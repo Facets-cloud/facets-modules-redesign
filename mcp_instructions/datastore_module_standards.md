@@ -13,12 +13,6 @@ This repository contains modules for databases, caches, queues, and their variou
 - Do NOT expose every possible configuration option
 - Users can fork the repository for custom configurations
 
-### Developer-Centric Abstractions
-Prefer intent-based inputs over technical configuration:
-- `performance_tier` instead of specific instance types
-- `backup_retention` instead of detailed backup policies
-- `scaling_enabled` instead of complex autoscaling parameters
-
 ### Security-First Defaults
 - Always configure secure defaults
 - Enable encryption by default where available
