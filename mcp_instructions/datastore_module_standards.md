@@ -9,8 +9,9 @@ This repository contains modules for databases, caches, queues, and their variou
 ## Design Philosophy
 
 ### Simplicity Over Flexibility
-- Provide the most common functionalities
+- Provide the most common functionalities with sensible defaults
 - Do NOT expose every possible configuration option
+- Use secure, production-ready defaults that don't require configuration
 - Users can fork the repository for custom configurations
 
 ### Technology-Familiar Field Names
@@ -22,8 +23,10 @@ This repository contains modules for databases, caches, queues, and their variou
 - Generate necessary infrastructure components within the module
 
 ### Security-First Defaults
-- Always configure secure defaults
-- Enable encryption by default where available
+- Always configure secure, production-ready defaults
+- Enable encryption at rest and in transit automatically (not configurable)
+- Enable high availability by default (not configurable)
+- Configure sensible backup policies automatically (not configurable)
 - Follow principle of least privilege for access
 
 ## Module Conventions
@@ -59,9 +62,9 @@ Every module in this repository MUST provide support for:
    - Resource scaling options
 
 4. **Backup & Restore**
-   - Automated backup configuration
+   - Automated backup configuration with sensible defaults (not configurable)
+   - **MUST support restore from backup functionality** - essential capability
    - Point-in-time recovery options
-   - Backup retention policies
 
 5. **Import Support**
    - MUST support importing existing resources
@@ -162,7 +165,7 @@ spec:
       default: "15"  # Always default to latest supported version
 ```
 
-### 2. Instance Configuration
+### 2. Instance Configuration  
 ```yaml
     instance_class:
       type: string
@@ -179,14 +182,30 @@ spec:
       default: 100
 ```
 
-### 3. High Availability & Clustering
+### 3. Backup & Restore
 ```yaml
-    multi_az:
+    restore_from_backup:
       type: boolean
-      title: "Multi-AZ Deployment"
-      description: "Enable multi-availability zone deployment"
+      title: "Restore from Backup"
+      description: "Restore database from existing backup"
       default: false
     
+    source_db_instance_identifier:
+      type: string
+      title: "Source DB Instance"
+      description: "Source database instance identifier for restore"
+      x-ui-visible-if:
+        field: spec.restore_from_backup
+        values: [true]
+    
+    # Note: Backup retention, encryption, HA are configured automatically
+    # - Backup retention: 7 days (not configurable)
+    # - Encryption: Always enabled (not configurable)
+    # - Multi-AZ: Enabled by default (not configurable)
+```
+
+### 4. Optional Features
+```yaml
     read_replica_count:
       type: number
       title: "Read Replica Count" 
@@ -194,48 +213,9 @@ spec:
       minimum: 0
       maximum: 5
       default: 0
-```
-
-### 4. Authentication & Security
-```yaml
-    storage_encrypted:
-      type: boolean
-      title: "Storage Encryption"
-      description: "Enable encryption at rest"
-      default: true
     
-    # Note: master_username and password should be generated within the module
-    # Do not expose credentials as configurable fields
-```
-
-### 5. Backup & Maintenance
-```yaml
-    backup_retention_period:
-      type: number
-      title: "Backup Retention Period (Days)"
-      description: "Number of days to retain automated backups"
-      minimum: 1
-      maximum: 35
-      default: 7
-    
-    preferred_maintenance_window:
-      type: string
-      title: "Preferred Maintenance Window"
-      description: "Preferred maintenance window (UTC)"
-      default: "sun:03:00-sun:04:00"
-```
-
-### 6. Networking & Access
-```yaml
-    publicly_accessible:
-      type: boolean
-      title: "Publicly Accessible"
-      description: "Enable public accessibility"
-      default: false
-    
-    # Note: subnet groups, security groups, and other networking components
-    # should be derived from VPC inputs or created within the module
-    # Do not expose low-level networking configuration
+    # Note: Other features like monitoring, performance insights are 
+    # enabled by default with sensible configurations (not exposed)
 ```
 
 ## Validation Checklist
@@ -246,8 +226,10 @@ Before completing any module:
 - [ ] Outputs use `@facets/` namespace
 - [ ] Inputs only consume `@facets/` namespaced types
 - [ ] Import declarations included for all major resources
-- [ ] Core functionality (version, auth, sizing, backup) implemented
-- [ ] Security defaults configured
+- [ ] Restore from backup functionality implemented and tested
+- [ ] Security defaults hardcoded (encryption always on, HA by default)
+- [ ] Backup policies configured automatically with sensible defaults
+- [ ] Credentials, subnet groups, security groups auto-generated
 - [ ] Standardized interfaces output structure implemented
-- [ ] Spec sections follow standard order and naming
+- [ ] Spec sections follow simplified structure (version, sizing, restore, optional features)
 - [ ] Module validates successfully with `validate_module()`
