@@ -17,6 +17,9 @@ This repository contains modules for databases, caches, queues, and their variou
 - Use field names familiar to users of the underlying technology
 - Do NOT invent new abstractions or terms
 - Group fields logically by sections for better organization
+- Make modules configurable by developers who are not always cloud experts
+- Do NOT expose low-level cloud details that can be derived or generated (e.g., subnet groups, security groups, credentials)
+- Generate necessary infrastructure components within the module
 
 ### Security-First Defaults
 - Always configure secure defaults
@@ -195,17 +198,14 @@ spec:
 
 ### 4. Authentication & Security
 ```yaml
-    master_username:
-      type: string
-      title: "Master Username"
-      description: "Master username for the database"
-      default: "postgres"
-    
     storage_encrypted:
       type: boolean
       title: "Storage Encryption"
       description: "Enable encryption at rest"
       default: true
+    
+    # Note: master_username and password should be generated within the module
+    # Do not expose credentials as configurable fields
 ```
 
 ### 5. Backup & Maintenance
@@ -233,11 +233,9 @@ spec:
       description: "Enable public accessibility"
       default: false
     
-    db_subnet_group_name:
-      type: string
-      title: "DB Subnet Group Name"
-      description: "Database subnet group name"
-      x-ui-variable-ref: true
+    # Note: subnet groups, security groups, and other networking components
+    # should be derived from VPC inputs or created within the module
+    # Do not expose low-level networking configuration
 ```
 
 ## Validation Checklist
