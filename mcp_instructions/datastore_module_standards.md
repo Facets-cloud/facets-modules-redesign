@@ -13,6 +13,11 @@ This repository contains modules for databases, caches, queues, and their variou
 - Do NOT expose every possible configuration option
 - Users can fork the repository for custom configurations
 
+### Technology-Familiar Field Names
+- Use field names familiar to users of the underlying technology
+- Do NOT invent new abstractions or terms
+- Group fields logically by sections for better organization
+
 ### Security-First Defaults
 - Always configure secure defaults
 - Enable encryption by default where available
@@ -156,16 +161,16 @@ spec:
 
 ### 2. Instance Configuration
 ```yaml
-    performance_tier:
+    instance_class:
       type: string
-      title: "Performance Tier"
-      description: "Performance level for the instance"
-      enum: ["basic", "standard", "high", "premium"]
-      default: "standard"
+      title: "Instance Class"
+      description: "Database instance class"
+      enum: ["db.t3.micro", "db.t3.small", "db.t3.medium", "db.m5.large"]
+      default: "db.t3.small"
     
-    storage_size:
+    allocated_storage:
       type: number
-      title: "Storage Size (GB)"
+      title: "Allocated Storage (GB)"
       description: "Initial storage allocation in GB"
       minimum: 20
       default: 100
@@ -173,13 +178,13 @@ spec:
 
 ### 3. High Availability & Clustering
 ```yaml
-    high_availability:
+    multi_az:
       type: boolean
-      title: "Enable High Availability"
-      description: "Enable multi-zone deployment for high availability"
+      title: "Multi-AZ Deployment"
+      description: "Enable multi-availability zone deployment"
       default: false
     
-    read_replicas:
+    read_replica_count:
       type: number
       title: "Read Replica Count" 
       description: "Number of read replicas to create"
@@ -190,52 +195,49 @@ spec:
 
 ### 4. Authentication & Security
 ```yaml
-    admin_username:
+    master_username:
       type: string
-      title: "Admin Username"
-      description: "Administrator username for the database"
-      default: "admin"
+      title: "Master Username"
+      description: "Master username for the database"
+      default: "postgres"
     
-    enable_encryption:
+    storage_encrypted:
       type: boolean
-      title: "Enable Encryption"
-      description: "Enable encryption at rest and in transit"
+      title: "Storage Encryption"
+      description: "Enable encryption at rest"
       default: true
 ```
 
 ### 5. Backup & Maintenance
 ```yaml
-    backup_retention:
+    backup_retention_period:
       type: number
-      title: "Backup Retention (Days)"
+      title: "Backup Retention Period (Days)"
       description: "Number of days to retain automated backups"
       minimum: 1
       maximum: 35
       default: 7
     
-    maintenance_window:
+    preferred_maintenance_window:
       type: string
-      title: "Maintenance Window"
-      description: "Preferred maintenance window"
-      enum: ["weeknight", "weekend", "custom"]
-      default: "weeknight"
+      title: "Preferred Maintenance Window"
+      description: "Preferred maintenance window (UTC)"
+      default: "sun:03:00-sun:04:00"
 ```
 
 ### 6. Networking & Access
 ```yaml
-    public_access:
+    publicly_accessible:
       type: boolean
-      title: "Enable Public Access"
-      description: "Allow connections from public internet"
+      title: "Publicly Accessible"
+      description: "Enable public accessibility"
       default: false
     
-    allowed_cidrs:
-      type: array
-      title: "Allowed CIDR Blocks"
-      description: "CIDR blocks allowed to connect"
-      items:
-        type: string
-        pattern: "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
+    db_subnet_group_name:
+      type: string
+      title: "DB Subnet Group Name"
+      description: "Database subnet group name"
+      x-ui-variable-ref: true
 ```
 
 ## Validation Checklist
