@@ -90,7 +90,19 @@ After implementing the fundamental module:
 5. **Ignore these parameters**: Set `resource`, `index`, and `key` to None (do not use them)
 6. **Prevent unwanted recreates**: For imported resources, evaluate adding `ignore_changes` for attributes that would trigger recreation (e.g., subnet groups, VPC settings) since changing these genuinely requires delete/recreate anyway
 
+## CRITICAL: Input Type Management Rules
+
+**NEVER register output types that you need as inputs:**
+- ALL required input types MUST already exist in the control plane
+- If needed input types don't exist, STOP and clarify with the user first
+- Do NOT create missing input types - they must be provided by other modules
+
 ## Output Types and Structure
+
+### MANDATORY User Approval for New Output Types
+- Get explicit user confirmation before creating ANY new output type
+- There is NO blanket approval for output type creation
+- Present the output type structure and get approval before proceeding
 
 ### Output Naming Convention
 - **Default output**: Use flavor-specific name (e.g., `@facets/rds`, `@facets/redis-cluster`, `@facets/kafka-ha`)
@@ -244,9 +256,11 @@ When using `generate_module_with_user_confirmation` to present module plans, ens
 **BEFORE presenting any module plan with generate_module_with_user_confirmation:**
 1. **Fetch existing output types** using appropriate tools to understand what `@facets/` types are already available for inputs
 2. **IGNORE any output types that do NOT start with `@facets/` - only consider `@facets/` prefixed types**
-3. **Determine new output types** this module will create (both default and interfaces outputs)
-4. **Verify type compatibility** across flavors of the same technology
-5. **Identify ALL required provider inputs** to ensure sufficient cloud provider configurations are available (e.g., AWS, GCP, Azure providers)
+3. **CRITICAL: NEVER register output types that you need as inputs** - ALL required input types MUST already exist. If needed input types don't exist, STOP and clarify with the user first.
+4. **Determine new output types** this module will create (both default and interfaces outputs)
+5. **MANDATORY: Get explicit user approval** for ANY new output types before proceeding - there is NO blanket approval for creating output types
+6. **Verify type compatibility** across flavors of the same technology
+7. **Identify ALL required provider inputs** to ensure sufficient cloud provider configurations are available (e.g., AWS, GCP, Azure providers)
 
 ### Required Plan Elements
 **Module plan presented with generate_module_with_user_confirmation MUST include:**
