@@ -48,6 +48,7 @@ Every module MUST provide support for:
    - Support only the last 3 major versions of each technology
    - Do NOT support deprecated versions
    - Default to latest supported version
+   - **MANDATORY: Validate version options against cloud provider documentation** - ensure all enum values are actually supported by the target cloud provider
 
 2. **Authentication & Security**
    - Secure credential management
@@ -168,7 +169,7 @@ spec:
           type: string
           title: "Database Version"
           description: "Version of the database engine"
-          enum: ["13", "14", "15"]  # Only last 3 major versions
+          enum: ["13", "14", "15"]  # Only last 3 major versions - MUST validate against cloud provider docs
           default: "15"  # Always default to latest
         # engine_variant: (if applicable for technology)
     
@@ -286,6 +287,7 @@ When using `generate_module_with_user_confirmation` to present module plans, ens
 Before completing any module:
 - [ ] Generated resource names comply with 63 character limits
 - [ ] Only last 3 major versions supported
+- [ ] Version options validated against cloud provider documentation
 - [ ] Outputs use `@facets/` namespace
 - [ ] Inputs only consume `@facets/` namespaced types
 - [ ] Import declarations included for major resources
