@@ -1,0 +1,201 @@
+intent: mysql
+flavor: aws-rds
+version: '1.0'
+clouds:
+- aws
+description: Managed MySQL database instance on AWS RDS with high availability, automated
+  backups, and read replicas
+spec:
+  title: MySQL RDS Database
+  description: Managed MySQL database instance on AWS RDS with high availability,
+    automated backups, and read replicas
+  type: object
+  properties:
+    version_config:
+      type: object
+      title: Version & Basic Configuration
+      properties:
+        version:
+          type: string
+          title: MySQL Version
+          description: Version of the MySQL database engine
+          enum:
+          - '5.7'
+          - '8.0'
+          - '8.4'
+          default: '8.4'
+        database_name:
+          type: string
+          title: Database Name
+          description: Initial database to create
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+          minLength: 1
+          maxLength: 64
+          default: myapp
+        master_username:
+          type: string
+          title: Master Username
+          description: Master username for database access
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+          minLength: 1
+          maxLength: 16
+          default: admin
+    sizing:
+      type: object
+      title: Sizing & Performance
+      properties:
+        instance_class:
+          type: string
+          title: Instance Class
+          description: RDS instance class for performance and capacity
+          enum:
+          - db.t3.micro
+          - db.t3.small
+          - db.t3.medium
+          - db.t3.large
+          - db.m5.large
+          - db.m5.xlarge
+          - db.m5.2xlarge
+          default: db.t3.small
+        allocated_storage:
+          type: number
+          title: Allocated Storage (GB)
+          description: Initial storage allocation in GB
+          minimum: 20
+          maximum: 65536
+          default: 100
+        max_allocated_storage:
+          type: number
+          title: Max Storage (GB)
+          description: Maximum storage for autoscaling (0 to disable)
+          minimum: 0
+          maximum: 65536
+          default: 1000
+        storage_type:
+          type: string
+          title: Storage Type
+          description: Storage type for the database
+          enum:
+          - gp2
+          - gp3
+          - io1
+          - io2
+          default: gp3
+        read_replica_count:
+          type: number
+          title: Read Replica Count
+          description: Number of read replicas to create
+          minimum: 0
+          maximum: 5
+          default: 0
+    restore_config:
+      type: object
+      title: Restore Operations
+      properties:
+        restore_from_backup:
+          type: boolean
+          title: Restore from Backup
+          description: Restore database from existing backup or snapshot
+          default: false
+        source_db_instance_identifier:
+          type: string
+          title: Source DB Instance
+          description: Source database instance identifier for restore
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+        restore_master_username:
+          type: string
+          title: Restore Master Username
+          description: Master username for restored database (required for restore
+            operations)
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+          minLength: 1
+          maxLength: 16
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+        restore_master_password:
+          type: string
+          title: Restore Master Password
+          description: Master password for restored database (required for restore
+            operations)
+          minLength: 8
+          maxLength: 128
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+    imports:
+      type: object
+      title: Import Existing Resources
+      properties:
+        db_instance_identifier:
+          type: string
+          title: DB Instance Identifier
+          description: Identifier of existing RDS instance to import
+        db_subnet_group_name:
+          type: string
+          title: DB Subnet Group Name
+          description: Name of existing DB subnet group to import
+        security_group_id:
+          type: string
+          title: Security Group ID
+          description: ID of existing security group to import
+  required:
+  - version_config
+imports:
+- name: db_instance_identifier
+  resource_address: aws_db_instance.mysql
+  required: true
+- name: db_subnet_group_name
+  resource_address: aws_db_subnet_group.mysql
+  required: false
+- name: security_group_id
+  resource_address: aws_security_group.mysql
+  required: false
+inputs:
+  aws_cloud_account:
+    type: '@facets/aws_cloud_account'
+    optional: false
+    displayName: AWS Cloud Account
+    description: AWS cloud account configuration for provider setup
+    providers:
+    - aws
+  vpc_details:
+    type: '@facets/aws-vpc-details'
+    optional: false
+    displayName: VPC Network Details
+    description: VPC configuration for database networking
+outputs:
+  default:
+    type: '@facets/mysql-aws-rds'
+    title: MySQL RDS Instance
+  interfaces:
+    type: '@facets/mysql-interface'
+    title: MySQL Database Interface
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+sample:
+  kind: mysql
+  flavor: aws-rds
+  version: '1.0'
+  disabled: true
+  spec:
+    version_config:
+      version: '8.4'
+      database_name: myapp
+      master_username: admin
+    sizing:
+      instance_class: db.t3.small
+      allocated_storage: 100
+      max_allocated_storage: 1000
+      storage_type: gp3
+      read_replica_count: 0
+    restore_config:
+      restore_from_backup: false
