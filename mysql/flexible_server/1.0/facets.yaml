@@ -1,0 +1,219 @@
+intent: mysql
+flavor: azure-flexible-server
+version: '1.0'
+clouds:
+- azure
+description: Azure Database for MySQL - Flexible Server with high availability and
+  automated backup
+spec:
+  title: Azure MySQL Flexible Server
+  description: Azure Database for MySQL - Flexible Server with high availability and
+    automated backup
+  type: object
+  properties:
+    version_config:
+      type: object
+      title: Version & Basic Configuration
+      properties:
+        version:
+          type: string
+          title: MySQL Version
+          description: MySQL engine version
+          enum:
+          - '5.7'
+          - 8.0.21
+          - 8.0.37
+          default: 8.0.37
+        database_name:
+          type: string
+          title: Database Name
+          description: Initial database name to create
+          default: mydb
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]{0,62}$
+        charset:
+          type: string
+          title: Character Set
+          description: Character set for the database
+          enum:
+          - utf8
+          - utf8mb4
+          - latin1
+          default: utf8mb4
+        collation:
+          type: string
+          title: Collation
+          description: Collation for the database
+          enum:
+          - utf8mb4_general_ci
+          - utf8mb4_unicode_ci
+          - utf8_general_ci
+          - latin1_swedish_ci
+          default: utf8mb4_unicode_ci
+    sizing:
+      type: object
+      title: Sizing & Performance
+      properties:
+        sku_name:
+          type: string
+          title: SKU Name
+          description: Azure MySQL Flexible Server SKU
+          enum:
+          - GP_Standard_D2s_v3
+          - GP_Standard_D4s_v3
+          - GP_Standard_D8s_v3
+          - GP_Standard_D16s_v3
+          - MO_Standard_E4s_v3
+          - MO_Standard_E8s_v3
+          - MO_Standard_E16s_v3
+          - B_Standard_B1s
+          - B_Standard_B1ms
+          - B_Standard_B2s
+          default: GP_Standard_D2s_v3
+        storage_gb:
+          type: number
+          title: Storage Size (GB)
+          description: Storage capacity in GB
+          minimum: 20
+          maximum: 16384
+          default: 100
+        iops:
+          type: number
+          title: IOPS
+          description: Provisioned IOPS (if supported by SKU)
+          minimum: 360
+          maximum: 20000
+          default: 360
+        storage_tier:
+          type: string
+          title: Storage Tier
+          description: Storage performance tier
+          enum:
+          - P4
+          - P6
+          - P10
+          - P15
+          - P20
+          - P30
+          - P40
+          - P50
+          - P60
+          - P70
+          - P80
+          default: P10
+        read_replica_count:
+          type: number
+          title: Read Replica Count
+          description: Number of read replicas to create
+          minimum: 0
+          maximum: 10
+          default: 0
+    restore_config:
+      type: object
+      title: Restore Operations
+      properties:
+        restore_from_backup:
+          type: boolean
+          title: Restore from Backup
+          description: Restore database from existing backup
+          default: false
+        source_server_id:
+          type: string
+          title: Source Server ID
+          description: Source MySQL server resource ID for restore
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+        restore_point_in_time:
+          type: string
+          title: Restore Point in Time
+          description: Point in time to restore from (ISO 8601 format)
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+        administrator_login:
+          type: string
+          title: Administrator Username
+          description: Administrator login username (required for restore)
+          default: mysqladmin
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]{0,31}$
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+        administrator_password:
+          type: string
+          title: Administrator Password
+          description: Administrator password (required for restore)
+          x-ui-secret-ref: true
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+    imports:
+      type: object
+      title: Import Existing Resources
+      properties:
+        server_id:
+          type: string
+          title: MySQL Server Resource ID
+          description: Azure resource ID of existing MySQL Flexible Server to import
+        database_id:
+          type: string
+          title: Database Resource ID
+          description: Azure resource ID of existing database to import
+        firewall_rule_id:
+          type: string
+          title: Firewall Rule Resource ID
+          description: Azure resource ID of existing firewall rule to import
+  required:
+  - version_config
+  - sizing
+inputs:
+  azure_provider:
+    type: '@facets/azure_cloud_account'
+    optional: false
+    displayName: Azure Cloud Account
+    description: Azure provider configuration
+    providers:
+    - azurerm
+  network_details:
+    type: '@facets/azure-network-details'
+    optional: false
+    displayName: Azure Network Details
+    description: Azure VNet and subnet configuration for MySQL server
+outputs:
+  default:
+    type: '@outputs/mysql'
+    title: Azure MySQL Flexible Server
+  interfaces:
+    type: '@facets/mysql-interface'
+    title: MySQL Database Interface
+imports:
+- name: server_id
+  resource_address: azurerm_mysql_flexible_server.main
+  required: true
+- name: database_id
+  resource_address: azurerm_mysql_flexible_database.databases[0]
+  required: false
+- name: firewall_rule_id
+  resource_address: azurerm_mysql_flexible_server_firewall_rule.azure_services
+  required: false
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+sample:
+  kind: mysql
+  flavor: azure-flexible-server
+  version: '1.0'
+  disabled: true
+  spec:
+    version_config:
+      version: 8.0.37
+      database_name: mydb
+    sizing:
+      sku_name: GP_Standard_D2s_v3
+      storage_gb: 100
