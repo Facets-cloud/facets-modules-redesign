@@ -44,7 +44,6 @@ resource "aws_eks_addon" "addon" {
   addon_name               = each.key
   addon_version            = each.value["addon_version"]
   configuration_values     = each.value["configuration_values"]
-  resolve_conflicts        = each.value["resolve_conflicts"]
   tags                     = each.value["tags"]
   preserve                 = each.value["preserve"]
   service_account_role_arn = each.value["service_account_role_arn"]
