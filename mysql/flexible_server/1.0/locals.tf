@@ -11,11 +11,12 @@ locals {
   collation     = var.instance.spec.version_config.collation
 
   # Sizing configuration
-  sku_name      = var.instance.spec.sizing.sku_name
-  storage_gb    = var.instance.spec.sizing.storage_gb
-  iops          = var.instance.spec.sizing.iops
-  storage_tier  = var.instance.spec.sizing.storage_tier # Keep for reference but not used in storage block
-  replica_count = var.instance.spec.sizing.read_replica_count
+  sku_name         = var.instance.spec.sizing.sku_name
+  storage_gb       = var.instance.spec.sizing.storage_gb
+  iops             = var.instance.spec.sizing.iops
+  storage_tier     = var.instance.spec.sizing.storage_tier # Keep for reference but not used in storage block
+  replica_count    = var.instance.spec.sizing.read_replica_count
+  is_burstable_sku = startswith(local.sku_name, "B_") # Detect if SKU is Burstable tier
 
   # Restore configuration
   restore_enabled       = lookup(var.instance.spec.restore_config, "restore_from_backup", false)

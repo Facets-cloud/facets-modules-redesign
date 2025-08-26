@@ -44,9 +44,12 @@ resource "azurerm_mysql_flexible_server" "main" {
   backup_retention_days        = local.backup_retention_days
   geo_redundant_backup_enabled = true
 
-  # High availability (enabled by default as per requirements)
-  high_availability {
-    mode = "ZoneRedundant"
+  # High availability (conditional based on SKU tier - not supported for Burstable)
+  dynamic "high_availability" {
+    for_each = local.is_burstable_sku ? [] : [1]
+    content {
+      mode = "ZoneRedundant"
+    }
   }
 
   # Network configuration - Use existing subnet from network module
