@@ -1,8 +1,8 @@
 intent: kubernetes_cluster
-flavor: aws_eks_demo
+flavor: aws-eks
 alias-flavors:
 - default
-version: '0.3'
+version: '0.1'
 clouds:
 - aws
 title: EKS Cluster with Auto Mode support
@@ -188,10 +188,10 @@ outputs:
           token: cluster.auth.token
 sample:
   kind: kubernetes_cluster
-  flavor: aws_eks_demo
+  flavor: aws-eks
   alias-flavors:
   - default
-  version: '0.3'
+  version: '0.1'
   metadata:
     name: eks-cluster
   spec:
