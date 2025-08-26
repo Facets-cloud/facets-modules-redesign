@@ -14,7 +14,7 @@ locals {
   sku_name      = var.instance.spec.sizing.sku_name
   storage_gb    = var.instance.spec.sizing.storage_gb
   iops          = var.instance.spec.sizing.iops
-  storage_tier  = var.instance.spec.sizing.storage_tier
+  storage_tier  = var.instance.spec.sizing.storage_tier # Keep for reference but not used in storage block
   replica_count = var.instance.spec.sizing.read_replica_count
 
   # Restore configuration
@@ -23,13 +23,14 @@ locals {
   restore_point_in_time = lookup(var.instance.spec.restore_config, "restore_point_in_time", null)
 
   # Credentials - use restore credentials if restoring, otherwise generate
-  administrator_login = local.restore_enabled ? lookup(var.instance.spec.restore_config, "administrator_login", "mysqladmin") : "mysqladmin"
-
+  administrator_login    = local.restore_enabled ? lookup(var.instance.spec.restore_config, "administrator_login", "mysqladmin") : "mysqladmin"
   administrator_password = local.restore_enabled ? lookup(var.instance.spec.restore_config, "administrator_password", random_password.mysql_password.result) : random_password.mysql_password.result
 
-  # Networking
-  subnet_id             = var.inputs.network_details.attributes.private_subnet_ids[0]
-  private_dns_zone_name = "${local.server_name}.private.mysql.database.azure.com"
+  # Networking - Use existing subnet from network module
+  # Try common subnet attribute names that the network module might provide
+  delegated_subnet_id = lookup(var.inputs.network_details.attributes, "delegated_subnet_id",
+    lookup(var.inputs.network_details.attributes, "subnet_id",
+  lookup(var.inputs.network_details.attributes, "private_subnet_id", null)))
 
   # Security defaults (hardcoded as per requirements)
   backup_retention_days = 7

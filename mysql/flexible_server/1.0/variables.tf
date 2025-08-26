@@ -107,8 +107,11 @@ variable "inputs" {
       attributes = object({
         resource_group_name = string
         vnet_id             = string
+        vnet_name           = string
         region              = string
+        vnet_cidr_block     = string
         private_subnet_ids  = list(string)
+        availability_zones  = optional(list(string))
       })
     })
   })

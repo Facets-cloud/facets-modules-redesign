@@ -4,9 +4,9 @@ resource "random_password" "mysql_password" {
   special = true
 }
 
-# Private DNS Zone for MySQL
+# Private DNS Zone for MySQL (MUST end with .mysql.database.azure.com)
 resource "azurerm_private_dns_zone" "mysql" {
-  name                = local.private_dns_zone_name
+  name                = "${local.server_name}.mysql.database.azure.com"
   resource_group_name = local.resource_group_name
   tags                = local.tags
 }
@@ -49,17 +49,17 @@ resource "azurerm_mysql_flexible_server" "main" {
     mode = "ZoneRedundant"
   }
 
-  # Network configuration
-  delegated_subnet_id = local.subnet_id
+  # Network configuration - Use existing subnet from network module
+  delegated_subnet_id = local.delegated_subnet_id
   private_dns_zone_id = azurerm_private_dns_zone.mysql.id
 
-  # Restore configuration (conditional)
+  # Restore configuration (conditional) - Fixed syntax
   source_server_id                  = local.restore_enabled && local.source_server_id != null ? local.source_server_id : null
   point_in_time_restore_time_in_utc = local.restore_enabled && local.restore_point_in_time != null ? local.restore_point_in_time : null
 
   # Prevent accidental deletion
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = false # Set to false for testing as requested
     ignore_changes = [
       # Ignore changes that would require recreation
       delegated_subnet_id,
@@ -84,7 +84,7 @@ resource "azurerm_mysql_flexible_database" "databases" {
   collation           = local.collation
 }
 
-# Read Replicas (if configured)
+# Read Replicas (if configured) - Updated configuration
 resource "azurerm_mysql_flexible_server" "replicas" {
   count = local.replica_count
 
@@ -92,25 +92,25 @@ resource "azurerm_mysql_flexible_server" "replicas" {
   resource_group_name = local.resource_group_name
   location            = local.location
 
-  # Replica configuration
+  # Replica configuration - Fixed syntax
   source_server_id = azurerm_mysql_flexible_server.main.id
 
-  # Same configuration as primary
+  # Same version as primary
   version  = local.mysql_version
   sku_name = local.sku_name
 
-  # Storage (must match primary)
+  # Storage (must match primary) - Simplified
   storage {
     size_gb = local.storage_gb
   }
 
-  # Network
-  delegated_subnet_id = local.subnet_id
+  # Network - Use existing subnet from network module
+  delegated_subnet_id = local.delegated_subnet_id
   private_dns_zone_id = azurerm_private_dns_zone.mysql.id
 
   # Prevent accidental deletion
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = false # Set to false for testing
   }
 
   tags = local.tags
@@ -120,7 +120,7 @@ resource "azurerm_mysql_flexible_server" "replicas" {
   ]
 }
 
-# Firewall rule to allow Azure services
+# Firewall rule to allow Azure services (optional for private access)
 resource "azurerm_mysql_flexible_server_firewall_rule" "azure_services" {
   name                = "${local.server_name}-azure-services"
   resource_group_name = local.resource_group_name

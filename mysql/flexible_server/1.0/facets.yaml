@@ -22,8 +22,7 @@ spec:
           enum:
           - '5.7'
           - 8.0.21
-          - 8.0.37
-          default: 8.0.37
+          default: 8.0.21
         database_name:
           type: string
           title: Database Name
@@ -58,6 +57,9 @@ spec:
           title: SKU Name
           description: Azure MySQL Flexible Server SKU
           enum:
+          - B_Standard_B1s
+          - B_Standard_B1ms
+          - B_Standard_B2s
           - GP_Standard_D2s_v3
           - GP_Standard_D4s_v3
           - GP_Standard_D8s_v3
@@ -65,10 +67,7 @@ spec:
           - MO_Standard_E4s_v3
           - MO_Standard_E8s_v3
           - MO_Standard_E16s_v3
-          - B_Standard_B1s
-          - B_Standard_B1ms
-          - B_Standard_B2s
-          default: GP_Standard_D2s_v3
+          default: B_Standard_B1ms
         storage_gb:
           type: number
           title: Storage Size (GB)
@@ -182,7 +181,7 @@ inputs:
     type: '@facets/azure-network-details'
     optional: false
     displayName: Azure Network Details
-    description: Azure VNet and subnet configuration for MySQL server
+    description: Azure VNet and delegated subnet configuration for MySQL server
 outputs:
   default:
     type: '@outputs/mysql'
@@ -212,8 +211,8 @@ sample:
   disabled: true
   spec:
     version_config:
-      version: 8.0.37
+      version: 8.0.21
       database_name: mydb
     sizing:
-      sku_name: GP_Standard_D2s_v3
+      sku_name: B_Standard_B1ms
       storage_gb: 100
