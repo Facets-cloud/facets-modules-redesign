@@ -1,0 +1,174 @@
+intent: postgres
+flavor: azure-flexible-server
+version: '1.0'
+clouds:
+- azure
+description: A developer-friendly PostgreSQL flexible server with secure defaults
+  and restore capabilities
+spec:
+  title: PostgreSQL Flexible Server on Azure
+  description: A developer-friendly PostgreSQL flexible server with secure defaults
+    and restore capabilities
+  type: object
+  properties:
+    version_config:
+      type: object
+      title: Version & Basic Configuration
+      x-ui-toggle: false
+      properties:
+        version:
+          type: string
+          title: PostgreSQL Version
+          description: Version of the PostgreSQL engine
+          enum:
+          - '13'
+          - '14'
+          - '15'
+          default: '15'
+        tier:
+          type: string
+          title: Performance Tier
+          description: Server performance tier
+          enum:
+          - Burstable
+          - GeneralPurpose
+          - MemoryOptimized
+          default: GeneralPurpose
+      required:
+      - version
+      - tier
+    azure_config:
+      type: object
+      title: Azure Configuration
+      x-ui-toggle: true
+      properties:
+        resource_group_name:
+          type: string
+          title: Resource Group Name
+          description: Name of the Azure resource group (leave empty for auto-detection)
+        location:
+          type: string
+          title: Azure Region
+          description: Azure region for deployment
+          enum:
+          - East US
+          - West US
+          - Central US
+          - East US 2
+          - West US 2
+          - North Europe
+          - West Europe
+          default: East US
+      required: []
+    sizing:
+      type: object
+      title: Sizing & Performance
+      x-ui-toggle: false
+      properties:
+        sku_name:
+          type: string
+          title: Server Size
+          description: SKU name for the PostgreSQL server
+          enum:
+          - B_Standard_B1ms
+          - B_Standard_B2s
+          - GP_Standard_D2s_v3
+          - GP_Standard_D4s_v3
+          - GP_Standard_D8s_v3
+          - MO_Standard_E2s_v3
+          - MO_Standard_E4s_v3
+          default: GP_Standard_D2s_v3
+        storage_gb:
+          type: number
+          title: Storage Size (GB)
+          description: Storage capacity in gigabytes
+          minimum: 32
+          maximum: 16384
+          default: 128
+        read_replica_count:
+          type: number
+          title: Read Replica Count
+          description: Number of read replicas to create
+          minimum: 0
+          maximum: 5
+          default: 0
+      required:
+      - sku_name
+      - storage_gb
+    restore_config:
+      type: object
+      title: Restore Operations
+      x-ui-toggle: true
+      properties:
+        restore_from_backup:
+          type: boolean
+          title: Restore from Backup
+          description: Restore database from existing backup
+          default: false
+        source_server_id:
+          type: string
+          title: Source Server ID
+          description: Azure resource ID of the source PostgreSQL server for restore
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+        restore_point_in_time:
+          type: string
+          title: Restore Point in Time
+          description: Point in time to restore to (RFC3339 format)
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+      required: []
+    imports:
+      type: object
+      title: Import Existing Resources
+      x-ui-toggle: true
+      properties:
+        flexible_server_id:
+          type: string
+          title: Flexible Server ID
+          description: Azure resource ID of existing PostgreSQL Flexible Server to
+            import
+      required: []
+  required:
+  - version_config
+  - sizing
+inputs:
+  azure_provider:
+    type: '@facets/azure_cloud_account'
+    optional: false
+    displayName: Azure Cloud Account
+    description: Azure credentials and provider configuration
+    providers:
+    - azurerm
+outputs:
+  default:
+    type: '@facets/postgres-azure-flexible-server'
+    title: PostgreSQL Azure Flexible Server
+  interfaces:
+    type: '@facets/postgres-interface'
+    title: PostgreSQL Database Interface
+imports:
+- name: flexible_server_id
+  resource_address: azurerm_postgresql_flexible_server.main
+  required: false
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+sample:
+  kind: postgres
+  flavor: azure-flexible-server
+  version: '1.0'
+  disabled: true
+  spec:
+    version_config:
+      version: '15'
+      tier: GeneralPurpose
+    sizing:
+      sku_name: GP_Standard_D2s_v3
+      storage_gb: 128
