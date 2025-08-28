@@ -7,10 +7,10 @@ locals {
     server_id                    = azurerm_postgresql_flexible_server.main.id
     storage_gb                   = azurerm_postgresql_flexible_server.main.storage_mb / 1024
     server_name                  = azurerm_postgresql_flexible_server.main.name
-    database_names               = [azurerm_postgresql_flexible_server_database.databases.name]
-    replica_servers              = length(azurerm_postgresql_flexible_server.replicas) > 0 ? azurerm_postgresql_flexible_server.replicas[*].fqdn : []
+    database_names               = [local.database_name]
+    replica_servers              = azurerm_postgresql_flexible_server.replicas[*].fqdn
     administrator_login          = azurerm_postgresql_flexible_server.main.administrator_login
-    resource_group_name          = azurerm_postgresql_flexible_server.main.resource_group_name
+    resource_group_name          = azurerm_resource_group.postgres_rg.name
     backup_retention_days        = azurerm_postgresql_flexible_server.main.backup_retention_days
     high_availability_enabled    = local.high_availability_enabled
     geo_redundant_backup_enabled = azurerm_postgresql_flexible_server.main.geo_redundant_backup_enabled

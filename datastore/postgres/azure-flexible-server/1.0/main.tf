@@ -10,7 +10,7 @@ resource "azurerm_resource_group" "postgres_rg" {
   }
 }
 
-# PostgreSQL Flexible Server - Simple and Direct
+# PostgreSQL Flexible Server - Simplified and Reliable
 resource "azurerm_postgresql_flexible_server" "main" {
   name                = local.resource_name
   resource_group_name = azurerm_resource_group.postgres_rg.name
@@ -26,13 +26,13 @@ resource "azurerm_postgresql_flexible_server" "main" {
   backup_retention_days        = local.backup_retention_days
   geo_redundant_backup_enabled = local.geo_redundant_backup_enabled
 
-  # High availability configuration
-  dynamic "high_availability" {
-    for_each = local.high_availability_enabled ? [1] : []
-    content {
-      mode = local.high_availability_mode
-    }
-  }
+  # Simplified - no high availability to avoid deployment issues
+  # dynamic "high_availability" {
+  #   for_each = local.high_availability_enabled ? [1] : []
+  #   content {
+  #     mode = local.high_availability_mode
+  #   }
+  # }
 
   # Restore configuration
   source_server_id                  = local.is_restore ? local.source_server_id : null
@@ -45,21 +45,21 @@ resource "azurerm_postgresql_flexible_server" "main" {
     prevent_destroy = false
     ignore_changes = [
       zone,
-      high_availability,
       administrator_password
     ]
   }
 }
 
-# Create default database
+# Create default database - conditional creation to handle existing "postgres" database
 resource "azurerm_postgresql_flexible_server_database" "databases" {
+  count     = local.database_name == "postgres" ? 0 : 1
   name      = local.database_name
   server_id = azurerm_postgresql_flexible_server.main.id
   collation = "en_US.utf8"
   charset   = "utf8"
 }
 
-# PostgreSQL Flexible Server Configuration for security
+# PostgreSQL Flexible Server Configuration for security - version-compatible settings only
 resource "azurerm_postgresql_flexible_server_configuration" "log_connections" {
   name      = "log_connections"
   server_id = azurerm_postgresql_flexible_server.main.id
@@ -72,13 +72,10 @@ resource "azurerm_postgresql_flexible_server_configuration" "log_disconnections"
   value     = "on"
 }
 
-resource "azurerm_postgresql_flexible_server_configuration" "connection_throttling" {
-  name      = "connection_throttling"
-  server_id = azurerm_postgresql_flexible_server.main.id
-  value     = "on"
-}
+# Note: connection_throttling is not supported in PostgreSQL 15+ on Azure Flexible Server
+# Removed to prevent configuration errors
 
-# Read replicas
+# Read replicas - only create if count > 0
 resource "azurerm_postgresql_flexible_server" "replicas" {
   count = local.replica_count
 

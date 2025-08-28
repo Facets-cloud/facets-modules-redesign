@@ -1,10 +1,10 @@
-# Local computations - Simple and Direct
+# Local computations - Complete and Correct
 locals {
   # Resource naming
   resource_name = "${var.instance_name}-${var.environment.unique_name}"
   database_name = "postgres"
 
-  # Simple resource group and location handling
+  # Resource group and location handling
   azure_config  = lookup(var.instance.spec, "azure_config", {})
   specified_rg  = lookup(local.azure_config, "resource_group_name", "")
   specified_loc = lookup(local.azure_config, "location", "")
@@ -33,11 +33,11 @@ locals {
   # Security and networking defaults
   ssl_enforcement_enabled      = true
   backup_retention_days        = 7
-  geo_redundant_backup_enabled = true
+  geo_redundant_backup_enabled = false # Disable to avoid region restrictions
 
-  # High availability configuration based on tier
-  high_availability_enabled = var.instance.spec.version_config.tier == "GeneralPurpose" || var.instance.spec.version_config.tier == "MemoryOptimized"
-  high_availability_mode    = local.high_availability_enabled ? "ZoneRedundant" : null
+  # Disable high availability to prevent Multi-Zone HA issues
+  high_availability_enabled = false
+  high_availability_mode    = null
 
   # Generate admin password
   admin_username = "psqladmin"

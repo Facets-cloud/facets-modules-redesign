@@ -132,6 +132,11 @@ spec:
           title: Flexible Server ID
           description: Azure resource ID of existing PostgreSQL Flexible Server to
             import
+        postgres_database_id:
+          type: string
+          title: Postgres Database ID
+          description: Azure resource ID of existing PostgreSQL database to import
+            (if exists)
       required: []
   required:
   - version_config
@@ -154,6 +159,9 @@ outputs:
 imports:
 - name: flexible_server_id
   resource_address: azurerm_postgresql_flexible_server.main
+  required: false
+- name: postgres_database_id
+  resource_address: azurerm_postgresql_flexible_server_database.databases[0]
   required: false
 iac:
   validated_files:
