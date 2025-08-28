@@ -160,7 +160,7 @@ inputs:
     - aws593
 outputs:
   attributes.k8s_details:
-    type: '@outputs/aws_eks'
+    type: '@facets/kubernetes-details'
     title: Kubernetes Cluster Output
     description: The output for the Kubernetes cluster
     providers:
