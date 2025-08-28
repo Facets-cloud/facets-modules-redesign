@@ -1,8 +1,9 @@
 # Local computations for PostgreSQL on Kubernetes
 locals {
-  # Naming and resource identifiers
-  postgres_name = "${var.instance_name}-${var.environment.unique_name}"
-  namespace     = var.instance.spec.imports != null ? lookup(var.instance.spec.imports, "namespace", "default") : "default"
+  # Naming and resource identifiers (shortened to avoid 52 char limit for CronJobs)
+  postgres_name_full = "${var.instance_name}-${var.environment.unique_name}"
+  postgres_name      = length(local.postgres_name_full) > 40 ? "${substr(var.instance_name, 0, 20)}-${substr(var.environment.unique_name, 0, 19)}" : local.postgres_name_full
+  namespace          = var.instance.spec.imports != null ? lookup(var.instance.spec.imports, "namespace", "default") : "default"
 
   # Helm release configuration
   helm_release_name = var.instance.spec.imports != null ? lookup(var.instance.spec.imports, "helm_release_name", local.postgres_name) : local.postgres_name
@@ -82,27 +83,21 @@ locals {
       }
     }
 
-    # Backup configuration (automatic, 7-day retention)
+    # Backup configuration (disabled to avoid CronJob naming length issues)
     backup = {
-      enabled = true
-      cronjob = {
-        schedule = "0 2 * * *" # Daily at 2 AM
-        storage = {
-          size = local.storage_size
-        }
-      }
+      enabled = false
     }
 
-    # Security defaults
+    # Security defaults (disabled NetworkPolicy for compatibility)
     networkPolicy = {
-      enabled = true
+      enabled = false
     }
 
-    # Metrics and monitoring (hardcoded for production readiness)
+    # Metrics and monitoring (disabled ServiceMonitor to avoid Prometheus Operator CRD dependency)
     metrics = {
       enabled = true
       serviceMonitor = {
-        enabled = true
+        enabled = false
       }
     }
   }
