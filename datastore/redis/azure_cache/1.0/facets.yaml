@@ -1,0 +1,183 @@
+intent: redis
+flavor: azure_cache_custom
+version: '1.0'
+clouds:
+- azure
+description: Custom Azure Cache for Redis - A fully managed in-memory cache service
+  built on open-source Redis, offering high performance and scalability for Azure
+  applications.
+spec:
+  title: Custom Azure Cache for Redis
+  description: Configure Azure Cache for Redis with developer-friendly settings
+  type: object
+  properties:
+    version_config:
+      type: object
+      title: Version & Basic Configuration
+      properties:
+        redis_version:
+          type: string
+          title: Redis Version
+          description: Redis version to use (4.0, 6.0 supported)
+          enum:
+          - '4'
+          - '6'
+          default: '6'
+        family:
+          type: string
+          title: Redis Family
+          description: Redis cache family (Basic, Standard, Premium)
+          enum:
+          - C
+          - P
+          default: P
+          x-ui-error-message: Family must be C (Basic/Standard) or P (Premium)
+      required:
+      - redis_version
+      - family
+    sizing:
+      type: object
+      title: Sizing & Performance
+      properties:
+        sku_name:
+          type: string
+          title: SKU Name
+          description: Cache SKU defining performance tier
+          enum:
+          - Basic
+          - Standard
+          - Premium
+          default: Premium
+        capacity:
+          type: number
+          title: Cache Capacity
+          description: Cache size/capacity (0-6 for Basic/Standard, 1-5 for Premium)
+          minimum: 0
+          maximum: 6
+          default: 1
+        replicas_per_master:
+          type: number
+          title: Replicas per Master
+          description: Number of replicas per master (Premium only)
+          minimum: 1
+          maximum: 3
+          default: 1
+          x-ui-visible-if:
+            field: spec.version_config.family
+            values:
+            - P
+        replicas_per_primary:
+          type: number
+          title: Replicas per Primary
+          description: Number of replicas per primary node (Premium only)
+          minimum: 1
+          maximum: 3
+          default: 1
+          x-ui-visible-if:
+            field: spec.version_config.family
+            values:
+            - P
+        shard_count:
+          type: number
+          title: Shard Count
+          description: Number of shards for Premium clustered cache
+          minimum: 1
+          maximum: 10
+          default: 1
+          x-ui-visible-if:
+            field: spec.version_config.family
+            values:
+            - P
+      required:
+      - sku_name
+      - capacity
+    restore_config:
+      type: object
+      title: Restore Operations
+      properties:
+        restore_from_backup:
+          type: boolean
+          title: Restore from Backup
+          description: Restore cache from existing RDB backup file
+          default: false
+        backup_storage_account_name:
+          type: string
+          title: Backup Storage Account
+          description: Azure Storage Account containing the backup file
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+        backup_container_name:
+          type: string
+          title: Backup Container Name
+          description: Storage container containing backup file
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+        backup_file_name:
+          type: string
+          title: Backup File Name
+          description: RDB backup file name (must end with .rdb)
+          pattern: ^.*\.rdb$
+          x-ui-error-message: Backup file must be an RDB file ending with .rdb
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+    imports:
+      type: object
+      title: Import Existing Resources
+      properties:
+        cache_name:
+          type: string
+          title: Cache Instance Name
+          description: Name of existing Azure Redis Cache instance to import
+        resource_group_name:
+          type: string
+          title: Resource Group Name
+          description: Resource group containing the cache instance
+  required:
+  - version_config
+  - sizing
+inputs:
+  azure_provider:
+    type: '@facets/azure_cloud_account'
+    optional: false
+    displayName: Azure Cloud Account
+    description: Azure cloud provider configuration
+    providers:
+    - azurerm
+  network_details:
+    type: '@facets/azure-network-details'
+    optional: false
+    displayName: Azure Network Details
+    description: Azure VNet and subnet configuration for cache deployment
+outputs:
+  default:
+    type: '@facets/redis-azure-cache'
+    title: Custom Azure Cache for Redis
+imports:
+- name: cache_name
+  resource_address: azurerm_redis_cache.main
+  required: true
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+sample:
+  kind: redis
+  flavor: azure_cache_custom
+  version: '1.0'
+  disabled: true
+  spec:
+    version_config:
+      redis_version: '6'
+      family: P
+    sizing:
+      sku_name: Premium
+      capacity: 1
+    restore_config:
+      restore_from_backup: false

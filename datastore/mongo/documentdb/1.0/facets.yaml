@@ -1,0 +1,146 @@
+intent: mongo
+flavor: aws-documentdb
+version: '1.0'
+clouds:
+- aws
+description: MongoDB-compatible database using AWS DocumentDB service
+spec:
+  title: MongoDB with AWS DocumentDB
+  description: MongoDB-compatible database using AWS DocumentDB service
+  type: object
+  properties:
+    version_config:
+      type: object
+      title: Version & Basic Configuration
+      properties:
+        engine_version:
+          type: string
+          title: DocumentDB Engine Version
+          description: DocumentDB engine version
+          enum:
+          - 4.0.0
+          - 5.0.0
+          - 6.0.0
+          default: 4.0.0
+        port:
+          type: number
+          title: Port
+          description: Port number for DocumentDB cluster
+          minimum: 1024
+          maximum: 65535
+          default: 27017
+    sizing:
+      type: object
+      title: Sizing & Performance
+      properties:
+        instance_class:
+          type: string
+          title: Instance Class
+          description: DocumentDB instance class
+          enum:
+          - db.t3.medium
+          - db.t4g.medium
+          - db.r5.large
+          - db.r5.xlarge
+          - db.r6g.large
+          - db.r6g.xlarge
+          default: db.t4g.medium
+        instance_count:
+          type: number
+          title: Instance Count
+          description: Number of instances in the DocumentDB cluster
+          minimum: 1
+          maximum: 16
+          default: 1
+    restore_config:
+      type: object
+      title: Restore Operations
+      properties:
+        restore_from_snapshot:
+          type: boolean
+          title: Restore from Snapshot
+          description: Restore DocumentDB cluster from existing snapshot
+          default: false
+        snapshot_identifier:
+          type: string
+          title: Snapshot Identifier
+          description: DocumentDB snapshot identifier for restore
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_snapshot
+            values:
+            - true
+        master_username:
+          type: string
+          title: Master Username
+          description: Master username for restored cluster
+          default: docdbadmin
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_snapshot
+            values:
+            - true
+        master_password:
+          type: string
+          title: Master Password
+          description: Master password for restored cluster (8+ characters)
+          minLength: 8
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_snapshot
+            values:
+            - true
+    imports:
+      type: object
+      title: Import Existing Resources
+      properties:
+        cluster_identifier:
+          type: string
+          title: Cluster Identifier
+          description: Existing DocumentDB cluster identifier to import
+        instance_identifiers:
+          type: string
+          title: Instance Identifiers
+          description: Comma-separated list of DocumentDB instance identifiers to
+            import
+  required:
+  - version_config
+  - sizing
+inputs:
+  aws_provider:
+    type: '@facets/aws_cloud_account'
+    optional: false
+    displayName: AWS Provider
+    description: AWS cloud account configuration
+    providers:
+    - aws
+  vpc_details:
+    type: '@facets/aws-vpc-details'
+    optional: false
+    displayName: VPC Details
+    description: VPC configuration for DocumentDB cluster
+outputs:
+  default:
+    type: '@outputs/mongo'
+    title: MongoDB DocumentDB Cluster
+imports:
+- name: cluster_identifier
+  resource_address: aws_docdb_cluster.main
+  required: true
+- name: instance_identifiers
+  resource_address: aws_docdb_cluster_instance.cluster_instances
+  required: false
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+sample:
+  kind: mongo
+  flavor: aws-documentdb
+  version: '1.0'
+  disabled: true
+  spec:
+    version_config:
+      engine_version: 4.0.0
+      port: 27017
+    sizing:
+      instance_class: db.t4g.medium
+      instance_count: 1

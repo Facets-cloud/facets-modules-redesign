@@ -1,0 +1,78 @@
+name: "@facets/redis-azure-cache"
+properties:
+  attributes:
+    type: object
+    title: "Azure Cache for Redis Attributes"
+    description: "Azure Redis Cache specific outputs"
+    properties:
+      cache_name:
+        type: string
+        description: "Name of the Azure Redis Cache instance"
+      hostname:
+        type: string
+        description: "Redis cache hostname"
+      port:
+        type: number
+        description: "Redis cache port"
+      ssl_port:
+        type: number
+        description: "Redis cache SSL port"
+      primary_access_key:
+        type: string
+        description: "Primary access key for authentication"
+      secondary_access_key:
+        type: string
+        description: "Secondary access key for authentication"
+      resource_group_name:
+        type: string
+        description: "Resource group containing the cache"
+      subnet_id:
+        type: string
+        description: "Subnet ID where cache is deployed"
+      redis_version:
+        type: string
+        description: "Redis version being used"
+      sku_name:
+        type: string
+        description: "SKU name of the cache"
+      family:
+        type: string
+        description: "Redis family (C or P)"
+      capacity:
+        type: number
+        description: "Cache capacity"
+      enable_non_ssl_port:
+        type: boolean
+        description: "Whether non-SSL port is enabled"
+      minimum_tls_version:
+        type: string
+        description: "Minimum TLS version"
+      shard_count:
+        type: number
+        description: "Number of shards (Premium only)"
+      replicas_per_master:
+        type: number
+        description: "Replicas per master (Premium only)"
+      location:
+        type: string
+        description: "Azure region location"
+  interfaces:
+    type: object
+    title: "Azure Cache for Redis Interfaces"  
+    description: "Standard Redis interface outputs"
+    properties:
+      cluster:
+        type: object
+        properties:
+          endpoint:
+            type: string
+            description: "Redis cluster endpoint with port"
+          connection_string:
+            type: string
+            description: "Redis connection string"
+          auth_token:
+            type: string
+            description: "Authentication token/access key"
+          port:
+            type: string
+            description: "Redis port as string"

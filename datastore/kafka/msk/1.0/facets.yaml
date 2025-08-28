@@ -1,0 +1,110 @@
+intent: kafka
+flavor: aws-msk
+version: '1.0'
+clouds:
+- aws
+description: AWS Managed Streaming for Apache Kafka cluster with secure defaults and
+  automatic scaling
+spec:
+  title: AWS MSK Kafka Cluster
+  description: AWS Managed Streaming for Apache Kafka cluster with secure defaults
+    and automatic scaling
+  type: object
+  properties:
+    version_config:
+      type: object
+      title: Version & Basic Configuration
+      properties:
+        kafka_version:
+          type: string
+          title: Kafka Version
+          description: Version of the Kafka engine
+          enum:
+          - 2.6.3
+          - 2.7.2
+          - 2.8.1
+          default: 2.8.1
+        instance_type:
+          type: string
+          title: Instance Type
+          description: MSK broker instance type
+          enum:
+          - kafka.t3.small
+          - kafka.m5.large
+          - kafka.m5.xlarge
+          - kafka.m5.2xlarge
+          default: kafka.m5.large
+    sizing:
+      type: object
+      title: Sizing & Performance
+      properties:
+        number_of_broker_nodes:
+          type: number
+          title: Number of Broker Nodes
+          description: Number of broker nodes per availability zone
+          minimum: 1
+          maximum: 15
+          default: 3
+        volume_size:
+          type: number
+          title: Volume Size (GB)
+          description: EBS volume size per broker in GB
+          minimum: 1
+          maximum: 16384
+          default: 100
+        client_subnets_count:
+          type: number
+          title: Client Subnets Count
+          description: Number of subnets to distribute brokers across (2-3 for multi-AZ)
+          minimum: 2
+          maximum: 3
+          default: 3
+    imports:
+      type: object
+      title: Import Existing Resources
+      properties:
+        cluster_arn:
+          type: string
+          title: MSK Cluster ARN
+          description: 'ARN of existing MSK cluster to import (format: arn:aws:kafka:region:account:cluster/name/uuid)'
+  required:
+  - version_config
+  - sizing
+imports:
+- name: cluster_arn
+  resource_address: aws_msk_cluster.main
+  required: false
+inputs:
+  aws_cloud_account:
+    type: '@facets/aws_cloud_account'
+    optional: false
+    displayName: AWS Cloud Account
+    description: AWS cloud account configuration and credentials
+    providers:
+    - aws
+  vpc_details:
+    type: '@facets/aws-vpc-details'
+    optional: false
+    displayName: VPC Details
+    description: VPC configuration for MSK cluster deployment
+outputs:
+  default:
+    type: '@outputs/kafka'
+    title: MSK Kafka Cluster
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+sample:
+  kind: kafka
+  flavor: aws-msk
+  version: '1.0'
+  disabled: true
+  spec:
+    version_config:
+      kafka_version: 2.8.1
+      instance_type: kafka.m5.large
+    sizing:
+      number_of_broker_nodes: 3
+      volume_size: 100
+      client_subnets_count: 3
