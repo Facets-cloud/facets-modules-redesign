@@ -1,0 +1,162 @@
+intent: redis
+flavor: k8s-custom
+version: '1.0'
+clouds:
+- kubernetes
+description: Redis deployment on Kubernetes using Helm chart with developer-friendly
+  configuration
+spec:
+  title: Redis on Kubernetes
+  description: Redis deployment on Kubernetes using Helm chart with developer-friendly
+    configuration
+  type: object
+  properties:
+    version_config:
+      type: object
+      title: Version & Basic Configuration
+      properties:
+        redis_version:
+          type: string
+          title: Redis Version
+          description: Version of Redis to deploy
+          enum:
+          - '6.2'
+          - '7.0'
+          - '7.2'
+          default: '7.2'
+        architecture:
+          type: string
+          title: Architecture
+          description: Redis deployment architecture
+          enum:
+          - standalone
+          - replication
+          default: replication
+    sizing:
+      type: object
+      title: Sizing & Performance
+      properties:
+        memory_limit:
+          type: string
+          title: Memory Limit
+          description: Memory limit per Redis instance
+          enum:
+          - 256Mi
+          - 512Mi
+          - 1Gi
+          - 2Gi
+          - 4Gi
+          - 8Gi
+          default: 1Gi
+        cpu_limit:
+          type: string
+          title: CPU Limit
+          description: CPU limit per Redis instance
+          enum:
+          - 100m
+          - 250m
+          - 500m
+          - 1000m
+          - 2000m
+          default: 500m
+        storage_size:
+          type: string
+          title: Storage Size
+          description: Persistent storage size for Redis data
+          enum:
+          - 1Gi
+          - 5Gi
+          - 10Gi
+          - 20Gi
+          - 50Gi
+          - 100Gi
+          default: 10Gi
+        replica_count:
+          type: number
+          title: Replica Count
+          description: Number of Redis replica instances
+          minimum: 0
+          maximum: 5
+          default: 1
+          x-ui-visible-if:
+            field: spec.version_config.architecture
+            values:
+            - replication
+    restore_config:
+      type: object
+      title: Restore Operations
+      properties:
+        restore_from_backup:
+          type: boolean
+          title: Restore from Backup
+          description: Restore Redis from existing backup
+          default: false
+        backup_source_path:
+          type: string
+          title: Backup Source Path
+          description: Path to Redis backup file (RDB format)
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+    imports:
+      type: object
+      title: Import Existing Resources
+      properties:
+        helm_release_name:
+          type: string
+          title: Helm Release Name
+          description: Name of existing Helm release to import
+        secret_name:
+          type: string
+          title: Secret Name
+          description: Name of existing Kubernetes secret containing Redis credentials
+        service_name:
+          type: string
+          title: Service Name
+          description: Name of existing Kubernetes service for Redis
+  required:
+  - version_config
+  - sizing
+imports:
+- name: helm_release_name
+  resource_address: helm_release.redis
+  required: false
+- name: secret_name
+  resource_address: kubernetes_secret.redis_auth
+  required: false
+inputs:
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Target Kubernetes cluster for Redis deployment
+    providers:
+    - kubernetes
+    - helm
+outputs:
+  default:
+    type: '@facets/redis-k8s-custom'
+    title: Redis K8s Custom Deployment
+  interfaces:
+    type: '@facets/redis-interface'
+    title: Redis Connection Interface
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+sample:
+  kind: redis
+  flavor: k8s-custom
+  version: '1.0'
+  disabled: true
+  spec:
+    version_config:
+      redis_version: '7.2'
+      architecture: replication
+    sizing:
+      memory_limit: 1Gi
+      cpu_limit: 500m
+      storage_size: 10Gi
+      replica_count: 1
