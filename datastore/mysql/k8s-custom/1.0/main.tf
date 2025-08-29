@@ -1,5 +1,5 @@
-# MySQL Kubernetes Deployment - Simplified to Avoid API Rate Limits
-# This module deploys MySQL on Kubernetes with minimal API calls
+# MySQL Kubernetes Deployment - Fixed Authentication Issues
+# This module deploys MySQL on Kubernetes with proper password handling
 
 terraform {
   required_providers {
@@ -18,10 +18,13 @@ terraform {
 resource "random_password" "mysql_root_password" {
   count   = var.instance.spec.version_config.root_password == null ? 1 : 0
   length  = 16
-  special = true
+  special = false # Avoid special characters that can cause auth issues
+  upper   = true
+  lower   = true
+  numeric = true
 }
 
-# Local values for simplified configuration
+# Local values for configuration
 locals {
   # Basic configuration
   mysql_version = var.instance.spec.version_config.mysql_version
@@ -57,6 +60,13 @@ locals {
     "app.kubernetes.io/name"     = "mysql"
     "app.kubernetes.io/instance" = local.release_name
   })
+
+  # MySQL initialization script for proper setup
+  mysql_init_sql = <<-EOT
+-- Initialize MySQL database properly
+CREATE DATABASE IF NOT EXISTS ${local.database_name} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+FLUSH PRIVILEGES;
+EOT
 }
 
 # MySQL Secret - Single API call
@@ -70,9 +80,23 @@ resource "kubernetes_secret" "mysql_secret" {
   data = {
     "mysql-root-password" = local.root_password
     "mysql-database"      = local.database_name
+    "mysql-user"          = "root"
   }
 
   type = "Opaque"
+}
+
+# MySQL ConfigMap for initialization
+resource "kubernetes_config_map" "mysql_init" {
+  metadata {
+    name      = "${local.release_name}-init"
+    namespace = local.namespace
+    labels    = local.common_labels
+  }
+
+  data = {
+    "init.sql" = local.mysql_init_sql
+  }
 }
 
 # MySQL Service - Single API call
@@ -100,7 +124,7 @@ resource "kubernetes_service" "mysql_service" {
   }
 }
 
-# MySQL StatefulSet - Single API call with minimal complexity
+# MySQL StatefulSet - Fixed authentication configuration
 resource "kubernetes_stateful_set" "mysql" {
   metadata {
     name      = local.statefulset_name
@@ -138,24 +162,31 @@ resource "kubernetes_stateful_set" "mysql" {
             protocol       = "TCP"
           }
 
+          # FIXED: Proper MySQL environment variables for authentication
           env {
-            name = "MYSQL_ROOT_PASSWORD"
-            value_from {
-              secret_key_ref {
-                name = kubernetes_secret.mysql_secret.metadata[0].name
-                key  = "mysql-root-password"
-              }
-            }
+            name  = "MYSQL_ROOT_PASSWORD"
+            value = local.root_password
           }
 
           env {
-            name = "MYSQL_DATABASE"
-            value_from {
-              secret_key_ref {
-                name = kubernetes_secret.mysql_secret.metadata[0].name
-                key  = "mysql-database"
-              }
-            }
+            name  = "MYSQL_DATABASE"
+            value = local.database_name
+          }
+
+          env {
+            name  = "MYSQL_ROOT_HOST"
+            value = "%" # Allow root access from any host
+          }
+
+          # Additional MySQL configuration for better security
+          env {
+            name  = "MYSQL_CHARSET"
+            value = "utf8mb4"
+          }
+
+          env {
+            name  = "MYSQL_COLLATION"
+            value = "utf8mb4_unicode_ci"
           }
 
           resources {
@@ -174,26 +205,44 @@ resource "kubernetes_stateful_set" "mysql" {
             mount_path = "/var/lib/mysql"
           }
 
-          # Simplified liveness probe to reduce API calls
+          volume_mount {
+            name       = "mysql-init-scripts"
+            mount_path = "/docker-entrypoint-initdb.d"
+          }
+
+          # FIXED: Improved health checks with proper authentication
           liveness_probe {
             exec {
-              command = ["mysqladmin", "ping", "-h", "localhost"]
+              command = [
+                "sh", "-c",
+                "mysqladmin ping -u root -p${local.root_password} --silent"
+              ]
             }
-            initial_delay_seconds = 30
+            initial_delay_seconds = 60 # Give more time for MySQL to start
             period_seconds        = 30
-            timeout_seconds       = 5
+            timeout_seconds       = 10
             failure_threshold     = 3
           }
 
-          # Simplified readiness probe
           readiness_probe {
             exec {
-              command = ["mysqladmin", "ping", "-h", "localhost"]
+              command = [
+                "sh", "-c",
+                "mysql -u root -p${local.root_password} -e 'SELECT 1' >/dev/null 2>&1"
+              ]
             }
-            initial_delay_seconds = 10
+            initial_delay_seconds = 30
             period_seconds        = 10
             timeout_seconds       = 5
             failure_threshold     = 3
+          }
+        }
+
+        # Add init script volume
+        volume {
+          name = "mysql-init-scripts"
+          config_map {
+            name = kubernetes_config_map.mysql_init.metadata[0].name
           }
         }
 

@@ -11,7 +11,7 @@ locals {
     database_name    = local.database_name
     mysql_version    = local.mysql_version
     replica_count    = local.replica_count
-    configmap_name   = "\"\""
+    configmap_name   = kubernetes_config_map.mysql_init.metadata[0].name
     reader_endpoint  = local.reader_endpoint
     primary_endpoint = local.primary_endpoint
     statefulset_name = kubernetes_stateful_set.mysql.metadata[0].name
