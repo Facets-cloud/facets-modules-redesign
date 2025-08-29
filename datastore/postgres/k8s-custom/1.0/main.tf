@@ -40,6 +40,9 @@ resource "helm_release" "postgresql" {
   cleanup_on_fail = true
   wait            = true
   wait_for_jobs   = true
+
+  # Force recreation when password changes
+  replace = true
 }
 
 # Kubernetes service for external access (if needed)

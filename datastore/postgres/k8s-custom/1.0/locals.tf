@@ -47,17 +47,30 @@ locals {
 
   # Helm values for PostgreSQL - base configuration
   postgres_values_base = {
+    # Global authentication (ensure consistency)
+    global = {
+      postgresql = {
+        auth = {
+          postgresPassword = local.master_password
+          username         = local.master_username
+          password         = local.master_password
+          database         = local.database_name
+        }
+      }
+    }
+
     # Image configuration
     image = {
       tag = local.postgres_version
     }
 
-    # Authentication configuration
+    # Authentication configuration (fixed password handling)
     auth = {
-      username       = local.master_username
-      password       = local.master_password
-      database       = local.database_name
-      existingSecret = local.restore_from_backup && var.instance.spec.imports != null ? lookup(var.instance.spec.imports, "secret_name", "") : ""
+      postgresPassword = local.master_password
+      username         = local.master_username
+      password         = local.master_password
+      database         = local.database_name
+      existingSecret   = local.restore_from_backup && var.instance.spec.imports != null ? lookup(var.instance.spec.imports, "secret_name", "") : ""
     }
 
     # Architecture configuration
