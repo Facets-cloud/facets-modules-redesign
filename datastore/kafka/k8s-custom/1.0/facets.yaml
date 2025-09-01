@@ -1,0 +1,123 @@
+intent: kafka
+flavor: k8s-custom
+version: '1.0'
+clouds:
+- kubernetes
+description: Apache Kafka cluster deployment on Kubernetes using Helm
+spec:
+  title: Kafka on Kubernetes
+  description: Apache Kafka cluster deployment on Kubernetes using Helm
+  type: object
+  properties:
+    version_config:
+      type: object
+      title: Version & Basic Configuration
+      properties:
+        version:
+          type: string
+          title: Kafka Version
+          description: Version of Apache Kafka
+          enum:
+          - '2.8'
+          - '3.4'
+          - '3.6'
+          default: '3.6'
+        cluster_size:
+          type: number
+          title: Cluster Size
+          description: Number of Kafka brokers in the cluster
+          minimum: 1
+          maximum: 10
+          default: 3
+    sizing:
+      type: object
+      title: Sizing & Performance
+      properties:
+        storage_size:
+          type: number
+          title: Storage Size (GB)
+          description: Storage allocation per broker in GB
+          minimum: 10
+          default: 100
+        memory_limit:
+          type: string
+          title: Memory Limit
+          description: Memory allocation per broker
+          default: 2Gi
+        cpu_limit:
+          type: string
+          title: CPU Limit
+          description: CPU allocation per broker
+          default: 1000m
+        enable_persistence:
+          type: boolean
+          title: Enable Persistence
+          description: Enable persistent storage for Kafka data
+          default: true
+    restore_config:
+      type: object
+      title: Restore Operations
+      properties:
+        restore_from_backup:
+          type: boolean
+          title: Restore from Backup
+          description: Restore Kafka data from existing backup
+          default: false
+        backup_source:
+          type: string
+          title: Backup Source
+          description: Source location for backup restoration
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+    imports:
+      type: object
+      title: Import Existing Resources
+      properties:
+        helm_release_name:
+          type: string
+          title: Helm Release Name
+          description: Name of existing Helm release to import
+  required:
+  - version_config
+  - sizing
+inputs:
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Target Kubernetes cluster for Kafka deployment
+    providers:
+    - kubernetes
+    - helm
+outputs:
+  default:
+    type: '@facets/kafka-k8s-custom'
+    title: Kafka on Kubernetes Cluster
+  interfaces:
+    type: '@facets/kafka-interface'
+    title: Kafka Connection Interface
+imports:
+- name: helm_release_name
+  resource_address: helm_release.kafka
+  required: false
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+sample:
+  kind: kafka
+  flavor: k8s-custom
+  version: '1.0'
+  disabled: true
+  spec:
+    version_config:
+      version: '3.6'
+      cluster_size: 3
+    sizing:
+      storage_size: 100
+      memory_limit: 2Gi
+      cpu_limit: 1000m
+      enable_persistence: true
