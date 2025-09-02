@@ -1,5 +1,5 @@
 intent: network
-flavor: gcp-vpc
+flavor: gcp_vpc
 version: '1.0'
 description: Creates a GCP VPC with configurable public subnets, private subnets,
   and database subnets across multiple zones
@@ -206,7 +206,7 @@ outputs:
     type: '@facets/gcp-network-details'
 sample:
   kind: network
-  flavor: gcp-vpc
+  flavor: gcp_vpc
   version: '1.0'
   spec:
     vpc_cidr: 10.0.0.0/16
