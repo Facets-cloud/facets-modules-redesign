@@ -46,7 +46,7 @@ resource "google_sql_database_instance" "main" {
       enable_private_path_for_google_cloud_services = true
     }
 
-    # Database flags for security
+    # Minimal database flags to avoid conflicts
     database_flags {
       name  = "cloudsql.iam_authentication"
       value = "on"
@@ -63,15 +63,12 @@ resource "google_sql_database_instance" "main" {
     )
   }
 
-  # Allow destruction and handle concurrent modifications  
+  # Simple lifecycle management
   lifecycle {
     prevent_destroy = false
     ignore_changes = [
-      settings[0].disk_size,      # Allow auto-resize to work
-      settings[0].user_labels,    # Ignore label changes
-      settings[0].database_flags, # Ignore flag changes that might cause conflicts
+      settings[0].disk_size, # Allow auto-resize to work
     ]
-    create_before_destroy = false # Avoid conflicts during updates
   }
 
   # Handle restore from backup scenario
@@ -106,6 +103,7 @@ resource "google_sql_database_instance" "read_replica" {
   region               = var.inputs.network.attributes.region
   database_version     = "POSTGRES_${var.instance.spec.version_config.version}"
   project              = var.inputs.gcp_provider.attributes.project
+  deletion_protection  = false
 
   replica_configuration {
     failover_target = false
@@ -140,7 +138,11 @@ resource "google_sql_database_instance" "read_replica" {
     )
   }
 
+  # Simple lifecycle management for replicas
   lifecycle {
     prevent_destroy = false
+    ignore_changes = [
+      settings[0].disk_size, # Allow auto-resize to work
+    ]
   }
 }
