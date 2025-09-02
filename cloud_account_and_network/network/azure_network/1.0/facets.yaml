@@ -1,5 +1,5 @@
 intent: network
-flavor: azure_network
+flavor: azure-network
 version: '1.0'
 description: Creates an Azure Virtual Network with automatically calculated subnet
   sizes from a /16 CIDR range, with one public and one private subnet per availability
@@ -71,7 +71,7 @@ outputs:
     type: '@facets/azure-network-details'
 sample:
   kind: network
-  flavor: azure_network
+  flavor: azure-network
   version: '1.0'
   spec:
     vnet_cidr: 10.0.0.0/16
