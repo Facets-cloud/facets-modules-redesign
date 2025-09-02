@@ -15,7 +15,6 @@ resource "google_service_networking_connection" "private_vpc_connection" {
 
   lifecycle {
     prevent_destroy = false
-    # Ignore changes to avoid conflicts during updates
     ignore_changes = [reserved_peering_ranges]
   }
 }
@@ -28,6 +27,7 @@ resource "random_password" "mysql_password" {
 }
 
 # CloudSQL MySQL instance
+# NOTE: Read replicas must be deleted before the master instance can be deleted
 resource "google_sql_database_instance" "mysql_instance" {
   name                = "${var.instance_name}-${var.environment.unique_name}"
   database_version    = "MYSQL_${replace(var.instance.spec.version_config.version, ".", "_")}"
