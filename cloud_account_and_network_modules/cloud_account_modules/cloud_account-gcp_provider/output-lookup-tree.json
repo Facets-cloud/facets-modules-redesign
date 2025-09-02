@@ -1,0 +1,13 @@
+{
+    "out": {
+        "attributes": {
+            "project": {},
+            "credentials": {},
+            "secrets": {
+                "type": "array",
+                "items": {}
+            }
+        },
+        "interfaces": {}
+    }
+}

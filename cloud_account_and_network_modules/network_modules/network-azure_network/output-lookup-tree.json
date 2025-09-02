@@ -1,0 +1,21 @@
+{
+    "out": {
+        "attributes": {
+            "resource_group_id": {},
+            "resource_group_name": {},
+            "vnet_id": {},
+            "vnet_name": {},
+            "vnet_cidr_block": {},
+            "region": {},
+            "availability_zones": {},
+            "nat_gateway_ids": {},
+            "nat_gateway_public_ip_ids": {},
+            "public_subnet_ids": {},
+            "private_subnet_ids": {},
+            "public_subnet_cidrs": {},
+            "private_subnet_cidrs": {},
+            "default_security_group_id": {}
+        },
+        "interfaces": {}
+    }
+}

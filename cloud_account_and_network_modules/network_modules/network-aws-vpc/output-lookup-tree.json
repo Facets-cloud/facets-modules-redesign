@@ -1,0 +1,21 @@
+{
+    "out": {
+        "attributes": {
+            "vpc_id": {},
+            "vpc_cidr_block": {},
+            "nat_gateway_ids": {},
+            "public_subnet_ids": {},
+            "availability_zones": {},
+            "private_subnet_ids": {},
+            "database_subnet_ids": {},
+            "database_subnet_group_name": {},
+            "internet_gateway_id": {},
+            "vpc_endpoint_s3_id": {},
+            "vpc_endpoint_dynamodb_id": {},
+            "vpc_endpoint_ecr_api_id": {},
+            "vpc_endpoint_ecr_dkr_id": {},
+            "vpc_endpoints_security_group_id": {}
+        },
+        "interfaces": {}
+    }
+}
