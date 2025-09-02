@@ -1,0 +1,166 @@
+intent: postgres
+flavor: gcp-cloudsql
+version: '1.0'
+clouds:
+- gcp
+description: Managed PostgreSQL database using Google Cloud SQL with secure defaults
+  and high availability
+spec:
+  title: PostgreSQL CloudSQL Database
+  description: Managed PostgreSQL database using Google Cloud SQL with secure defaults
+    and high availability
+  type: object
+  properties:
+    version_config:
+      type: object
+      title: Version & Basic Configuration
+      properties:
+        version:
+          type: string
+          title: PostgreSQL Version
+          description: Version of the PostgreSQL database engine
+          enum:
+          - '13'
+          - '14'
+          - '15'
+          default: '15'
+        database_name:
+          type: string
+          title: Database Name
+          description: Name of the default database to create
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+          default: app_db
+    sizing:
+      type: object
+      title: Sizing & Performance
+      properties:
+        tier:
+          type: string
+          title: Instance Tier
+          description: Cloud SQL instance tier
+          enum:
+          - db-f1-micro
+          - db-g1-small
+          - db-n1-standard-1
+          - db-n1-standard-2
+          - db-n1-standard-4
+          default: db-g1-small
+        disk_size:
+          type: number
+          title: Disk Size (GB)
+          description: Initial disk size in GB
+          minimum: 10
+          maximum: 30720
+          default: 100
+        read_replica_count:
+          type: number
+          title: Read Replica Count
+          description: Number of read replicas to create
+          minimum: 0
+          maximum: 5
+          default: 0
+    restore_config:
+      type: object
+      title: Restore Operations
+      properties:
+        restore_from_backup:
+          type: boolean
+          title: Restore from Backup
+          description: Restore database from existing backup
+          default: false
+        source_instance_id:
+          type: string
+          title: Source Instance ID
+          description: Source Cloud SQL instance ID for restore
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+        master_username:
+          type: string
+          title: Master Username
+          description: Master username for restored database (required when restoring)
+          default: postgres
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+        master_password:
+          type: string
+          title: Master Password
+          description: Master password for restored database (required when restoring)
+          x-ui-secret-ref: true
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+    imports:
+      type: object
+      title: Import Existing Resources
+      x-ui-toggle: true
+      properties:
+        instance_id:
+          type: string
+          title: Cloud SQL Instance ID
+          description: ID of existing Cloud SQL instance to import
+        database_name:
+          type: string
+          title: Database Name
+          description: Name of existing database to import
+        user_name:
+          type: string
+          title: User Name
+          description: Name of existing database user to import
+  required:
+  - version_config
+  - sizing
+imports:
+- name: instance_id
+  resource_address: google_sql_database_instance.main
+  required: false
+- name: database_name
+  resource_address: google_sql_database.default
+  required: false
+- name: user_name
+  resource_address: google_sql_user.master_user
+  required: false
+inputs:
+  gcp_provider:
+    type: '@facets/gcp_cloud_account'
+    optional: false
+    displayName: GCP Provider
+    description: GCP cloud account configuration and credentials
+    providers:
+    - google
+  network:
+    type: '@facets/gcp-network-details'
+    optional: false
+    displayName: GCP Network
+    description: GCP VPC network configuration for database placement
+outputs:
+  default:
+    type: '@facets/postgres-gcp-cloudsql'
+    title: PostgreSQL CloudSQL Instance
+  interfaces:
+    type: '@facets/postgres-interface'
+    title: PostgreSQL Interface
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+sample:
+  kind: postgres
+  flavor: gcp-cloudsql
+  version: '1.0'
+  disabled: true
+  spec:
+    version_config:
+      version: '15'
+      database_name: app_db
+    sizing:
+      tier: db-g1-small
+      disk_size: 100
+      read_replica_count: 0
+    restore_config:
+      restore_from_backup: false
