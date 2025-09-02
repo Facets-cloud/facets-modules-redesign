@@ -1,0 +1,171 @@
+intent: mongo
+flavor: k8s-custom
+version: '1.0'
+clouds:
+- kubernetes
+description: Deploys and manages MongoDB database instances on Kubernetes using Helm
+  charts with secure defaults and high availability
+spec:
+  title: MongoDB Database on Kubernetes
+  description: Deploys and manages MongoDB database instances on Kubernetes using
+    Helm charts with secure defaults and high availability
+  type: object
+  properties:
+    version_config:
+      type: object
+      title: Version & Basic Configuration
+      properties:
+        mongo_version:
+          type: string
+          title: MongoDB Version
+          description: Version of the MongoDB database engine
+          enum:
+          - '6.0'
+          - '7.0'
+          - '8.0'
+          default: '8.0'
+        database_name:
+          type: string
+          title: Initial Database Name
+          description: Name of the initial database to create
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]{0,62}$
+          default: myapp
+        root_password:
+          type: string
+          title: Root Password
+          description: MongoDB root user password (leave empty for auto-generated)
+          minLength: 8
+        namespace:
+          type: string
+          title: Kubernetes Namespace
+          description: Namespace where MongoDB will be deployed
+          pattern: ^[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$
+          default: default
+    sizing:
+      type: object
+      title: Sizing & Performance
+      properties:
+        replica_count:
+          type: number
+          title: Replica Count
+          description: Number of MongoDB replicas (1 for single instance, 3+ for HA)
+          minimum: 1
+          maximum: 7
+          default: 1
+        storage_size:
+          type: string
+          title: Storage Size
+          description: Storage size per replica (e.g., 20Gi, 100Gi)
+          pattern: ^[0-9]+[KMGT]i$
+          default: 20Gi
+        cpu_request:
+          type: string
+          title: CPU Request
+          description: CPU resource request (e.g., 500m, 1000m)
+          default: 500m
+        memory_request:
+          type: string
+          title: Memory Request
+          description: Memory resource request (e.g., 1Gi, 2Gi)
+          default: 1Gi
+        cpu_limit:
+          type: string
+          title: CPU Limit
+          description: CPU resource limit (e.g., 1000m, 2000m)
+          default: 1000m
+        memory_limit:
+          type: string
+          title: Memory Limit
+          description: Memory resource limit (e.g., 2Gi, 4Gi)
+          default: 2Gi
+    restore_config:
+      type: object
+      title: Restore Operations
+      properties:
+        restore_from_backup:
+          type: boolean
+          title: Restore from Backup
+          description: Restore MongoDB from existing backup
+          default: false
+        backup_source_pvc:
+          type: string
+          title: Backup Source PVC
+          description: PVC containing backup data to restore from
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+        init_js_configmap:
+          type: string
+          title: Init JS ConfigMap
+          description: ConfigMap containing JavaScript initialization scripts
+    imports:
+      type: object
+      title: Import Existing Resources
+      properties:
+        statefulset_name:
+          type: string
+          title: StatefulSet Name
+          description: Name of existing MongoDB StatefulSet to import
+        service_name:
+          type: string
+          title: Service Name
+          description: Name of existing MongoDB service to import
+        secret_name:
+          type: string
+          title: Secret Name
+          description: Name of existing MongoDB secret to import
+        configmap_name:
+          type: string
+          title: ConfigMap Name
+          description: Name of existing MongoDB ConfigMap to import
+        pvc_names:
+          type: string
+          title: PVC Names
+          description: Comma-separated list of PVC names to import
+  required:
+  - version_config
+  - sizing
+inputs:
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Target Kubernetes cluster for MongoDB deployment
+    providers:
+    - kubernetes
+    - helm
+outputs:
+  default:
+    type: '@facets/mongo'
+    title: MongoDB Kubernetes Deployment
+imports:
+- name: statefulset_name
+  resource_address: kubernetes_stateful_set.mongodb
+  required: false
+- name: service_name
+  resource_address: kubernetes_service.mongodb_service
+  required: false
+- name: secret_name
+  resource_address: kubernetes_secret.mongodb_secret
+  required: false
+- name: configmap_name
+  resource_address: kubernetes_config_map.mongodb_init
+  required: false
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+sample:
+  kind: mongo
+  flavor: k8s-custom
+  version: '1.0'
+  disabled: true
+  spec:
+    version_config:
+      mongo_version: '8.0'
+      database_name: myapp
+      namespace: default
+    sizing:
+      replica_count: 1
+      storage_size: 20Gi
