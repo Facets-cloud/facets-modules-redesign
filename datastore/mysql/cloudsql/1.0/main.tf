@@ -1,37 +1,6 @@
-# Private IP range for CloudSQL
-resource "google_compute_global_address" "private_ip_range" {
-  name          = "${var.instance_name}-${var.environment.unique_name}-private-ip"
-  purpose       = "VPC_PEERING"
-  address_type  = "INTERNAL"
-  prefix_length = 16
-  network       = var.inputs.network.attributes.vpc_self_link
-}
-
-# Private services connection for CloudSQL
-resource "google_service_networking_connection" "private_vpc_connection" {
-  network                 = var.inputs.network.attributes.vpc_self_link
-  service                 = "servicenetworking.googleapis.com"
-  reserved_peering_ranges = [google_compute_global_address.private_ip_range.name]
-
-  lifecycle {
-    prevent_destroy = false
-    # Complete ignore approach - let the connection persist if needed
-    ignore_changes = [
-      reserved_peering_ranges,
-      service,
-      network
-    ]
-    # Don't try to delete if it would fail
-    create_before_destroy = false
-  }
-
-  # Extended timeouts for better handling
-  timeouts {
-    create = "30m"
-    update = "30m"
-    delete = "30m"
-  }
-}
+# Use existing private services connection from network module
+# No need to create new private IP range or service networking connection
+# The network module already provides these resources
 
 # Random password for MySQL root user (when not restoring from backup)
 resource "random_password" "mysql_password" {
@@ -48,8 +17,8 @@ resource "google_sql_database_instance" "mysql_instance" {
   region              = var.inputs.network.attributes.region
   deletion_protection = false
 
-  # Ensure private connection is established before creating instance
-  depends_on = [google_service_networking_connection.private_vpc_connection]
+  # Use existing private services connection from network module
+  # Connection dependency is managed by the network module
 
   # Clone configuration for restore operations
   dynamic "clone" {
@@ -82,12 +51,13 @@ resource "google_sql_database_instance" "mysql_instance" {
       transaction_log_retention_days = 7
     }
 
-    # IP configuration for private networking
+    # IP configuration for private networking using existing network module resources
     ip_configuration {
       ipv4_enabled                                  = false
       private_network                               = var.inputs.network.attributes.vpc_self_link
       enable_private_path_for_google_cloud_services = true
-      allocated_ip_range                            = null
+      # Let CloudSQL use the existing private services range managed by network module
+      allocated_ip_range = null
     }
 
     # Database flags for security and performance
@@ -165,11 +135,13 @@ resource "google_sql_database_instance" "read_replica" {
   settings {
     tier = var.instance.spec.sizing.tier
 
-    # IP configuration matching master
+    # IP configuration matching master - using existing network module resources
     ip_configuration {
       ipv4_enabled                                  = false
       private_network                               = var.inputs.network.attributes.vpc_self_link
       enable_private_path_for_google_cloud_services = true
+      # Let CloudSQL use the existing private services range managed by network module
+      allocated_ip_range = null
     }
 
     # User labels

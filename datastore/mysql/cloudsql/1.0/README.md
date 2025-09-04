@@ -19,17 +19,18 @@ This module is environment-aware and will create unique resources per environmen
 - **MySQL Database** - Initial application database with specified name  
 - **Database User** - Root user with auto-generated secure password
 - **Read Replicas** - Optional read-only replicas for improved performance
-- **Private IP Configuration** - Secure private network connectivity only
+
+Note: This module uses existing private networking infrastructure provided by the network module and does not create additional private IP ranges or service connections.
 
 ## Security Considerations
 
 This module implements several security best practices by default:
-- **Private networking only** - No public IP addresses assigned
+- **Private networking only** - Uses existing private services connection from network module
 - **Encryption at rest and in transit** - All data encrypted automatically
 - **Regional high availability** - Multi-zone deployment for resilience
 - **Automated backups** - 7-day retention with point-in-time recovery
 - **Secure password generation** - Random passwords for new instances
-- **Network isolation** - Uses provided VPC for database subnet allocation
+- **Network isolation** - Uses provided VPC and existing private services infrastructure
 
 ## Key Features
 
@@ -52,7 +53,7 @@ Automatic disk resize enabled with intelligent limits to prevent runaway costs w
 
 This module requires:
 - **GCP Cloud Account** (`@facets/gcp_cloud_account`) - Provides GCP provider configuration
-- **VPC Network** (`@facets/gcp-network-details`) - Provides networking infrastructure for private IP setup
+- **VPC Network** (`@facets/gcp-network-details`) - Provides networking infrastructure including pre-configured private services connection for CloudSQL
 
 ## Module Outputs
 
