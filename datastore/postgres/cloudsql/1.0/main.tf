@@ -1,33 +1,45 @@
-# Random password generation for database user
-resource "random_password" "master_password" {
+# Use existing private services connection from network module
+# No need to create new private IP range or service networking connection
+# The network module already provides these resources
+
+# Random password for PostgreSQL user (when not restoring from backup)
+resource "random_password" "postgres_password" {
   count   = var.instance.spec.restore_config.restore_from_backup ? 0 : 1
   length  = 16
   special = true
 }
 
-# Cloud SQL Database Instance
-resource "google_sql_database_instance" "main" {
-  name             = local.instance_identifier
-  database_version = "POSTGRES_${var.instance.spec.version_config.version}"
-  region           = var.inputs.network.attributes.region
-  project          = var.inputs.gcp_provider.attributes.project
-
-  # Deletion protection disabled for easy cleanup
+# CloudSQL PostgreSQL instance
+# NOTE: Read replicas must be deleted before the master instance can be deleted
+resource "google_sql_database_instance" "postgres_instance" {
+  name                = local.instance_identifier
+  database_version    = "POSTGRES_${var.instance.spec.version_config.version}"
+  region              = var.inputs.network.attributes.region
   deletion_protection = false
+
+  # Use existing private services connection from network module
+  # Connection dependency is managed by the network module
+
+  # Clone configuration for restore operations
+  dynamic "clone" {
+    for_each = var.instance.spec.restore_config.restore_from_backup ? [1] : []
+    content {
+      source_instance_name = var.instance.spec.restore_config.source_instance_id
+    }
+  }
 
   settings {
     tier = var.instance.spec.sizing.tier
 
     # Disk configuration
-    disk_type             = "PD_SSD"
     disk_size             = var.instance.spec.sizing.disk_size
+    disk_type             = "PD_SSD"
     disk_autoresize       = true
     disk_autoresize_limit = var.instance.spec.sizing.disk_size * 2
 
-    # Availability configuration - always enable HA
+    # High availability and backup configuration (hardcoded for security)
     availability_type = "REGIONAL"
 
-    # Backup configuration - secure defaults
     backup_configuration {
       enabled                        = true
       start_time                     = "03:00"
@@ -39,24 +51,38 @@ resource "google_sql_database_instance" "main" {
       location = var.inputs.network.attributes.region
     }
 
-    # Network configuration
+    # IP configuration for private networking using existing network module resources
     ip_configuration {
       ipv4_enabled                                  = false
-      private_network                               = var.inputs.network.attributes.vpc_id
+      private_network                               = var.inputs.network.attributes.vpc_self_link
       enable_private_path_for_google_cloud_services = true
+      # Let CloudSQL use the existing private services range managed by network module
+      allocated_ip_range = null
     }
 
-    # Minimal database flags to avoid conflicts
+    # Database flags for security and performance
     database_flags {
-      name  = "cloudsql.iam_authentication"
+      name  = "log_checkpoints"
       value = "on"
+    }
+
+    database_flags {
+      name  = "log_connections"
+      value = "on"
+    }
+
+    # Maintenance window
+    maintenance_window {
+      day          = 7 # Sunday
+      hour         = 3 # 3 AM
+      update_track = "stable"
     }
 
     # User labels for resource management
     user_labels = merge(
       var.environment.cloud_tags,
       {
-        managed_by = "facets"
+        managed-by = "facets"
         intent     = var.instance.kind
         flavor     = var.instance.flavor
       }
@@ -78,39 +104,28 @@ resource "google_sql_database_instance" "main" {
       deletion_protection,               # Ignore deletion protection changes
     ]
   }
-
-  # Handle restore from backup scenario
-  dynamic "restore_backup_context" {
-    for_each = var.instance.spec.restore_config.restore_from_backup ? [1] : []
-    content {
-      backup_run_id = var.instance.spec.restore_config.source_instance_id
-    }
-  }
 }
 
-# Default database creation
-resource "google_sql_database" "default" {
+# Initial database
+resource "google_sql_database" "initial_database" {
   name     = var.instance.spec.version_config.database_name
-  instance = google_sql_database_instance.main.name
-  project  = var.inputs.gcp_provider.attributes.project
+  instance = google_sql_database_instance.postgres_instance.name
 }
 
-# Master user creation
-resource "google_sql_user" "master_user" {
+# PostgreSQL user configuration
+resource "google_sql_user" "postgres_user" {
   name     = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_username : "postgres"
-  instance = google_sql_database_instance.main.name
-  password = local.master_password
-  project  = var.inputs.gcp_provider.attributes.project
+  instance = google_sql_database_instance.postgres_instance.name
+  password = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_password : random_password.postgres_password[0].result
 }
 
-# Read replicas (if requested)
+# Read replicas (if specified)
 resource "google_sql_database_instance" "read_replica" {
   count                = var.instance.spec.sizing.read_replica_count
-  name                 = "${var.instance_name}-${var.environment.unique_name}-replica-${count.index + 1}"
-  master_instance_name = google_sql_database_instance.main.name
+  name                 = "${local.instance_identifier}-replica-${count.index + 1}"
+  database_version     = google_sql_database_instance.postgres_instance.database_version
   region               = var.inputs.network.attributes.region
-  database_version     = "POSTGRES_${var.instance.spec.version_config.version}"
-  project              = var.inputs.gcp_provider.attributes.project
+  master_instance_name = google_sql_database_instance.postgres_instance.name
   deletion_protection  = false
 
   replica_configuration {
@@ -120,28 +135,23 @@ resource "google_sql_database_instance" "read_replica" {
   settings {
     tier = var.instance.spec.sizing.tier
 
-    # Disk configuration
-    disk_type       = "PD_SSD"
-    disk_autoresize = true
-
-    # Availability configuration
-    availability_type = "ZONAL"
-
-    # Network configuration
+    # IP configuration matching master - using existing network module resources
     ip_configuration {
       ipv4_enabled                                  = false
-      private_network                               = var.inputs.network.attributes.vpc_id
+      private_network                               = var.inputs.network.attributes.vpc_self_link
       enable_private_path_for_google_cloud_services = true
+      # Let CloudSQL use the existing private services range managed by network module
+      allocated_ip_range = null
     }
 
-    # User labels for resource management
+    # User labels
     user_labels = merge(
       var.environment.cloud_tags,
       {
-        managed_by = "facets"
+        managed-by = "facets"
         intent     = var.instance.kind
         flavor     = var.instance.flavor
-        replica    = "true"
+        replica-of = google_sql_database_instance.postgres_instance.name
       }
     )
   }
