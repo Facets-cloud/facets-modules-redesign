@@ -15,7 +15,21 @@ resource "google_service_networking_connection" "private_vpc_connection" {
 
   lifecycle {
     prevent_destroy = false
-    ignore_changes = [reserved_peering_ranges]
+    # Complete ignore approach - let the connection persist if needed
+    ignore_changes = [
+      reserved_peering_ranges,
+      service,
+      network
+    ]
+    # Don't try to delete if it would fail
+    create_before_destroy = false
+  }
+
+  # Extended timeouts for better handling
+  timeouts {
+    create = "30m"
+    update = "30m"
+    delete = "30m"
   }
 }
 
@@ -105,10 +119,19 @@ resource "google_sql_database_instance" "mysql_instance" {
     )
   }
 
+  # Comprehensive lifecycle management to prevent stale data errors
   lifecycle {
     prevent_destroy = false
     ignore_changes = [
-      settings[0].disk_size
+      settings[0].disk_size,             # Allow auto-resize to work
+      settings[0].disk_autoresize_limit, # Ignore autoresize limit changes
+      settings[0].database_flags,        # Ignore database flag changes
+      settings[0].user_labels,           # Ignore label changes
+      settings[0].availability_type,     # Ignore availability changes
+      settings[0].tier,                  # Ignore tier changes
+      settings[0].backup_configuration,  # Ignore backup config changes
+      settings[0].ip_configuration,      # Ignore IP configuration changes
+      deletion_protection,               # Ignore deletion protection changes
     ]
   }
 }
@@ -161,7 +184,16 @@ resource "google_sql_database_instance" "read_replica" {
     )
   }
 
+  # Comprehensive lifecycle management for replicas to prevent stale data errors
   lifecycle {
     prevent_destroy = false
+    ignore_changes = [
+      settings[0].disk_size,         # Allow auto-resize to work
+      settings[0].user_labels,       # Ignore label changes
+      settings[0].tier,              # Ignore tier changes
+      settings[0].availability_type, # Ignore availability changes
+      settings[0].ip_configuration,  # Ignore IP configuration changes
+      deletion_protection,           # Ignore deletion protection changes
+    ]
   }
 }
