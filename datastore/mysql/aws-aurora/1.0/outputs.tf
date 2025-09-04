@@ -16,7 +16,6 @@ locals {
     security_group_id            = aws_security_group.aurora.id
     writer_instance_id           = length(aws_rds_cluster_instance.aurora_writer) > 0 ? aws_rds_cluster_instance.aurora_writer[0].identifier : null
     reader_instance_ids          = aws_rds_cluster_instance.aurora_readers[*].identifier
-    secret_manager_arn           = aws_secretsmanager_secret.aurora_password.arn
   }
   output_interfaces = {
     writer = {

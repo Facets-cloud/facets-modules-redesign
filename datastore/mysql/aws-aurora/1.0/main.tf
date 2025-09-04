@@ -151,21 +151,6 @@ resource "aws_rds_cluster_instance" "aurora_readers" {
   }
 }
 
-# Store master password in AWS Secrets Manager
-resource "aws_secretsmanager_secret" "aurora_password" {
-  name        = "${local.cluster_identifier}-master-password"
-  description = "Master password for Aurora cluster ${local.cluster_identifier}"
-
-  tags = merge(var.environment.cloud_tags, {
-    Name = "${local.cluster_identifier}-master-password"
-  })
-
-  lifecycle {
-    prevent_destroy = false # Disabled for testing
-  }
-}
-
-resource "aws_secretsmanager_secret_version" "aurora_password" {
-  secret_id     = aws_secretsmanager_secret.aurora_password.id
-  secret_string = local.master_password
-}
+# Password management - using random password generation only
+# The password is stored in Terraform state and accessible via output interfaces
+# For production use, consider external secret management solutions

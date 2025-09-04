@@ -23,7 +23,6 @@ The module creates the following AWS resources:
 - **Aurora Cluster Instances** - Writer instance and configurable number of read replicas  
 - **DB Subnet Group** - Database subnet group using provided VPC private subnets
 - **Security Group** - VPC security group allowing MySQL traffic (port 3306) within VPC CIDR
-- **Secrets Manager Secret** - Secure storage for database master password
 - **Random Password** - Auto-generated secure password when not restoring from backup
 
 ## Security Considerations
@@ -31,10 +30,12 @@ The module creates the following AWS resources:
 This module implements several security best practices:
 
 - **Encryption at rest** is always enabled for the Aurora cluster
-- **Encryption in transit** is enforced for all database connections
-- **Master password** is stored securely in AWS Secrets Manager
+- **Encryption in transit** is enforced for all database connections  
+- **Master password** is auto-generated and stored securely in Terraform state
 - **Network isolation** restricts database access to VPC CIDR blocks only
 - **Backup retention** is set to 7 days with automated point-in-time recovery
 - **Performance Insights** is enabled for database monitoring and troubleshooting
+
+⚠️ **Password Security Note**: The master password is generated randomly and stored in Terraform state. For enhanced security in production environments, consider implementing external secret management solutions.
 
 The module supports importing existing Aurora resources and restoring from backups while maintaining security standards.
