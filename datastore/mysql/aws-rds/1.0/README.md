@@ -1,53 +1,62 @@
-# MySQL AWS RDS Database Module
-
-[![Facets](https://img.shields.io/badge/facets-module-blue)](https://facets.cloud)
-[![Version](https://img.shields.io/badge/version-1.0-green)](./facets.yaml)
+# MySQL RDS Database Module v1.0
 
 ## Overview
 
-This module provisions a managed MySQL database instance on AWS RDS with enterprise-grade security, high availability, and automated backup capabilities. It provides a developer-friendly interface for creating production-ready MySQL databases with configurable performance tiers and optional read replicas.
+This Facets module provisions a managed MySQL database instance on AWS RDS with high availability, automated backups, and read replicas. The module provides a secure, production-ready MySQL database with encryption at rest and in transit, following AWS best practices for database deployment.
 
 ## Environment as Dimension
 
-This module is environment-aware and automatically configures resources based on the deployment environment. Resource naming, tagging, and network configurations adapt to the specific environment context through the `var.environment` parameter. Storage autoscaling, backup retention, and maintenance windows are configured with production-ready defaults that remain consistent across environments.
+This module is environment-aware and will create unique resources per environment using the `var.environment.unique_name` for resource naming. Database configurations remain consistent across environments, but networking and scaling settings can be adjusted per environment through the spec configuration.
 
 ## Resources Created
 
-The module creates the following AWS resources:
-
-- **RDS MySQL Instance** - Primary database instance with configurable version, storage, and performance settings
-- **Read Replicas** - Optional read-only database replicas for improved read performance and availability
-- **DB Subnet Group** - Network configuration for database placement within private subnets
-- **Security Group** - Network access controls restricting database access to VPC CIDR range
-- **Secrets Manager Secret** - Secure storage for database master password
-- **CloudWatch Log Groups** - Automatic log collection for error, general, and slow query logs
+- **RDS MySQL Instance**: Primary database instance with specified version and sizing
+- **DB Subnet Group**: Private subnet group for database networking within VPC
+- **Security Group**: Dedicated security group allowing MySQL access (port 3306) from VPC CIDR
+- **Read Replicas**: Optional read-only database replicas for improved read performance
+- **Random Password**: Automatically generated secure master password (16 characters with special characters)
 
 ## Security Considerations
 
-This module implements security best practices by default:
+### Password Management
+This module uses **random password generation only** and does not utilize AWS Secrets Manager. The generated password is stored in Terraform state and made available through the module's output interfaces. For production deployments, consider implementing external secret management solutions.
 
-- **Encryption at Rest** - All database storage is encrypted using AWS KMS
-- **Network Isolation** - Database instances are deployed in private subnets with no public access
-- **Access Control** - Security groups restrict access to VPC CIDR range only
-- **Credential Management** - Master passwords are generated automatically and stored in AWS Secrets Manager
-- **Multi-AZ Deployment** - High availability is enabled by default for production resilience
-- **Automated Backups** - 7-day backup retention with point-in-time recovery capabilities
-- **Performance Monitoring** - Performance Insights enabled for database optimization (when supported)
+### Network Security
+- Database instances are deployed in private subnets only (never publicly accessible)
+- Security group restricts access to MySQL port 3306 from VPC CIDR block only
+- All connections use encryption in transit (SSL/TLS)
 
-The module supports importing existing RDS instances, subnet groups, and security groups to bring existing infrastructure under management without recreation. Restore functionality allows creating new instances from existing backups while maintaining security configurations.
+### Data Protection
+- Storage encryption at rest is always enabled using AWS managed keys
+- Automated backups are configured with 7-day retention period
+- High availability is enabled by default with Multi-AZ deployment
+- Final snapshots are created before deletion (disabled for testing environments)
 
-## Key Features
+### Performance and Monitoring
+- Performance Insights enabled for supported instance classes (disabled for db.t3.micro and db.t3.small)
+- CloudWatch logs exports enabled for error, general, and slow query logs
+- Monitoring interval disabled to avoid IAM role requirements
 
-**Version Management** - Supports MySQL versions 5.7, 8.0, and 8.4 with automatic validation
+## Restore Operations
 
-**Storage Options** - Configurable storage types (gp2, gp3, io1, io2) with automatic scaling support
+The module supports restoring from existing RDS backups or snapshots by setting `restore_from_backup: true` and providing:
+- Source database instance identifier
+- Restored database master username
+- Restored database master password
 
-**Performance Scaling** - Multiple instance classes from development (db.t3.micro) to production (db.m5.2xlarge)
+When restoring, the module uses the provided credentials instead of generating new ones.
 
-**Read Scalability** - Support for up to 5 read replicas with automatic endpoint management
+## Import Support
 
-**Backup and Recovery** - Automated daily backups with point-in-time recovery and restore functionality
+Existing AWS RDS resources can be imported into this module using the import configuration:
+- **DB Instance**: Import existing RDS instance using its identifier
+- **DB Subnet Group**: Import existing subnet group by name  
+- **Security Group**: Import existing security group by ID
 
-**Resource Import** - Import existing RDS instances, subnet groups, and security groups without disruption
+## Best Practices
 
-**Instance Class Optimization** - Automatic Performance Insights configuration based on instance capabilities
+- Instance classes db.t3.micro and db.t3.small do not support Performance Insights
+- Read replicas are created in the same VPC and security group as the primary instance
+- Storage autoscaling is configured when max_allocated_storage is greater than allocated_storage
+- Backup and maintenance windows are scheduled during low-traffic periods (3-4 AM UTC)
+- All resources include comprehensive tagging for resource management and cost allocation

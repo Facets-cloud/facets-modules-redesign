@@ -13,7 +13,6 @@ locals {
     availability_zone       = local.mysql_instance.availability_zone
     security_group_id       = aws_security_group.mysql.id
     subnet_group_name       = aws_db_subnet_group.mysql.name
-    secret_manager_arn      = aws_secretsmanager_secret.mysql_password.arn
     read_replica_endpoints  = length(aws_db_instance.read_replicas) > 0 ? aws_db_instance.read_replicas[*].endpoint : []
     backup_retention_period = local.mysql_instance.backup_retention_period
   }

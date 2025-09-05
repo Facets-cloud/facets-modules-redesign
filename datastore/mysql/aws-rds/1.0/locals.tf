@@ -4,7 +4,6 @@ locals {
   db_identifier       = "${var.instance_name}-${var.environment.unique_name}"
   subnet_group_name   = "${var.instance_name}-${var.environment.unique_name}-subnet-group"
   security_group_name = "${var.instance_name}-${var.environment.unique_name}-sg"
-  secret_name         = "${var.instance_name}-${var.environment.unique_name}-password"
 
   # Database configuration
   is_restore_operation = var.instance.spec.restore_config.restore_from_backup

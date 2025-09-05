@@ -19,26 +19,6 @@ resource "random_password" "master_password" {
   special = true
 }
 
-# Store password in AWS Secrets Manager
-resource "aws_secretsmanager_secret" "mysql_password" {
-  name        = local.secret_name
-  description = "MySQL master password for ${var.instance_name}"
-
-  tags = merge(var.environment.cloud_tags, {
-    Name   = local.secret_name
-    Module = "mysql"
-    Flavor = "aws-rds"
-  })
-}
-
-resource "aws_secretsmanager_secret_version" "mysql_password" {
-  secret_id = aws_secretsmanager_secret.mysql_password.id
-  secret_string = jsonencode({
-    username = local.master_username
-    password = local.master_password
-  })
-}
-
 # Create DB subnet group
 resource "aws_db_subnet_group" "mysql" {
   name       = local.subnet_group_name
@@ -247,3 +227,7 @@ resource "aws_db_instance" "read_replicas" {
     Role   = "read-replica"
   })
 }
+
+# Password management - using random password generation only
+# The password is stored in Terraform state and accessible via output interfaces
+# For production use, consider external secret management solutions
