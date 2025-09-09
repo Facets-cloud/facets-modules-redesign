@@ -76,6 +76,15 @@ variable "instance" {
     condition     = var.instance.spec.sizing.read_replica_count >= 0 && var.instance.spec.sizing.read_replica_count <= 10
     error_message = "Read replica count must be between 0 and 10"
   }
+
+  validation {
+    condition = (
+      var.instance.spec.restore_config.restore_from_backup == true ?
+      var.instance.spec.restore_config.administrator_password != null && var.instance.spec.restore_config.administrator_password != "" :
+      true
+    )
+    error_message = "When restore_from_backup is enabled, administrator_password must be provided."
+  }
 }
 
 variable "instance_name" {

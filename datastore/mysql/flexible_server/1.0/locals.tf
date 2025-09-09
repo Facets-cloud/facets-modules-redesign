@@ -19,13 +19,14 @@ locals {
   is_burstable_sku = startswith(local.sku_name, "B_") # Detect if SKU is Burstable tier
 
   # Restore configuration
-  restore_enabled       = lookup(var.instance.spec.restore_config, "restore_from_backup", false)
-  source_server_id      = lookup(var.instance.spec.restore_config, "source_server_id", null)
-  restore_point_in_time = lookup(var.instance.spec.restore_config, "restore_point_in_time", null)
+  restore_enabled       = try(var.instance.spec.restore_config.restore_from_backup, false)
+  source_server_id      = try(var.instance.spec.restore_config.source_server_id, null)
+  restore_point_in_time = try(var.instance.spec.restore_config.restore_point_in_time, null)
 
-  # Credentials - use restore credentials if restoring, otherwise generate
-  administrator_login    = local.restore_enabled ? lookup(var.instance.spec.restore_config, "administrator_login", "mysqladmin") : "mysqladmin"
-  administrator_password = local.restore_enabled ? lookup(var.instance.spec.restore_config, "administrator_password", random_password.mysql_password.result) : random_password.mysql_password.result
+  # Credentials - For restore operations, credentials come from source server
+  # For new servers, use provided or generated credentials
+  administrator_login    = local.restore_enabled ? try(var.instance.spec.restore_config.administrator_login, "mysqladmin") : "mysqladmin"
+  administrator_password = local.restore_enabled ? try(var.instance.spec.restore_config.administrator_password, null) : (length(random_password.mysql_password) > 0 ? random_password.mysql_password[0].result : null)
 
   # Networking - Use existing subnet from network module
   # Try common subnet attribute names that the network module might provide

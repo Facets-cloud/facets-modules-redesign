@@ -134,7 +134,8 @@ spec:
         administrator_login:
           type: string
           title: Administrator Username
-          description: Administrator login username (required for restore)
+          description: Username for connecting to the restored server (server inherits
+            actual credentials from source)
           default: mysqladmin
           pattern: ^[a-zA-Z][a-zA-Z0-9_]{0,31}$
           x-ui-visible-if:
@@ -144,8 +145,10 @@ spec:
         administrator_password:
           type: string
           title: Administrator Password
-          description: Administrator password (required for restore)
-          x-ui-secret-ref: true
+          description: Password for connecting to the restored server (server inherits
+            actual credentials from source)
+          minLength: 8
+          maxLength: 128
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
             values:

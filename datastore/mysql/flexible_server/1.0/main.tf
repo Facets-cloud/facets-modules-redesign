@@ -1,5 +1,6 @@
-# Generate random password for MySQL admin
+# Generate random password for MySQL admin (only when not restoring)
 resource "random_password" "mysql_password" {
+  count   = local.restore_enabled ? 0 : 1
   length  = 16
   special = true
 }
@@ -26,27 +27,36 @@ resource "azurerm_mysql_flexible_server" "main" {
   resource_group_name = local.resource_group_name
   location            = local.location
 
-  # Server configuration
-  administrator_login    = local.administrator_login
-  administrator_password = local.administrator_password
+  # Restore configuration (MUST come first for restore operations)
+  create_mode                       = local.restore_enabled ? "PointInTimeRestore" : "Default"
+  source_server_id                  = local.restore_enabled && local.source_server_id != null ? local.source_server_id : null
+  point_in_time_restore_time_in_utc = local.restore_enabled && local.restore_point_in_time != null ? local.restore_point_in_time : null
 
-  # Version and SKU
-  version  = local.mysql_version
-  sku_name = local.sku_name
+  # Server configuration (only for new servers, not for restore)
+  # During restore, credentials are inherited from source server
+  administrator_login    = local.restore_enabled ? null : local.administrator_login
+  administrator_password = local.restore_enabled ? null : local.administrator_password
 
-  # Storage configuration
-  storage {
-    size_gb = local.storage_gb
-    iops    = local.iops
+  # Version and SKU (only for new servers)
+  version  = local.restore_enabled ? null : local.mysql_version
+  sku_name = local.restore_enabled ? null : local.sku_name
+
+  # Storage configuration (only for new servers)
+  dynamic "storage" {
+    for_each = local.restore_enabled ? [] : [1]
+    content {
+      size_gb = local.storage_gb
+      iops    = local.iops
+    }
   }
 
-  # Security and backup
-  backup_retention_days        = local.backup_retention_days
-  geo_redundant_backup_enabled = true
+  # Security and backup (only for new servers)
+  backup_retention_days        = local.restore_enabled ? null : local.backup_retention_days
+  geo_redundant_backup_enabled = local.restore_enabled ? null : true
 
-  # High availability (conditional based on SKU tier - not supported for Burstable)
+  # High availability (conditional based on SKU tier - not supported for Burstable, and not for restore)
   dynamic "high_availability" {
-    for_each = local.is_burstable_sku ? [] : [1]
+    for_each = (!local.restore_enabled && !local.is_burstable_sku) ? [1] : []
     content {
       mode = "ZoneRedundant"
     }
@@ -55,10 +65,6 @@ resource "azurerm_mysql_flexible_server" "main" {
   # Network configuration - Use existing subnet from network module
   delegated_subnet_id = local.delegated_subnet_id
   private_dns_zone_id = azurerm_private_dns_zone.mysql.id
-
-  # Restore configuration (conditional) - Fixed syntax
-  source_server_id                  = local.restore_enabled && local.source_server_id != null ? local.source_server_id : null
-  point_in_time_restore_time_in_utc = local.restore_enabled && local.restore_point_in_time != null ? local.restore_point_in_time : null
 
   # Prevent accidental deletion
   lifecycle {
@@ -77,9 +83,10 @@ resource "azurerm_mysql_flexible_server" "main" {
   ]
 }
 
-# MySQL Database
+# MySQL Database (only create for new servers, not for restore)
+# During restore, Azure automatically creates databases from the source server
 resource "azurerm_mysql_flexible_database" "databases" {
-  count               = 1
+  count               = local.restore_enabled ? 0 : 1
   name                = local.database_name
   resource_group_name = local.resource_group_name
   server_name         = azurerm_mysql_flexible_server.main.name
@@ -87,9 +94,9 @@ resource "azurerm_mysql_flexible_database" "databases" {
   collation           = local.collation
 }
 
-# Read Replicas (if configured) - Updated configuration
+# Read Replicas (only for new servers, not for restore operations)
 resource "azurerm_mysql_flexible_server" "replicas" {
-  count = local.replica_count
+  count = local.restore_enabled ? 0 : local.replica_count
 
   name                = "${local.server_name}-replica-${count.index + 1}"
   resource_group_name = local.resource_group_name
