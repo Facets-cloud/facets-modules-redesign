@@ -4,7 +4,7 @@ A managed MySQL Aurora cluster with high availability, automated backups, and re
 
 ## Overview
 
-This module provisions an AWS Aurora MySQL cluster with serverless v2 scaling capabilities. It provides a fully managed relational database service with automated backup, point-in-time recovery, and multi-AZ deployment for high availability.
+This module provisions an AWS Aurora MySQL cluster with serverless v2 scaling capabilities. It provides a fully managed relational database service with automated backup, manual snapshot restore, and multi-AZ deployment for high availability.
 
 ## Environment as Dimension
 
@@ -33,9 +33,9 @@ This module implements several security best practices:
 - **Encryption in transit** is enforced for all database connections  
 - **Master password** is auto-generated and stored securely in Terraform state
 - **Network isolation** restricts database access to VPC CIDR blocks only
-- **Backup retention** is set to 7 days with automated point-in-time recovery
+- **Backup retention** is set to 7 days with manual snapshot restore capability
 - **Performance Insights** is enabled for database monitoring and troubleshooting
 
-⚠️ **Password Security Note**: The master password is generated randomly and stored in Terraform state. For enhanced security in production environments, consider implementing external secret management solutions.
+⚠️ **Snapshot Restoration Note**: When restoring from a manual snapshot, the module automatically inherits the engine version, database name, and master credentials from the original snapshot. The specified `engine_version` and `database_name` in the configuration are ignored during restoration, and the `master_username`/`master_password` from `restore_config` are used to access the restored cluster.
 
-The module supports importing existing Aurora resources and restoring from backups while maintaining security standards.
+The module supports importing existing Aurora resources and restoring from manual snapshots while maintaining security standards.

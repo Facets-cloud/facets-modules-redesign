@@ -1,16 +1,17 @@
-# Generate a random password if not restoring from backup
+# Generate a random password only when NOT restoring from backup
+# Excludes characters not allowed by Aurora MySQL: '/', '@', '"', ' ' (space)
 resource "random_password" "master_password" {
-  count   = coalesce(try(var.instance.spec.restore_config.restore_from_backup, null), false) ? 0 : 1
-  length  = 16
-  special = true
+  count            = var.instance.spec.restore_config.restore_from_backup ? 0 : 1
+  length           = 16
+  special          = true
+  override_special = "!#$%&*+-=?^_`{|}~" # Safe special characters for Aurora MySQL
 }
 
 # Generate unique cluster identifier
 locals {
   cluster_identifier  = "${var.instance_name}-${var.environment.unique_name}"
-  restore_from_backup = coalesce(try(var.instance.spec.restore_config.restore_from_backup, null), false)
-  source_cluster_id   = try(var.instance.spec.restore_config.source_cluster_identifier, "")
-  should_restore      = local.restore_from_backup && local.source_cluster_id != "" && local.source_cluster_id != null
+  restore_from_backup = var.instance.spec.restore_config.restore_from_backup
+  source_snapshot_id  = var.instance.spec.restore_config.source_snapshot_identifier
   master_password     = local.restore_from_backup ? var.instance.spec.restore_config.master_password : random_password.master_password[0].result
   master_username     = local.restore_from_backup ? var.instance.spec.restore_config.master_username : "admin"
 
@@ -67,20 +68,29 @@ data "aws_vpc" "selected" {
 
 # Create Aurora cluster
 resource "aws_rds_cluster" "aurora" {
-  cluster_identifier           = local.cluster_identifier
-  engine                       = "aurora-mysql"
-  engine_version               = var.instance.spec.version_config.engine_version
-  database_name                = var.instance.spec.version_config.database_name
-  master_username              = local.master_username
-  master_password              = local.master_password
+  cluster_identifier = local.cluster_identifier
+  engine             = "aurora-mysql"
+
+  # When restoring from snapshot, these fields must be completely omitted (null)
+  # AWS will inherit these values from the snapshot automatically
+  engine_version  = local.restore_from_backup ? null : var.instance.spec.version_config.engine_version
+  database_name   = local.restore_from_backup ? null : var.instance.spec.version_config.database_name
+  master_username = local.restore_from_backup ? null : local.master_username
+  master_password = local.restore_from_backup ? null : local.master_password
+
+  # Backup configuration
   backup_retention_period      = 7 # Hardcoded - 7 days retention
   preferred_backup_window      = "03:00-04:00"
   preferred_maintenance_window = "sun:04:00-sun:05:00"
-  db_subnet_group_name         = aws_db_subnet_group.aurora.name
-  vpc_security_group_ids       = [aws_security_group.aurora.id]
-  storage_encrypted            = true  # Always enabled
-  skip_final_snapshot          = true  # For testing
-  deletion_protection          = false # Disabled for testing
+
+  # Network and security
+  db_subnet_group_name   = aws_db_subnet_group.aurora.name
+  vpc_security_group_ids = [aws_security_group.aurora.id]
+  storage_encrypted      = true # Always enabled
+
+  # Testing configurations
+  skip_final_snapshot = true  # For testing
+  deletion_protection = false # Disabled for testing
 
   # Serverless v2 scaling configuration
   serverlessv2_scaling_configuration {
@@ -88,15 +98,9 @@ resource "aws_rds_cluster" "aurora" {
     min_capacity = var.instance.spec.sizing.min_capacity
   }
 
-  # Restore from backup if specified
-  dynamic "restore_to_point_in_time" {
-    for_each = local.should_restore ? [1] : []
-    content {
-      source_cluster_identifier  = var.instance.spec.restore_config.source_cluster_identifier
-      restore_type               = "full-copy"
-      use_latest_restorable_time = true
-    }
-  }
+  # Restore from manual snapshot if specified
+  # This is the KEY parameter that tells AWS to restore from snapshot instead of creating fresh
+  snapshot_identifier = local.restore_from_backup ? var.instance.spec.restore_config.source_snapshot_identifier : null
 
   tags = merge(var.environment.cloud_tags, {
     Name = local.cluster_identifier

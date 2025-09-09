@@ -16,10 +16,10 @@ variable "instance" {
         read_replica_count = number
       })
       restore_config = optional(object({
-        restore_from_backup       = optional(bool)
-        source_cluster_identifier = optional(string)
-        master_username           = optional(string)
-        master_password           = optional(string)
+        restore_from_backup        = optional(bool)
+        source_snapshot_identifier = optional(string)
+        master_username            = optional(string)
+        master_password            = optional(string)
       }), {})
       imports = optional(object({
         cluster_identifier          = optional(string)

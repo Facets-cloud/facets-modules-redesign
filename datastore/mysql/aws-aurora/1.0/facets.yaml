@@ -31,6 +31,9 @@ spec:
           description: Name of the initial database to create
           pattern: ^[a-zA-Z][a-zA-Z0-9_]{0,62}$
           default: mydb
+      required:
+      - engine_version
+      - database_name
     sizing:
       type: object
       title: Sizing & Performance
@@ -68,6 +71,11 @@ spec:
           minimum: 0
           maximum: 15
           default: 1
+      required:
+      - instance_class
+      - min_capacity
+      - max_capacity
+      - read_replica_count
     restore_config:
       type: object
       title: Restore Operations
@@ -75,13 +83,13 @@ spec:
       properties:
         restore_from_backup:
           type: boolean
-          title: Restore from Backup
-          description: Restore cluster from existing backup or snapshot
+          title: Restore from Manual Snapshot
+          description: Restore cluster from existing manual snapshot
           default: false
-        source_cluster_identifier:
+        source_snapshot_identifier:
           type: string
-          title: Source Cluster Identifier
-          description: Source Aurora cluster identifier for restore
+          title: Source Snapshot Identifier
+          description: Manual snapshot identifier (ARN or name) to restore from
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
             values:
@@ -89,7 +97,7 @@ spec:
         master_username:
           type: string
           title: Master Username
-          description: Master username (required when restoring from backup)
+          description: Master username (required when restoring from snapshot)
           pattern: ^[a-zA-Z][a-zA-Z0-9_]{0,15}$
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
@@ -98,13 +106,15 @@ spec:
         master_password:
           type: string
           title: Master Password
-          description: Master password (required when restoring from backup)
+          description: Master password (required when restoring from snapshot)
           minLength: 8
           maxLength: 41
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
             values:
             - true
+      required:
+      - restore_from_backup
     imports:
       type: object
       title: Import Existing Resources
@@ -125,6 +135,7 @@ spec:
   required:
   - version_config
   - sizing
+  - restore_config
 inputs:
   aws_provider:
     type: '@facets/aws_cloud_account'
@@ -171,3 +182,5 @@ sample:
       min_capacity: 1
       max_capacity: 4
       read_replica_count: 1
+    restore_config:
+      restore_from_backup: false
