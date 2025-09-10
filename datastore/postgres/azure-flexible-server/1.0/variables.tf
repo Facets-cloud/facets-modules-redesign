@@ -9,10 +9,6 @@ variable "instance" {
         version = string
         tier    = string
       })
-      azure_config = optional(object({
-        resource_group_name = optional(string)
-        location            = optional(string, "East US")
-      }), {})
       sizing = object({
         sku_name           = string
         storage_gb         = number
@@ -23,8 +19,12 @@ variable "instance" {
         source_server_id      = optional(string)
         restore_point_in_time = optional(string)
       }), {})
+      network_config = optional(object({
+        create_dns_zone = optional(bool, true)
+      }), {})
       imports = optional(object({
-        flexible_server_id = optional(string)
+        flexible_server_id   = optional(string)
+        postgres_database_id = optional(string)
       }), {})
     })
   })
@@ -84,5 +84,22 @@ variable "inputs" {
         tenant_id       = string
       })
     })
+    network_details = object({
+      attributes = object({
+        resource_group_name = string
+        vnet_id             = string
+        vnet_name           = string
+        region              = string
+        vnet_cidr_block     = string
+        private_subnet_ids  = list(string)
+        availability_zones  = optional(list(string))
+      })
+    })
   })
+
+  # Validation to ensure at least one subnet is provided
+  validation {
+    condition     = length(var.inputs.network_details.attributes.private_subnet_ids) > 0
+    error_message = "Network details must provide at least one private_subnet_id for PostgreSQL Flexible Server deployment."
+  }
 }

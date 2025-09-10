@@ -10,7 +10,12 @@ locals {
     database_names               = [local.database_name]
     replica_servers              = azurerm_postgresql_flexible_server.replicas[*].fqdn
     administrator_login          = azurerm_postgresql_flexible_server.main.administrator_login
-    resource_group_name          = azurerm_resource_group.postgres_rg.name
+    delegated_subnet_id          = azurerm_subnet.postgres_delegated.id
+    delegated_subnet_name        = azurerm_subnet.postgres_delegated.name
+    delegated_subnet_cidr        = local.final_postgres_subnet_cidr
+    private_dns_zone_id          = local.postgres_dns_zone_id
+    private_dns_zone_name        = local.postgres_dns_zone_name
+    resource_group_name          = local.resource_group_name
     backup_retention_days        = azurerm_postgresql_flexible_server.main.backup_retention_days
     high_availability_enabled    = local.high_availability_enabled
     geo_redundant_backup_enabled = azurerm_postgresql_flexible_server.main.geo_redundant_backup_enabled
@@ -18,15 +23,15 @@ locals {
   output_interfaces = {
     reader = {
       host              = length(azurerm_postgresql_flexible_server.replicas) > 0 ? azurerm_postgresql_flexible_server.replicas[0].fqdn : azurerm_postgresql_flexible_server.main.fqdn
-      password          = local.admin_password
+      password          = local.is_restore ? "RESTORED_SERVER_USE_ORIGINAL_PASSWORD" : local.admin_password
       username          = azurerm_postgresql_flexible_server.main.administrator_login
-      connection_string = length(azurerm_postgresql_flexible_server.replicas) > 0 ? format("postgres://%s:%s@%s:%d/%s", azurerm_postgresql_flexible_server.main.administrator_login, local.admin_password, azurerm_postgresql_flexible_server.replicas[0].fqdn, 5432, local.database_name) : format("postgres://%s:%s@%s:%d/%s", azurerm_postgresql_flexible_server.main.administrator_login, local.admin_password, azurerm_postgresql_flexible_server.main.fqdn, 5432, local.database_name)
+      connection_string = local.is_restore ? format("postgres://%s:RESTORED_SERVER_USE_ORIGINAL_PASSWORD@%s:%d/%s", azurerm_postgresql_flexible_server.main.administrator_login, length(azurerm_postgresql_flexible_server.replicas) > 0 ? azurerm_postgresql_flexible_server.replicas[0].fqdn : azurerm_postgresql_flexible_server.main.fqdn, 5432, local.database_name) : (length(azurerm_postgresql_flexible_server.replicas) > 0 ? format("postgres://%s:%s@%s:%d/%s", azurerm_postgresql_flexible_server.main.administrator_login, local.admin_password, azurerm_postgresql_flexible_server.replicas[0].fqdn, 5432, local.database_name) : format("postgres://%s:%s@%s:%d/%s", azurerm_postgresql_flexible_server.main.administrator_login, local.admin_password, azurerm_postgresql_flexible_server.main.fqdn, 5432, local.database_name))
     }
     writer = {
       host              = azurerm_postgresql_flexible_server.main.fqdn
-      password          = local.admin_password
+      password          = local.is_restore ? "RESTORED_SERVER_USE_ORIGINAL_PASSWORD" : local.admin_password
       username          = azurerm_postgresql_flexible_server.main.administrator_login
-      connection_string = format("postgres://%s:%s@%s:%d/%s", azurerm_postgresql_flexible_server.main.administrator_login, local.admin_password, azurerm_postgresql_flexible_server.main.fqdn, 5432, local.database_name)
+      connection_string = local.is_restore ? format("postgres://%s:RESTORED_SERVER_USE_ORIGINAL_PASSWORD@%s:%d/%s", azurerm_postgresql_flexible_server.main.administrator_login, azurerm_postgresql_flexible_server.main.fqdn, 5432, local.database_name) : format("postgres://%s:%s@%s:%d/%s", azurerm_postgresql_flexible_server.main.administrator_login, local.admin_password, azurerm_postgresql_flexible_server.main.fqdn, 5432, local.database_name)
     }
   }
 }

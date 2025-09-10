@@ -37,29 +37,6 @@ spec:
       required:
       - version
       - tier
-    azure_config:
-      type: object
-      title: Azure Configuration
-      x-ui-toggle: true
-      properties:
-        resource_group_name:
-          type: string
-          title: Resource Group Name
-          description: Name of the Azure resource group (leave empty for auto-detection)
-        location:
-          type: string
-          title: Azure Region
-          description: Azure region for deployment
-          enum:
-          - East US
-          - West US
-          - Central US
-          - East US 2
-          - West US 2
-          - North Europe
-          - West Europe
-          default: East US
-      required: []
     sizing:
       type: object
       title: Sizing & Performance
@@ -122,6 +99,18 @@ spec:
             values:
             - true
       required: []
+    network_config:
+      type: object
+      title: Network Configuration
+      x-ui-toggle: true
+      properties:
+        create_dns_zone:
+          type: boolean
+          title: Create DNS Zone
+          description: Create new DNS zone (set to false if DNS zone already exists
+            in environment)
+          default: true
+      required: []
     imports:
       type: object
       title: Import Existing Resources
@@ -149,6 +138,11 @@ inputs:
     description: Azure credentials and provider configuration
     providers:
     - azurerm
+  network_details:
+    type: '@facets/azure-network-details'
+    optional: false
+    displayName: Azure Network Details
+    description: Azure VNet and delegated subnet configuration for PostgreSQL server
 outputs:
   default:
     type: '@facets/postgres-azure-flexible-server'
