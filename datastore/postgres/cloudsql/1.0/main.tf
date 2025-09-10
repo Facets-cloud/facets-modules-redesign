@@ -106,8 +106,9 @@ resource "google_sql_database_instance" "postgres_instance" {
   }
 }
 
-# Initial database
+# Initial database (only created when not restoring from backup)
 resource "google_sql_database" "initial_database" {
+  count    = var.instance.spec.restore_config.restore_from_backup ? 0 : 1
   name     = var.instance.spec.version_config.database_name
   instance = google_sql_database_instance.postgres_instance.name
 }

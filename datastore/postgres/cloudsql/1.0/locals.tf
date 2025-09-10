@@ -6,7 +6,7 @@ locals {
   postgres_port       = 5432
   master_username     = google_sql_user.postgres_user.name
   master_password     = google_sql_user.postgres_user.password
-  database_name       = google_sql_database.initial_database.name
+  database_name       = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.version_config.database_name : google_sql_database.initial_database[0].name
 
   # Read replica endpoints (if any)
   replica_endpoints = var.instance.spec.sizing.read_replica_count > 0 ? [
