@@ -89,7 +89,6 @@ spec:
           type: string
           title: Master Password
           description: Master password for restored database (required when restoring)
-          x-ui-secret-ref: true
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
             values:
