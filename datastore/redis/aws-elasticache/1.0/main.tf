@@ -1,5 +1,6 @@
-# Generate secure auth token for Redis
+# Generate secure auth token for Redis (only for new clusters)
 resource "random_password" "redis_auth_token" {
+  count   = var.instance.spec.imports.cluster_id != null && var.instance.spec.imports.cluster_id != "" ? 0 : 1
   length  = 64
   special = false
 }
@@ -15,6 +16,13 @@ resource "aws_elasticache_subnet_group" "redis" {
       Name = "${var.instance_name}-${var.environment.unique_name}-subnet-group"
     }
   )
+
+  lifecycle {
+    ignore_changes = [
+      # Ignore name changes for imported resources
+      name,
+    ]
+  }
 }
 
 # Security group for ElastiCache
@@ -49,6 +57,11 @@ resource "aws_security_group" "redis" {
 
   lifecycle {
     create_before_destroy = true
+    ignore_changes = [
+      # Ignore name_prefix changes for imported resources
+      name_prefix,
+      name,
+    ]
   }
 }
 
@@ -81,8 +94,9 @@ resource "aws_elasticache_replication_group" "redis" {
   # Security settings (hardcoded for security)
   at_rest_encryption_enabled = true
   transit_encryption_enabled = true
-  auth_token                 = random_password.redis_auth_token.result
-  auth_token_update_strategy = "ROTATE"
+  # Only set auth_token for new clusters, not for imported ones
+  auth_token                 = var.instance.spec.imports.cluster_id != null && var.instance.spec.imports.cluster_id != "" ? null : random_password.redis_auth_token[0].result
+  auth_token_update_strategy = var.instance.spec.imports.cluster_id != null && var.instance.spec.imports.cluster_id != "" ? null : "ROTATE"
 
   # High availability - only enable if we have multiple nodes
   multi_az_enabled           = local.enable_ha
@@ -114,6 +128,11 @@ resource "aws_elasticache_replication_group" "redis" {
     ignore_changes = [
       # Ignore changes to snapshot_name after initial creation
       snapshot_name,
+      # Ignore replication group ID changes for imported resources
+      replication_group_id,
+      # Ignore ALL auth-related fields for imported resources
+      auth_token,
+      auth_token_update_strategy,
     ]
   }
 
