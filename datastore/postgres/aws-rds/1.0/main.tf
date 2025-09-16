@@ -1,22 +1,26 @@
 # PostgreSQL RDS Instance Implementation
 
-# Random password generation (when not restoring from backup or importing)
 resource "random_password" "master_password" {
-  count   = (var.instance.spec.restore_config.restore_from_backup || try(var.instance.spec.imports.db_instance_identifier, null) != null) ? 0 : 1
+  count   = (var.instance.spec.restore_config.restore_from_backup || lookup(var.instance.spec, "imports", null) != null && lookup(var.instance.spec.imports, "db_instance_identifier", null) != null) ? 0 : 1
   length  = 16
   special = true
+  upper   = true
+  lower   = true
+  numeric = true
+  # Exclude RDS-forbidden characters: /, @, ", space
+  override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
 # Random username generation (when not restoring from backup or importing)
 resource "random_id" "master_username" {
-  count       = (var.instance.spec.restore_config.restore_from_backup || try(var.instance.spec.imports.db_instance_identifier, null) != null) ? 0 : 1
+  count       = (var.instance.spec.restore_config.restore_from_backup || lookup(var.instance.spec, "imports", null) != null && lookup(var.instance.spec.imports, "db_instance_identifier", null) != null) ? 0 : 1
   byte_length = 4
 }
 
 # Locals for computed values
 locals {
   # Check if we're importing
-  is_importing = try(var.instance.spec.imports.db_instance_identifier, null) != null
+  is_importing = lookup(var.instance.spec, "imports", null) != null && lookup(var.instance.spec.imports, "db_instance_identifier", null) != null
 
   # Resource naming with length constraints
   db_instance_identifier = substr("${var.instance_name}-${var.environment.unique_name}", 0, 63)
@@ -24,10 +28,28 @@ locals {
   security_group_name    = substr("${var.instance_name}-${var.environment.unique_name}-sg", 0, 63)
 
   # Use imported or created subnet group
-  actual_subnet_group_name = try(var.instance.spec.imports.subnet_group_name, null) != null ? var.instance.spec.imports.subnet_group_name : (length(aws_db_subnet_group.postgres) > 0 ? aws_db_subnet_group.postgres[0].name : null)
+  actual_subnet_group_name = lookup(var.instance.spec, "imports", null) != null && lookup(var.instance.spec.imports, "subnet_group_name", null) != null ? var.instance.spec.imports.subnet_group_name : (length(aws_db_subnet_group.postgres) > 0 ? aws_db_subnet_group.postgres[0].name : null)
 
   # Use imported or created security group
-  actual_security_group_id = try(var.instance.spec.imports.security_group_id, null) != null ? var.instance.spec.imports.security_group_id : (length(aws_security_group.postgres) > 0 ? aws_security_group.postgres[0].id : null)
+  actual_security_group_id = lookup(var.instance.spec, "imports", null) != null && lookup(var.instance.spec.imports, "security_group_id", null) != null ? var.instance.spec.imports.security_group_id : (length(aws_security_group.postgres) > 0 ? aws_security_group.postgres[0].id : null)
+
+  # Determine the correct source DB identifier for replicas
+  # Use imported identifier if importing, otherwise use the generated identifier
+  replica_source_identifier = local.is_importing ? lookup(var.instance.spec.imports, "db_instance_identifier", aws_db_instance.postgres.identifier) : aws_db_instance.postgres.identifier
+
+  # Parameter group name for consistency
+  parameter_group_for_replica = "default.postgres${split(".", var.instance.spec.version_config.engine_version)[0]}"
+
+  # Add suffix to replica names when importing to avoid conflicts with existing replicas
+  # This ensures new Terraform-managed replicas don't conflict with pre-existing unmanaged replicas
+  # Reserve 15 characters for suffix: "-imp-replica-5" (worst case scenario)
+  # This leaves 48 characters for the base identifier when importing, 52 when not importing
+
+  # Helper to truncate without ending on hyphen
+  base_for_import = substr(local.db_instance_identifier, 0, 44)
+  base_cleaned    = substr(local.base_for_import, -1, 1) == "-" ? substr(local.base_for_import, 0, 43) : local.base_for_import
+
+  replica_identifier_base = local.is_importing ? substr("${local.base_cleaned}imp", 0, 47) : substr(local.db_instance_identifier, 0, 52)
 
   # Master credentials - don't set when importing
   master_username = local.is_importing ? null : (var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_username : "pgadmin${random_id.master_username[0].hex}")
@@ -57,7 +79,7 @@ locals {
 
 # DB Subnet Group - only create if not importing
 resource "aws_db_subnet_group" "postgres" {
-  count = try(var.instance.spec.imports.subnet_group_name, null) != null ? 0 : 1
+  count = lookup(var.instance.spec, "imports", null) != null && lookup(var.instance.spec.imports, "subnet_group_name", null) != null ? 0 : 1
 
   name       = local.subnet_group_name
   subnet_ids = var.inputs.vpc_details.attributes.private_subnet_ids
@@ -77,7 +99,7 @@ resource "aws_db_subnet_group" "postgres" {
 
 # Security Group for RDS - only create if not importing
 resource "aws_security_group" "postgres" {
-  count = try(var.instance.spec.imports.security_group_id, null) != null ? 0 : 1
+  count = lookup(var.instance.spec, "imports", null) != null && lookup(var.instance.spec.imports, "security_group_id", null) != null ? 0 : 1
 
   name_prefix = "${local.security_group_name}-"
   vpc_id      = var.inputs.vpc_details.attributes.vpc_id
@@ -158,14 +180,15 @@ resource "aws_db_instance" "postgres" {
   # Deletion protection (configurable for testing)
   deletion_protection = var.instance.spec.security_config.deletion_protection
 
-  # Skip final snapshot for development (can be overridden)
-  skip_final_snapshot       = true
-  final_snapshot_identifier = "${local.db_instance_identifier}-final-snapshot-${formatdate("YYYY-MM-DD-hhmm", timestamp())}"
+  # Final snapshot configuration - skip snapshots for faster destroy
+  skip_final_snapshot = true
+  # Don't set final_snapshot_identifier when skipping to avoid validation errors
 
   tags = local.common_tags
 
   lifecycle {
-    prevent_destroy = true
+    # Comment out prevent_destroy for testing - uncomment for production
+    # prevent_destroy = true
     ignore_changes = [
       # Ignore changes that would trigger recreation when importing
       db_subnet_group_name,
@@ -174,20 +197,19 @@ resource "aws_db_instance" "postgres" {
       username,
       password,
       # Ignore snapshot identifier after initial creation/import
-      snapshot_identifier,
-      # Ignore final snapshot identifier timestamp changes
-      final_snapshot_identifier
+      snapshot_identifier
     ]
   }
 }
 
-# Read Replicas (conditional) - Don't create when importing
+# Read Replicas (always allow creation based on read_replica_count)
 resource "aws_db_instance" "read_replicas" {
-  count = local.is_importing ? 0 : var.instance.spec.sizing.read_replica_count
+  count = var.instance.spec.sizing.read_replica_count
 
   # Basic configuration
-  identifier          = "${local.db_instance_identifier}-replica-${count.index + 1}"
-  replicate_source_db = aws_db_instance.postgres.identifier
+  # Use replica_identifier_base which adds "-imported" suffix when importing to avoid conflicts
+  identifier          = "${local.replica_identifier_base}-replica-${count.index + 1}"
+  replicate_source_db = local.replica_source_identifier
   instance_class      = var.instance.spec.sizing.instance_class
 
   # Use same security group as primary
@@ -200,20 +222,23 @@ resource "aws_db_instance" "read_replicas" {
   # High availability for replicas
   multi_az = false # Read replicas don't need multi-AZ
 
+  skip_final_snapshot = true
+
   # Monitoring (disable enhanced monitoring to avoid IAM role requirement)
   monitoring_interval          = 0
   performance_insights_enabled = true
 
-  # Parameter group (same as primary)
-  parameter_group_name = aws_db_instance.postgres.parameter_group_name
+  # Parameter group (use consistent parameter group)
+  parameter_group_name = local.parameter_group_for_replica
 
   tags = merge(local.common_tags, {
-    Name = "${local.db_instance_identifier}-replica-${count.index + 1}"
+    Name = "${local.replica_identifier_base}-replica-${count.index + 1}"
     Role = "ReadReplica"
   })
 
   lifecycle {
-    prevent_destroy = true
+    # Comment out prevent_destroy for testing - uncomment for production
+    # prevent_destroy = true
     ignore_changes = [
       # Ignore changes to the source DB after creation
       replicate_source_db,

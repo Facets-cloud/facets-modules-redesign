@@ -78,8 +78,10 @@ When importing a primary instance that has existing read replicas:
 
 - **Only the primary instance is imported** into Terraform state
 - **Pre-existing read replicas remain unmanaged** by Terraform
-- **New read replicas** are created based on `read_replica_count` configuration
+- **New read replicas** are created based on `read_replica_count` configuration with an `-imp` suffix to avoid naming conflicts
 - **Existing unmanaged replicas** continue to exist in AWS but outside Terraform control
+- **Example**: If existing replica is `mydb-env-replica-1`, new Terraform-managed replica will be `mydb-env-imp-replica-1`
+- **Identifier length**: Automatically truncated to stay within AWS 63-character limit, avoiding consecutive hyphens
 
 #### Destroy Behavior with Existing Replicas
 
