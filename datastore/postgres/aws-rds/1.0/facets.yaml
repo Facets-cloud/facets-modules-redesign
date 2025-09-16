@@ -119,7 +119,7 @@ spec:
             values:
             - true
       required:
-      - restore_from_backup
+      - restore_config
     imports:
       type: object
       title: Import Existing Resources
@@ -127,10 +127,22 @@ spec:
         db_instance_identifier:
           type: string
           title: RDS Instance Identifier
-          description: Identifier of existing RDS instance to import
+          description: Identifier of existing RDS instance to import (main or replica)
           pattern: ^[a-zA-Z][a-zA-Z0-9-]*$
           minLength: 1
           maxLength: 63
+        subnet_group_name:
+          type: string
+          title: DB Subnet Group Name
+          description: Name of existing DB subnet group (required when importing)
+          pattern: ^[a-zA-Z][a-zA-Z0-9-]*$
+          minLength: 1
+          maxLength: 255
+        security_group_id:
+          type: string
+          title: Security Group ID
+          description: ID of existing security group (required when importing)
+          pattern: ^sg-[0-9a-fA-F]{8,17}$
   required:
   - version_config
   - sizing
@@ -139,7 +151,13 @@ spec:
 imports:
 - name: db_instance_identifier
   resource_address: aws_db_instance.postgres
-  required: true
+  required: false
+- name: subnet_group_name
+  resource_address: aws_db_subnet_group.postgres
+  required: false
+- name: security_group_id
+  resource_address: aws_security_group.postgres
+  required: false
 inputs:
   aws_provider:
     type: '@facets/aws_cloud_account'
@@ -155,8 +173,11 @@ inputs:
     description: AWS VPC infrastructure for database deployment
 outputs:
   default:
-    type: '@outputs/postgres'
+    type: '@facets/postgres-aws-rds'
     title: PostgreSQL RDS Instance
+  interfaces:
+    type: '@facets/postgres-interface'
+    title: PostgreSQL Database Interface
 iac:
   validated_files:
   - main.tf

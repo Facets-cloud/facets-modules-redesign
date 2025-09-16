@@ -25,6 +25,8 @@ variable "instance" {
       })
       imports = optional(object({
         db_instance_identifier = optional(string)
+        subnet_group_name      = optional(string)
+        security_group_id      = optional(string)
       }))
     })
   })

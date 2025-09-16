@@ -1,28 +1,37 @@
 # PostgreSQL RDS Instance Implementation
 
-# Random password generation (when not restoring from backup)
+# Random password generation (when not restoring from backup or importing)
 resource "random_password" "master_password" {
-  count   = var.instance.spec.restore_config.restore_from_backup ? 0 : 1
+  count   = (var.instance.spec.restore_config.restore_from_backup || try(var.instance.spec.imports.db_instance_identifier, null) != null) ? 0 : 1
   length  = 16
   special = true
 }
 
-# Random username generation (when not restoring from backup)  
+# Random username generation (when not restoring from backup or importing)
 resource "random_id" "master_username" {
-  count       = var.instance.spec.restore_config.restore_from_backup ? 0 : 1
+  count       = (var.instance.spec.restore_config.restore_from_backup || try(var.instance.spec.imports.db_instance_identifier, null) != null) ? 0 : 1
   byte_length = 4
 }
 
 # Locals for computed values
 locals {
+  # Check if we're importing
+  is_importing = try(var.instance.spec.imports.db_instance_identifier, null) != null
+
   # Resource naming with length constraints
   db_instance_identifier = substr("${var.instance_name}-${var.environment.unique_name}", 0, 63)
   subnet_group_name      = substr("${var.instance_name}-${var.environment.unique_name}-subnet-group", 0, 63)
   security_group_name    = substr("${var.instance_name}-${var.environment.unique_name}-sg", 0, 63)
 
-  # Master credentials
-  master_username = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_username : "pgadmin${random_id.master_username[0].hex}"
-  master_password = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_password : random_password.master_password[0].result
+  # Use imported or created subnet group
+  actual_subnet_group_name = try(var.instance.spec.imports.subnet_group_name, null) != null ? var.instance.spec.imports.subnet_group_name : (length(aws_db_subnet_group.postgres) > 0 ? aws_db_subnet_group.postgres[0].name : null)
+
+  # Use imported or created security group
+  actual_security_group_id = try(var.instance.spec.imports.security_group_id, null) != null ? var.instance.spec.imports.security_group_id : (length(aws_security_group.postgres) > 0 ? aws_security_group.postgres[0].id : null)
+
+  # Master credentials - don't set when importing
+  master_username = local.is_importing ? null : (var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_username : "pgadmin${random_id.master_username[0].hex}")
+  master_password = local.is_importing ? null : (var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_password : random_password.master_password[0].result)
 
   # Database configuration
   database_name = var.instance.spec.version_config.database_name
@@ -46,18 +55,30 @@ locals {
   })
 }
 
-# DB Subnet Group
+# DB Subnet Group - only create if not importing
 resource "aws_db_subnet_group" "postgres" {
+  count = try(var.instance.spec.imports.subnet_group_name, null) != null ? 0 : 1
+
   name       = local.subnet_group_name
   subnet_ids = var.inputs.vpc_details.attributes.private_subnet_ids
 
   tags = merge(local.common_tags, {
     Name = "${local.db_instance_identifier}-subnet-group"
   })
+
+  lifecycle {
+    create_before_destroy = true
+    ignore_changes = [
+      # Ignore tag changes that might occur outside Terraform
+      tags["LastModified"],
+    ]
+  }
 }
 
-# Security Group for RDS
+# Security Group for RDS - only create if not importing
 resource "aws_security_group" "postgres" {
+  count = try(var.instance.spec.imports.security_group_id, null) != null ? 0 : 1
+
   name_prefix = "${local.security_group_name}-"
   vpc_id      = var.inputs.vpc_details.attributes.vpc_id
   description = "Security group for PostgreSQL RDS instance ${local.db_instance_identifier}"
@@ -98,10 +119,10 @@ resource "aws_db_instance" "postgres" {
   instance_class = var.instance.spec.sizing.instance_class
 
   # Database configuration
-  db_name = local.database_name
-  # Conditional credentials - only set when not restoring from snapshot
-  username = var.instance.spec.restore_config.restore_from_backup ? null : local.master_username
-  password = var.instance.spec.restore_config.restore_from_backup ? null : local.master_password
+  db_name = local.is_importing ? null : local.database_name
+  # Conditional credentials - only set when not restoring from snapshot or importing
+  username = local.master_username
+  password = local.master_password
   port     = local.db_port
 
   # Storage configuration
@@ -111,8 +132,8 @@ resource "aws_db_instance" "postgres" {
   storage_encrypted     = true # Always encrypted
 
   # Network configuration
-  db_subnet_group_name   = aws_db_subnet_group.postgres.name
-  vpc_security_group_ids = [aws_security_group.postgres.id]
+  db_subnet_group_name   = local.actual_subnet_group_name
+  vpc_security_group_ids = local.actual_security_group_id != null ? [local.actual_security_group_id] : []
   publicly_accessible    = false # Always private
 
   # Backup configuration (hardcoded for security)
@@ -138,7 +159,7 @@ resource "aws_db_instance" "postgres" {
   deletion_protection = var.instance.spec.security_config.deletion_protection
 
   # Skip final snapshot for development (can be overridden)
-  skip_final_snapshot       = false
+  skip_final_snapshot       = true
   final_snapshot_identifier = "${local.db_instance_identifier}-final-snapshot-${formatdate("YYYY-MM-DD-hhmm", timestamp())}"
 
   tags = local.common_tags
@@ -146,16 +167,23 @@ resource "aws_db_instance" "postgres" {
   lifecycle {
     prevent_destroy = true
     ignore_changes = [
-      # Ignore changes that would trigger recreation
+      # Ignore changes that would trigger recreation when importing
       db_subnet_group_name,
-      vpc_security_group_ids
+      vpc_security_group_ids,
+      # Ignore password and username when importing since we don't know them
+      username,
+      password,
+      # Ignore snapshot identifier after initial creation/import
+      snapshot_identifier,
+      # Ignore final snapshot identifier timestamp changes
+      final_snapshot_identifier
     ]
   }
 }
 
-# Read Replicas (conditional)
+# Read Replicas (conditional) - Don't create when importing
 resource "aws_db_instance" "read_replicas" {
-  count = var.instance.spec.sizing.read_replica_count
+  count = local.is_importing ? 0 : var.instance.spec.sizing.read_replica_count
 
   # Basic configuration
   identifier          = "${local.db_instance_identifier}-replica-${count.index + 1}"
@@ -163,7 +191,7 @@ resource "aws_db_instance" "read_replicas" {
   instance_class      = var.instance.spec.sizing.instance_class
 
   # Use same security group as primary
-  vpc_security_group_ids = [aws_security_group.postgres.id]
+  vpc_security_group_ids = local.actual_security_group_id != null ? [local.actual_security_group_id] : []
   publicly_accessible    = false
 
   # Storage configuration (inherited from source)
@@ -186,5 +214,16 @@ resource "aws_db_instance" "read_replicas" {
 
   lifecycle {
     prevent_destroy = true
+    ignore_changes = [
+      # Ignore changes to the source DB after creation
+      replicate_source_db,
+      # Ignore security group changes that might happen on the primary
+      vpc_security_group_ids,
+      # Ignore parameter group changes that might occur after primary instance changes
+      parameter_group_name
+    ]
   }
+
+  # Ensure replicas are created after primary instance is fully created
+  depends_on = [aws_db_instance.postgres]
 }

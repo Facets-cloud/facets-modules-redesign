@@ -36,3 +36,89 @@ This module implements security-first defaults that cannot be disabled:
 - **Performance Monitoring**: Performance Insights enabled for security event monitoring
 
 Users should ensure proper IAM policies and VPC configurations are in place to maintain the security posture established by this module.
+
+## Import Existing Infrastructure
+
+This module supports importing existing AWS RDS PostgreSQL instances and their associated resources into Terraform management.
+
+### Supported Import Resources
+
+- **RDS Instance**: Import existing primary or read replica instances
+- **DB Subnet Group**: Import existing subnet group configurations
+- **Security Group**: Import existing security group rules
+
+### Import Configuration
+
+To import existing resources, provide the following fields in the `imports` section:
+
+```yaml
+spec:
+  imports:
+    db_instance_identifier: "my-existing-rds-instance"
+    subnet_group_name: "my-existing-subnet-group"
+    security_group_id: "sg-0123456789abcdef0"
+```
+
+### Import Workflow
+
+1. **Configure Import Fields**: Set the appropriate identifiers in the module configuration
+2. **Run Terraform Import**: Execute import commands for each resource:
+   ```bash
+   terraform import module.postgres.aws_db_instance.postgres my-existing-rds-instance
+   terraform import module.postgres.aws_db_subnet_group.postgres[0] my-existing-subnet-group
+   terraform import module.postgres.aws_security_group.postgres[0] sg-0123456789abcdef0
+   ```
+3. **Verify State**: Run `terraform plan` to ensure imported resources match configuration
+
+### Important Limitations
+
+#### Read Replica Handling
+
+When importing a primary instance that has existing read replicas:
+
+- **Only the primary instance is imported** into Terraform state
+- **Pre-existing read replicas remain unmanaged** by Terraform
+- **New read replicas** are created based on `read_replica_count` configuration
+- **Existing unmanaged replicas** continue to exist in AWS but outside Terraform control
+
+#### Destroy Behavior with Existing Replicas
+
+**Critical**: If you import a primary instance that has pre-existing read replicas and later attempt to destroy it:
+
+1. **Terraform-managed resources** (new replicas, security groups) will be destroyed successfully
+2. **Primary instance deletion will FAIL** with an error like:
+   - `InvalidDBInstanceState: Cannot delete DB instance because it has read replicas`
+   - AWS prevents deletion of primary instances with active read replicas
+
+#### Recommended Destroy Workflow
+
+Before running `terraform destroy` on an imported primary instance:
+
+1. **Identify unmanaged replicas** using AWS Console or CLI:
+   ```bash
+   aws rds describe-db-instances --query "DBInstances[?ReplicationSourceDBInstanceIdentifier=='your-primary-instance-id'].DBInstanceIdentifier"
+   ```
+
+2. **Handle existing replicas** (choose one):
+   - **Option A**: Manually delete unmanaged replicas first
+   - **Option B**: Promote replicas to standalone instances
+   - **Option C**: Use AWS Console to force-delete primary (promotes replicas automatically)
+
+3. **Run Terraform destroy** after handling unmanaged replicas
+
+#### Password Management for Imported Instances
+
+- **Passwords are not retrievable** from imported instances
+- **Connection strings** in outputs will not include passwords for imported resources
+- **Manual password management** required for imported instances
+- **Password field** shows placeholder: `IMPORTED_INSTANCE_PASSWORD_NOT_AVAILABLE`
+
+### Best Practices for Import
+
+1. **Import one instance at a time** - Either primary or a single replica
+2. **Document existing replicas** before import for future reference
+3. **Test destroy workflow** in non-production first
+4. **Consider migration strategy** for existing replicas:
+   - Keep them unmanaged for gradual migration
+   - Or recreate them as Terraform-managed resources
+5. **Enable deletion protection** to prevent accidental deletion of imported instances
