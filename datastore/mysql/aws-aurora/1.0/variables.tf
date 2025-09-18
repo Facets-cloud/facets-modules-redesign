@@ -31,11 +31,11 @@ variable "instance" {
 
   validation {
     condition = contains([
-      "8.0.mysql_aurora.3.07.1",
+      "8.0.mysql_aurora.3.08.2",
       "8.0.mysql_aurora.3.06.0",
       "5.7.mysql_aurora.2.12.3"
     ], var.instance.spec.version_config.engine_version)
-    error_message = "Engine version must be one of: 8.0.mysql_aurora.3.07.1, 8.0.mysql_aurora.3.06.0, 5.7.mysql_aurora.2.12.3"
+    error_message = "Engine version must be one of: 8.0.mysql_aurora.3.08.2, 8.0.mysql_aurora.3.06.0, 5.7.mysql_aurora.2.12.3"
   }
 
   validation {

@@ -21,10 +21,13 @@ spec:
           title: MySQL Engine Version
           description: Aurora MySQL engine version
           enum:
-          - 8.0.mysql_aurora.3.07.1
-          - 8.0.mysql_aurora.3.06.0
           - 5.7.mysql_aurora.2.12.3
-          default: 8.0.mysql_aurora.3.07.1
+          - 8.0.mysql_aurora.3.08.0
+          - 8.0.mysql_aurora.3.08.1
+          - 8.0.mysql_aurora.3.08.2
+          - 8.0.mysql_aurora.3.09.0
+          - 8.0.mysql_aurora.3.10.0
+          default: 8.0.mysql_aurora.3.08.2
         database_name:
           type: string
           title: Database Name
@@ -161,7 +164,7 @@ imports:
   resource_address: aws_rds_cluster_instance.aurora_writer[0]
   required: false
 - name: reader_instance_identifiers
-  resource_address: aws_rds_cluster_instance.aurora_readers
+  resource_address: aws_rds_cluster_instance.aurora_readers[0]
   required: false
 iac:
   validated_files:
@@ -175,7 +178,7 @@ sample:
   disabled: true
   spec:
     version_config:
-      engine_version: 8.0.mysql_aurora.3.07.1
+      engine_version: 8.0.mysql_aurora.3.08.2
       database_name: mydb
     sizing:
       instance_class: db.t4g.medium
