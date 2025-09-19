@@ -1,0 +1,390 @@
+intent: kubernetes_cluster
+flavor: gke
+version: '1.0'
+clouds:
+- gcp
+title: GKE Cluster with Auto-Upgrade Support
+description: A Kubernetes GKE cluster module with auto-upgrade enabled by default
+  and all necessary configurations preset.
+allow_skipping_module_on_selective_release: false
+spec:
+  type: object
+  x-ui-order:
+  - cluster
+  - auto_upgrade_settings
+  - system_node_pool
+  - security
+  - logging
+  - tags
+  properties:
+    cluster:
+      type: object
+      title: Cluster
+      description: Configuration for the GKE cluster.
+      x-ui-toggle: false
+      properties:
+        cluster_endpoint_public_access_cidrs:
+          type: array
+          title: Cluster Endpoint Public Access CIDRs
+          description: List of CIDR blocks which can access the GKE public API server
+            endpoint.
+          default:
+          - 0.0.0.0/0
+          x-ui-override-disable: true
+      required: []
+    auto_upgrade_settings:
+      type: object
+      title: Auto-Upgrade Settings
+      description: Configuration for automatic cluster upgrades.
+      x-ui-toggle: false
+      properties:
+        release_channel:
+          type: string
+          title: Release Channel
+          description: Release channel for automatic upgrades. The Kubernetes version
+            will be managed automatically by Google based on the selected channel.
+          default: REGULAR
+          enum:
+          - RAPID
+          - REGULAR
+          - STABLE
+        maintenance_window:
+          type: object
+          title: Maintenance Window
+          description: Maintenance window configuration for upgrades.
+          x-ui-toggle: false
+          properties:
+            is_enabled:
+              type: boolean
+              title: Enable Maintenance Window
+              description: Enable maintenance window for scheduled upgrades.
+              default: true
+            start_time:
+              type: string
+              title: Start Time
+              description: Start time for maintenance window (HH:MM format in UTC).
+              default: 02:00
+              pattern: ^([0-1][0-9]|2[0-3]):[0-5][0-9]$
+              x-ui-error-message: Time must be in HH:MM format (24-hour)
+              x-ui-visible-if:
+                field: spec.auto_upgrade_settings.maintenance_window.is_enabled
+                values:
+                - true
+            end_time:
+              type: string
+              title: End Time
+              description: End time for maintenance window (HH:MM format in UTC).
+              default: 06:00
+              pattern: ^([0-1][0-9]|2[0-3]):[0-5][0-9]$
+              x-ui-error-message: Time must be in HH:MM format (24-hour)
+              x-ui-visible-if:
+                field: spec.auto_upgrade_settings.maintenance_window.is_enabled
+                values:
+                - true
+            recurrence:
+              type: string
+              title: Recurrence
+              description: Maintenance window recurrence pattern.
+              default: FREQ=WEEKLY;BYDAY=SU
+              x-ui-visible-if:
+                field: spec.auto_upgrade_settings.maintenance_window.is_enabled
+                values:
+                - true
+          required:
+          - is_enabled
+      required:
+      - release_channel
+    system_node_pool:
+      type: object
+      title: System Node Pool
+      description: Configuration for system node pool (required for GKE).
+      x-ui-toggle: false
+      properties:
+        enabled:
+          type: boolean
+          title: Enabled
+          description: Enable system node pool.
+          default: true
+          readOnly: true
+        node_count:
+          type: integer
+          title: Node Count
+          description: Initial number of nodes.
+          default: 3
+          minimum: 1
+          maximum: 1000
+          x-ui-visible-if:
+            field: spec.system_node_pool.enabled
+            values:
+            - true
+        machine_type:
+          type: string
+          title: Machine Type
+          description: GCP machine type for system nodes.
+          default: e2-medium
+          x-ui-visible-if:
+            field: spec.system_node_pool.enabled
+            values:
+            - true
+        disk_size_gb:
+          type: integer
+          title: Disk Size (GB)
+          description: Boot disk size in GB.
+          default: 100
+          minimum: 10
+          maximum: 65536
+          x-ui-visible-if:
+            field: spec.system_node_pool.enabled
+            values:
+            - true
+        disk_type:
+          type: string
+          title: Disk Type
+          description: Boot disk type.
+          default: pd-standard
+          enum:
+          - pd-standard
+          - pd-ssd
+          - pd-balanced
+          x-ui-visible-if:
+            field: spec.system_node_pool.enabled
+            values:
+            - true
+        enable_autoscaling:
+          type: boolean
+          title: Enable Autoscaling
+          description: Enable autoscaling for system node pool.
+          default: true
+          x-ui-visible-if:
+            field: spec.system_node_pool.enabled
+            values:
+            - true
+        min_nodes:
+          type: integer
+          title: Minimum Nodes
+          description: Minimum number of nodes when autoscaling is enabled.
+          default: 1
+          minimum: 0
+          maximum: 1000
+          x-ui-visible-if:
+            field: spec.system_node_pool.enable_autoscaling
+            values:
+            - true
+        max_nodes:
+          type: integer
+          title: Maximum Nodes
+          description: Maximum number of nodes when autoscaling is enabled.
+          default: 10
+          minimum: 1
+          maximum: 1000
+          x-ui-visible-if:
+            field: spec.system_node_pool.enable_autoscaling
+            values:
+            - true
+        labels:
+          type: object
+          title: Node Labels
+          description: Kubernetes labels to apply to system nodes.
+          default:
+            facets.cloud/node-type: system
+            managed-by: facets
+          x-ui-yaml-editor: true
+          x-ui-visible-if:
+            field: spec.system_node_pool.enabled
+            values:
+            - true
+      required:
+      - enabled
+    security:
+      type: object
+      title: Security Settings
+      description: Security configuration for the GKE cluster.
+      x-ui-toggle: false
+      properties:
+        enable_private_cluster:
+          type: boolean
+          title: Enable Private Cluster
+          description: Create a private cluster where nodes have only private IP addresses.
+          default: true
+        enable_network_policy:
+          type: boolean
+          title: Enable Network Policy
+          description: Enable Kubernetes network policy enforcement.
+          default: true
+        enable_workload_identity:
+          type: boolean
+          title: Enable Workload Identity
+          description: Enable Workload Identity for secure access to GCP services.
+          default: true
+        master_ipv4_cidr_block:
+          type: string
+          title: Master IPv4 CIDR Block
+          description: CIDR block for the master network (private clusters only).
+          default: 10.0.0.0/28
+          pattern: ^(\d{1,3}\.){3}\d{1,3}\/\d{1,2}$
+          x-ui-error-message: Must be a valid CIDR block
+          x-ui-visible-if:
+            field: spec.security.enable_private_cluster
+            values:
+            - true
+      required:
+      - enable_private_cluster
+      - enable_network_policy
+      - enable_workload_identity
+    logging:
+      type: object
+      title: Logging Configuration
+      description: Google Cloud Logging configuration for the GKE cluster.
+      x-ui-toggle: true
+      properties:
+        enable_logging:
+          type: boolean
+          title: Enable Cluster Logging
+          description: Enable Google Cloud Logging for the cluster.
+          default: false
+        log_retention_days:
+          type: integer
+          title: Log Retention Days
+          description: Number of days to retain cluster logs.
+          default: 30
+          minimum: 1
+          maximum: 3653
+          x-ui-visible-if:
+            field: spec.logging.enable_logging
+            values:
+            - true
+        enable_workloads_logging:
+          type: boolean
+          title: Enable Workloads Logging
+          description: Enable logging for workloads running in the cluster.
+          default: true
+          x-ui-visible-if:
+            field: spec.logging.enable_logging
+            values:
+            - true
+        enable_api_server_logging:
+          type: boolean
+          title: Enable API Server Logging
+          description: Enable logging for the Kubernetes API server.
+          default: true
+          x-ui-visible-if:
+            field: spec.logging.enable_logging
+            values:
+            - true
+        enable_system_components_logging:
+          type: boolean
+          title: Enable System Components Logging
+          description: Enable logging for system components.
+          default: false
+          x-ui-visible-if:
+            field: spec.logging.enable_logging
+            values:
+            - true
+      required: []
+    tags:
+      type: object
+      title: Labels
+      description: Labels to apply to the GKE cluster.
+      x-ui-toggle: false
+      x-ui-yaml-editor: true
+  required:
+  - cluster
+  - auto_upgrade_settings
+  - system_node_pool
+  - security
+  - logging
+inputs:
+  network_details:
+    type: '@facets/gcp-network-details'
+    displayName: Network
+    description: The GCP VPC network where the GKE cluster will be created
+    default:
+      resource_type: network
+      resource_name: default
+  cloud_account:
+    type: '@facets/gcp_cloud_account'
+    displayName: Cloud Account
+    description: The GCP Cloud Account where the GKE cluster will be created
+    optional: false
+    providers:
+    - google
+    - google-beta
+outputs:
+  default:
+    type: '@facets/gcp_gke'
+    title: Kubernetes Cluster Output
+    description: The output for the GKE cluster
+    providers:
+      kubernetes:
+        source: hashicorp/kubernetes
+        version: 2.17.0
+        attributes:
+          host: attributes.cluster_endpoint
+          client_certificate: attributes.client_certificate
+          client_key: attributes.client_key
+          cluster_ca_certificate: attributes.cluster_ca_certificate
+      helm:
+        source: hashicorp/helm
+        version: 2.8.0
+        attributes:
+          kubernetes:
+            host: attributes.cluster_endpoint
+            client_certificate: attributes.client_certificate
+            client_key: attributes.client_key
+            cluster_ca_certificate: attributes.cluster_ca_certificate
+      google:
+        source: hashicorp/google
+        version: 5.0.0
+        attributes:
+          project: attributes.project_id
+          region: attributes.cluster_location
+sample:
+  kind: kubernetes_cluster
+  flavor: gke
+  version: '1.0'
+  metadata:
+    name: gke-cluster
+  spec:
+    cluster:
+      cluster_endpoint_public_access_cidrs:
+      - 0.0.0.0/0
+    auto_upgrade_settings:
+      release_channel: REGULAR
+      maintenance_window:
+        is_enabled: true
+        start_time: 02:00
+        end_time: 06:00
+        recurrence: FREQ=WEEKLY;BYDAY=SU
+    system_node_pool:
+      enabled: true
+      node_count: 3
+      machine_type: e2-medium
+      disk_size_gb: 100
+      disk_type: pd-standard
+      enable_autoscaling: true
+      min_nodes: 1
+      max_nodes: 10
+      labels:
+        facets.cloud/node-type: system
+        managed-by: facets
+    security:
+      enable_private_cluster: true
+      enable_network_policy: true
+      enable_workload_identity: true
+      master_ipv4_cidr_block: 10.0.0.0/28
+    logging:
+      enable_logging: false
+      enable_workloads_logging: true
+      enable_api_server_logging: true
+      enable_system_components_logging: false
+    tags: {}
+imports:
+- name: gke_cluster
+  resource_address: google_container_cluster.primary
+  required: false
+- name: system_node_pool
+  resource_address: google_container_node_pool.system[0]
+  required: true
+- name: node_pool_service_account
+  resource_address: google_service_account.node_pool
+  required: true
