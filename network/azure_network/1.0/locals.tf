@@ -56,9 +56,11 @@ locals {
     }
   ]
 
-  # Database subnet configuration
-  database_config         = var.instance.spec.database_config
-  enable_database_subnets = local.database_config.enable_database_subnets
+  # Database subnet configuration - three separate flags
+  database_config                   = var.instance.spec.database_config
+  enable_general_database_subnet    = local.database_config.enable_general_database_subnet
+  enable_postgresql_flexible_subnet = local.database_config.enable_postgresql_flexible_subnet
+  enable_mysql_flexible_subnet      = local.database_config.enable_mysql_flexible_subnet
 
   # Calculate database subnet CIDRs
   # If user provides specific CIDRs, use them; otherwise, auto-calculate
@@ -80,9 +82,9 @@ locals {
     mysql      = lookup(local.database_config.database_subnet_cidrs, "mysql", local.default_database_cidrs.mysql)
   }
 
-  # DNS Zone configuration
-  create_postgresql_dns_zone = local.enable_database_subnets && lookup(local.database_config.create_dns_zones, "postgresql", true)
-  create_mysql_dns_zone      = local.enable_database_subnets && lookup(local.database_config.create_dns_zones, "mysql", true)
+  # DNS Zone configuration - automatically created when subnets are enabled
+  create_postgresql_dns_zone = local.enable_postgresql_flexible_subnet
+  create_mysql_dns_zone      = local.enable_mysql_flexible_subnet
 
   # DNS Zone names - using environment unique name for uniqueness
   postgresql_dns_zone_name = "pg-${var.environment.unique_name}.postgres.database.azure.com"

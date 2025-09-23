@@ -56,23 +56,19 @@ variable "instance" {
 
       # Database Configuration
       database_config = optional(object({
-        enable_database_subnets = bool
+        enable_general_database_subnet    = optional(bool, false)
+        enable_postgresql_flexible_subnet = optional(bool, false)
+        enable_mysql_flexible_subnet      = optional(bool, false)
         database_subnet_cidrs = optional(object({
           general    = optional(string)
           postgresql = optional(string)
           mysql      = optional(string)
         }), {})
-        create_dns_zones = optional(object({
-          postgresql = optional(bool, true)
-          mysql      = optional(bool, true)
-        }), {})
         }), {
-        enable_database_subnets = true
-        database_subnet_cidrs   = {}
-        create_dns_zones = {
-          postgresql = true
-          mysql      = true
-        }
+        enable_general_database_subnet    = false
+        enable_postgresql_flexible_subnet = false
+        enable_mysql_flexible_subnet      = false
+        database_subnet_cidrs             = {}
       })
 
       # Additional Tags

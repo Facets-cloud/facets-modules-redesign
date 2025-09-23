@@ -1,10 +1,11 @@
 #########################################################################
 # Private DNS Zones for Database Services                               #
-# Shared DNS zones that can be used by all database instances          #
+# Automatically created when respective database subnets are enabled    #
 #########################################################################
 
 # PostgreSQL Private DNS Zone
 # This zone will be shared by ALL PostgreSQL Flexible Servers in this VNet
+# Automatically created when PostgreSQL subnet is enabled
 resource "azurerm_private_dns_zone" "postgresql" {
   count = local.create_postgresql_dns_zone ? 1 : 0
 
@@ -36,6 +37,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "postgresql" {
 
 # MySQL Private DNS Zone
 # This zone will be shared by ALL MySQL Flexible Servers in this VNet
+# Automatically created when MySQL subnet is enabled
 resource "azurerm_private_dns_zone" "mysql" {
   count = local.create_mysql_dns_zone ? 1 : 0
 
@@ -65,5 +67,5 @@ resource "azurerm_private_dns_zone_virtual_network_link" "mysql" {
   }
 }
 
-# Output DNS Zone information for consumption by database modules
-# These will be included in the main outputs.tf
+# Note: DNS zones are automatically created when the respective database subnet is enabled
+# This ensures that the DNS infrastructure is always available when needed
