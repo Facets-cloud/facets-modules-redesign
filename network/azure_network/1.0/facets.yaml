@@ -53,46 +53,23 @@ spec:
     database_config:
       type: object
       title: Database Subnet Configuration
-      description: Configuration for database-related subnets
+      description: Configuration for database-related subnets (automatically allocates /24 blocks)
       properties:
         enable_general_database_subnet:
           type: boolean
           title: Enable General Database Subnet
-          description: Create subnet for private endpoints and non-delegated database resources (/24)
+          description: Creates a /24 subnet for private endpoints and non-delegated database resources
           default: false
         enable_postgresql_flexible_subnet:
           type: boolean
           title: Enable PostgreSQL Flexible Server Subnet
-          description: Create delegated subnet for PostgreSQL Flexible Servers (/24)
+          description: Creates a /24 delegated subnet for PostgreSQL Flexible Servers
           default: false
         enable_mysql_flexible_subnet:
           type: boolean
           title: Enable MySQL Flexible Server Subnet
-          description: Create delegated subnet for MySQL Flexible Servers (/24)
+          description: Creates a /24 delegated subnet for MySQL Flexible Servers
           default: false
-        database_subnet_cidrs:
-          type: object
-          title: Database Subnet CIDRs
-          description: CIDR blocks for database subnets (must be /24 blocks within VNet CIDR)
-          properties:
-            general:
-              type: string
-              title: General Database Subnet
-              description: For database resources that don't require delegation
-              pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}/24$
-              x-ui-placeholder: 10.0.100.0/24
-            postgresql:
-              type: string
-              title: PostgreSQL Delegated Subnet
-              description: Delegated subnet for all PostgreSQL Flexible Servers
-              pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}/24$
-              x-ui-placeholder: 10.0.101.0/24
-            mysql:
-              type: string
-              title: MySQL Delegated Subnet
-              description: Delegated subnet for all MySQL Flexible Servers
-              pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}/24$
-              x-ui-placeholder: 10.0.102.0/24
     tags:
       type: object
       title: Additional Tags

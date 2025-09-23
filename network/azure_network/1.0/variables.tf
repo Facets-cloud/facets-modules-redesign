@@ -54,21 +54,15 @@ variable "instance" {
         strategy = string
       })
 
-      # Database Configuration
+      # Database Configuration - Simplified without CIDR inputs
       database_config = optional(object({
         enable_general_database_subnet    = optional(bool, false)
         enable_postgresql_flexible_subnet = optional(bool, false)
         enable_mysql_flexible_subnet      = optional(bool, false)
-        database_subnet_cidrs = optional(object({
-          general    = optional(string)
-          postgresql = optional(string)
-          mysql      = optional(string)
-        }), {})
         }), {
         enable_general_database_subnet    = false
         enable_postgresql_flexible_subnet = false
         enable_mysql_flexible_subnet      = false
-        database_subnet_cidrs             = {}
       })
 
       # Additional Tags
@@ -137,51 +131,5 @@ variable "instance" {
       "single", "per_az"
     ], var.instance.spec.nat_gateway.strategy)
     error_message = "NAT Gateway strategy must be either 'single' or 'per_az'."
-  }
-
-  #########################################################################
-  # Database Subnet CIDR Validation                                       #
-  #########################################################################
-  validation {
-    condition     = var.instance.spec.database_config.database_subnet_cidrs.general == null || can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/24$", var.instance.spec.database_config.database_subnet_cidrs.general))
-    error_message = "General database subnet CIDR must be a valid /24 block (e.g., 10.0.100.0/24)."
-  }
-
-  validation {
-    condition     = var.instance.spec.database_config.database_subnet_cidrs.postgresql == null || can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/24$", var.instance.spec.database_config.database_subnet_cidrs.postgresql))
-    error_message = "PostgreSQL database subnet CIDR must be a valid /24 block (e.g., 10.0.101.0/24)."
-  }
-
-  validation {
-    condition     = var.instance.spec.database_config.database_subnet_cidrs.mysql == null || can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/24$", var.instance.spec.database_config.database_subnet_cidrs.mysql))
-    error_message = "MySQL database subnet CIDR must be a valid /24 block (e.g., 10.0.102.0/24)."
-  }
-
-  # Validate database subnets are within VNet CIDR range (Facets best practice)
-  validation {
-    condition = var.instance.spec.database_config.database_subnet_cidrs.general == null || (
-      can(cidrnetmask(var.instance.spec.database_config.database_subnet_cidrs.general)) &&
-      substr(var.instance.spec.database_config.database_subnet_cidrs.general, 0, length(split(".", var.instance.spec.vnet_cidr)[0]) + length(split(".", var.instance.spec.vnet_cidr)[1]) + 1) ==
-      substr(var.instance.spec.vnet_cidr, 0, length(split(".", var.instance.spec.vnet_cidr)[0]) + length(split(".", var.instance.spec.vnet_cidr)[1]) + 1)
-    )
-    error_message = "General database subnet CIDR must be within the VNet CIDR range."
-  }
-
-  validation {
-    condition = var.instance.spec.database_config.database_subnet_cidrs.postgresql == null || (
-      can(cidrnetmask(var.instance.spec.database_config.database_subnet_cidrs.postgresql)) &&
-      substr(var.instance.spec.database_config.database_subnet_cidrs.postgresql, 0, length(split(".", var.instance.spec.vnet_cidr)[0]) + length(split(".", var.instance.spec.vnet_cidr)[1]) + 1) ==
-      substr(var.instance.spec.vnet_cidr, 0, length(split(".", var.instance.spec.vnet_cidr)[0]) + length(split(".", var.instance.spec.vnet_cidr)[1]) + 1)
-    )
-    error_message = "PostgreSQL database subnet CIDR must be within the VNet CIDR range."
-  }
-
-  validation {
-    condition = var.instance.spec.database_config.database_subnet_cidrs.mysql == null || (
-      can(cidrnetmask(var.instance.spec.database_config.database_subnet_cidrs.mysql)) &&
-      substr(var.instance.spec.database_config.database_subnet_cidrs.mysql, 0, length(split(".", var.instance.spec.vnet_cidr)[0]) + length(split(".", var.instance.spec.vnet_cidr)[1]) + 1) ==
-      substr(var.instance.spec.vnet_cidr, 0, length(split(".", var.instance.spec.vnet_cidr)[0]) + length(split(".", var.instance.spec.vnet_cidr)[1]) + 1)
-    )
-    error_message = "MySQL database subnet CIDR must be within the VNet CIDR range."
   }
 }

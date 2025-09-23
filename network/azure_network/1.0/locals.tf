@@ -75,11 +75,11 @@ locals {
     mysql      = "${local.vnet_base[0]}.${local.vnet_base[1]}.102.0/24"
   }
 
-  # Final database subnet CIDRs
+  # Final database subnet CIDRs - using auto-calculated defaults
   database_subnet_cidrs = {
-    general    = lookup(local.database_config.database_subnet_cidrs, "general", local.default_database_cidrs.general)
-    postgresql = lookup(local.database_config.database_subnet_cidrs, "postgresql", local.default_database_cidrs.postgresql)
-    mysql      = lookup(local.database_config.database_subnet_cidrs, "mysql", local.default_database_cidrs.mysql)
+    general    = local.default_database_cidrs.general
+    postgresql = local.default_database_cidrs.postgresql
+    mysql      = local.default_database_cidrs.mysql
   }
 
   # DNS Zone configuration - automatically created when subnets are enabled
