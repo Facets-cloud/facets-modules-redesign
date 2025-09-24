@@ -19,9 +19,6 @@ variable "instance" {
         source_server_id      = optional(string)
         restore_point_in_time = optional(string)
       }), {})
-      network_config = optional(object({
-        create_dns_zone = optional(bool, true)
-      }), {})
       imports = optional(object({
         flexible_server_id   = optional(string)
         postgres_database_id = optional(string)
@@ -86,20 +83,36 @@ variable "inputs" {
     })
     network_details = object({
       attributes = object({
-        resource_group_name = string
-        vnet_id             = string
-        vnet_name           = string
-        region              = string
-        vnet_cidr_block     = string
-        private_subnet_ids  = list(string)
-        availability_zones  = optional(list(string))
+        resource_group_name             = string
+        vnet_id                         = string
+        vnet_name                       = string
+        region                          = string
+        vnet_cidr_block                 = string
+        private_subnet_ids              = list(string)
+        availability_zones              = optional(list(string))
+        database_postgresql_subnet_id   = optional(string)
+        database_postgresql_subnet_name = optional(string)
+        database_postgresql_subnet_cidr = optional(string)
+        postgresql_dns_zone_id          = optional(string)
+        postgresql_dns_zone_name        = optional(string)
       })
     })
   })
 
-  # Validation to ensure at least one subnet is provided
+  # Validation to ensure PostgreSQL subnet and DNS zone are provided
   validation {
-    condition     = length(var.inputs.network_details.attributes.private_subnet_ids) > 0
-    error_message = "Network details must provide at least one private_subnet_id for PostgreSQL Flexible Server deployment."
+    condition = (
+      var.inputs.network_details.attributes.database_postgresql_subnet_id != null &&
+      var.inputs.network_details.attributes.database_postgresql_subnet_id != ""
+    )
+    error_message = "Network details must provide database_postgresql_subnet_id. Ensure the network module has 'database_config.enable_postgresql_flexible_subnet' set to true."
+  }
+
+  validation {
+    condition = (
+      var.inputs.network_details.attributes.postgresql_dns_zone_id != null &&
+      var.inputs.network_details.attributes.postgresql_dns_zone_id != ""
+    )
+    error_message = "Network details must provide postgresql_dns_zone_id. Ensure the network module has 'database_config.enable_postgresql_flexible_subnet' set to true."
   }
 }

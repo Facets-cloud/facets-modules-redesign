@@ -99,18 +99,6 @@ spec:
             values:
             - true
       required: []
-    network_config:
-      type: object
-      title: Network Configuration
-      x-ui-toggle: true
-      properties:
-        create_dns_zone:
-          type: boolean
-          title: Create DNS Zone
-          description: Create new DNS zone (set to false if DNS zone already exists
-            in environment)
-          default: true
-      required: []
     imports:
       type: object
       title: Import Existing Resources
@@ -142,7 +130,7 @@ inputs:
     type: '@facets/azure-network-details'
     optional: false
     displayName: Azure Network Details
-    description: Azure VNet and delegated subnet configuration for PostgreSQL server
+    description: Azure VNet with PostgreSQL delegated subnet and DNS zone configuration
 outputs:
   default:
     type: '@facets/postgres-azure-flexible-server'

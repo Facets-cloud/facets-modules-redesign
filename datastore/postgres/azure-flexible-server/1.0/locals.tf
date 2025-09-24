@@ -1,10 +1,17 @@
-# Local computations - Complete and Correct
+# Local computations - Simplified after network module refactoring
 locals {
   # Resource naming
+  # Azure PostgreSQL server names have a 63 character limit
   resource_name = "${var.instance_name}-postgres-${var.environment.unique_name}"
   database_name = "postgres"
 
-  # Resource group and location from network details (matching MySQL pattern)
+  # For replicas, we need shorter names to stay within 63 char limit
+  # Calculate how much space we have for the base name (63 - 3 for "-r#")
+  max_replica_base_length = 60
+  # If resource_name is too long for replicas, create a shorter version
+  replica_base_name = length("${local.resource_name}-r1") <= 63 ? local.resource_name : substr(local.resource_name, 0, local.max_replica_base_length)
+
+  # Resource group and location from network details
   resource_group_name = var.inputs.network_details.attributes.resource_group_name
   location            = var.inputs.network_details.attributes.region
 
@@ -25,25 +32,14 @@ locals {
   imports          = lookup(var.instance.spec, "imports", {})
   import_server_id = lookup(local.imports, "flexible_server_id", null)
 
-  # Networking - Create dedicated delegated subnet for PostgreSQL
-  # Extract VNet name from network details
-  vnet_name = var.inputs.network_details.attributes.vnet_name
-
-  # Use VNet CIDR block to create a /28 subnet for PostgreSQL
-  vnet_cidr_block = var.inputs.network_details.attributes.vnet_cidr_block
-
-  # Naming convention for PostgreSQL subnet -
-  postgres_subnet_name = "${var.instance_name}-postgres-${var.environment.unique_name}"
-
-  # DNS zone name for PostgreSQL (required format - cannot match server name)
-  postgres_dns_zone_name = "pg-dns-${var.environment.unique_name}.postgres.database.azure.com"
-
-  # Network configuration
-  network_config  = lookup(var.instance.spec, "network_config", {})
-  create_dns_zone = lookup(local.network_config, "create_dns_zone", true)
-
-  # Get DNS zone ID from either newly created or existing zone
-  postgres_dns_zone_id = local.create_dns_zone ? azurerm_private_dns_zone.postgres[0].id : data.azurerm_private_dns_zone.existing[0].id
+  # Network configuration - Consuming from network module
+  vnet_name              = var.inputs.network_details.attributes.vnet_name
+  vnet_id                = var.inputs.network_details.attributes.vnet_id
+  postgres_subnet_id     = var.inputs.network_details.attributes.database_postgresql_subnet_id
+  postgres_subnet_name   = var.inputs.network_details.attributes.database_postgresql_subnet_name
+  postgres_subnet_cidr   = var.inputs.network_details.attributes.database_postgresql_subnet_cidr
+  postgres_dns_zone_id   = var.inputs.network_details.attributes.postgresql_dns_zone_id
+  postgres_dns_zone_name = var.inputs.network_details.attributes.postgresql_dns_zone_name
 
   # Security and networking defaults
   ssl_enforcement_enabled      = true
@@ -53,7 +49,6 @@ locals {
   # Disable high availability to prevent Multi-Zone HA issues
   # This is a known limitation with Azure PostgreSQL Flexible Server
   # Reference: https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-high-availability
-
   high_availability_enabled = false
   high_availability_mode    = null
 
