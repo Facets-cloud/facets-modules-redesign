@@ -28,4 +28,7 @@ locals {
     mysql_dns_zone_id               = local.create_mysql_dns_zone ? azurerm_private_dns_zone.mysql[0].id : null
     mysql_dns_zone_name             = local.create_mysql_dns_zone ? azurerm_private_dns_zone.mysql[0].name : null
   }
+  # Network modules do not expose connection interfaces
+  output_interfaces = {
+  }
 }

@@ -5,7 +5,7 @@
 locals {
   # Fixed subnet allocation: 1 public + 1 private subnet per AZ
   # Public subnets: /24 (256 IPs each) - smaller allocation
-  # Private subnets: /18 (16,384 IPs each) - larger allocation as requested
+  # Private subnets: /19 (8,192 IPs each) - balanced allocation for /16 network
 
   # Calculate total subnets needed
   num_azs               = length(var.instance.spec.availability_zones)
@@ -14,12 +14,12 @@ locals {
 
   # For /16 CIDR, we'll use:
   # - Public subnets: /24 (256 IPs each)
-  # - Private subnets: /18 (16,384 IPs each)
+  # - Private subnets: /19 (8,192 IPs each)
 
   # Calculate newbits for cidrsubnets function
   vnet_prefix_length     = 16 # We enforce /16 input
   public_subnet_newbits  = 8  # /16 + 8 = /24 (256 IPs)
-  private_subnet_newbits = 2  # /16 + 2 = /18 (16,384 IPs)
+  private_subnet_newbits = 3  # /16 + 3 = /19 (8,192 IPs) - reduced from /18
 
   # Create subnet mappings with AZ and CIDR
   # Public subnets - 1 per AZ
