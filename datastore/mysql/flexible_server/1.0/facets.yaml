@@ -4,11 +4,12 @@ version: '1.0'
 clouds:
 - azure
 description: Azure Database for MySQL - Flexible Server with high availability and
-  automated backup
+  automated backup. Requires network module with MySQL subnet enabled (database_config.enable_mysql_flexible_subnet
+  = true)
 spec:
   title: Azure MySQL Flexible Server
   description: Azure Database for MySQL - Flexible Server with high availability and
-    automated backup
+    automated backup. Network module must have MySQL flexible server subnet enabled.
   type: object
   properties:
     version_config:
@@ -55,18 +56,24 @@ spec:
         sku_name:
           type: string
           title: SKU Name
-          description: Azure MySQL Flexible Server SKU
+          description: Azure MySQL Flexible Server SKU. Note - Burstable SKUs do not
+            support read replicas or high availability
           enum:
           - B_Standard_B1s
           - B_Standard_B1ms
           - B_Standard_B2s
-          - GP_Standard_D2s_v3
-          - GP_Standard_D4s_v3
-          - GP_Standard_D8s_v3
-          - GP_Standard_D16s_v3
-          - MO_Standard_E4s_v3
-          - MO_Standard_E8s_v3
-          - MO_Standard_E16s_v3
+          - B_Standard_B2ms
+          - B_Standard_B4ms
+          - GP_Standard_D2ds_v4
+          - GP_Standard_D4ds_v4
+          - GP_Standard_D8ds_v4
+          - GP_Standard_D16ds_v4
+          - GP_Standard_D32ds_v4
+          - MO_Standard_E2ds_v4
+          - MO_Standard_E4ds_v4
+          - MO_Standard_E8ds_v4
+          - MO_Standard_E16ds_v4
+          - MO_Standard_E20ds_v4
           default: B_Standard_B1ms
         storage_gb:
           type: number
@@ -102,7 +109,8 @@ spec:
         read_replica_count:
           type: number
           title: Read Replica Count
-          description: Number of read replicas to create
+          description: Number of read replicas to create. Not supported for Burstable
+            SKUs - will be automatically set to 0
           minimum: 0
           maximum: 10
           default: 0
@@ -183,8 +191,9 @@ inputs:
   network_details:
     type: '@facets/azure-network-details'
     optional: false
-    displayName: Azure Network Details
-    description: Azure VNet and delegated subnet configuration for MySQL server
+    displayName: Azure Network Details with MySQL Support
+    description: Azure VNet with MySQL delegated subnet and DNS zone (requires database_config.enable_mysql_flexible_subnet
+      = true)
 outputs:
   default:
     type: '@outputs/mysql'
@@ -207,6 +216,7 @@ iac:
   - main.tf
   - variables.tf
   - locals.tf
+  - outputs.tf
 sample:
   kind: mysql
   flavor: azure-flexible-server
@@ -216,6 +226,11 @@ sample:
     version_config:
       version: 8.0.21
       database_name: mydb
+      charset: utf8mb4
+      collation: utf8mb4_unicode_ci
     sizing:
       sku_name: B_Standard_B1ms
       storage_gb: 100
+      iops: 360
+      storage_tier: P10
+      read_replica_count: 0

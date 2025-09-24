@@ -5,21 +5,8 @@ resource "random_password" "mysql_password" {
   special = true
 }
 
-# Private DNS Zone for MySQL (MUST end with .mysql.database.azure.com)
-resource "azurerm_private_dns_zone" "mysql" {
-  name                = "${local.server_name}.mysql.database.azure.com"
-  resource_group_name = local.resource_group_name
-  tags                = local.tags
-}
-
-# Link Private DNS Zone to VNet
-resource "azurerm_private_dns_zone_virtual_network_link" "mysql" {
-  name                  = "${local.server_name}-dns-link"
-  resource_group_name   = local.resource_group_name
-  private_dns_zone_name = azurerm_private_dns_zone.mysql.name
-  virtual_network_id    = var.inputs.network_details.attributes.vnet_id
-  tags                  = local.tags
-}
+# NOTE: DNS Zone and VNet linking are now managed by the azure-network module
+# The network module must have database_config.enable_mysql_flexible_subnet = true
 
 # MySQL Flexible Server
 resource "azurerm_mysql_flexible_server" "main" {
@@ -62,9 +49,9 @@ resource "azurerm_mysql_flexible_server" "main" {
     }
   }
 
-  # Network configuration - Use existing subnet from network module
+  # Network configuration - Use subnet and DNS zone from network module
   delegated_subnet_id = local.delegated_subnet_id
-  private_dns_zone_id = azurerm_private_dns_zone.mysql.id
+  private_dns_zone_id = local.mysql_dns_zone_id
 
   # Prevent accidental deletion
   lifecycle {
@@ -77,10 +64,6 @@ resource "azurerm_mysql_flexible_server" "main" {
   }
 
   tags = local.tags
-
-  depends_on = [
-    azurerm_private_dns_zone_virtual_network_link.mysql
-  ]
 }
 
 # MySQL Database (only create for new servers, not for restore)
@@ -98,25 +81,29 @@ resource "azurerm_mysql_flexible_database" "databases" {
 resource "azurerm_mysql_flexible_server" "replicas" {
   count = local.restore_enabled ? 0 : local.replica_count
 
-  name                = "${local.server_name}-replica-${count.index + 1}"
+  # Use shorter name pattern for replicas to stay within 63 character limit
+  name                = "${local.replica_base_name}-r${count.index + 1}"
   resource_group_name = local.resource_group_name
   location            = local.location
 
-  # Replica configuration - Fixed syntax
+  # Replica configuration - Must specify create_mode as "Replica"
+  create_mode      = "Replica"
   source_server_id = azurerm_mysql_flexible_server.main.id
 
-  # Same version as primary
+  # Replicas don't need administrator credentials as they inherit from source
+  # Version and SKU must match the primary server
   version  = local.mysql_version
   sku_name = local.sku_name
 
-  # Storage (must match primary) - Simplified
+  # Storage configuration must match primary
   storage {
     size_gb = local.storage_gb
+    iops    = local.iops
   }
 
-  # Network - Use existing subnet from network module
+  # Network - Use subnet and DNS zone from network module
   delegated_subnet_id = local.delegated_subnet_id
-  private_dns_zone_id = azurerm_private_dns_zone.mysql.id
+  private_dns_zone_id = local.mysql_dns_zone_id
 
   # Prevent accidental deletion
   lifecycle {

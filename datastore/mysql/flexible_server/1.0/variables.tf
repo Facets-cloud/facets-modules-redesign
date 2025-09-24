@@ -50,11 +50,17 @@ variable "instance" {
 
   validation {
     condition = contains([
-      "GP_Standard_D2s_v3", "GP_Standard_D4s_v3", "GP_Standard_D8s_v3", "GP_Standard_D16s_v3",
-      "MO_Standard_E4s_v3", "MO_Standard_E8s_v3", "MO_Standard_E16s_v3",
-      "B_Standard_B1s", "B_Standard_B1ms", "B_Standard_B2s"
+      # Burstable SKUs
+      "B_Standard_B1s", "B_Standard_B1ms", "B_Standard_B2s", "B_Standard_B2ms", "B_Standard_B4ms",
+      # General Purpose SKUs (v4 generation)
+      "GP_Standard_D2ds_v4", "GP_Standard_D4ds_v4", "GP_Standard_D8ds_v4", "GP_Standard_D16ds_v4", "GP_Standard_D32ds_v4", "GP_Standard_D48ds_v4", "GP_Standard_D64ds_v4",
+      # Memory Optimized SKUs (v4 generation)
+      "MO_Standard_E2ds_v4", "MO_Standard_E4ds_v4", "MO_Standard_E8ds_v4", "MO_Standard_E16ds_v4", "MO_Standard_E20ds_v4", "MO_Standard_E32ds_v4", "MO_Standard_E48ds_v4", "MO_Standard_E64ds_v4",
+      # Legacy v5 SKUs (if still supported)
+      "GP_Standard_D2ds_v5", "GP_Standard_D4ds_v5", "GP_Standard_D8ds_v5", "GP_Standard_D16ds_v5", "GP_Standard_D32ds_v5", "GP_Standard_D48ds_v5", "GP_Standard_D64ds_v5",
+      "MO_Standard_E2ds_v5", "MO_Standard_E4ds_v5", "MO_Standard_E8ds_v5", "MO_Standard_E16ds_v5", "MO_Standard_E20ds_v5", "MO_Standard_E32ds_v5", "MO_Standard_E48ds_v5", "MO_Standard_E64ds_v5"
     ], var.instance.spec.sizing.sku_name)
-    error_message = "SKU name must be a valid Azure MySQL Flexible Server SKU"
+    error_message = "SKU name must be a valid Azure MySQL Flexible Server SKU (e.g., B_Standard_B1ms, GP_Standard_D2ds_v4, MO_Standard_E4ds_v4)"
   }
 
   validation {
@@ -75,6 +81,14 @@ variable "instance" {
   validation {
     condition     = var.instance.spec.sizing.read_replica_count >= 0 && var.instance.spec.sizing.read_replica_count <= 10
     error_message = "Read replica count must be between 0 and 10"
+  }
+
+  validation {
+    condition = (
+      # If using Burstable SKU, replica count must be 0
+      startswith(var.instance.spec.sizing.sku_name, "B_") ? var.instance.spec.sizing.read_replica_count == 0 : true
+    )
+    error_message = "Read replicas are not supported for Burstable SKUs (B_Standard_B1s, B_Standard_B1ms, B_Standard_B2s). Please set read_replica_count to 0 or use a General Purpose or Memory Optimized SKU."
   }
 
   validation {
@@ -121,7 +135,28 @@ variable "inputs" {
         vnet_cidr_block     = string
         private_subnet_ids  = list(string)
         availability_zones  = optional(list(string))
+        # MySQL-specific network attributes from azure-network module
+        database_mysql_subnet_id = optional(string)
+        mysql_dns_zone_id        = optional(string)
       })
     })
   })
+
+  # Validation to ensure MySQL subnet is configured in the network module
+  validation {
+    condition = (
+      var.inputs.network_details.attributes.database_mysql_subnet_id != null &&
+      var.inputs.network_details.attributes.database_mysql_subnet_id != ""
+    )
+    error_message = "The network module must have MySQL Flexible Server subnet enabled (database_config.enable_mysql_flexible_subnet = true)"
+  }
+
+  # Validation to ensure MySQL DNS zone is configured in the network module
+  validation {
+    condition = (
+      var.inputs.network_details.attributes.mysql_dns_zone_id != null &&
+      var.inputs.network_details.attributes.mysql_dns_zone_id != ""
+    )
+    error_message = "The network module must have MySQL DNS zone configured (automatically created when MySQL subnet is enabled)"
+  }
 }

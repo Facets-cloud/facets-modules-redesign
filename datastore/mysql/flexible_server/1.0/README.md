@@ -1,44 +1,55 @@
 # Azure MySQL Flexible Server Module
 
-[![Module Version](https://img.shields.io/badge/module-1.0-blue.svg)](./facets.yaml)
-[![Cloud](https://img.shields.io/badge/cloud-azure-blue.svg)]()
-[![Terraform](https://img.shields.io/badge/terraform-1.5.7-purple.svg)]()
+**Version:** 1.0
 
 ## Overview
 
-This module provisions an Azure Database for MySQL - Flexible Server with enterprise-grade security, high availability, and automated backup capabilities. It provides a developer-friendly abstraction for deploying production-ready MySQL databases on Azure with minimal configuration while maintaining security best practices.
+This module deploys Azure Database for MySQL - Flexible Server with high availability, automated backup, and optional read replicas. The module leverages network resources from the azure-network module, requiring MySQL-specific subnet and DNS zone configuration to be enabled.
 
-The module supports point-in-time restore from existing databases, read replica scaling, and seamless integration with Azure Virtual Networks through private DNS zones.
+## Prerequisites
+
+The azure-network module must have MySQL Flexible Server support enabled:
+```yaml
+database_config:
+  enable_mysql_flexible_subnet: true
+```
 
 ## Environment as Dimension
 
-This module is **environment-aware** and adapts its behavior based on the deployment environment:
-
-- **Resource Naming**: Incorporates `var.environment.unique_name` to ensure globally unique resource names across environments
-- **Tagging Strategy**: Applies `var.environment.cloud_tags` for consistent resource tagging and cost allocation
-- **Network Integration**: Leverages environment-specific network configurations through input dependencies
-
-The module uses `var.environment` extensively for resource naming patterns and applies standardized tagging from the platform, ensuring proper resource organization and tracking across development, staging, and production environments.
+This module is environment-aware with the following environment-specific behaviors:
+- Server naming incorporates `environment.unique_name` for uniqueness across environments
+- DNS zones and network configurations are environment-specific through the network module
+- Tags from `environment.cloud_tags` are applied to all resources
 
 ## Resources Created
 
-- **Azure MySQL Flexible Server** - Primary database server with zone-redundant high availability
-- **MySQL Database** - Initial database with configurable charset and collation
-- **Private DNS Zone** - Secure network resolution for database connectivity  
-- **DNS Zone Virtual Network Link** - Integration with Azure VNet infrastructure
-- **Read Replica Servers** - Optional read-only replicas for scaling read workloads
-- **Firewall Rules** - Azure service access configuration
-- **Random Password** - Secure credential generation for database access
+- Azure MySQL Flexible Server with configurable SKU and storage
+- Initial database with specified charset and collation
+- Random admin password generation (for new servers)
+- Optional read replicas (up to 10)
+- Firewall rule for Azure services access
+- High availability configuration (Zone Redundant for non-burstable SKUs)
+
+## Network Integration
+
+This module consumes network resources from the azure-network module:
+- Uses dedicated MySQL delegated subnet (`database_mysql_subnet_id`)
+- Utilizes pre-configured MySQL Private DNS Zone (`mysql_dns_zone_id`)
+- Requires VNet integration for private connectivity
 
 ## Security Considerations
 
-This module implements security-first defaults that cannot be disabled:
+- Administrator passwords are auto-generated using secure random generation
+- Supports restore from backup with credential inheritance from source server
+- Private endpoint connectivity through delegated subnet
+- Optional firewall rule for Azure services (0.0.0.0)
+- Backup retention configured with geo-redundant storage
+- Sensitive outputs (passwords, connection strings) are marked as sensitive
 
-- **Network Isolation**: All database traffic uses private networking through VNet integration
-- **Encryption**: Data encryption at rest and in transit is automatically enabled
-- **High Availability**: Zone-redundant deployment prevents single-point-of-failure
-- **Backup Security**: Geo-redundant backups with 7-day retention for disaster recovery
-- **Access Control**: Private DNS zones restrict database access to authorized networks only
-- **Credential Management**: Secure random password generation with configurable restore credentials
+## Advanced Features
 
-The module follows Azure security best practices and integrates with existing network security boundaries defined by the consuming infrastructure.
+- **Point-in-time restore**: Restore from existing backup with time specification
+- **Read replicas**: Configure up to 10 read replicas for scaling read operations
+- **Import support**: Import existing MySQL servers, databases, and firewall rules
+- **High Availability**: Automatic Zone Redundant HA for General Purpose and Memory Optimized SKUs
+- **Storage tiers**: Support for various storage performance tiers (P4 to P80)
