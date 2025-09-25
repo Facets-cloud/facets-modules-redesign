@@ -94,37 +94,21 @@ spec:
       required:
       - sku_name
       - capacity
-    restore_config:
+    terraform_import:
       type: object
-      title: Restore Operations
-      properties:
-        restore_from_backup:
-          type: boolean
-          title: Restore from Backup
-          description: Restore cache from existing RDB backup file (Premium SKU only)
-          default: false
-        backup_file_name:
-          type: string
-          title: Backup File Name
-          description: RDB backup file name to restore from (must end with .rdb)
-          pattern: ^.*\.rdb$
-          x-ui-error-message: Backup file must be an RDB file ending with .rdb
-          x-ui-visible-if:
-            field: spec.restore_config.restore_from_backup
-            values:
-            - true
-    imports:
-      type: object
-      title: Import Existing Resources
+      title: Import Existing Cache (Terraform State Only)
+      description: Import an existing Azure Redis Cache into Terraform state management
+        (NOT for data restoration)
       properties:
         cache_name:
           type: string
-          title: Cache Instance Name
-          description: Name of existing Azure Redis Cache instance to import
+          title: Existing Cache Name
+          description: Name of existing cache to import into Terraform state (does
+            NOT import data)
         resource_group_name:
           type: string
           title: Resource Group Name
-          description: Resource group containing the cache instance
+          description: Resource group containing the existing cache instance
   required:
   - version_config
   - sizing
@@ -166,5 +150,3 @@ sample:
     sizing:
       sku_name: Premium
       capacity: 1
-    restore_config:
-      restore_from_backup: false

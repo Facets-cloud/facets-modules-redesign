@@ -16,11 +16,7 @@ variable "instance" {
         replicas_per_primary = optional(number)
         shard_count          = optional(number)
       })
-      restore_config = optional(object({
-        restore_from_backup = optional(bool)
-        backup_file_name    = optional(string)
-      }))
-      imports = optional(object({
+      terraform_import = optional(object({
         cache_name          = optional(string)
         resource_group_name = optional(string)
       }))
@@ -50,27 +46,6 @@ variable "instance" {
   validation {
     condition     = var.instance.spec.version_config.redis_version != "7.2" || var.instance.spec.sizing.sku_name == "Premium"
     error_message = "Redis version 7.2 is only supported with Premium SKU. Use version 4 or 6 for Basic/Standard SKUs."
-  }
-
-  validation {
-    condition = (
-      var.instance.spec.restore_config == null ||
-      var.instance.spec.restore_config.restore_from_backup != true ||
-      var.instance.spec.sizing.sku_name == "Premium"
-    )
-    error_message = "Restore from backup functionality requires Premium SKU. Only Premium tier supports RDB backup and restore operations."
-  }
-
-  validation {
-    condition = (
-      var.instance.spec.restore_config == null ||
-      var.instance.spec.restore_config.restore_from_backup != true ||
-      (
-        var.instance.spec.restore_config.backup_file_name != null &&
-        var.instance.spec.restore_config.backup_file_name != ""
-      )
-    )
-    error_message = "When restore_from_backup is enabled, backup_file_name is required."
   }
 }
 

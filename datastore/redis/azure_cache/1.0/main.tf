@@ -14,11 +14,6 @@ locals {
   replicas_per_primary = lookup(var.instance.spec.sizing, "replicas_per_primary", 1)
   shard_count          = lookup(var.instance.spec.sizing, "shard_count", 1)
 
-  # Restore configuration  
-  restore_config      = lookup(var.instance.spec, "restore_config", {})
-  restore_from_backup = lookup(local.restore_config, "restore_from_backup", false)
-  backup_file_name    = lookup(local.restore_config, "backup_file_name", "")
-
   # Network details from inputs
   resource_group_name = var.inputs.network_details.attributes.resource_group_name
 
@@ -191,6 +186,26 @@ resource "azurerm_redis_cache" "main" {
 
   tags = local.tags
 }
+
+# IMPORTANT: Data Import/Restore Instructions for Premium SKU
+# =============================================================
+# Azure Redis Cache does NOT support automatic restore from RDB files during Terraform creation.
+# Unlike MySQL/PostgreSQL Flexible Servers, Redis Cache import is a manual post-deployment process.
+#
+# To import data from an RDB backup file (Premium SKU only):
+# 1. Ensure your Redis Cache has been created successfully (terraform apply)
+# 2. Upload your RDB backup file to the storage container created by this module:
+#    - Storage Account: ${local.backup_storage_name} (created automatically for Premium SKU)
+#    - Container Name: redis-backups
+# 3. Navigate to Azure Portal:
+#    - Go to your Redis Cache instance
+#    - Select "Administration" > "Import Data" from the left menu
+#    - Choose your RDB file from the storage container
+#    - Click "Import" to start the restore process
+# 4. Monitor the import progress in the Azure Portal notifications
+#
+# Note: The import feature is ONLY available for Premium tier caches.
+# Basic and Standard tiers do NOT support import/export functionality.
 
 # Firewall rule to allow access from appropriate subnets (Premium SKU only)
 # Uses database subnet if available, otherwise private subnets
