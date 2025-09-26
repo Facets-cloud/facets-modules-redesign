@@ -1,94 +1,61 @@
-variable "instance" {
-  description = "Creates a GCP VPC with configurable public subnets, private subnets, and database subnets across multiple zones"
-  type = object({
-    kind    = string
-    flavor  = string
-    version = string
-    spec = object({
-      vpc_cidr          = string
-      region            = optional(string, "us-central1")
-      auto_select_zones = optional(bool, false)
-      zones             = optional(list(string), [])
-      public_subnets = object({
-        count_per_zone = number
-        subnet_size    = string
-      })
-      private_subnets = object({
-        count_per_zone = number
-        subnet_size    = string
-      })
-      database_subnets = object({
-        count_per_zone = number
-        subnet_size    = string
-      })
-      nat_gateway = object({
-        strategy = string
-      })
-      firewall_rules = optional(object({
-        allow_internal = optional(bool, true)
-        allow_ssh      = optional(bool, true)
-        allow_http     = optional(bool, true)
-        allow_https    = optional(bool, true)
-        allow_icmp     = optional(bool, true)
-      }))
-      private_google_access = optional(object({
-        enable_private_subnets  = optional(bool, true)
-        enable_database_subnets = optional(bool, true)
-      }))
-      tags = optional(map(string), {})
-    })
-  })
-
-  validation {
-    condition     = can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$", var.instance.spec.vpc_cidr))
-    error_message = "CIDR must be a valid IP block (e.g., 10.0.0.0/16)."
-  }
-
-  validation {
-    condition     = contains(["256", "512", "1024", "2048", "4096", "8192"], var.instance.spec.public_subnets.subnet_size)
-    error_message = "Public subnet size must be one of: 256, 512, 1024, 2048, 4096, 8192."
-  }
-
-  validation {
-    condition     = contains(["256", "512", "1024", "2048", "4096", "8192"], var.instance.spec.private_subnets.subnet_size)
-    error_message = "Private subnet size must be one of: 256, 512, 1024, 2048, 4096, 8192."
-  }
-
-  validation {
-    condition     = contains(["256", "512", "1024", "2048", "4096", "8192"], var.instance.spec.database_subnets.subnet_size)
-    error_message = "Database subnet size must be one of: 256, 512, 1024, 2048, 4096, 8192."
-  }
-
-  validation {
-    condition     = contains(["single", "per_zone"], var.instance.spec.nat_gateway.strategy)
-    error_message = "NAT gateway strategy must be either 'single' or 'per_zone'."
-  }
-
-  validation {
-    condition     = length(var.instance.spec.region) > 0
-    error_message = "GCP region cannot be empty."
-  }
-}
 variable "instance_name" {
-  description = "The architectural name for the resource as added in the Facets blueprint designer."
+  description = "Name of the instance"
   type        = string
 }
+
 variable "environment" {
-  description = "An object containing details about the environment."
+  description = "Environment configuration"
   type = object({
     name        = string
     unique_name = string
-    cloud_tags  = optional(map(string), {})
+    cloud_tags  = map(string)
   })
 }
+
 variable "inputs" {
-  description = "A map of inputs requested by the module developer."
-  type = object({
-    cloud_account = object({
-      attributes = object({
-        project     = string
-        credentials = string
-      })
-    })
-  })
+  description = "Input references from other modules"
+  type        = map(any)
+  default     = {}
+}
+
+variable "instance" {
+  description = "Instance configuration"
+  type        = any
+
+  # VPC CIDR must be /16 for GKE-optimized allocation
+  validation {
+    condition     = try(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/16$", lookup(var.instance.spec, "vpc_cidr", "")), false) != false
+    error_message = "VPC CIDR must be a /16 block (e.g., 10.0.0.0/16) for optimal GKE workloads."
+  }
+
+  # NAT Gateway strategy validation (GCP only has regional NAT)
+  validation {
+    condition = try(
+      var.instance.spec.nat_gateway.strategy == "single",
+      false
+    )
+    error_message = "NAT Gateway strategy must be 'single' for GCP (Cloud NAT is regional)."
+  }
+
+  # Validation for labels: ensure all label values are strings
+  validation {
+    condition = try(
+      alltrue([
+        for k, v in lookup(var.instance.spec, "labels", {}) : can(tostring(v))
+      ]),
+      true
+    )
+    error_message = "All label values must be strings."
+  }
+
+  # Validation for labels: ensure label keys don't conflict with reserved keys
+  validation {
+    condition = try(
+      alltrue([
+        for k in keys(lookup(var.instance.spec, "labels", {})) : !contains(["environment", "managed-by", "module", "project"], k)
+      ]),
+      true
+    )
+    error_message = "Label keys 'environment', 'managed-by', 'module', and 'project' are reserved and will be overridden by the module."
+  }
 }

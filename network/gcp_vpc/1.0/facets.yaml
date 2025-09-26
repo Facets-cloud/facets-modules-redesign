@@ -1,8 +1,8 @@
 intent: network
 flavor: gcp-vpc
 version: '1.0'
-description: Creates a GCP VPC with configurable public subnets, private subnets,
-  and database subnets across multiple zones
+description: Creates a GKE-optimized GCP VPC with auto-calculated subnets. Fixed allocation
+  - Private (8K IPs), Public (256 IPs), Database (256 IPs), plus GKE secondary ranges
 clouds:
 - gcp
 spec:
@@ -11,111 +11,23 @@ spec:
     vpc_cidr:
       type: string
       title: VPC CIDR Block
-      description: CIDR block for the VPC (e.g., 10.0.0.0/16)
-      pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$
+      description: CIDR block for the VPC (must be /16 for optimal GKE workloads)
+      pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}/16$
       x-ui-overrides-only: true
-      x-ui-error-message: CIDR must be a valid IP block (e.g., 10.0.0.0/16)
+      x-ui-error-message: VPC CIDR must be a /16 block (e.g., 10.0.0.0/16)
       x-ui-placeholder: 10.0.0.0/16
-    region:
-      type: string
-      title: GCP Region
-      description: GCP region where the VPC will be created
-      default: us-central1
-      x-ui-overrides-only: true
-    auto_select_zones:
+      default: 10.0.0.0/16
+    auto_create_subnetworks:
       type: boolean
-      title: Auto Select Zones
-      description: Automatically select any 3 zones from the region
+      title: Auto Create Subnetworks
+      description: Auto-create subnets in all regions (not recommended for production)
       default: false
-    zones:
-      type: array
-      title: GCP Zones
-      description: List of GCP zones to use for subnets (space separated). Only used
-        when auto_select_zones is false
-      x-ui-overrides-only: true
-      x-ui-visible-if:
-        field: spec.auto_select_zones
-        values:
-        - false
-    public_subnets:
-      type: object
-      title: Public Subnets Configuration
-      properties:
-        count_per_zone:
-          type: number
-          title: Public Subnets per Zone
-          description: Number of public subnets to create in each zone
-          minimum: 0
-          maximum: 3
-          default: 1
-        subnet_size:
-          type: string
-          title: Public Subnet Size
-          description: Number of IP addresses in each public subnet
-          enum:
-          - '256'
-          - '512'
-          - '1024'
-          - '2048'
-          - '4096'
-          - '8192'
-          default: '256'
-      required:
-      - count_per_zone
-      - subnet_size
-    private_subnets:
-      type: object
-      title: Private Subnets Configuration
-      properties:
-        count_per_zone:
-          type: number
-          title: Private Subnets per Zone
-          description: Number of private subnets to create in each zone
-          minimum: 0
-          maximum: 3
-          default: 1
-        subnet_size:
-          type: string
-          title: Private Subnet Size
-          description: Number of IP addresses in each private subnet
-          enum:
-          - '256'
-          - '512'
-          - '1024'
-          - '2048'
-          - '4096'
-          - '8192'
-          default: '1024'
-      required:
-      - count_per_zone
-      - subnet_size
-    database_subnets:
-      type: object
-      title: Database Subnets Configuration
-      description: Configure dedicated subnets for database resources
-      properties:
-        count_per_zone:
-          type: number
-          title: Database Subnets per Zone
-          description: Number of database subnets to create in each zone
-          minimum: 0
-          maximum: 3
-          default: 1
-        subnet_size:
-          type: string
-          title: Database Subnet Size
-          description: Number of IP addresses in each database subnet
-          enum:
-          - '256'
-          - '512'
-          - '1024'
-          - '2048'
-          - '4096'
-          - '8192'
-          default: '256'
-      required:
-      - count_per_zone
-      - subnet_size
+      x-ui-hidden: true
+    enable_gke_setup:
+      type: boolean
+      title: Enable GKE Setup
+      description: Create GKE-specific resources (secondary ranges, internal LB subnet)
+      default: true
     nat_gateway:
       type: object
       title: Cloud NAT Configuration
@@ -123,10 +35,9 @@ spec:
         strategy:
           type: string
           title: Cloud NAT Strategy
-          description: Choose whether to create one Cloud NAT or one per zone
+          description: Cloud NAT is always regional in GCP (single strategy only)
           enum:
           - single
-          - per_zone
           default: single
       required:
       - strategy
@@ -152,7 +63,7 @@ spec:
           title: Allow HTTP Access
           description: Allow HTTP access from the internet to instances with network
             tag 'http-server'
-          default: true
+          default: false
         allow_https:
           type: boolean
           title: Allow HTTPS Access
@@ -164,23 +75,12 @@ spec:
           title: Allow ICMP
           description: Allow ICMP (ping) traffic within the VPC
           default: true
-    private_google_access:
-      type: object
-      title: Private Google Access Configuration
-      description: Configure private access to Google APIs and services
-      x-ui-toggle: true
-      properties:
-        enable_private_subnets:
-          type: boolean
-          title: Enable for Private Subnets
-          description: Enable Private Google Access for private subnets
-          default: true
-        enable_database_subnets:
-          type: boolean
-          title: Enable for Database Subnets
-          description: Enable Private Google Access for database subnets
-          default: true
-    tags:
+    enable_flow_logs:
+      type: boolean
+      title: Enable VPC Flow Logs
+      description: Enable flow logs for network monitoring and security analysis
+      default: false
+    labels:
       type: object
       title: Additional Labels
       description: Optional additional labels to apply to all VPC resources. These
@@ -188,9 +88,6 @@ spec:
       x-ui-yaml-editor: true
   required:
   - vpc_cidr
-  - public_subnets
-  - private_subnets
-  - database_subnets
   - nat_gateway
 inputs:
   cloud_account:
@@ -210,28 +107,16 @@ sample:
   version: '1.0'
   spec:
     vpc_cidr: 10.0.0.0/16
-    region: us-central1
-    auto_select_zones: true
-    public_subnets:
-      count_per_zone: 1
-      subnet_size: '256'
-    private_subnets:
-      count_per_zone: 1
-      subnet_size: '1024'
-    database_subnets:
-      count_per_zone: 1
-      subnet_size: '256'
+    enable_gke_setup: true
     nat_gateway:
       strategy: single
     firewall_rules:
       allow_internal: true
       allow_ssh: true
-      allow_http: true
+      allow_http: false
       allow_https: true
       allow_icmp: true
-    private_google_access:
-      enable_private_subnets: true
-      enable_database_subnets: true
+    enable_flow_logs: false
 iac:
   validated_files:
   - main.tf
