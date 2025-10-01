@@ -20,16 +20,16 @@ locals {
     database_subnet_name = google_compute_subnetwork.database.name
     database_subnet_cidr = google_compute_subnetwork.database.ip_cidr_range
 
-    # GKE-specific (only if enabled)
-    internal_lb_subnet_id   = local.enable_gke_setup ? google_compute_subnetwork.internal_lb[0].id : null
-    internal_lb_subnet_name = local.enable_gke_setup ? google_compute_subnetwork.internal_lb[0].name : null
-    internal_lb_subnet_cidr = local.enable_gke_setup ? google_compute_subnetwork.internal_lb[0].ip_cidr_range : null
+    # GKE-specific (always available)
+    internal_lb_subnet_id   = google_compute_subnetwork.internal_lb.id
+    internal_lb_subnet_name = google_compute_subnetwork.internal_lb.name
+    internal_lb_subnet_cidr = google_compute_subnetwork.internal_lb.ip_cidr_range
 
-    # GKE secondary ranges (only if enabled)
-    gke_pods_range_name     = local.enable_gke_setup ? "${local.name_prefix}-gke-pods" : null
-    gke_pods_cidr           = local.enable_gke_setup ? local.gke_pods_subnet_cidr : null
-    gke_services_range_name = local.enable_gke_setup ? "${local.name_prefix}-gke-services" : null
-    gke_services_cidr       = local.enable_gke_setup ? local.gke_services_subnet_cidr : null
+    # GKE secondary ranges (always available)
+    gke_pods_range_name     = "${local.name_prefix}-gke-pods"
+    gke_pods_cidr           = local.gke_pods_subnet_cidr
+    gke_services_range_name = "${local.name_prefix}-gke-services"
+    gke_services_cidr       = local.gke_services_subnet_cidr
 
     # NAT and Router
     router_id   = google_compute_router.router.id
@@ -57,8 +57,8 @@ locals {
     total_private_ips     = local.total_private_ips
     total_public_ips      = local.total_public_ips
     total_database_ips    = local.total_database_ips
-    total_gke_pod_ips     = local.enable_gke_setup ? local.total_gke_pods : 0
-    total_gke_service_ips = local.enable_gke_setup ? local.total_gke_services : 0
+    total_gke_pod_ips     = local.total_gke_pods
+    total_gke_service_ips = local.total_gke_services
     reserved_ips          = local.reserved_ips
   }
 

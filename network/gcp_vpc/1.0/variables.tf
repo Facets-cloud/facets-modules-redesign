@@ -28,14 +28,6 @@ variable "instance" {
     error_message = "VPC CIDR must be a /16 block (e.g., 10.0.0.0/16) for optimal GKE workloads."
   }
 
-  # NAT Gateway strategy validation (GCP only has regional NAT)
-  validation {
-    condition = try(
-      var.instance.spec.nat_gateway.strategy == "single",
-      false
-    )
-    error_message = "NAT Gateway strategy must be 'single' for GCP (Cloud NAT is regional)."
-  }
 
   # Validation for labels: ensure all label values are strings
   validation {

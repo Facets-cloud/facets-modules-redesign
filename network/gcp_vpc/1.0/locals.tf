@@ -9,8 +9,6 @@ locals {
   # Extract commonly used values to avoid repeated lookups
   spec             = var.instance.spec
   vpc_cidr         = local.spec.vpc_cidr
-  nat_gateway      = local.spec.nat_gateway
-  enable_gke_setup = lookup(local.spec, "enable_gke_setup", true)
   enable_flow_logs = lookup(local.spec, "enable_flow_logs", false)
   firewall_rules = lookup(local.spec, "firewall_rules", {
     allow_internal = true

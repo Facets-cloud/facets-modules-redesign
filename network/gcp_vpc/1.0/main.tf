@@ -1,7 +1,7 @@
 # VPC Network
 resource "google_compute_network" "vpc" {
   name                    = "${local.name_prefix}-vpc"
-  auto_create_subnetworks = lookup(local.spec, "auto_create_subnetworks", false)
+  auto_create_subnetworks = false
   routing_mode            = "REGIONAL"
   description             = "VPC network created by Facets for ${var.environment.name}"
 
@@ -17,21 +17,15 @@ resource "google_compute_subnetwork" "private" {
   private_ip_google_access = true
   description              = "Private subnet for general workloads and GKE nodes"
 
-  # GKE secondary ranges (only if GKE setup is enabled)
-  dynamic "secondary_ip_range" {
-    for_each = local.enable_gke_setup ? [1] : []
-    content {
-      range_name    = "${local.name_prefix}-gke-pods"
-      ip_cidr_range = local.gke_pods_subnet_cidr
-    }
+  # GKE secondary ranges (always enabled for GKE readiness)
+  secondary_ip_range {
+    range_name    = "${local.name_prefix}-gke-pods"
+    ip_cidr_range = local.gke_pods_subnet_cidr
   }
 
-  dynamic "secondary_ip_range" {
-    for_each = local.enable_gke_setup ? [1] : []
-    content {
-      range_name    = "${local.name_prefix}-gke-services"
-      ip_cidr_range = local.gke_services_subnet_cidr
-    }
+  secondary_ip_range {
+    range_name    = "${local.name_prefix}-gke-services"
+    ip_cidr_range = local.gke_services_subnet_cidr
   }
 
   dynamic "log_config" {
@@ -86,10 +80,8 @@ resource "google_compute_subnetwork" "database" {
   }
 }
 
-# Internal Load Balancer Subnet (for GKE internal LBs) - GKE CRITICAL
+# Internal Load Balancer Subnet (for GKE internal LBs) - Always enabled for GKE readiness
 resource "google_compute_subnetwork" "internal_lb" {
-  count = local.enable_gke_setup ? 1 : 0
-
   name          = "${local.name_prefix}-internal-lb"
   ip_cidr_range = local.internal_lb_subnet_cidr
   region        = local.gcp_region

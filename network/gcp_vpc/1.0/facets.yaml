@@ -17,30 +17,6 @@ spec:
       x-ui-error-message: VPC CIDR must be a /16 block (e.g., 10.0.0.0/16)
       x-ui-placeholder: 10.0.0.0/16
       default: 10.0.0.0/16
-    auto_create_subnetworks:
-      type: boolean
-      title: Auto Create Subnetworks
-      description: Auto-create subnets in all regions (not recommended for production)
-      default: false
-      x-ui-hidden: true
-    enable_gke_setup:
-      type: boolean
-      title: Enable GKE Setup
-      description: Create GKE-specific resources (secondary ranges, internal LB subnet)
-      default: true
-    nat_gateway:
-      type: object
-      title: Cloud NAT Configuration
-      properties:
-        strategy:
-          type: string
-          title: Cloud NAT Strategy
-          description: Cloud NAT is always regional in GCP (single strategy only)
-          enum:
-          - single
-          default: single
-      required:
-      - strategy
     firewall_rules:
       type: object
       title: Firewall Rules Configuration
@@ -88,7 +64,6 @@ spec:
       x-ui-yaml-editor: true
   required:
   - vpc_cidr
-  - nat_gateway
 inputs:
   cloud_account:
     type: '@facets/gcp_cloud_account'
@@ -107,9 +82,6 @@ sample:
   version: '1.0'
   spec:
     vpc_cidr: 10.0.0.0/16
-    enable_gke_setup: true
-    nat_gateway:
-      strategy: single
     firewall_rules:
       allow_internal: true
       allow_ssh: true
