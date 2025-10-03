@@ -109,12 +109,12 @@ spec:
       properties:
         account_name:
           type: string
-          title: Cosmos DB Account Name
-          description: Name of existing Cosmos DB account to import
+          title: Cosmos DB Account Resource ID
+          description: Full Azure resource ID of existing Cosmos DB account (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DocumentDB/databaseAccounts/{name})
         database_name:
           type: string
-          title: MongoDB Database Name
-          description: Name of existing MongoDB database to import
+          title: MongoDB Database Resource ID
+          description: Full Azure resource ID of existing MongoDB database (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DocumentDB/databaseAccounts/{account}/mongodbDatabases/{name})
   required:
   - version_config
   - sizing

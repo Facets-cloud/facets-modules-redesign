@@ -1,17 +1,12 @@
 # All local values are defined in locals.tf to avoid duplication
 
 # Random string for unique naming to avoid conflicts
+# Only create when NOT importing (imports use existing resources with existing names)
 resource "random_string" "suffix" {
+  count   = local.is_import ? 0 : 1
   length  = 6
   special = false
   upper   = false
-}
-
-# Data source for existing account (if importing)
-data "azurerm_cosmosdb_account" "existing" {
-  count               = local.import_account_name != null ? 1 : 0
-  name                = local.import_account_name
-  resource_group_name = var.inputs.network_details.attributes.resource_group_name
 }
 
 # Data source to get restorable account information (for restore operations)
@@ -21,9 +16,9 @@ data "azurerm_cosmosdb_restorable_database_accounts" "source" {
   location = var.inputs.network_details.attributes.region
 }
 
-# Azure Cosmos DB Account for MongoDB API (Normal Creation)
+# Azure Cosmos DB Account for MongoDB API (Normal Creation or Import)
 resource "azurerm_cosmosdb_account" "mongodb" {
-  count               = local.import_account_name == null && !local.is_restore ? 1 : 0
+  count               = !local.is_restore ? 1 : 0
   name                = local.account_name
   location            = var.inputs.network_details.attributes.region
   resource_group_name = var.inputs.network_details.attributes.resource_group_name
@@ -60,11 +55,14 @@ resource "azurerm_cosmosdb_account" "mongodb" {
     }
   }
 
-  # Backup policy - enable continuous backup for point-in-time restore capability
-  backup {
-    type                = lookup(var.instance.spec.backup_config, "enable_continuous_backup", false) ? "Continuous" : "Periodic"
-    interval_in_minutes = lookup(var.instance.spec.backup_config, "enable_continuous_backup", false) ? null : 240 # 4 hours for periodic
-    retention_in_hours  = lookup(var.instance.spec.backup_config, "enable_continuous_backup", false) ? null : 168 # 7 days for periodic
+  # Backup policy - only set when NOT importing (imports inherit existing backup policy)
+  dynamic "backup" {
+    for_each = local.is_import ? [] : [1]
+    content {
+      type                = lookup(var.instance.spec.backup_config, "enable_continuous_backup", false) ? "Continuous" : "Periodic"
+      interval_in_minutes = lookup(var.instance.spec.backup_config, "enable_continuous_backup", false) ? null : 240 # 4 hours for periodic
+      retention_in_hours  = lookup(var.instance.spec.backup_config, "enable_continuous_backup", false) ? null : 168 # 7 days for periodic
+    }
   }
 
   # Security - encryption enabled by default
@@ -73,11 +71,15 @@ resource "azurerm_cosmosdb_account" "mongodb" {
   # Prevent accidental deletion
   lifecycle {
     prevent_destroy = true
+    # Always ignore these to prevent recreation
     ignore_changes = [
-      # Ignore changes that would require recreation for imported resources
       location,
       resource_group_name,
-      kind
+      kind,
+      backup,
+      consistency_policy,
+      geo_location,
+      mongo_server_version
     ]
   }
 
@@ -160,16 +162,17 @@ resource "azurerm_cosmosdb_account" "mongodb_restored" {
   })
 }
 
-# MongoDB Database
+# MongoDB Database (Normal Creation or Import)
 resource "azurerm_cosmosdb_mongo_database" "main" {
-  count               = local.import_database_name == null && !local.is_restore ? 1 : 0
+  count               = local.database_count
   name                = local.database_name
   resource_group_name = var.inputs.network_details.attributes.resource_group_name
-  account_name        = local.import_account_name != null ? local.import_account_name : azurerm_cosmosdb_account.mongodb[0].name
+  # When importing, use the import account name directly to avoid dependency on account resource
+  account_name = local.is_import ? local.import_account_name : azurerm_cosmosdb_account.mongodb[0].name
 
-  # Throughput configuration
+  # Throughput configuration - only set when NOT importing
   dynamic "autoscale_settings" {
-    for_each = var.instance.spec.sizing.throughput_mode == "provisioned" ? [1] : []
+    for_each = !local.is_import && var.instance.spec.sizing.throughput_mode == "provisioned" ? [1] : []
     content {
       max_throughput = var.instance.spec.sizing.max_throughput
     }
@@ -177,6 +180,8 @@ resource "azurerm_cosmosdb_mongo_database" "main" {
 
   lifecycle {
     prevent_destroy = true
+    # Always ignore throughput changes to prevent drift
+    ignore_changes = [autoscale_settings, throughput]
   }
 }
 

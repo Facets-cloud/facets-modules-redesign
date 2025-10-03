@@ -1,10 +1,19 @@
 locals {
-  # Import configuration with proper null handling
-  import_account_name  = try(var.instance.spec.imports.account_name, null)
-  import_database_name = try(var.instance.spec.imports.database_name, null)
+  # Import configuration - now expects full Azure resource IDs
+  import_account_id  = try(var.instance.spec.imports.account_name, null)
+  import_database_id = try(var.instance.spec.imports.database_name, null)
 
-  # Restore configuration
-  is_restore = lookup(var.instance.spec.restore_config, "restore_from_backup", false) == true
+  # Extract account name from resource ID for use in Terraform configs
+  # Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DocumentDB/databaseAccounts/{name}
+  import_account_name  = local.import_account_id != null ? element(split("/", local.import_account_id), length(split("/", local.import_account_id)) - 1) : null
+  import_database_name = local.import_database_id != null ? element(split("/", local.import_database_id), length(split("/", local.import_database_id)) - 1) : null
+
+  # Mode detection flags
+  is_restore = try(var.instance.spec.restore_config.restore_from_backup, false) == true
+  is_import  = local.import_account_id != null
+
+  # Database should exist for both import and create modes (not restore)
+  database_count = local.is_restore ? 0 : 1
 
   # Ensure names are within 44 character limit for Azure Cosmos DB
   # Format: instance-env-suffix (total must be <= 44 chars)
@@ -23,21 +32,26 @@ locals {
   instance_part = regex("^(.+?)[-]*$", substr(local.clean_instance, 0, local.instance_max))[0]
   env_part      = regex("^(.+?)[-]*$", substr(local.clean_env, 0, local.env_max))[0]
 
+  # Random suffix - only used when NOT importing
+  random_suffix = local.is_import ? "" : random_string.suffix[0].result
+
   # Build name that won't exceed 44 chars and follows Azure naming rules
-  account_name  = "${local.instance_part}-${local.env_part}-${random_string.suffix.result}"
-  database_name = "db-${substr(local.instance_part, 0, 20)}-${random_string.suffix.result}"
+  # Use import names when importing, otherwise generate new names
+  account_name  = local.is_import ? local.import_account_name : "${local.instance_part}-${local.env_part}-${local.random_suffix}"
+  database_name = local.is_import && local.import_database_name != null ? local.import_database_name : "db-${substr(local.instance_part, 0, 20)}-${local.random_suffix}"
 
   # Generate final database name for outputs
-  final_database_name = local.import_database_name != null ? local.import_database_name : local.database_name
+  final_database_name = local.cosmos_database.name
 
   # Get the actual account (either created, imported, or restored)
-  cosmos_account = local.import_account_name != null ? data.azurerm_cosmosdb_account.existing[0] : (
+  # When importing but the account is not yet in state, we need to handle this gracefully
+  cosmos_account = (
     local.is_restore ? azurerm_cosmosdb_account.mongodb_restored[0] : azurerm_cosmosdb_account.mongodb[0]
   )
 
-  # Get the actual database (either created or restored)
-  cosmos_database = local.is_restore ? azurerm_cosmosdb_mongo_database.main_restored[0] : (
-    local.import_database_name == null ? azurerm_cosmosdb_mongo_database.main[0] : null
+  # Get the actual database (either created, imported, or restored)
+  cosmos_database = (
+    local.is_restore ? azurerm_cosmosdb_mongo_database.main_restored[0] : azurerm_cosmosdb_mongo_database.main[0]
   )
 
   # Connection details
