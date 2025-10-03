@@ -1,43 +1,64 @@
-# Redis on Kubernetes (k8s-custom)
+# PostgreSQL on Kubernetes Module
 
 ![Version](https://img.shields.io/badge/version-1.0-blue.svg)
-![Cloud](https://img.shields.io/badge/cloud-kubernetes-green.svg)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-13|14|15|16-blue.svg)
 
 ## Overview
 
-This module deploys Redis on Kubernetes using the Bitnami Helm chart with production-ready defaults and developer-friendly configuration options. It supports both standalone and replication architectures with automatic authentication, persistent storage, and backup functionality.
+This module deploys PostgreSQL database on Kubernetes using the production-ready Bitnami Helm chart. It provides configurable storage, high availability options, and secure defaults for enterprise use. The module supports both standalone and primary-replica architectures with automated backup configuration.
 
 ## Environment as Dimension
 
-This module is environment-aware and creates unique namespaces per environment deployment. Resources are tagged with environment metadata and use the environment's unique name for resource isolation. Each environment gets its own Redis instance with separate storage, networking, and credentials.
+The module is **environment-aware** and provisions unique resources per environment using `var.environment.unique_name`:
+
+- **Helm Release Names**: Each environment gets uniquely named releases to prevent conflicts
+- **Storage**: Persistent volume claims are isolated per environment
+- **Networking**: Services and network policies are scoped to environment-specific namespaces
+- **Security**: Secrets and authentication are managed separately for each environment
 
 ## Resources Created
 
-- **Kubernetes Namespace**: Dedicated namespace for Redis deployment with environment-specific naming
-- **Redis Deployment**: Master/replica Redis instances deployed via Helm chart with configurable sizing
-- **Persistent Storage**: Dedicated persistent volumes for Redis data with configurable storage size
-- **Authentication Secret**: Kubernetes secret with auto-generated strong passwords for Redis access  
-- **Network Services**: Kubernetes services for Redis master and replica endpoints with cluster DNS
-- **Backup Configuration**: Automatic RDB snapshots every 6 hours with restore capability from existing backups
-- **Resource Limits**: CPU and memory limits configured per instance for resource governance
-- **Security Context**: Non-root user execution with read-only filesystem and dropped capabilities
+This module creates the following Kubernetes resources:
+
+- **PostgreSQL StatefulSet** via Bitnami Helm chart with configurable version and resources
+- **Persistent Volume Claims** for database storage with configurable size and storage class
+- **Kubernetes Services** for database connectivity (primary and read replica)
+- **Kubernetes Secret** containing database credentials and configuration
+- **Network Policy** for secure pod-to-pod communication within namespace
+- **Namespace** for isolated deployment (optional, if not using default)
+- **External Service** for cluster-internal database access
+- **Backup CronJob** with automated 7-day retention policy
+
+## Architecture Support
+
+**Standalone Mode**: Single PostgreSQL instance with persistent storage and automated backups.
+
+**Replication Mode**: Primary-replica setup with configurable read replica count (1-5) for high availability and read scaling.
 
 ## Security Considerations
 
-All security configurations are hardcoded for production use and cannot be disabled. Redis authentication is always enabled with strong auto-generated passwords stored in Kubernetes secrets. The deployment runs with non-root security context, read-only root filesystem, and dropped Linux capabilities. Persistent storage retains data across pod restarts, and automatic backups provide data protection with 7-day retention policies.
+The module implements security-first defaults:
 
-Network policies can be enabled in clusters that support them for additional isolation. All communication within the cluster uses DNS-based service discovery with Redis AUTH protocol for authentication.
+- **Encryption**: PostgreSQL connections secured with TLS
+- **Network Isolation**: Network policies restrict traffic to same namespace only
+- **Credential Management**: Automatic password generation stored in Kubernetes secrets
+- **Backup Security**: Encrypted backup storage with retention policies
+- **Resource Limits**: CPU and memory limits prevent resource exhaustion
+- **High Availability**: Multi-replica support for production workloads
 
-## Key Features
+## Backup and Restore
 
-**Production Security**: Authentication always enabled, non-root execution, capability dropping, and read-only filesystems hardcoded for security compliance.
+**Automated Backups**: Daily backups scheduled at 2 AM with 7-day retention policy.
 
-**High Availability**: Supports replication architecture with configurable replica count for read scaling and failure resilience.
+**Restore Support**: Module supports restoring from existing backups stored in S3, GCS, or persistent volume claims. When restoring, provide the source path and master password for the restored instance.
 
-**Resource Management**: Configurable CPU and memory limits with persistent storage sizing options from 1GB to 100GB capacity.
+**Import Capability**: Existing PostgreSQL deployments can be imported by specifying Helm release name, namespace, service names, and secret references.
 
-**Backup & Restore**: Automatic RDB snapshots with restore functionality from existing backup files for disaster recovery scenarios.
+## Resource Management
 
-**Environment Isolation**: Each environment deployment creates isolated namespaces with unique resource naming and tagging strategies.
+The module follows Kubernetes best practices:
 
-**Import Support**: Ability to import existing Helm releases, Kubernetes secrets, and services for migration scenarios.
+- **Resource Requests/Limits**: Configurable CPU and memory for predictable scheduling
+- **Storage Classes**: Support for different storage tiers and providers
+- **Lifecycle Management**: Prevents accidental destruction of persistent data
+- **Monitoring Ready**: Metrics endpoint exposed for Prometheus integration

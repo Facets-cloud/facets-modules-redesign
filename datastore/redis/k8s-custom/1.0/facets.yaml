@@ -1,87 +1,104 @@
-intent: redis
+intent: postgres
 flavor: k8s-custom
 version: '1.0'
 clouds:
 - kubernetes
-description: Redis deployment on Kubernetes using Helm chart with developer-friendly
-  configuration
+description: PostgreSQL database deployed on Kubernetes using Helm chart with configurable
+  storage and high availability options
 spec:
-  title: Redis on Kubernetes
-  description: Redis deployment on Kubernetes using Helm chart with developer-friendly
-    configuration
+  title: PostgreSQL on Kubernetes
+  description: PostgreSQL database deployed on Kubernetes using Helm chart with configurable
+    storage and high availability options
   type: object
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
       properties:
-        redis_version:
+        version:
           type: string
-          title: Redis Version
-          description: Version of Redis to deploy
+          title: PostgreSQL Version
+          description: Version of PostgreSQL engine
           enum:
-          - '6.2'
-          - '7.0'
-          - '7.2'
-          default: '7.2'
-        architecture:
+          - '13'
+          - '14'
+          - '15'
+          - '16'
+          default: '16'
+        database_name:
           type: string
-          title: Architecture
-          description: Redis deployment architecture
-          enum:
-          - standalone
-          - replication
-          default: replication
+          title: Database Name
+          description: Name of the default database to create
+          default: postgres
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]{0,62}$
+        username:
+          type: string
+          title: Master Username
+          description: Master username for PostgreSQL
+          default: postgres
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]{0,62}$
     sizing:
       type: object
       title: Sizing & Performance
       properties:
-        memory_limit:
+        architecture:
           type: string
-          title: Memory Limit
-          description: Memory limit per Redis instance
+          title: Architecture
+          description: PostgreSQL deployment architecture
           enum:
-          - 256Mi
-          - 512Mi
-          - 1Gi
-          - 2Gi
-          - 4Gi
-          - 8Gi
-          default: 1Gi
-        cpu_limit:
-          type: string
-          title: CPU Limit
-          description: CPU limit per Redis instance
-          enum:
-          - 100m
-          - 250m
-          - 500m
-          - 1000m
-          - 2000m
-          default: 500m
-        storage_size:
-          type: string
-          title: Storage Size
-          description: Persistent storage size for Redis data
-          enum:
-          - 1Gi
-          - 5Gi
-          - 10Gi
-          - 20Gi
-          - 50Gi
-          - 100Gi
-          default: 10Gi
-        replica_count:
+          - standalone
+          - replication
+          default: standalone
+        primary_resources:
+          type: object
+          title: Primary Instance Resources
+          properties:
+            cpu:
+              type: string
+              title: CPU Request
+              description: CPU resource request for primary instance
+              default: 250m
+            memory:
+              type: string
+              title: Memory Request
+              description: Memory resource request for primary instance
+              default: 256Mi
+            cpu_limit:
+              type: string
+              title: CPU Limit
+              description: CPU resource limit for primary instance
+              default: 1000m
+            memory_limit:
+              type: string
+              title: Memory Limit
+              description: Memory resource limit for primary instance
+              default: 1Gi
+        read_replica_count:
           type: number
-          title: Replica Count
-          description: Number of Redis replica instances
+          title: Read Replica Count
+          description: Number of read replicas to create (only for replication architecture)
           minimum: 0
           maximum: 5
-          default: 1
+          default: 0
           x-ui-visible-if:
-            field: spec.version_config.architecture
+            field: spec.sizing.architecture
             values:
             - replication
+        storage:
+          type: object
+          title: Storage Configuration
+          properties:
+            size:
+              type: string
+              title: Storage Size
+              description: Persistent volume size
+              default: 8Gi
+              pattern: ^[0-9]+(Ki|Mi|Gi|Ti|Pi|Ei|k|M|G|T|P|E)$
+            storage_class:
+              type: string
+              title: Storage Class
+              description: Kubernetes storage class name (leave empty for default)
+              default: ''
     restore_config:
       type: object
       title: Restore Operations
@@ -89,16 +106,39 @@ spec:
         restore_from_backup:
           type: boolean
           title: Restore from Backup
-          description: Restore Redis from existing backup
+          description: Restore database from existing backup
           default: false
-        backup_source_path:
-          type: string
-          title: Backup Source Path
-          description: Path to Redis backup file (RDB format)
+        backup_source:
+          type: object
+          title: Backup Source Configuration
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
             values:
             - true
+          properties:
+            source_type:
+              type: string
+              title: Backup Source Type
+              description: Type of backup source
+              enum:
+              - s3
+              - gcs
+              - pvc
+              default: s3
+            source_path:
+              type: string
+              title: Backup Path
+              description: Path to backup files (S3 URI, GCS path, or PVC path)
+        master_password:
+          type: string
+          title: Master Password
+          description: Master password for restored database (required for restore
+            operations)
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+          x-ui-secret-ref: true
     imports:
       type: object
       title: Import Existing Resources
@@ -107,56 +147,62 @@ spec:
           type: string
           title: Helm Release Name
           description: Name of existing Helm release to import
+        namespace:
+          type: string
+          title: Kubernetes Namespace
+          description: Namespace of existing PostgreSQL deployment
+        primary_service_name:
+          type: string
+          title: Primary Service Name
+          description: Name of existing primary PostgreSQL service
         secret_name:
           type: string
           title: Secret Name
-          description: Name of existing Kubernetes secret containing Redis credentials
-        service_name:
-          type: string
-          title: Service Name
-          description: Name of existing Kubernetes service for Redis
+          description: Name of existing secret containing PostgreSQL credentials
   required:
   - version_config
   - sizing
 imports:
 - name: helm_release_name
-  resource_address: helm_release.redis
-  required: false
-- name: secret_name
-  resource_address: kubernetes_secret.redis_auth
-  required: false
+  resource_address: helm_release.postgresql
+  required: true
 inputs:
   kubernetes_cluster:
     type: '@facets/kubernetes-details'
     optional: false
     displayName: Kubernetes Cluster
-    description: Target Kubernetes cluster for Redis deployment
+    description: Target Kubernetes cluster for PostgreSQL deployment
     providers:
     - kubernetes
     - helm
 outputs:
   default:
-    type: '@facets/redis-k8s-custom'
-    title: Redis K8s Custom Deployment
+    type: '@facets/postgres-k8s-custom'
+    title: PostgreSQL on Kubernetes Details
   interfaces:
-    type: '@facets/redis-interface'
-    title: Redis Connection Interface
+    type: '@facets/postgres-interface'
+    title: PostgreSQL Database Interface
 iac:
   validated_files:
   - main.tf
   - variables.tf
   - locals.tf
 sample:
-  kind: redis
+  kind: postgres
   flavor: k8s-custom
   version: '1.0'
   disabled: true
   spec:
     version_config:
-      redis_version: '7.2'
-      architecture: replication
+      version: '16'
+      database_name: postgres
+      username: postgres
     sizing:
-      memory_limit: 1Gi
-      cpu_limit: 500m
-      storage_size: 10Gi
-      replica_count: 1
+      architecture: standalone
+      primary_resources:
+        cpu: 250m
+        memory: 256Mi
+        cpu_limit: 1000m
+        memory_limit: 1Gi
+      storage:
+        size: 8Gi
