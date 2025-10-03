@@ -94,21 +94,19 @@ spec:
       required:
       - sku_name
       - capacity
-    terraform_import:
+    imports:
       type: object
       title: Import Existing Cache (Terraform State Only)
       description: Import an existing Azure Redis Cache into Terraform state management
-        (NOT for data restoration)
       properties:
-        cache_name:
+        cache_resource_id:
           type: string
-          title: Existing Cache Name
-          description: Name of existing cache to import into Terraform state (does
-            NOT import data)
-        resource_group_name:
+          title: Redis Cache Resource ID
+          description: Full Azure resource ID of existing cache (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Cache/redis/{name})
+        firewall_rule_resource_id:
           type: string
-          title: Resource Group Name
-          description: Resource group containing the existing cache instance
+          title: Firewall Rule Resource ID (Optional)
+          description: Full Azure resource ID of firewall rule (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Cache/Redis/{cacheName}/firewallRules/{ruleName})
   required:
   - version_config
   - sizing
@@ -130,9 +128,12 @@ outputs:
     type: '@facets/redis-azure-cache'
     title: Custom Azure Cache for Redis
 imports:
-- name: cache_name
+- name: cache_resource_id
   resource_address: azurerm_redis_cache.main
-  required: true
+  required: false
+- name: firewall_rule_resource_id
+  resource_address: azurerm_redis_firewall_rule.vnet_access[0]
+  required: false
 iac:
   validated_files:
   - main.tf

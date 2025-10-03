@@ -1,7 +1,19 @@
 # Local computations for Azure Redis Cache configuration
 locals {
+  # Import configuration - expects full Azure resource ID
+  # Normalize case: Azure returns Microsoft.Cache/Redis but Terraform expects Microsoft.Cache/redis
+  import_cache_id_raw = try(var.instance.spec.imports.cache_resource_id, null)
+  import_cache_id     = try(var.instance.spec.imports.cache_resource_id, null)
+
+  # Extract cache name from resource ID for use in Terraform configs
+  # Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Cache/redis/{name}
+  import_cache_name = local.import_cache_id != null ? element(split("/", local.import_cache_id), length(split("/", local.import_cache_id)) - 1) : null
+
+  # Mode detection
+  is_import = local.import_cache_id != null
+
   # Basic naming and identification
-  cache_name = "${var.instance_name}-${var.environment.unique_name}"
+  cache_name = local.is_import ? local.import_cache_name : "${var.instance_name}-${var.environment.unique_name}"
 
   # Extract configuration values
   redis_version = var.instance.spec.version_config.redis_version
@@ -47,9 +59,9 @@ locals {
   # Final storage name: {cache_prefix}bk{timestamp}
   backup_storage_name = "${local.cache_prefix}bk${local.timestamp_suffix}"
 
-  # Premium SKU always needs backup storage - always create it
+  # Premium SKU always needs backup storage - but not when importing
   is_premium            = local.sku_name == "Premium"
-  create_backup_storage = local.is_premium
+  create_backup_storage = local.is_premium && !local.is_import
 
   # Validation: Ensure storage account name doesn't exceed Azure limits
   storage_name_valid = length(local.backup_storage_name) <= 24 && length(local.backup_storage_name) >= 3
@@ -160,11 +172,11 @@ resource "azurerm_redis_cache" "main" {
   redis_configuration {
     maxmemory_policy = "allkeys-lru"
 
-    # Only set backup configuration for Premium SKU
+    # Only set backup configuration for Premium SKU and when NOT importing
     # Let Azure handle the max snapshot count automatically
-    rdb_backup_enabled            = local.family == "P" ? true : null
-    rdb_backup_frequency          = local.family == "P" ? 1440 : null
-    rdb_storage_connection_string = local.family == "P" ? local.backup_storage_connection_string : null
+    rdb_backup_enabled            = local.family == "P" && !local.is_import ? true : null
+    rdb_backup_frequency          = local.family == "P" && !local.is_import ? 1440 : null
+    rdb_storage_connection_string = local.family == "P" && !local.is_import ? local.backup_storage_connection_string : null
   }
 
   # Patch schedule for maintenance
@@ -176,6 +188,22 @@ resource "azurerm_redis_cache" "main" {
   # Lifecycle configuration
   lifecycle {
     prevent_destroy = false
+    ignore_changes = [
+      name,
+      location,
+      resource_group_name,
+      subnet_id,
+      redis_configuration,
+      capacity,
+      family,
+      sku_name,
+      redis_version,
+      shard_count,
+      patch_schedule,
+      non_ssl_port_enabled,
+      minimum_tls_version,
+      tags
+    ]
   }
 
   # Ensure storage is created before Redis cache for Premium SKU
@@ -218,4 +246,14 @@ resource "azurerm_redis_firewall_rule" "vnet_access" {
 
   start_ip = cidrhost(local.firewall_subnet_cidrs[count.index], 0)
   end_ip   = cidrhost(local.firewall_subnet_cidrs[count.index], -1)
+
+  lifecycle {
+    ignore_changes = [
+      name,
+      redis_cache_name,
+      resource_group_name,
+      start_ip,
+      end_ip
+    ]
+  }
 }
