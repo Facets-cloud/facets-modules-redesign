@@ -1,0 +1,166 @@
+intent: mongo
+flavor: cosmosdb
+version: '1.0'
+clouds:
+- azure
+description: MongoDB-compatible database using Azure Cosmos DB service
+spec:
+  title: MongoDB with Azure Cosmos DB
+  description: MongoDB-compatible database using Azure Cosmos DB service
+  type: object
+  properties:
+    version_config:
+      type: object
+      title: Version & Basic Configuration
+      properties:
+        api_version:
+          type: string
+          title: MongoDB API Version
+          description: MongoDB API version supported by Cosmos DB
+          enum:
+          - '3.2'
+          - '3.6'
+          - '4.0'
+          - '4.2'
+          default: '4.2'
+        consistency_level:
+          type: string
+          title: Consistency Level
+          description: Default consistency level for the Cosmos DB account
+          enum:
+          - eventual
+          - session
+          - bounded_staleness
+          - strong
+          - consistent_prefix
+          default: session
+        port:
+          type: number
+          title: Port
+          description: Port number for MongoDB connection
+          minimum: 1024
+          maximum: 65535
+          default: 27017
+    sizing:
+      type: object
+      title: Sizing & Performance
+      properties:
+        throughput_mode:
+          type: string
+          title: Throughput Mode
+          description: Throughput configuration mode
+          enum:
+          - provisioned
+          - serverless
+          default: provisioned
+        max_throughput:
+          type: number
+          title: Maximum Throughput (RU/s)
+          description: Maximum Request Units per second for autoscale provisioned
+            throughput
+          minimum: 400
+          maximum: 1000000
+          default: 4000
+        enable_multi_region:
+          type: boolean
+          title: Enable Multi-Region Writes
+          description: Enable multi-region writes for global distribution
+          default: false
+    backup_config:
+      type: object
+      title: Backup Configuration
+      properties:
+        enable_continuous_backup:
+          type: boolean
+          title: Enable Continuous Backup
+          description: Enable continuous backup for point-in-time restore capability
+            (30-day retention)
+          default: false
+    restore_config:
+      type: object
+      title: Restore Operations
+      properties:
+        restore_from_backup:
+          type: boolean
+          title: Restore from Backup
+          description: Create new CosmosDB account from an existing backup (requires
+            source account to have continuous backup enabled)
+          default: false
+        source_account_name:
+          type: string
+          title: Source Account Name
+          description: Source Cosmos DB account name to restore from (must have continuous
+            backup enabled)
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+        restore_timestamp:
+          type: string
+          title: Restore Timestamp
+          description: Point-in-time restore timestamp in RFC3339 format (e.g., 2023-12-01T10:00:00Z)
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+    imports:
+      type: object
+      title: Import Existing Resources
+      properties:
+        account_name:
+          type: string
+          title: Cosmos DB Account Name
+          description: Name of existing Cosmos DB account to import
+        database_name:
+          type: string
+          title: MongoDB Database Name
+          description: Name of existing MongoDB database to import
+  required:
+  - version_config
+  - sizing
+inputs:
+  azure_provider:
+    type: '@facets/azure_cloud_account'
+    optional: false
+    displayName: Azure Provider
+    description: Azure cloud account configuration
+    providers:
+    - azurerm
+  network_details:
+    type: '@facets/azure-network-details'
+    optional: false
+    displayName: Network Details
+    description: Azure network configuration for Cosmos DB deployment
+outputs:
+  default:
+    type: '@facets/mongo'
+    title: MongoDB Cosmos DB Cluster
+imports:
+- name: account_name
+  resource_address: azurerm_cosmosdb_account.mongodb[0]
+  required: false
+- name: database_name
+  resource_address: azurerm_cosmosdb_mongo_database.main[0]
+  required: false
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+  - outputs.tf
+sample:
+  kind: mongo
+  flavor: cosmosdb
+  version: '1.0'
+  disabled: false
+  spec:
+    version_config:
+      api_version: '4.2'
+      consistency_level: session
+      port: 27017
+    sizing:
+      throughput_mode: provisioned
+      max_throughput: 4000
+      enable_multi_region: false
+    backup_config:
+      enable_continuous_backup: false
