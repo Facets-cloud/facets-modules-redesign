@@ -1,6 +1,6 @@
-# Generate random password for MySQL admin (only when not restoring)
+# Generate random password for MySQL admin (only when not restoring or importing)
 resource "random_password" "mysql_password" {
-  count   = local.restore_enabled ? 0 : 1
+  count   = local.restore_enabled || local.is_import ? 0 : 1
   length  = 16
   special = true
 }
@@ -57,9 +57,24 @@ resource "azurerm_mysql_flexible_server" "main" {
   lifecycle {
     prevent_destroy = false # Set to false for testing as requested
     ignore_changes = [
-      # Ignore changes that would require recreation
+      # Ignore changes that would require recreation during import
+      name,
+      location,
+      resource_group_name,
       delegated_subnet_id,
-      private_dns_zone_id
+      private_dns_zone_id,
+      administrator_login,
+      administrator_password,
+      version,
+      sku_name,
+      storage,
+      backup_retention_days,
+      geo_redundant_backup_enabled,
+      high_availability,
+      create_mode,
+      source_server_id,
+      point_in_time_restore_time_in_utc,
+      tags
     ]
   }
 
@@ -75,6 +90,16 @@ resource "azurerm_mysql_flexible_database" "databases" {
   server_name         = azurerm_mysql_flexible_server.main.name
   charset             = local.charset
   collation           = local.collation
+
+  lifecycle {
+    ignore_changes = [
+      name,
+      server_name,
+      resource_group_name,
+      charset,
+      collation
+    ]
+  }
 }
 
 # Read Replicas (only for new servers, not for restore operations)
@@ -117,11 +142,24 @@ resource "azurerm_mysql_flexible_server" "replicas" {
   ]
 }
 
-# Firewall rule to allow Azure services (optional for private access)
+# Firewall rule to allow Azure services (only for public access servers, skip during import)
+# VNet-integrated servers (private access) cannot have firewall rules
 resource "azurerm_mysql_flexible_server_firewall_rule" "azure_services" {
+  count = local.is_import ? 0 : 1
+
   name                = "${local.server_name}-azure-services"
   resource_group_name = local.resource_group_name
   server_name         = azurerm_mysql_flexible_server.main.name
   start_ip_address    = "0.0.0.0"
   end_ip_address      = "0.0.0.0"
+
+  lifecycle {
+    ignore_changes = [
+      name,
+      server_name,
+      resource_group_name,
+      start_ip_address,
+      end_ip_address
+    ]
+  }
 }

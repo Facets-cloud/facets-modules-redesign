@@ -168,15 +168,11 @@ spec:
         server_id:
           type: string
           title: MySQL Server Resource ID
-          description: Azure resource ID of existing MySQL Flexible Server to import
+          description: Full Azure resource ID of existing MySQL Flexible Server (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DBforMySQL/flexibleServers/{name})
         database_id:
           type: string
           title: Database Resource ID
-          description: Azure resource ID of existing database to import
-        firewall_rule_id:
-          type: string
-          title: Firewall Rule Resource ID
-          description: Azure resource ID of existing firewall rule to import
+          description: Full Azure resource ID of existing database (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DBforMySQL/flexibleServers/{server}/databases/{name})
   required:
   - version_config
   - sizing
@@ -207,9 +203,6 @@ imports:
   required: true
 - name: database_id
   resource_address: azurerm_mysql_flexible_database.databases[0]
-  required: false
-- name: firewall_rule_id
-  resource_address: azurerm_mysql_flexible_server_firewall_rule.azure_services
   required: false
 iac:
   validated_files:

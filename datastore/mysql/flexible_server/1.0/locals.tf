@@ -1,7 +1,18 @@
 locals {
+  # Import configuration - expects full Azure resource IDs
+  import_server_id   = try(var.instance.spec.imports.server_id, null)
+  import_database_id = try(var.instance.spec.imports.database_id, null)
+
+  # Extract server name from resource ID for use in Terraform configs
+  # Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DBforMySQL/flexibleServers/{name}
+  import_server_name = local.import_server_id != null ? element(split("/", local.import_server_id), length(split("/", local.import_server_id)) - 1) : null
+
+  # Mode detection
+  is_import = local.import_server_id != null
+
   # Basic configuration
   # Azure MySQL server names have a 63 character limit
-  server_name = "${var.instance_name}-mysql-${var.environment.unique_name}"
+  server_name = local.is_import ? local.import_server_name : "${var.instance_name}-mysql-${var.environment.unique_name}"
 
   # For replicas, we need shorter names to stay within 63 char limit
   # Calculate how much space we have for the base name (63 - 3 for "-r#")
