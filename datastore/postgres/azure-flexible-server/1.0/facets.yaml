@@ -34,6 +34,13 @@ spec:
           - GeneralPurpose
           - MemoryOptimized
           default: GeneralPurpose
+        database_name:
+          type: string
+          title: Database Name
+          description: Initial database name to create. Use 'postgres' for default
+            system database (read-only, cannot be managed)
+          default: postgres
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]{0,62}$
       required:
       - version
       - tier
@@ -107,13 +114,13 @@ spec:
         flexible_server_id:
           type: string
           title: Flexible Server ID
-          description: Azure resource ID of existing PostgreSQL Flexible Server to
-            import
+          description: Full Azure resource ID of existing PostgreSQL Flexible Server
+            (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DBforPostgreSQL/flexibleServers/{name})
         postgres_database_id:
           type: string
-          title: Postgres Database ID
-          description: Azure resource ID of existing PostgreSQL database to import
-            (if exists)
+          title: Custom Database ID (Optional)
+          description: Full Azure resource ID of custom database for import - NOT
+            for "postgres" system database (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DBforPostgreSQL/flexibleServers/{server}/databases/{name})
       required: []
   required:
   - version_config
@@ -159,6 +166,7 @@ sample:
     version_config:
       version: '15'
       tier: GeneralPurpose
+      database_name: myappdb
     sizing:
       sku_name: GP_Standard_D2s_v3
       storage_gb: 128

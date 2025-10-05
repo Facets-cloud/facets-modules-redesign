@@ -1,9 +1,20 @@
 # Local computations - Simplified after network module refactoring
 locals {
+  # Import configuration - expects full Azure resource IDs
+  import_server_id   = try(var.instance.spec.imports.flexible_server_id, null)
+  import_database_id = try(var.instance.spec.imports.postgres_database_id, null)
+
+  # Extract server name from resource ID for use in Terraform configs
+  # Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DBforPostgreSQL/flexibleServers/{name}
+  import_server_name = local.import_server_id != null ? element(split("/", local.import_server_id), length(split("/", local.import_server_id)) - 1) : null
+
+  # Mode detection
+  is_import = local.import_server_id != null
+
   # Resource naming
   # Azure PostgreSQL server names have a 63 character limit
-  resource_name = "${var.instance_name}-postgres-${var.environment.unique_name}"
-  database_name = "postgres"
+  resource_name = local.is_import ? local.import_server_name : "${var.instance_name}-postgres-${var.environment.unique_name}"
+  database_name = try(var.instance.spec.version_config.database_name, "postgres")
 
   # For replicas, we need shorter names to stay within 63 char limit
   # Calculate how much space we have for the base name (63 - 3 for "-r#")
@@ -28,10 +39,6 @@ locals {
   source_server_id = lookup(local.restore_config, "source_server_id", null)
   restore_time     = lookup(local.restore_config, "restore_point_in_time", null)
 
-  # Import configuration  
-  imports          = lookup(var.instance.spec, "imports", {})
-  import_server_id = lookup(local.imports, "flexible_server_id", null)
-
   # Network configuration - Consuming from network module
   vnet_name              = var.inputs.network_details.attributes.vnet_name
   vnet_id                = var.inputs.network_details.attributes.vnet_id
@@ -52,9 +59,9 @@ locals {
   high_availability_enabled = false
   high_availability_mode    = null
 
-  # Generate admin password
+  # Generate admin password (skip during restore or import)
   admin_username = "psqladmin"
-  admin_password = random_password.admin_password.result
+  admin_password = local.is_restore || local.is_import ? null : random_password.admin_password[0].result
 
   # Tags
   common_tags = merge(

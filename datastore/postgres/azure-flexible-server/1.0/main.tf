@@ -1,5 +1,6 @@
-# Generate random password for PostgreSQL admin
+# Generate random password for PostgreSQL admin (skip during restore or import)
 resource "random_password" "admin_password" {
+  count   = local.is_restore || local.is_import ? 0 : 1
   length  = 16
   special = true
 }
@@ -37,40 +38,81 @@ resource "azurerm_postgresql_flexible_server" "main" {
   lifecycle {
     prevent_destroy = false
     ignore_changes = [
-      zone,
+      # Ignore changes that would cause resource replacement during import
+      name,
+      location,
+      resource_group_name,
+      administrator_login,
       administrator_password,
-      # Ignore changes that would require recreation
+      sku_name,
+      version,
+      storage_mb,
+      backup_retention_days,
+      geo_redundant_backup_enabled,
       delegated_subnet_id,
       private_dns_zone_id,
-      # Ignore restore-related attributes that change after restore
+      public_network_access_enabled,
       create_mode,
       source_server_id,
-      point_in_time_restore_time_in_utc
+      point_in_time_restore_time_in_utc,
+      zone,
+      tags
     ]
   }
 }
 
-# Create default database - conditional creation to handle existing "postgres" database
-# Skip database creation during restore as Azure automatically restores all databases
+# Database resource - Conditional creation/import logic
+# CRITICAL: The "postgres" database is a system database that:
+#   - Always exists on the server (created automatically by Azure)
+#   - Cannot be explicitly deleted via API (Azure blocks this)
+#   - Is automatically removed when the server is deleted
+#
+# Count logic:
+#   - Restore mode: count = 0 (all databases auto-restored by Azure)
+#   - Database name is "postgres": count = 0 (cannot manage system database)
+#   - Custom database name + Create mode: count = 1 (create new database)
+#   - Custom database name + Import mode: count = 1 (import existing database)
 resource "azurerm_postgresql_flexible_server_database" "databases" {
-  count     = local.is_restore ? 0 : (local.database_name == "postgres" ? 0 : 1)
+  count     = local.is_restore || local.database_name == "postgres" ? 0 : 1
   name      = local.database_name
   server_id = azurerm_postgresql_flexible_server.main.id
   collation = "en_US.utf8"
   charset   = "utf8"
+
+  lifecycle {
+    ignore_changes = [
+      name,
+      server_id,
+      collation,
+      charset
+    ]
+  }
 }
 
 # PostgreSQL Flexible Server Configuration for security - version-compatible settings only
+# Skip during import as configurations already exist on the imported server
 resource "azurerm_postgresql_flexible_server_configuration" "log_connections" {
+  count = local.is_import ? 0 : 1
+
   name      = "log_connections"
   server_id = azurerm_postgresql_flexible_server.main.id
   value     = "on"
+
+  lifecycle {
+    ignore_changes = [name, server_id, value]
+  }
 }
 
 resource "azurerm_postgresql_flexible_server_configuration" "log_disconnections" {
+  count = local.is_import ? 0 : 1
+
   name      = "log_disconnections"
   server_id = azurerm_postgresql_flexible_server.main.id
   value     = "on"
+
+  lifecycle {
+    ignore_changes = [name, server_id, value]
+  }
 }
 
 # Note: connection_throttling is not supported in PostgreSQL 15+ on Azure Flexible Server

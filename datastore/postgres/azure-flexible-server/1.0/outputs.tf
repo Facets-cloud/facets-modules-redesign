@@ -23,15 +23,15 @@ locals {
   output_interfaces = {
     reader = sensitive({
       host              = length(azurerm_postgresql_flexible_server.replicas) > 0 ? azurerm_postgresql_flexible_server.replicas[0].fqdn : azurerm_postgresql_flexible_server.main.fqdn
-      password          = local.is_restore ? "RESTORED_SERVER_USE_ORIGINAL_PASSWORD" : local.admin_password
+      password          = local.is_restore || local.is_import ? "" : (local.admin_password != null ? local.admin_password : "")
       username          = azurerm_postgresql_flexible_server.main.administrator_login
-      connection_string = local.is_restore ? format("postgres://%s:RESTORED_SERVER_USE_ORIGINAL_PASSWORD@%s:%d/%s", azurerm_postgresql_flexible_server.main.administrator_login, length(azurerm_postgresql_flexible_server.replicas) > 0 ? azurerm_postgresql_flexible_server.replicas[0].fqdn : azurerm_postgresql_flexible_server.main.fqdn, 5432, local.database_name) : (length(azurerm_postgresql_flexible_server.replicas) > 0 ? format("postgres://%s:%s@%s:%d/%s", azurerm_postgresql_flexible_server.main.administrator_login, local.admin_password, azurerm_postgresql_flexible_server.replicas[0].fqdn, 5432, local.database_name) : format("postgres://%s:%s@%s:%d/%s", azurerm_postgresql_flexible_server.main.administrator_login, local.admin_password, azurerm_postgresql_flexible_server.main.fqdn, 5432, local.database_name))
+      connection_string = (local.is_restore || local.is_import || local.admin_password == null) ? "" : (length(azurerm_postgresql_flexible_server.replicas) > 0 ? format("postgres://%s:%s@%s:%d/%s", azurerm_postgresql_flexible_server.main.administrator_login, local.admin_password, azurerm_postgresql_flexible_server.replicas[0].fqdn, 5432, local.database_name) : format("postgres://%s:%s@%s:%d/%s", azurerm_postgresql_flexible_server.main.administrator_login, local.admin_password, azurerm_postgresql_flexible_server.main.fqdn, 5432, local.database_name))
     })
     writer = sensitive({
       host              = azurerm_postgresql_flexible_server.main.fqdn
-      password          = local.is_restore ? "RESTORED_SERVER_USE_ORIGINAL_PASSWORD" : local.admin_password
+      password          = local.is_restore || local.is_import ? "" : (local.admin_password != null ? local.admin_password : "")
       username          = azurerm_postgresql_flexible_server.main.administrator_login
-      connection_string = local.is_restore ? format("postgres://%s:RESTORED_SERVER_USE_ORIGINAL_PASSWORD@%s:%d/%s", azurerm_postgresql_flexible_server.main.administrator_login, azurerm_postgresql_flexible_server.main.fqdn, 5432, local.database_name) : format("postgres://%s:%s@%s:%d/%s", azurerm_postgresql_flexible_server.main.administrator_login, local.admin_password, azurerm_postgresql_flexible_server.main.fqdn, 5432, local.database_name)
+      connection_string = (local.is_restore || local.is_import || local.admin_password == null) ? "" : format("postgres://%s:%s@%s:%d/%s", azurerm_postgresql_flexible_server.main.administrator_login, local.admin_password, azurerm_postgresql_flexible_server.main.fqdn, 5432, local.database_name)
     })
     secrets = ["reader", "writer"]
   }
