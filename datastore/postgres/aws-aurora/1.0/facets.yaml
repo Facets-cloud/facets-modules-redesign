@@ -1,0 +1,196 @@
+intent: postgres
+flavor: aws-aurora
+version: '1.0'
+clouds:
+- aws
+description: A managed PostgreSQL Aurora cluster with high availability, automated
+  backups, and read replicas
+spec:
+  title: PostgreSQL Aurora Cluster
+  description: A managed PostgreSQL Aurora cluster with high availability, automated
+    backups, and read replicas
+  type: object
+  properties:
+    version_config:
+      type: object
+      title: Version & Basic Configuration
+      x-ui-toggle: true
+      properties:
+        engine_version:
+          type: string
+          title: PostgreSQL Engine Version
+          description: Aurora PostgreSQL engine version
+          enum:
+          - '13.21'
+          - '14.18'
+          - '15.13'
+          - '16.9'
+          - '17.5'
+          default: '16.9'
+        database_name:
+          type: string
+          title: Database Name
+          description: Name of the initial database to create
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+          minLength: 1
+          maxLength: 63
+          default: postgres
+      required:
+      - engine_version
+      - database_name
+    sizing:
+      type: object
+      title: Sizing & Performance
+      x-ui-toggle: true
+      properties:
+        instance_class:
+          type: string
+          title: Instance Class
+          description: Aurora instance class for cluster instances
+          enum:
+          - db.t4g.medium
+          - db.r5.large
+          - db.r5.xlarge
+          - db.r5.2xlarge
+          - db.r6g.large
+          - db.r6g.xlarge
+          default: db.t4g.medium
+        min_capacity:
+          type: number
+          title: Minimum Capacity (ACU)
+          description: Minimum Aurora Capacity Units for serverless scaling
+          minimum: 0.5
+          maximum: 128
+          default: 1
+        max_capacity:
+          type: number
+          title: Maximum Capacity (ACU)
+          description: Maximum Aurora Capacity Units for serverless scaling
+          minimum: 1
+          maximum: 128
+          default: 4
+        read_replica_count:
+          type: number
+          title: Read Replica Count
+          description: Number of read replica instances to create
+          minimum: 0
+          maximum: 15
+          default: 1
+      required:
+      - instance_class
+      - min_capacity
+      - max_capacity
+      - read_replica_count
+    restore_config:
+      type: object
+      title: Restore Operations
+      x-ui-toggle: true
+      properties:
+        restore_from_backup:
+          type: boolean
+          title: Restore from Manual Snapshot
+          description: Restore cluster from existing manual snapshot
+          default: false
+        source_snapshot_identifier:
+          type: string
+          title: Source Snapshot Identifier
+          description: Manual snapshot identifier (ARN or name) to restore from
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+        master_username:
+          type: string
+          title: Master Username
+          description: Master username (required when restoring from snapshot)
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+          minLength: 1
+          maxLength: 63
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+        master_password:
+          type: string
+          title: Master Password
+          description: Master password (required when restoring from snapshot)
+          minLength: 8
+          maxLength: 128
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+      required:
+      - restore_from_backup
+    imports:
+      type: object
+      title: Import Existing Resources
+      x-ui-toggle: true
+      properties:
+        cluster_identifier:
+          type: string
+          title: Aurora Cluster Identifier
+          description: Existing Aurora cluster identifier to import
+        writer_instance_identifier:
+          type: string
+          title: Writer Instance Identifier
+          description: Existing writer instance identifier to import
+        reader_instance_identifiers:
+          type: string
+          title: Reader Instance Identifiers
+          description: Existing reader instance identifiers to import (comma-separated)
+  required:
+  - version_config
+  - sizing
+  - restore_config
+inputs:
+  aws_provider:
+    type: '@facets/aws_cloud_account'
+    optional: false
+    displayName: AWS Cloud Account
+    description: AWS cloud account and provider configuration
+    providers:
+    - aws
+  vpc_details:
+    type: '@facets/aws-vpc-details'
+    optional: false
+    displayName: VPC Details
+    description: VPC and networking configuration for Aurora cluster
+outputs:
+  default:
+    type: '@facets/postgres-aws-aurora'
+    title: PostgreSQL Aurora Cluster
+  interfaces:
+    type: '@facets/postgres-interface'
+    title: PostgreSQL Database Interface
+imports:
+- name: cluster_identifier
+  resource_address: aws_rds_cluster.aurora
+  required: true
+- name: writer_instance_identifier
+  resource_address: aws_rds_cluster_instance.aurora_writer[0]
+  required: false
+- name: reader_instance_identifiers
+  resource_address: aws_rds_cluster_instance.aurora_readers[0]
+  required: false
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+sample:
+  kind: postgres
+  flavor: aws-aurora
+  version: '1.0'
+  disabled: true
+  spec:
+    version_config:
+      engine_version: '16.9'
+      database_name: postgres
+    sizing:
+      instance_class: db.t4g.medium
+      min_capacity: 1
+      max_capacity: 4
+      read_replica_count: 1
+    restore_config:
+      restore_from_backup: false
