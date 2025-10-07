@@ -20,8 +20,8 @@ locals {
     project_id = local.project_id
 
     # Network configuration
-    vpc_network         = local.vpc_network
-    subnet              = local.subnet
+    network             = local.network
+    subnetwork          = local.subnetwork
     pods_range_name     = local.pods_range_name
     services_range_name = local.services_range_name
 

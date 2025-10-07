@@ -12,9 +12,9 @@ spec:
       type: integer
       title: Initial Node Count
       description: Number of nodes in the default node pool
-      default: 3
+      default: 1
       minimum: 1
-      maximum: 100
+      maximum: 10
     machine_type:
       type: string
       title: Machine Type
@@ -51,7 +51,7 @@ spec:
       description: Minimum number of nodes when autoscaling is enabled
       default: 1
       minimum: 1
-      maximum: 100
+      maximum: 30
       x-ui-visible-if:
         field: spec.enable_autoscaling
         values:
@@ -62,7 +62,7 @@ spec:
       description: Maximum number of nodes when autoscaling is enabled
       default: 10
       minimum: 1
-      maximum: 100
+      maximum: 30
       x-ui-visible-if:
         field: spec.enable_autoscaling
         values:
@@ -114,7 +114,7 @@ sample:
   flavor: gke
   version: '1.0'
   spec:
-    initial_node_count: 3
+    initial_node_count: 1
     machine_type: e2-standard-4
     auto_upgrade: true
     enable_autoscaling: true

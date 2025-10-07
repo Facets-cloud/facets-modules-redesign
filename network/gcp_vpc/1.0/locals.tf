@@ -95,7 +95,6 @@ locals {
   common_labels = merge(
     {
       environment = var.environment.name
-      project     = var.environment.stackName
     },
     local.labels_spec,
     var.environment.cloud_tags

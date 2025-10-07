@@ -19,8 +19,8 @@ resource "google_container_cluster" "primary" {
   initial_node_count = local.enable_autoscaling ? null : local.initial_node_count
 
   # Network configuration
-  network    = local.vpc_network
-  subnetwork = local.subnet
+  network    = local.network
+  subnetwork = local.subnetwork
 
   # IP allocation policy for pods and services
   ip_allocation_policy {

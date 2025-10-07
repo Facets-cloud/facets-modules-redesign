@@ -5,11 +5,12 @@ module "name" {
   resource_name   = var.instance_name
   resource_type   = "network"
   globally_unique = true
+  prefix          = "vpc-"
 }
 
 # VPC Network
 resource "google_compute_network" "vpc" {
-  name                    = "${local.name_prefix}-vpc"
+  name                    = local.name_prefix
   auto_create_subnetworks = false
   routing_mode            = "REGIONAL"
   description             = "VPC network created by Facets for ${var.environment.name}"

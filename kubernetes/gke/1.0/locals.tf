@@ -22,9 +22,9 @@ locals {
   project_id         = lookup(var.inputs.cloud_account, "attributes", {}).project_id
   region             = lookup(var.inputs.cloud_account, "attributes", {}).region
 
-  # VPC integration
-  vpc_network         = lookup(local.network_attributes, "vpc_id", "")
-  subnet              = lookup(local.network_attributes, "private_subnet_id", "")
+  # Network integration (using GCP terminology)
+  network             = lookup(local.network_attributes, "vpc_id", "")
+  subnetwork          = lookup(local.network_attributes, "private_subnet_id", "")
   pods_range_name     = lookup(local.network_attributes, "gke_pods_range_name", "")
   services_range_name = lookup(local.network_attributes, "gke_services_range_name", "")
 
@@ -32,7 +32,8 @@ locals {
   whitelisted_cidrs = lookup(local.spec, "whitelisted_cidrs", ["0.0.0.0/0"])
 
   # Cluster naming (using name module)
-  cluster_name = module.name.name
+  # GKE requires cluster names to start with a letter
+  cluster_name = "gke-${module.name.name}"
 
   # Labels - only from environment
   cluster_labels = var.environment.cloud_tags
