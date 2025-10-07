@@ -1,98 +1,154 @@
-# Generate a unique name for the GKE cluster
 module "name" {
   source          = "github.com/Facets-cloud/facets-utility-modules//name"
   environment     = var.environment
-  limit           = 63
+  limit           = 32
   resource_name   = var.instance_name
-  resource_type   = "k8s"
+  resource_type   = "kubernetes_cluster"
   globally_unique = true
 }
 
-# GKE Cluster
+# Data source to get access token for Kubernetes provider
+data "google_client_config" "default" {}
+
+# GKE Cluster with default node pool
 resource "google_container_cluster" "primary" {
-  name     = local.name
-  location = local.location
+  name     = local.cluster_name
+  location = local.region # Regional cluster for HA
+
+  # Use the default node pool instead of creating separate ones
+  initial_node_count = local.enable_autoscaling ? null : local.initial_node_count
 
   # Network configuration
-  network    = local.network
-  subnetwork = local.subnetwork
+  network    = local.vpc_network
+  subnetwork = local.subnet
 
-  # Logging service configuration
-  logging_service = local.enable_logging ? "logging.googleapis.com/kubernetes" : "none"
-
-  # Monitoring service configuration
-  monitoring_service = local.enable_logging ? "monitoring.googleapis.com/kubernetes" : "none"
-
-  # Logging configuration
-  logging_config {
-    enable_components = local.enabled_log_components
-  }
-
-  # Monitoring configuration
-  monitoring_config {
-    enable_components = local.enabled_log_components
+  # IP allocation policy for pods and services
+  ip_allocation_policy {
+    cluster_secondary_range_name  = local.pods_range_name
+    services_secondary_range_name = local.services_range_name
   }
 
   # Release channel for automatic upgrades
-  release_channel {
-    channel = local.release_channel
-  }
-
-  # Private cluster configuration
-  dynamic "private_cluster_config" {
-    for_each = local.enable_private_cluster ? [1] : []
+  dynamic "release_channel" {
+    for_each = local.auto_upgrade ? [1] : []
     content {
-      enable_private_nodes    = true
-      enable_private_endpoint = false
-      master_ipv4_cidr_block  = local.master_ipv4_cidr_block
-
-      master_global_access_config {
-        enabled = true
-      }
+      channel = local.release_channel
     }
   }
 
-  # IP allocation policy
-  ip_allocation_policy {
-    cluster_secondary_range_name  = lookup(local.network_attributes, "pods_range_name", "")
-    services_secondary_range_name = lookup(local.network_attributes, "services_range_name", "")
-  }
+  # Private nodes with public endpoint
+  private_cluster_config {
+    enable_private_nodes    = true  # Nodes have private IPs only (secure)
+    enable_private_endpoint = false # API accessible from internet (manageable)
+    # master_ipv4_cidr_block  = "10.0.0.0/28" # Required for private nodes
 
-  # Master authorized networks
-  master_auth {
-    client_certificate_config {
-      issue_client_certificate = true
+    master_global_access_config {
+      enabled = true
     }
   }
 
+  # Whitelisted CIDRs for API access
   dynamic "master_authorized_networks_config" {
-    for_each = length(local.authorized_networks) > 0 ? [1] : []
+    for_each = length(local.whitelisted_cidrs) > 0 ? [1] : []
     content {
       dynamic "cidr_blocks" {
-        for_each = local.authorized_networks
+        for_each = local.whitelisted_cidrs
         content {
-          cidr_block   = cidr_blocks.value.cidr_block
-          display_name = cidr_blocks.value.display_name
+          cidr_block   = cidr_blocks.value
+          display_name = "Whitelisted: ${cidr_blocks.value}"
         }
       }
     }
   }
 
-  # Network policy
-  dynamic "network_policy" {
-    for_each = local.enable_network_policy ? [1] : []
+  # Node pool autoscaling configuration
+  dynamic "cluster_autoscaling" {
+    for_each = local.enable_autoscaling ? [1] : []
     content {
-      enabled  = true
-      provider = "CALICO"
+      enabled = true
+      resource_limits {
+        resource_type = "cpu"
+        minimum       = local.min_nodes * 2 # Assuming minimum 2 vCPUs per node
+        maximum       = local.max_nodes * 8 # Assuming up to 8 vCPUs per node
+      }
+      resource_limits {
+        resource_type = "memory"
+        minimum       = local.min_nodes * 4  # Assuming minimum 4GB per node
+        maximum       = local.max_nodes * 32 # Assuming up to 32GB per node
+      }
+      auto_provisioning_defaults {
+        management {
+          auto_repair  = true
+          auto_upgrade = local.auto_upgrade
+        }
+        shielded_instance_config {
+          enable_secure_boot          = true
+          enable_integrity_monitoring = true
+        }
+        oauth_scopes = [
+          "https://www.googleapis.com/auth/cloud-platform"
+        ]
+      }
     }
   }
 
-  # Workload Identity
-  dynamic "workload_identity_config" {
-    for_each = local.enable_workload_identity ? [1] : []
-    content {
-      workload_pool = local.workload_identity_namespace
+  # Default node pool configuration
+  node_config {
+    machine_type = local.machine_type
+    disk_size_gb = local.disk_size_gb
+    disk_type    = local.disk_type
+
+    # Security hardening
+    shielded_instance_config {
+      enable_secure_boot          = true
+      enable_integrity_monitoring = true
     }
+
+    # Metadata
+    metadata = {
+      disable-legacy-endpoints = "true"
+    }
+
+    # OAuth scopes
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
+
+    # Labels from environment
+    labels = local.cluster_labels
+
+    # Workload identity mode (best practice)
+    workload_metadata_config {
+      mode = "GKE_METADATA"
+    }
+  }
+
+  # Node pool management settings
+  node_pool_defaults {
+    node_config_defaults {
+      logging_variant = "DEFAULT"
+    }
+  }
+
+  # Node pool autoscaling (if enabled)
+  dynamic "node_pool_auto_config" {
+    for_each = local.enable_autoscaling ? [1] : []
+    content {
+      network_tags {
+        tags = ["gke-${local.cluster_name}"]
+      }
+    }
+  }
+
+  # Enable network policy (Calico)
+  network_policy {
+    enabled  = true
+    provider = "CALICO"
+  }
+
+  # Enable workload identity for secure access to GCP services
+  workload_identity_config {
+    workload_pool = "${local.project_id}.svc.id.goog"
   }
 
   # Addons configuration
@@ -105,140 +161,50 @@ resource "google_container_cluster" "primary" {
       disabled = false
     }
 
-    dynamic "network_policy_config" {
-      for_each = local.enable_network_policy ? [1] : []
-      content {
-        disabled = false
-      }
+    network_policy_config {
+      disabled = false
+    }
+
+    gce_persistent_disk_csi_driver_config {
+      enabled = true
+    }
+  }
+
+  # Binary authorization for image security
+  binary_authorization {
+    evaluation_mode = "PROJECT_SINGLETON_POLICY_ENFORCE"
+  }
+
+  # Logging configuration
+  logging_config {
+    enable_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
+  }
+
+  # Monitoring configuration
+  monitoring_config {
+    enable_components = ["SYSTEM_COMPONENTS"]
+    managed_prometheus {
+      enabled = true
     }
   }
 
   # Maintenance policy
-  dynamic "maintenance_policy" {
-    for_each = local.maintenance_window_enabled ? [1] : []
-    content {
-      recurring_window {
-        start_time = "${formatdate("YYYY-MM-DD", timestamp())}T${local.maintenance_window_start}:00Z"
-        end_time   = "${formatdate("YYYY-MM-DD", timestamp())}T${local.maintenance_window_end}:00Z"
-        recurrence = local.maintenance_window_recurrence
-      }
+  maintenance_policy {
+    recurring_window {
+      start_time = "2024-01-01T00:00:00Z"
+      end_time   = "2024-01-01T04:00:00Z"
+      recurrence = "FREQ=WEEKLY;BYDAY=SA"
     }
   }
-
-  # Remove the default node pool
-  remove_default_node_pool = true
-  initial_node_count       = 1
 
   # Resource labels
   resource_labels = local.cluster_labels
 
-  # Prevent destroy
+  # Lifecycle
   lifecycle {
-    prevent_destroy = true
-  }
-}
-
-# System Node Pool
-resource "google_container_node_pool" "system" {
-  count = local.system_node_pool_enabled ? 1 : 0
-
-  name     = "system-node-pool"
-  location = local.location
-  cluster  = google_container_cluster.primary.name
-
-  # Initial node count
-  initial_node_count = local.system_node_pool_autoscaling ? null : local.system_node_pool_count
-
-  # Autoscaling configuration
-  dynamic "autoscaling" {
-    for_each = local.system_node_pool_autoscaling ? [1] : []
-    content {
-      min_node_count = local.system_node_pool_min_nodes
-      max_node_count = local.system_node_pool_max_nodes
-    }
-  }
-
-  # Node configuration
-  node_config {
-    preemptible  = false
-    machine_type = local.system_node_pool_machine_type
-
-    # Disk configuration
-    disk_size_gb = local.system_node_pool_disk_size
-    disk_type    = local.system_node_pool_disk_type
-
-    # Service account
-    service_account = google_service_account.node_pool.email
-
-    # OAuth scopes
-    oauth_scopes = [
-      "https://www.googleapis.com/auth/logging.write",
-      "https://www.googleapis.com/auth/monitoring",
-      "https://www.googleapis.com/auth/devstorage.read_only",
-      "https://www.googleapis.com/auth/servicecontrol",
-      "https://www.googleapis.com/auth/service.management.readonly",
-      "https://www.googleapis.com/auth/trace.append"
+    ignore_changes = [
+      initial_node_count,
+      node_config[0].labels,
     ]
-
-    # Node labels
-    labels = local.node_labels
-
-    # Node tags
-    tags = ["gke-node", local.name]
-
-    # Workload Identity
-    dynamic "workload_metadata_config" {
-      for_each = local.enable_workload_identity ? [1] : []
-      content {
-        mode = "GKE_METADATA"
-      }
-    }
-
-    # Shielded instance config
-    shielded_instance_config {
-      enable_secure_boot          = true
-      enable_integrity_monitoring = true
-    }
-
-    # Metadata
-    metadata = {
-      disable-legacy-endpoints = "true"
-    }
   }
-
-  # Management
-  management {
-    auto_repair  = true
-    auto_upgrade = true
-  }
-
-  # Upgrade settings
-  upgrade_settings {
-    max_surge       = 1
-    max_unavailable = 0
-  }
-
-  # Prevent destroy
-  lifecycle {
-    prevent_destroy = true
-  }
-}
-
-# Service account for node pool
-resource "google_service_account" "node_pool" {
-  account_id   = "${local.name}-node-pool-sa"
-  display_name = "Service Account for ${local.name} Node Pool"
-}
-
-# IAM binding for the node pool service account
-resource "google_project_iam_member" "node_pool_sa_permissions" {
-  for_each = toset([
-    "roles/logging.logWriter",
-    "roles/monitoring.metricWriter",
-    "roles/monitoring.viewer"
-  ])
-
-  project = local.project_id
-  role    = each.value
-  member  = "serviceAccount:${google_service_account.node_pool.email}"
 }
