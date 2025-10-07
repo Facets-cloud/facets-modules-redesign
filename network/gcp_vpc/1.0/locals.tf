@@ -88,18 +88,17 @@ locals {
   local.total_gke_services)
   reserved_ips = 65536 - local.total_used_ips
 
-  # Resource naming prefix
-  name_prefix = "${var.environment.unique_name}-${var.instance_name}"
+  # Resource naming prefix (using name module)
+  name_prefix = module.name.name
 
   # Common labels for all resources
   common_labels = merge(
     {
       environment = var.environment.name
-      managed-by  = "facets"
-      module      = "gcp-vpc"
-      project     = var.environment.unique_name
+      project     = var.environment.stackName
     },
-    local.labels_spec
+    local.labels_spec,
+    var.environment.cloud_tags
   )
 
   # Network tags for firewall rules

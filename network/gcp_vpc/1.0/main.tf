@@ -1,3 +1,12 @@
+module "name" {
+  source          = "github.com/Facets-cloud/facets-utility-modules//name"
+  environment     = var.environment
+  limit           = 32
+  resource_name   = var.instance_name
+  resource_type   = "network"
+  globally_unique = true
+}
+
 # VPC Network
 resource "google_compute_network" "vpc" {
   name                    = "${local.name_prefix}-vpc"
@@ -100,6 +109,9 @@ resource "google_compute_global_address" "google_services" {
   address       = cidrhost(local.google_services_subnet_cidr, 0)
   network       = google_compute_network.vpc.id
   description   = "IP range for Google managed services"
+
+  # Facets labels
+  labels = local.common_labels
 }
 
 resource "google_service_networking_connection" "google_services" {
