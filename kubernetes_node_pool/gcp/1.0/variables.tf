@@ -9,14 +9,6 @@ variable "instance" {
       taints         = []
       labels         = {}
     }
-    advanced = {
-      location          = ""
-      management        = {}
-      upgrade_settings  = {}
-      node_locations    = {}
-      max_pods_per_node = 1000
-      node_locations    = ["ap-south1-a"]
-    }
   }
 }
 

@@ -1,17 +1,3 @@
-locals {
-  gke_advanced                  = lookup(lookup(var.instance, "advanced", {}), "gke", {})
-  gke_advanced_management       = lookup(local.gke_advanced, "management", {})
-  gke_advanced_upgrade_settings = lookup(local.gke_advanced, "upgrade_settings", {})
-  gke_advanced_node_config      = lookup(local.gke_advanced, "node_config", {})
-  gke_advanced_network_config   = lookup(local.gke_advanced, "network_config", {})
-  #  pod_ip_range_name = lookup(local.gke_advanced_network_config, "pod_ipv4_cidr_block", null) == null ? var.inputs.network_details.attributes.legacy_outputs.vpc_details.secondary_ip_range_names.pod_cidr_range : "${var.cluster.stackName}-${var.cluster.name}-${var.instance_name}-pods"
-  pod_ip_range_name = var.inputs.network_details.attributes.legacy_outputs.vpc_details.secondary_ip_range_names.pod_cidr_range
-  spec              = lookup(var.instance, "spec", {})
-  labels            = lookup(local.spec, "labels", {})
-  spot              = lookup(local.gke_advanced_node_config, "spot", false)
-  iam_roles         = lookup(lookup(local.spec, "iam", {}), "roles", {})
-}
-
 module "sa-name" {
   source          = "github.com/Facets-cloud/facets-utility-modules//name"
   environment     = var.environment
@@ -39,11 +25,11 @@ resource "google_project_iam_member" "np-account-iam" {
 }
 
 resource "google_container_node_pool" "node_pool" {
-  project     = var.cluster.project
+  project     = var.inputs.cloud_account.attributes.project_id
   provider    = "google-beta"
   name_prefix = "${var.instance_name}-"
   cluster     = var.inputs.kubernetes_details.attributes.legacy_outputs.k8s_details.cluster_name
-  location    = lookup(var.inputs.network_details.attributes.legacy_outputs.vpc_details, "region", lookup(var.cluster, "region", null))
+  location    = var.inputs.cloud_account.attributes.region
 
   autoscaling {
     min_node_count = lookup(local.spec, "min_node_count", null)
@@ -51,17 +37,17 @@ resource "google_container_node_pool" "node_pool" {
   }
 
   management {
-    auto_repair  = lookup(local.gke_advanced_management, "auto_repair", true)
-    auto_upgrade = lookup(local.gke_advanced_management, "auto_upgrade", false)
+    auto_repair  = local.auto_repair
+    auto_upgrade = local.auto_upgrade
   }
 
   initial_node_count = lookup(local.spec, "min_node_count", null)
-  max_pods_per_node  = lookup(local.gke_advanced, "max_pods_per_node", null)
-  node_locations     = lookup(local.gke_advanced, "node_locations", null)
+  max_pods_per_node  = local.max_pods_per_node
+  node_locations     = local.node_locations
 
   upgrade_settings {
-    max_surge       = lookup(local.gke_advanced_upgrade_settings, "max_surge", 1)
-    max_unavailable = lookup(local.gke_advanced_upgrade_settings, "max_unavailable", 0)
+    max_surge       = lookup(local.spec, "max_surge", 1)
+    max_unavailable = lookup(local.spec, "max_unavailable", 0)
   }
   version = var.inputs.kubernetes_details.attributes.legacy_outputs.k8s_details.kubernetes_version
 
@@ -84,11 +70,11 @@ resource "google_container_node_pool" "node_pool" {
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
     ]
-    disk_type = lookup(local.spec, "disk_type", lookup(local.gke_advanced_node_config, "disk_type", null))
+    disk_type = lookup(local.spec, "disk_type", "pd-standard")
     metadata = {
       disable-legacy-endpoints = "true"
     }
-    preemptible = lookup(local.gke_advanced_node_config, "preemptible", null)
+    preemptible = lookup(local.spec, "preemptible", false)
     tags = [
       "gke-${var.inputs.kubernetes_details.attributes.legacy_outputs.k8s_details.cluster_name}"
     ]
@@ -102,7 +88,7 @@ resource "google_container_node_pool" "node_pool" {
     }
 
     dynamic "guest_accelerator" {
-      for_each = length(lookup(local.gke_advanced_node_config, "guest_accelerator", {})) > 0 ? local.gke_advanced_node_config["guest_accelerator"] : {}
+      for_each = lookup(local.spec, "guest_accelerator", {})
       content {
         type  = guest_accelerator.value["type"]
         count = guest_accelerator.value["count"]
@@ -110,14 +96,14 @@ resource "google_container_node_pool" "node_pool" {
     }
 
     shielded_instance_config {
-      enable_secure_boot          = lookup(lookup(local.gke_advanced_node_config, "shielded_instance_config", {}), "enable_secure_boot", false)
-      enable_integrity_monitoring = lookup(lookup(local.gke_advanced_node_config, "shielded_instance_config", {}), "enable_integrity_monitoring", true)
+      enable_secure_boot          = lookup(lookup(local.spec, "shielded_instance_config", {}), "enable_secure_boot", false)
+      enable_integrity_monitoring = lookup(lookup(local.spec, "shielded_instance_config", {}), "enable_integrity_monitoring", true)
     }
 
     kubelet_config {
-      cpu_manager_policy = lookup(local.gke_advanced_node_config, "cpu_manager_policy", "static")
-      cpu_cfs_quota      = lookup(local.gke_advanced_node_config, "cpu_cfs_quota", false)
-      pod_pids_limit     = lookup(local.gke_advanced_node_config, "pod_pids_limit", 0)
+      cpu_manager_policy = lookup(local.spec, "cpu_manager_policy", "static")
+      cpu_cfs_quota      = lookup(local.spec, "cpu_cfs_quota", false)
+      pod_pids_limit     = lookup(local.spec, "pod_pids_limit", 0)
     }
   }
 
