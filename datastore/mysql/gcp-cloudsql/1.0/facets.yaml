@@ -1,0 +1,217 @@
+intent: mysql
+flavor: gcp-cloudsql
+version: '1.0'
+clouds:
+- gcp
+description: Managed MySQL database using Google Cloud SQL with automated backups
+  and high availability
+spec:
+  title: MySQL CloudSQL Instance
+  description: Managed MySQL database using Google Cloud SQL with automated backups
+    and high availability
+  type: object
+  properties:
+    version_config:
+      type: object
+      title: Version & Basic Configuration
+      properties:
+        version:
+          type: string
+          title: MySQL Version
+          description: MySQL database engine version
+          enum:
+          - '5.7'
+          - '8.0'
+          - '8.4'
+          default: '8.0'
+        database_name:
+          type: string
+          title: Initial Database Name
+          description: Name of the initial database to create
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+          minLength: 1
+          maxLength: 64
+          default: app_db
+      required:
+      - version
+      - database_name
+    sizing:
+      type: object
+      title: Sizing & Performance
+      properties:
+        tier:
+          type: string
+          title: Machine Type
+          description: CloudSQL machine type for the instance
+          enum:
+          - db-f1-micro
+          - db-g1-small
+          - db-n1-standard-1
+          - db-n1-standard-2
+          - db-n1-standard-4
+          - db-n1-highmem-2
+          - db-n1-highmem-4
+          default: db-n1-standard-1
+        disk_size:
+          type: number
+          title: Storage Size (GB)
+          description: Initial storage allocation in GB
+          minimum: 10
+          maximum: 30720
+          default: 100
+        read_replica_count:
+          type: number
+          title: Read Replica Count
+          description: Number of read replicas to create
+          minimum: 0
+          maximum: 5
+          default: 0
+      required:
+      - tier
+      - disk_size
+    restore_config:
+      type: object
+      title: Restore Operations
+      properties:
+        restore_from_backup:
+          type: boolean
+          title: Restore from Backup
+          description: Restore database from existing CloudSQL backup or instance
+          default: false
+        source_instance_id:
+          type: string
+          title: Source Instance ID
+          description: Source CloudSQL instance identifier for restore operations
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+        master_username:
+          type: string
+          title: Master Username
+          description: Username for the master user (required for restore operations)
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+          minLength: 1
+          maxLength: 32
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+        master_password:
+          type: string
+          title: Master Password
+          description: Password for the master user (required for restore operations)
+          minLength: 8
+          x-ui-secret-ref: true
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+    imports:
+      type: object
+      title: Import Existing Resources
+      x-ui-toggle: true
+      properties:
+        instance_name:
+          type: string
+          title: CloudSQL Instance Name
+          description: Name of existing CloudSQL instance to import (format projectId/instanceName)
+          pattern: ^[a-z0-9/_-]+$
+          minLength: 1
+          maxLength: 200
+        database_name:
+          type: string
+          title: Database Name (Optional)
+          description: Name of existing database to import (format projectId/instanceName/databaseName).
+            Leave empty to create new database.
+          pattern: ^[a-z0-9/_-]*$
+          minLength: 0
+          maxLength: 250
+        root_user:
+          type: string
+          title: Root User Name (Optional)
+          description: Name of existing root user to import (format projectId/instanceName/userName).
+            Leave empty to create new user.
+          pattern: ^[a-z0-9/_-]*$
+          minLength: 0
+          maxLength: 250
+        read_replica_0:
+          type: string
+          title: Read Replica 1 Name
+          description: Name of first read replica to import (format projectId/replicaName)
+          pattern: ^[a-z0-9/_-]+$
+          minLength: 1
+          maxLength: 200
+        read_replica_1:
+          type: string
+          title: Read Replica 2 Name
+          description: Name of second read replica to import (format projectId/replicaName)
+          pattern: ^[a-z0-9/_-]+$
+          minLength: 1
+          maxLength: 200
+        read_replica_2:
+          type: string
+          title: Read Replica 3 Name
+          description: Name of third read replica to import (format projectId/replicaName)
+          pattern: ^[a-z0-9/_-]+$
+          minLength: 1
+          maxLength: 200
+  required:
+  - version_config
+  - sizing
+imports:
+- name: instance_name
+  resource_address: google_sql_database_instance.mysql_instance
+  required: false
+- name: database_name
+  resource_address: google_sql_database.initial_database
+  required: false
+- name: root_user
+  resource_address: google_sql_user.mysql_root_user
+  required: false
+- name: read_replica_0
+  resource_address: google_sql_database_instance.read_replica[0]
+  required: false
+- name: read_replica_1
+  resource_address: google_sql_database_instance.read_replica[1]
+  required: false
+- name: read_replica_2
+  resource_address: google_sql_database_instance.read_replica[2]
+  required: false
+inputs:
+  gcp_provider:
+    type: '@facets/gcp_cloud_account'
+    optional: false
+    displayName: GCP Cloud Account
+    description: GCP cloud account and provider configuration
+    providers:
+    - google
+  network:
+    type: '@facets/gcp-network-details'
+    optional: false
+    displayName: VPC Network
+    description: VPC network for CloudSQL private IP configuration
+outputs:
+  default:
+    type: '@facets/mysql-cloudsql'
+    title: MySQL CloudSQL Instance
+  interfaces:
+    type: '@facets/mysql-interface'
+    title: MySQL Database Interface
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+sample:
+  kind: mysql
+  flavor: gcp-cloudsql
+  version: '1.0'
+  disabled: true
+  spec:
+    version_config:
+      version: '8.0'
+      database_name: app_db
+    sizing:
+      tier: db-n1-standard-1
+      disk_size: 100
