@@ -1,0 +1,125 @@
+intent: redis
+flavor: gcp-memorystore
+version: '1.0'
+clouds:
+- gcp
+description: Managed Redis instance using Google Cloud Memorystore with high availability
+  and security
+spec:
+  title: GCP Redis Memorystore
+  description: Managed Redis instance using Google Cloud Memorystore with high availability
+    and security
+  type: object
+  properties:
+    version_config:
+      type: object
+      title: Version & Basic Configuration
+      properties:
+        redis_version:
+          type: string
+          title: Redis Version
+          description: Version of the Redis engine
+          enum:
+          - REDIS_6_X
+          - REDIS_7_0
+          - REDIS_7_2
+          default: REDIS_7_2
+      required:
+      - redis_version
+    sizing:
+      type: object
+      title: Sizing & Performance
+      properties:
+        memory_size_gb:
+          type: number
+          title: Memory Size (GB)
+          description: Memory allocation in GB for the Redis instance (min 5GB for
+            Standard HA tier)
+          minimum: 1
+          maximum: 300
+          default: 5
+        tier:
+          type: string
+          title: Service Tier
+          description: Service tier for the Redis instance
+          enum:
+          - BASIC
+          - STANDARD_HA
+          default: STANDARD_HA
+      required:
+      - memory_size_gb
+      - tier
+    restore_config:
+      type: object
+      title: Restore Operations
+      properties:
+        restore_from_backup:
+          type: boolean
+          title: Restore from Backup
+          description: Restore Redis instance from existing backup
+          default: false
+        source_instance_id:
+          type: string
+          title: Source Instance ID
+          description: Source Redis instance ID to restore from
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+      required:
+      - restore_from_backup
+    imports:
+      type: object
+      title: Import Existing Resources
+      properties:
+        instance_id:
+          type: string
+          title: Instance ID
+          description: Existing Memorystore Redis instance ID to import
+          pattern: ^projects/[^/]+/locations/[^/]+/instances/[^/]+$
+  required:
+  - version_config
+  - sizing
+  - restore_config
+inputs:
+  gcp_provider:
+    type: '@facets/gcp_cloud_account'
+    optional: false
+    displayName: GCP Cloud Account
+    description: GCP project and authentication configuration
+    providers:
+    - google
+  network:
+    type: '@facets/gcp-network-details'
+    optional: true
+    displayName: GCP Network Configuration
+    description: VPC and subnet configuration for the Redis instance (must have private
+      service access enabled)
+outputs:
+  interfaces:
+    type: '@facets/redis-interface'
+    title: Redis Interface
+imports:
+- name: instance_id
+  resource: google_redis_instance.main
+  resource_address: google_redis_instance.main
+  required: false
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+  - outputs.tf
+sample:
+  kind: redis
+  flavor: gcp-memorystore
+  version: '1.0'
+  disabled: true
+  spec:
+    version_config:
+      redis_version: REDIS_7_2
+    sizing:
+      memory_size_gb: 5
+      tier: STANDARD_HA
+    restore_config:
+      restore_from_backup: false
