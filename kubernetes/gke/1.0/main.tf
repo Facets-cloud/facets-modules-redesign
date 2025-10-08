@@ -15,6 +15,9 @@ resource "google_container_cluster" "primary" {
   name     = local.cluster_name
   location = local.region # Regional cluster for HA
 
+  # Allow cluster deletion
+  deletion_protection = false
+
   # Use the default node pool instead of creating separate ones
   initial_node_count = local.enable_autoscaling ? null : local.initial_node_count
 
@@ -188,12 +191,14 @@ resource "google_container_cluster" "primary" {
     }
   }
 
-  # Maintenance policy
-  maintenance_policy {
-    recurring_window {
-      start_time = "2024-01-01T00:00:00Z"
-      end_time   = "2024-01-01T04:00:00Z"
-      recurrence = "FREQ=WEEKLY;BYDAY=SA"
+  # Maintenance policy - only when auto-upgrade is enabled
+  # Daily maintenance window at 3 AM UTC for 4 hours
+  dynamic "maintenance_policy" {
+    for_each = local.auto_upgrade ? [1] : []
+    content {
+      daily_maintenance_window {
+        start_time = "03:00"
+      }
     }
   }
 
@@ -203,8 +208,7 @@ resource "google_container_cluster" "primary" {
   # Lifecycle
   lifecycle {
     ignore_changes = [
-      initial_node_count,
-      node_config[0].labels,
+      initial_node_count
     ]
   }
 }
