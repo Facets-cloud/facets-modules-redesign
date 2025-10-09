@@ -97,7 +97,7 @@ outputs:
   attributes.k8s_details:
     type: '@facets/gke'
     title: Kubernetes Cluster Output
-    description: The output for the GKE cluster with token-based authentication
+    description: The output for the GKE cluster with exec-based authentication using gke-gcloud-auth-plugin
     providers:
       kubernetes:
         source: hashicorp/kubernetes
@@ -105,7 +105,10 @@ outputs:
         attributes:
           host: cluster.auth.host
           cluster_ca_certificate: cluster.auth.cluster_ca_certificate
-          token: cluster.auth.token
+          exec:
+            api_version: cluster.auth.kubernetes_provider_exec.api_version
+            command: cluster.auth.kubernetes_provider_exec.command
+            args: cluster.auth.kubernetes_provider_exec.args
       helm:
         source: hashicorp/helm
         version: 3.0.2
@@ -113,14 +116,20 @@ outputs:
           kubernetes:
             host: cluster.auth.host
             cluster_ca_certificate: cluster.auth.cluster_ca_certificate
-            token: cluster.auth.token
+            exec:
+              api_version: cluster.auth.kubernetes_provider_exec.api_version
+              command: cluster.auth.kubernetes_provider_exec.command
+              args: cluster.auth.kubernetes_provider_exec.args
       kubernetes-alpha:
         source: hashicorp/kubernetes-alpha
         version: 0.6.0
         attributes:
           host: cluster.auth.host
           cluster_ca_certificate: cluster.auth.cluster_ca_certificate
-          token: cluster.auth.token
+          exec:
+            api_version: cluster.auth.kubernetes_provider_exec.api_version
+            command: cluster.auth.kubernetes_provider_exec.command
+            args: cluster.auth.kubernetes_provider_exec.args
 sample:
   kind: kubernetes_cluster
   flavor: gke
