@@ -104,33 +104,33 @@ outputs:
         source: hashicorp/kubernetes
         version: 2.38.0
         attributes:
-          host: cluster.auth.host
-          cluster_ca_certificate: cluster.auth.cluster_ca_certificate
+          host: cluster_endpoint
+          cluster_ca_certificate: cluster_ca_certificate
           exec:
-            api_version: cluster.auth.kubernetes_provider_exec.api_version
-            command: cluster.auth.kubernetes_provider_exec.command
-            args: cluster.auth.kubernetes_provider_exec.args
+            api_version: kubernetes_provider_exec.api_version
+            command: kubernetes_provider_exec.command
+            args: kubernetes_provider_exec.args
       helm:
         source: hashicorp/helm
         version: 3.0.2
         attributes:
           kubernetes:
-            host: cluster.auth.host
-            cluster_ca_certificate: cluster.auth.cluster_ca_certificate
+            host: cluster_endpoint
+            cluster_ca_certificate: cluster_ca_certificate
             exec:
-              api_version: cluster.auth.kubernetes_provider_exec.api_version
-              command: cluster.auth.kubernetes_provider_exec.command
-              args: cluster.auth.kubernetes_provider_exec.args
+              api_version: kubernetes_provider_exec.api_version
+              command: kubernetes_provider_exec.command
+              args: kubernetes_provider_exec.args
       kubernetes-alpha:
         source: hashicorp/kubernetes-alpha
         version: 0.6.0
         attributes:
-          host: cluster.auth.host
-          cluster_ca_certificate: cluster.auth.cluster_ca_certificate
+          host: cluster_endpoint
+          cluster_ca_certificate: cluster_ca_certificate
           exec:
-            api_version: cluster.auth.kubernetes_provider_exec.api_version
-            command: cluster.auth.kubernetes_provider_exec.command
-            args: cluster.auth.kubernetes_provider_exec.args
+            api_version: kubernetes_provider_exec.api_version
+            command: kubernetes_provider_exec.command
+            args: kubernetes_provider_exec.args
 sample:
   kind: kubernetes_cluster
   flavor: gke
