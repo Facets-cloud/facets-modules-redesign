@@ -26,9 +26,9 @@ resource "google_project_iam_member" "np-account-iam" {
 
 resource "google_container_node_pool" "node_pool" {
   project     = var.inputs.cloud_account.attributes.project_id
-  provider    = "google-beta"
+  provider    = google-beta
   name_prefix = "${var.instance_name}-"
-  cluster     = var.inputs.kubernetes_details.attributes.legacy_outputs.k8s_details.cluster_name
+  cluster     = var.inputs.kubernetes_details.attributes.cluster.name
   location    = var.inputs.cloud_account.attributes.region
 
   autoscaling {
@@ -49,7 +49,7 @@ resource "google_container_node_pool" "node_pool" {
     max_surge       = lookup(local.spec, "max_surge", 1)
     max_unavailable = lookup(local.spec, "max_unavailable", 0)
   }
-  version = var.inputs.kubernetes_details.attributes.legacy_outputs.k8s_details.kubernetes_version
+  version = var.inputs.kubernetes_details.attributes.cluster.version
 
   node_config {
     machine_type = lookup(local.spec, "instance_type", null)
@@ -66,7 +66,7 @@ resource "google_container_node_pool" "node_pool" {
     labels          = local.labels
     resource_labels = merge(local.labels, lookup(lookup(var.instance, "metadata", {}), "labels", {}))
     # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
-    service_account = length(local.iam_roles) > 0 ? google_service_account.sa[0].email : var.inputs.kubernetes_details.attributes.legacy_outputs.k8s_details.node_pool_service_account
+    service_account = length(local.iam_roles) > 0 ? google_service_account.sa[0].email : null
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
     ]
@@ -76,7 +76,7 @@ resource "google_container_node_pool" "node_pool" {
     }
     preemptible = lookup(local.spec, "preemptible", false)
     tags = [
-      "gke-${var.inputs.kubernetes_details.attributes.legacy_outputs.k8s_details.cluster_name}"
+      "gke-${var.inputs.kubernetes_details.attributes.cluster.name}"
     ]
     spot = local.spot
 

@@ -3,7 +3,7 @@ locals {
   spec = lookup(var.instance, "spec", {})
 
   # Basic cluster configuration
-  initial_node_count = lookup(local.spec, "initial_node_count", 3)
+  initial_node_count = lookup(local.spec, "initial_node_count", 1)
   machine_type       = lookup(local.spec, "machine_type", "e2-standard-4")
   disk_size_gb       = 100           # Hardcoded to match legacy default
   disk_type          = "pd-standard" # Hardcoded to match legacy default

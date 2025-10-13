@@ -1,7 +1,7 @@
 intent: kubernetes_node_pool
-flavor: gke_node_pool
+flavor: gke_custom_node_pool
 version: '1.0'
-description: Adds kubernetes_node_pool - gke_node_pool flavor
+description: Custom GKE node pool with advanced configuration options
 clouds:
 - gcp
 inputs:
@@ -32,9 +32,19 @@ inputs:
     optional: false
     providers:
     - google
+outputs:
+  default:
+    type: '@facets/kubernetes_nodepool'
+    title: GKE Node Pool Output
+    description: Basic output information for the GKE node pool
+  attributes.node_pool_details:
+    type: '@facets/gke_node_pool_details'
+    title: GKE Node Pool Details
+    description: Detailed information about the GKE node pool including configuration
+      and status
 spec:
   title: Kubernetes Node Pool
-  description: Specification of the kubernetes node pool for gke_node_pool flavor
+  description: Specification of the custom GKE node pool with advanced configuration
   type: object
   properties:
     instance_type:
@@ -113,7 +123,7 @@ spec:
   - taints
   - labels
 sample:
-  flavor: gke_node_pool
+  flavor: gke_custom_node_pool
   version: '1.0'
   kind: kubernetes_node_pool
   metadata: {}

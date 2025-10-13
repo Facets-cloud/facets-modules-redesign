@@ -19,7 +19,7 @@ resource "google_container_cluster" "primary" {
   deletion_protection = false
 
   # Use the default node pool instead of creating separate ones
-  initial_node_count = local.enable_autoscaling ? null : local.initial_node_count
+  initial_node_count = local.initial_node_count
 
   # Network configuration
   network    = local.network
