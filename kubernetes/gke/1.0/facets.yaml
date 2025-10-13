@@ -92,12 +92,13 @@ inputs:
     - google
 outputs:
   default:
-    type: '@facets/gke_cluster'
+    type: '@facets/kubernetes-details'
     title: Kubernetes Cluster Output
   attributes.k8s_details:
     type: '@facets/gke'
     title: Kubernetes Cluster Output
-    description: The output for the GKE cluster with exec-based authentication using gke-gcloud-auth-plugin
+    description: The output for the GKE cluster with exec-based authentication using
+      gke-gcloud-auth-plugin
     providers:
       kubernetes:
         source: hashicorp/kubernetes
