@@ -64,6 +64,11 @@ spec:
       type: integer
       minimum: 0
       maximum: 100
+    autoscaling_per_zone:
+      title: Autoscaling Per Zone
+      description: If true, min/max nodes apply per zone. If false, applies as total across all zones.
+      type: boolean
+      default: false
     is_public:
       title: Is Public
       description: Set this to true to deploy the node pool in public subnets

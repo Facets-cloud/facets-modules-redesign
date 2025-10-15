@@ -2,9 +2,10 @@ locals {
   spec = lookup(var.instance, "spec", {})
 
   # Node pool configuration from spec
-  labels    = lookup(local.spec, "labels", {})
-  spot      = lookup(local.spec, "spot", false)
-  iam_roles = lookup(lookup(local.spec, "iam", {}), "roles", {})
+  labels               = lookup(local.spec, "labels", {})
+  spot                 = lookup(local.spec, "spot", false)
+  iam_roles            = lookup(lookup(local.spec, "iam", {}), "roles", {})
+  autoscaling_per_zone = lookup(local.spec, "autoscaling_per_zone", false)
 
   # Management settings from spec
   auto_repair = lookup(lookup(local.spec, "management", {}), "auto_repair", true)

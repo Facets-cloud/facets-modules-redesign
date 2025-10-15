@@ -32,8 +32,10 @@ resource "google_container_node_pool" "node_pool" {
   location    = var.inputs.cloud_account.attributes.region
 
   autoscaling {
-    min_node_count = lookup(local.spec, "min_node_count", null)
-    max_node_count = lookup(local.spec, "max_node_count", null)
+    total_min_node_count = local.autoscaling_per_zone ? null : lookup(local.spec, "min_node_count", null)
+    total_max_node_count = local.autoscaling_per_zone ? null : lookup(local.spec, "max_node_count", null)
+    min_node_count       = local.autoscaling_per_zone ? lookup(local.spec, "min_node_count", null) : null
+    max_node_count       = local.autoscaling_per_zone ? lookup(local.spec, "max_node_count", null) : null
   }
 
   management {
