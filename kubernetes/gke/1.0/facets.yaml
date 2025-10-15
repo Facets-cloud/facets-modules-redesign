@@ -94,43 +94,42 @@ outputs:
   default:
     type: '@facets/kubernetes-details'
     title: Kubernetes Cluster Output
-  attributes:
-    type: '@facets/gke'
-    title: Kubernetes Cluster Output
-    description: The output for the GKE cluster with exec-based authentication using
-      gke-gcloud-auth-plugin
     providers:
       kubernetes:
         source: hashicorp/kubernetes
         version: 2.38.0
         attributes:
-          host: cluster_endpoint
-          cluster_ca_certificate: cluster_ca_certificate
+          host: attributes.cluster_endpoint
+          cluster_ca_certificate: attributes.cluster_ca_certificate
           exec:
-            api_version: kubernetes_provider_exec.api_version
-            command: kubernetes_provider_exec.command
-            args: kubernetes_provider_exec.args
+            api_version: attributes.kubernetes_provider_exec.api_version
+            command: attributes.kubernetes_provider_exec.command
+            args: attributes.kubernetes_provider_exec.args
       helm:
         source: hashicorp/helm
         version: 3.0.2
         attributes:
           kubernetes:
-            host: cluster_endpoint
-            cluster_ca_certificate: cluster_ca_certificate
+            host: attributes.cluster_endpoint
+            cluster_ca_certificate: attributes.cluster_ca_certificate
             exec:
-              api_version: kubernetes_provider_exec.api_version
-              command: kubernetes_provider_exec.command
-              args: kubernetes_provider_exec.args
+              api_version: attributes.kubernetes_provider_exec.api_version
+              command: attributes.kubernetes_provider_exec.command
+              args: attributes.kubernetes_provider_exec.args
       kubernetes-alpha:
         source: hashicorp/kubernetes-alpha
         version: 0.6.0
         attributes:
-          host: cluster_endpoint
-          cluster_ca_certificate: cluster_ca_certificate
+          host: attributes.cluster_endpoint
+          cluster_ca_certificate: attributes.cluster_ca_certificate
           exec:
-            api_version: kubernetes_provider_exec.api_version
-            command: kubernetes_provider_exec.command
-            args: kubernetes_provider_exec.args
+            api_version: attributes.kubernetes_provider_exec.api_version
+            command: attributes.kubernetes_provider_exec.command
+            args: attributes.kubernetes_provider_exec.args
+  attributes:
+    type: '@facets/gke'
+    title: GKE Cluster Attributes
+    description: Additional GKE cluster attributes without provider configuration
 sample:
   kind: kubernetes_cluster
   flavor: gke

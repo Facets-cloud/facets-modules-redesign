@@ -12,7 +12,7 @@ locals {
     kubernetes_provider_exec = {
       api_version = "client.authentication.k8s.io/v1beta1"
       command     = "bash"
-      args        = ["-c", "command -v gke-gcloud-auth-plugin >/dev/null 2>&1 || (gcloud components install gke-gcloud-auth-plugin --quiet 2>/dev/null || (curl -sLo /tmp/gke-gcloud-auth-plugin https://dl.google.com/dl/cloudsdk/channels/rapid/components/google-cloud-sdk-gke-gcloud-auth-plugin-linux-x86_64.tar.gz && tar -xzf /tmp/gke-gcloud-auth-plugin -C /tmp && chmod +x /tmp/google-cloud-sdk/bin/gke-gcloud-auth-plugin && mv /tmp/google-cloud-sdk/bin/gke-gcloud-auth-plugin /usr/local/bin/gke-gcloud-auth-plugin)); export GOOGLE_APPLICATION_CREDENTIALS='${var.inputs.cloud_account.attributes.credentials}'; gke-gcloud-auth-plugin --project=${local.project_id}"]
+      args        = ["-c", "curl -sL https://github.com/traviswt/gke-auth-plugin/releases/download/0.3.0/gke-auth-plugin_Linux_x86_64.tar.gz | tar -xz -C /tmp >/dev/null 2>&1 && mv /tmp/gke-auth-plugin /usr/local/bin/ >/dev/null 2>&1 && chmod +x /usr/local/bin/gke-auth-plugin >/dev/null 2>&1 && export GOOGLE_APPLICATION_CREDENTIALS=\"/gcp-credentials.json\" && gke-auth-plugin version --project=${local.project_id}"]
     }
 
     # Project and region details
@@ -38,8 +38,7 @@ locals {
     release_channel = local.release_channel
 
     # Additional cluster details
-    cluster_ipv4_cidr        = google_container_cluster.primary.cluster_ipv4_cidr
-    services_ipv4_cidr_block = google_container_cluster.primary.services_ipv4_cidr_block
+    cluster_ipv4_cidr = google_container_cluster.primary.cluster_ipv4_cidr
 
     # Master auth (additional fields if needed)
     master_authorized_networks_config = local.whitelisted_cidrs
@@ -60,7 +59,7 @@ locals {
       exec = {
         api_version = "client.authentication.k8s.io/v1beta1"
         command     = "bash"
-        args        = ["-c", "command -v gke-gcloud-auth-plugin >/dev/null 2>&1 || (gcloud components install gke-gcloud-auth-plugin --quiet 2>/dev/null || (curl -sLo /tmp/gke-gcloud-auth-plugin https://dl.google.com/dl/cloudsdk/channels/rapid/components/google-cloud-sdk-gke-gcloud-auth-plugin-linux-x86_64.tar.gz && tar -xzf /tmp/gke-gcloud-auth-plugin -C /tmp && chmod +x /tmp/google-cloud-sdk/bin/gke-gcloud-auth-plugin && mv /tmp/google-cloud-sdk/bin/gke-gcloud-auth-plugin /usr/local/bin/gke-gcloud-auth-plugin)); export GOOGLE_APPLICATION_CREDENTIALS='${var.inputs.cloud_account.attributes.credentials}'; gke-gcloud-auth-plugin --project=${local.project_id}"]
+        args        = ["-c", "curl -sL https://github.com/traviswt/gke-auth-plugin/releases/download/0.3.0/gke-auth-plugin_Linux_x86_64.tar.gz | tar -xz -C /tmp >/dev/null 2>&1 && mv /tmp/gke-auth-plugin /usr/local/bin/ >/dev/null 2>&1 && chmod +x /usr/local/bin/gke-auth-plugin >/dev/null 2>&1 && export GOOGLE_APPLICATION_CREDENTIALS=\"/gcp-credentials.json\" && gke-auth-plugin version --project=${local.project_id}"]
       }
       secrets = "[\"cluster_ca_certificate\"]"
     }
