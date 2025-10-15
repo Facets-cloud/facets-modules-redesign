@@ -45,6 +45,15 @@ spec:
       title: Enable Node Autoscaling
       description: Enable autoscaling for the default node pool
       default: true
+    autoscaling_per_zone:
+      type: boolean
+      title: Autoscaling Per Zone
+      description: If true, min/max nodes apply per zone. If false, applies as total across all zones.
+      default: false
+      x-ui-visible-if:
+        field: spec.enable_autoscaling
+        values:
+        - true
     min_nodes:
       type: integer
       title: Minimum Nodes

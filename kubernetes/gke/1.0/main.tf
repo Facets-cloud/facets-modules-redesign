@@ -21,6 +21,19 @@ resource "google_container_cluster" "primary" {
   # Use the default node pool instead of creating separate ones
   initial_node_count = local.initial_node_count
 
+  # Default node pool autoscaling
+  dynamic "node_pool" {
+    for_each = local.enable_autoscaling ? [1] : []
+    content {
+      autoscaling {
+        total_min_node_count = local.autoscaling_per_zone ? null : local.min_nodes
+        total_max_node_count = local.autoscaling_per_zone ? null : local.max_nodes
+        min_node_count       = local.autoscaling_per_zone ? local.min_nodes : null
+        max_node_count       = local.autoscaling_per_zone ? local.max_nodes : null
+      }
+    }
+  }
+
   # Network configuration
   network    = local.network
   subnetwork = local.subnetwork

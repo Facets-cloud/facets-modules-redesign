@@ -13,9 +13,10 @@ locals {
   release_channel = local.auto_upgrade ? "STABLE" : "UNSPECIFIED" # Hardcoded to STABLE
 
   # Autoscaling configuration
-  enable_autoscaling = lookup(local.spec, "enable_autoscaling", true)
-  min_nodes          = lookup(local.spec, "min_nodes", 1)
-  max_nodes          = lookup(local.spec, "max_nodes", 10)
+  enable_autoscaling   = lookup(local.spec, "enable_autoscaling", true)
+  autoscaling_per_zone = lookup(local.spec, "autoscaling_per_zone", false)
+  min_nodes            = lookup(local.spec, "min_nodes", 1)
+  max_nodes            = lookup(local.spec, "max_nodes", 10)
 
   # Network configuration from VPC module
   network_attributes = lookup(var.inputs.network_details, "attributes", {})
