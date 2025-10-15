@@ -12,7 +12,7 @@ locals {
     kubernetes_provider_exec = {
       api_version = "client.authentication.k8s.io/v1beta1"
       command     = "bash"
-      args        = ["-c", "curl -sLo /tmp/gke-auth-plugin.tar.gz https://github.com/traviswt/gke-auth-plugin/releases/download/0.3.0/gke-auth-plugin_Linux_x86_64.tar.gz >/dev/null 2>&1 && tar -xzf /tmp/gke-auth-plugin.tar.gz -C /tmp >/dev/null 2>&1 && chmod +x /tmp/gke-auth-plugin >/dev/null 2>&1 && mv /tmp/gke-auth-plugin /usr/local/bin/gke-auth-plugin >/dev/null 2>&1 && GOOGLE_APPLICATION_CREDENTIALS=/gcp-credentials.json gke-auth-plugin"]
+      args        = ["-c", "command -v gke-auth-plugin >/dev/null 2>&1 || (curl -sLo /tmp/gke-auth-plugin.tar.gz https://github.com/traviswt/gke-auth-plugin/releases/download/0.3.0/gke-auth-plugin_Linux_x86_64.tar.gz && tar -xzf /tmp/gke-auth-plugin.tar.gz -C /tmp && chmod +x /tmp/gke-auth-plugin && mv /tmp/gke-auth-plugin /usr/local/bin/gke-auth-plugin); GOOGLE_APPLICATION_CREDENTIALS=/gcp-credentials.json gke-auth-plugin"]
     }
 
     # Project and region details
@@ -59,7 +59,7 @@ locals {
       exec = {
         api_version = "client.authentication.k8s.io/v1beta1"
         command     = "bash"
-        args        = ["-c", "curl -sLo /tmp/gke-auth-plugin.tar.gz https://github.com/traviswt/gke-auth-plugin/releases/download/0.3.0/gke-auth-plugin_Linux_x86_64.tar.gz >/dev/null 2>&1 && tar -xzf /tmp/gke-auth-plugin.tar.gz -C /tmp >/dev/null 2>&1 && chmod +x /tmp/gke-auth-plugin >/dev/null 2>&1 && mv /tmp/gke-auth-plugin /usr/local/bin/gke-auth-plugin >/dev/null 2>&1 && GOOGLE_APPLICATION_CREDENTIALS=/gcp-credentials.json gke-auth-plugin"]
+        args        = ["-c", "command -v gke-auth-plugin >/dev/null 2>&1 || (curl -sLo /tmp/gke-auth-plugin.tar.gz https://github.com/traviswt/gke-auth-plugin/releases/download/0.3.0/gke-auth-plugin_Linux_x86_64.tar.gz && tar -xzf /tmp/gke-auth-plugin.tar.gz -C /tmp && chmod +x /tmp/gke-auth-plugin && mv /tmp/gke-auth-plugin /usr/local/bin/gke-auth-plugin); GOOGLE_APPLICATION_CREDENTIALS=/gcp-credentials.json gke-auth-plugin"]
       }
       secrets = "[\"cluster_ca_certificate\"]"
     }
