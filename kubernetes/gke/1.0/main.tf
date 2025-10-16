@@ -21,15 +21,48 @@ resource "google_container_cluster" "primary" {
   # Use the default node pool instead of creating separate ones
   initial_node_count = local.initial_node_count
 
-  # Default node pool autoscaling
-  dynamic "node_pool" {
-    for_each = local.enable_autoscaling ? [1] : []
-    content {
-      autoscaling {
+  # Default node pool configuration
+  node_pool {
+    # Conditional autoscaling block
+    dynamic "autoscaling" {
+      for_each = local.enable_autoscaling ? [1] : []
+      content {
         total_min_node_count = local.autoscaling_per_zone ? null : local.min_nodes
         total_max_node_count = local.autoscaling_per_zone ? null : local.max_nodes
         min_node_count       = local.autoscaling_per_zone ? local.min_nodes : null
         max_node_count       = local.autoscaling_per_zone ? local.max_nodes : null
+      }
+    }
+
+    node_locations = length(local.node_locations) > 0 ? local.node_locations : null
+
+    node_config {
+      machine_type = local.machine_type
+      disk_size_gb = local.disk_size_gb
+      disk_type    = local.disk_type
+
+      # Security hardening
+      shielded_instance_config {
+        enable_secure_boot          = true
+        enable_integrity_monitoring = true
+      }
+
+      # Metadata
+      metadata = {
+        disable-legacy-endpoints = "true"
+      }
+
+      # OAuth scopes
+      oauth_scopes = [
+        "https://www.googleapis.com/auth/cloud-platform"
+      ]
+
+      # Labels from environment
+      labels = local.cluster_labels
+
+      # Workload identity mode (best practice)
+      workload_metadata_config {
+        mode = "GKE_METADATA"
       }
     }
   }
@@ -105,37 +138,6 @@ resource "google_container_cluster" "primary" {
           "https://www.googleapis.com/auth/cloud-platform"
         ]
       }
-    }
-  }
-
-  # Default node pool configuration
-  node_config {
-    machine_type = local.machine_type
-    disk_size_gb = local.disk_size_gb
-    disk_type    = local.disk_type
-
-    # Security hardening
-    shielded_instance_config {
-      enable_secure_boot          = true
-      enable_integrity_monitoring = true
-    }
-
-    # Metadata
-    metadata = {
-      disable-legacy-endpoints = "true"
-    }
-
-    # OAuth scopes
-    oauth_scopes = [
-      "https://www.googleapis.com/auth/cloud-platform"
-    ]
-
-    # Labels from environment
-    labels = local.cluster_labels
-
-    # Workload identity mode (best practice)
-    workload_metadata_config {
-      mode = "GKE_METADATA"
     }
   }
 

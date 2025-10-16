@@ -48,7 +48,8 @@ spec:
     autoscaling_per_zone:
       type: boolean
       title: Autoscaling Per Zone
-      description: If true, min/max nodes apply per zone. If false, applies as total across all zones.
+      description: If true, min/max nodes apply per zone. If false, applies as total
+        across all zones.
       default: false
       x-ui-visible-if:
         field: spec.enable_autoscaling

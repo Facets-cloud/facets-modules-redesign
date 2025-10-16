@@ -29,6 +29,9 @@ locals {
   pods_range_name     = lookup(local.network_attributes, "gke_pods_range_name", "")
   services_range_name = lookup(local.network_attributes, "gke_services_range_name", "")
 
+  # Zones from network module (will be empty list if not provided, meaning all zones in region)
+  node_locations = lookup(local.network_attributes, "zones", [])
+
   # Security settings
   whitelisted_cidrs = lookup(local.spec, "whitelisted_cidrs", ["0.0.0.0/0"])
 
