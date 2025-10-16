@@ -17,5 +17,8 @@ locals {
 
   # Node configuration from spec
   max_pods_per_node = lookup(local.spec, "max_pods_per_node", null)
-  node_locations    = lookup(local.spec, "node_locations", null)
+
+  # Zones from network module (will be empty list if not provided, meaning all zones in region)
+  network_zones  = lookup(var.inputs.network_details.attributes, "zones", [])
+  node_locations = length(local.network_zones) > 0 ? local.network_zones : null
 }
