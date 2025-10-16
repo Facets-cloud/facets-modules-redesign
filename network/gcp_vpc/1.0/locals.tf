@@ -1,9 +1,3 @@
-# Data source to get compute zones in the region
-data "google_compute_zones" "available" {
-  region = local.gcp_region
-  status = "UP"
-}
-
 # Local values for simplified GKE-optimized calculations
 locals {
   # Extract commonly used values to avoid repeated lookups
@@ -17,12 +11,19 @@ locals {
     allow_https    = true
     allow_icmp     = true
   })
-  labels_spec = lookup(local.spec, "labels", {})
-  gcp_region  = var.inputs.cloud_account.attributes.region
-  gcp_project = var.inputs.cloud_account.attributes.project_id
+  labels_spec       = lookup(local.spec, "labels", {})
+  gcp_region        = var.inputs.cloud_account.attributes.region
+  gcp_project       = var.inputs.cloud_account.attributes.project_id
+  auto_select_zones = lookup(local.spec, "auto_select_zones", true)
+  zones_spec        = lookup(local.spec, "zones", [])
 
   # GCP uses regional subnets, not zonal like AWS
   # We'll create regional subnets that span all zones
+
+  # Zone selection logic
+  # If auto_select_zones is true, select first 3 zones from region
+  # If auto_select_zones is false, use zones from spec
+  selected_zones = local.auto_select_zones ? slice(data.google_compute_zones.available.names, 0, min(3, length(data.google_compute_zones.available.names))) : local.zones_spec
 
   # Fixed subnet allocation for GKE-optimized VPC
   # VPC: /16 (65,536 IPs)

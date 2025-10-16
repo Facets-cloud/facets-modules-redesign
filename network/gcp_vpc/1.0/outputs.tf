@@ -6,6 +6,7 @@ locals {
     vpc_self_link = google_compute_network.vpc.self_link
     region        = local.gcp_region
     project_id    = local.gcp_project
+    zones         = local.selected_zones
 
     # Subnets - Regional resources in GCP
     private_subnet_id   = google_compute_subnetwork.private.id

@@ -17,6 +17,25 @@ spec:
       x-ui-error-message: VPC CIDR must be a /16 block (e.g., 10.0.0.0/16)
       x-ui-placeholder: 10.0.0.0/16
       default: 10.0.0.0/16
+    auto_select_zones:
+      type: boolean
+      title: Auto Select Zones
+      description: Automatically select 3 zones from the region
+      default: true
+    zones:
+      type: array
+      title: Zones
+      description: List of zones to use (2-5 zones supported). Only used when auto_select_zones
+        is false
+      x-ui-overrides-only: true
+      x-ui-visible-if:
+        field: spec.auto_select_zones
+        values:
+        - false
+      minItems: 2
+      maxItems: 5
+      items:
+        type: string
     firewall_rules:
       type: object
       title: Firewall Rules Configuration
@@ -82,6 +101,7 @@ sample:
   version: '1.0'
   spec:
     vpc_cidr: 10.0.0.0/16
+    auto_select_zones: true
     firewall_rules:
       allow_internal: true
       allow_ssh: true

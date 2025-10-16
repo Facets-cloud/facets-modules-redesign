@@ -8,6 +8,12 @@ module "name" {
   prefix          = "vpc-"
 }
 
+# Data source to get compute zones in the region
+data "google_compute_zones" "available" {
+  region = var.inputs.cloud_account.attributes.region
+  status = "UP"
+}
+
 # VPC Network
 resource "google_compute_network" "vpc" {
   name                    = local.name_prefix
