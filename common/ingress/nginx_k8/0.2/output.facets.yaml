@@ -1,0 +1,5 @@
+out:
+  interfaces:
+    type: string
+  attributes:
+    type: string

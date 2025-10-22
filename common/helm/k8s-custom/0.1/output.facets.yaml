@@ -1,0 +1,5 @@
+out:
+  interfaces: {}
+  attributes:
+    release_name:
+      type: string
