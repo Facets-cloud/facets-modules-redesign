@@ -1,0 +1,60 @@
+out:
+  interfaces:
+    kubernetes:
+      host:
+        type: string
+      cluster_ca_certificate:
+        type: string
+      kubernetes_provider_exec:
+        api_version:
+          type: string
+        command:
+          type: string
+        args:
+          type: array
+          items:
+            type: string
+      secrets:
+        type: array
+        items:
+          type: string
+  attributes:
+    cluster_endpoint:
+      type: string
+    cluster_ca_certificate:
+      type: string
+    cluster_name:
+      type: string
+    cluster_version:
+      type: string
+    cluster_arn:
+      type: string
+    cluster_id:
+      type: string
+    oidc_issuer_url:
+      type: string
+    oidc_provider:
+      type: string
+    oidc_provider_arn:
+      type: string
+    node_iam_role_arn:
+      type: string
+    node_iam_role_name:
+      type: string
+    node_security_group_id:
+      type: string
+    cloud_provider:
+      type: string
+    kubernetes_provider_exec:
+      api_version:
+        type: string
+      command:
+        type: string
+      args:
+        type: array
+        items:
+          type: string
+    secrets:
+      type: array
+      items:
+        type: string
