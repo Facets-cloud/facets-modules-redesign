@@ -21,7 +21,7 @@ inputs:
     - kubernetes-alpha
     - helm
   kubernetes_node_pool_details:
-    optional: true
+    optional: false
     type: '@facets/kubernetes_nodepool'
     displayName: Node Pool
 outputs:

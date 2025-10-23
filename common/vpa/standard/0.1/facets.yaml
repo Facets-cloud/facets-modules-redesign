@@ -30,7 +30,7 @@ inputs:
   kubernetes_node_pool_details:
     type: '@facets/kubernetes_nodepool'
     displayName: Node Pool
-    optional: true
+    optional: false
 spec:
   title: VPA Configuration
   description: Configuration options for Vertical Pod Autoscaler deployment
