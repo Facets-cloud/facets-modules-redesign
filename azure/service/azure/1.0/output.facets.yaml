@@ -1,0 +1,14 @@
+out:
+  interfaces:
+    type: string
+  attributes:
+    selector_labels:
+      type: string
+    namespace:
+      type: string
+    resource_type:
+      type: string
+    resource_name:
+      type: string
+    service_name:
+      type: string
