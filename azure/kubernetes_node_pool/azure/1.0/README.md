@@ -1,29 +1,42 @@
-# Kubernetes Node Pool Module (AKS Flavor)
+# Azure AKS Node Pool Module
 
 ## Overview
 
-The `kubernetes_node_pool - aks` flavor (v0.1) enables the creation and management of Kubernetes node pools using Azure Kubernetes Service (AKS). This module provides configuration options for defining the characteristics and behavior of AKS node pools.
-
-Supported clouds:
-- Azure
+The Azure AKS Node Pool module creates and manages custom node pools for Azure Kubernetes Service clusters with intelligent scaling and workload isolation capabilities. This module provides flexible node pool management with support for various Azure VM sizes, advanced taint configurations, and comprehensive labeling strategies for workload targeting and resource optimization.
 
 ## Configurability
 
-- **Instance Type**: SKU of the virtual machines used in this node pool.
-- **Min Node Count**: Minimum number of nodes which should exist within this node pool.
-- **Max Node Count**: Maximum number of nodes which should exist within this node pool.
-- **Disk Size**: Size of the disk in GiB for nodes in this node pool.
-- **Taints**: Map of Kubernetes taints which should be applied to nodes in the node pool.
-  - **Taint Object**: Configuration for each taint.
-    - **Key**: Taint key.
-    - **Value**: Taint value.
-    - **Effect**: Taint effect.
-- **Labels**: Map of labels to be added to nodes in the node pool. Enter key-value pair for labels in YAML format.
+- **Instance Configuration**: 
+  - Flexible Azure VM size selection (e.g., Standard_F8, Standard_D4a_v4)
+  - Comprehensive instance type validation and placeholder guidance
+  - Support for various Azure VM families and performance tiers
+- **Scaling Management**: Intelligent node pool scaling with:
+  - Minimum and maximum node count configuration (0-100 nodes)
+  - Auto-scaling capabilities for dynamic workload management
+  - Resource optimization through flexible scaling policies
+- **Storage Configuration**: Advanced disk management including:
+  - Disk size configuration (50G to 1000G) with pattern validation
+  - Support for various Azure disk types and performance tiers
+  - Optimized storage allocation for different workload requirements
+- **Workload Isolation**: Sophisticated taint and label management:
+  - Custom taint configuration with key-value-effect patterns
+  - Node label management for workload targeting
+  - Support for specialized workloads requiring node isolation
+- **Validation & UI Enhancements**:
+  - Pattern validation for disk sizes, taint keys, and node counts
+  - YAML editor for complex taint and label configurations
+  - Comprehensive error messaging with format examples
+  - Dynamic validation for Azure VM size compatibility
 
 ## Usage
 
-Use this module to create and manage Kubernetes node pools using Azure Kubernetes Service (AKS). It is especially useful for:
+This module is designed for dynamic, workload-specific node pool management on Azure AKS clusters.
 
-- Defining the characteristics and behavior of AKS node pools
-- Managing the deployment and execution environment of Kubernetes nodes
-- Enhancing the functionality and integration of Azure-hosted applications
+Common use cases:
+
+- Creating specialized node pools for different workload types (compute-intensive, memory-optimized, GPU workloads)
+- Implementing workload isolation through advanced taint and label management
+- Supporting diverse compute requirements with flexible Azure VM size selection
+- Managing cost optimization through intelligent node pool scaling
+- Enabling specialized workloads requiring specific node configurations or isolation
+- Supporting enterprise compliance requirements with granular node pool management
