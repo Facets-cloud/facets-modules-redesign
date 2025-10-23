@@ -44,5 +44,25 @@ locals {
       cidr_blocks = [cidr]
     }
   }
+  node_security_group_additional_rules = {
+    allow_all_vpc_traffic = {
+      description = "Allow all traffic within VPC"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      type        = "ingress"
+      cidr_blocks = [var.inputs.network_details.attributes.vpc_cidr_block]
+    }
+  }
+  cluster_primary_security_group_additional_rules = {
+    allow_all_vpc_traffic = {
+      description = "Allow all traffic within VPC"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      type        = "ingress"
+      cidr_blocks = [var.inputs.network_details.attributes.vpc_cidr_block]
+    }
+  }
   tags = merge(var.environment.cloud_tags, lookup(local.spec, "tags", {}))
 }

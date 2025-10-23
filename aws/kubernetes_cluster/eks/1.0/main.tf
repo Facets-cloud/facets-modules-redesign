@@ -26,28 +26,18 @@ module "eks" {
   create_kms_key                           = true
   enable_kms_key_rotation                  = true
   cluster_addons                           = local.addons
+  node_security_group_additional_rules     = local.node_security_group_additional_rules
 }
 
-# Additional primary security group ingress rules (node-to-node kubelet, etc.)
-locals {
-  primary_sg_additional_ingress = merge({
-    allow_all_vpc_traffic = {
-      description = "Allow all traffic within VPC"
-      port        = 0
-      protocol    = "-1"
-    }
-  }, lookup(lookup(var.instance, "spec", {}), "primary_sg_additional_ingress", {}))
-}
+resource "aws_security_group_rule" "cluster_primary_sg_ingress" {
+  for_each = local.cluster_primary_security_group_additional_rules
 
-resource "aws_security_group_rule" "primary_sg_ingress" {
-  for_each = local.primary_sg_additional_ingress
-
-  type              = "ingress"
+  type              = each.value.type
   security_group_id = module.eks.cluster_primary_security_group_id
-  from_port         = each.value.port
-  to_port           = each.value.port
+  from_port         = each.value.from_port
+  to_port           = each.value.to_port
   protocol          = each.value.protocol
-  cidr_blocks       = [var.inputs.network_details.attributes.vpc_cidr_block]
+  cidr_blocks       = each.value.cidr_blocks
   description       = lookup(each.value, "description", null)
 
   depends_on = [module.eks]
@@ -59,4 +49,3 @@ resource "aws_security_group_rule" "primary_sg_ingress" {
     }
   }
 }
-
