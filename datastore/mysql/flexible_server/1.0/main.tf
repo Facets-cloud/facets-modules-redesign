@@ -1,0 +1,165 @@
+# Generate random password for MySQL admin (only when not restoring or importing)
+resource "random_password" "mysql_password" {
+  count   = local.restore_enabled || local.is_import ? 0 : 1
+  length  = 16
+  special = true
+}
+
+# NOTE: DNS Zone and VNet linking are now managed by the azure-network module
+# The network module must have database_config.enable_mysql_flexible_subnet = true
+
+# MySQL Flexible Server
+resource "azurerm_mysql_flexible_server" "main" {
+  name                = local.server_name
+  resource_group_name = local.resource_group_name
+  location            = local.location
+
+  # Restore configuration (MUST come first for restore operations)
+  create_mode                       = local.restore_enabled ? "PointInTimeRestore" : "Default"
+  source_server_id                  = local.restore_enabled && local.source_server_id != null ? local.source_server_id : null
+  point_in_time_restore_time_in_utc = local.restore_enabled && local.restore_point_in_time != null ? local.restore_point_in_time : null
+
+  # Server configuration (only for new servers, not for restore)
+  # During restore, credentials are inherited from source server
+  administrator_login    = local.restore_enabled ? null : local.administrator_login
+  administrator_password = local.restore_enabled ? null : local.administrator_password
+
+  # Version and SKU (only for new servers)
+  version  = local.restore_enabled ? null : local.mysql_version
+  sku_name = local.restore_enabled ? null : local.sku_name
+
+  # Storage configuration (only for new servers)
+  dynamic "storage" {
+    for_each = local.restore_enabled ? [] : [1]
+    content {
+      size_gb = local.storage_gb
+      iops    = local.iops
+    }
+  }
+
+  # Security and backup (only for new servers)
+  backup_retention_days        = local.restore_enabled ? null : local.backup_retention_days
+  geo_redundant_backup_enabled = local.restore_enabled ? null : true
+
+  # High availability (conditional based on SKU tier - not supported for Burstable, and not for restore)
+  dynamic "high_availability" {
+    for_each = (!local.restore_enabled && !local.is_burstable_sku) ? [1] : []
+    content {
+      mode = "ZoneRedundant"
+    }
+  }
+
+  # Network configuration - Use subnet and DNS zone from network module
+  delegated_subnet_id = local.delegated_subnet_id
+  private_dns_zone_id = local.mysql_dns_zone_id
+
+  # Prevent accidental deletion
+  lifecycle {
+    prevent_destroy = false # Set to false for testing as requested
+    ignore_changes = [
+      # Ignore changes that would require recreation during import
+      name,
+      location,
+      resource_group_name,
+      delegated_subnet_id,
+      private_dns_zone_id,
+      administrator_login,
+      administrator_password,
+      version,
+      sku_name,
+      storage,
+      backup_retention_days,
+      geo_redundant_backup_enabled,
+      high_availability,
+      create_mode,
+      source_server_id,
+      point_in_time_restore_time_in_utc,
+      tags
+    ]
+  }
+
+  tags = local.tags
+}
+
+# MySQL Database (only create for new servers, not for restore)
+# During restore, Azure automatically creates databases from the source server
+resource "azurerm_mysql_flexible_database" "databases" {
+  count               = local.restore_enabled ? 0 : 1
+  name                = local.database_name
+  resource_group_name = local.resource_group_name
+  server_name         = azurerm_mysql_flexible_server.main.name
+  charset             = local.charset
+  collation           = local.collation
+
+  lifecycle {
+    ignore_changes = [
+      name,
+      server_name,
+      resource_group_name,
+      charset,
+      collation
+    ]
+  }
+}
+
+# Read Replicas (only for new servers, not for restore operations)
+resource "azurerm_mysql_flexible_server" "replicas" {
+  count = local.restore_enabled ? 0 : local.replica_count
+
+  # Use shorter name pattern for replicas to stay within 63 character limit
+  name                = "${local.replica_base_name}-r${count.index + 1}"
+  resource_group_name = local.resource_group_name
+  location            = local.location
+
+  # Replica configuration - Must specify create_mode as "Replica"
+  create_mode      = "Replica"
+  source_server_id = azurerm_mysql_flexible_server.main.id
+
+  # Replicas don't need administrator credentials as they inherit from source
+  # Version and SKU must match the primary server
+  version  = local.mysql_version
+  sku_name = local.sku_name
+
+  # Storage configuration must match primary
+  storage {
+    size_gb = local.storage_gb
+    iops    = local.iops
+  }
+
+  # Network - Use subnet and DNS zone from network module
+  delegated_subnet_id = local.delegated_subnet_id
+  private_dns_zone_id = local.mysql_dns_zone_id
+
+  # Prevent accidental deletion
+  lifecycle {
+    prevent_destroy = false # Set to false for testing
+  }
+
+  tags = local.tags
+
+  depends_on = [
+    azurerm_mysql_flexible_server.main
+  ]
+}
+
+# Firewall rule to allow Azure services (only for public access servers, skip during import)
+# VNet-integrated servers (private access) cannot have firewall rules
+resource "azurerm_mysql_flexible_server_firewall_rule" "azure_services" {
+  count = local.is_import ? 0 : 1
+
+  name                = "${local.server_name}-azure-services"
+  resource_group_name = local.resource_group_name
+  server_name         = azurerm_mysql_flexible_server.main.name
+  start_ip_address    = "0.0.0.0"
+  end_ip_address      = "0.0.0.0"
+
+  lifecycle {
+    ignore_changes = [
+      name,
+      server_name,
+      resource_group_name,
+      start_ip_address,
+      end_ip_address
+    ]
+  }
+}
