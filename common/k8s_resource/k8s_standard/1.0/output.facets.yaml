@@ -1,0 +1,7 @@
+out:
+  interfaces: {}
+  attributes:
+    resource_name:
+      type: string
+    resource_namespace:
+      type: string

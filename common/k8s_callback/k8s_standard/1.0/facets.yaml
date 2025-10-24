@@ -1,0 +1,30 @@
+intent: k8s_callback
+flavor: default
+version: '1.0'
+description: Creates ServiceAccount with admin role and registers OVH K8s credentials
+  with Facets control plane
+clouds:
+- kubernetes
+inputs:
+  kubernetes_details:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Kubernetes cluster configuration
+    providers:
+    - kubernetes
+spec:
+  title: K8s Callback
+  description: Configure K8s credential
+  type: object
+  properties: {}
+sample:
+  kind: k8s_callback
+  flavor: default
+  version: '1.0'
+  disabled: false
+  spec: {}
+iac:
+  validated_files:
+  - main.tf
+  - versions.tf

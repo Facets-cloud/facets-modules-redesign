@@ -1,0 +1,143 @@
+intent: kubernetes_node_pool
+flavor: gke_custom_node_pool
+version: '1.0'
+description: Custom GKE node pool with advanced configuration options
+clouds:
+- gcp
+inputs:
+  network_details:
+    optional: false
+    type: '@facets/gcp-network-details'
+    displayName: Network
+    description: The GCP VPC network where the node pool will be created
+    default:
+      resource_type: network
+      resource_name: default
+  kubernetes_details:
+    optional: false
+    type: '@facets/gke'
+    displayName: GKE Cluster
+    description: The GKE cluster where the node pool will be added
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+    - kubernetes
+    - kubernetes-alpha
+    - helm
+  cloud_account:
+    type: '@facets/gcp_cloud_account'
+    displayName: Cloud Account
+    description: The GCP Cloud Account where the node pool will be created
+    optional: false
+    providers:
+    - google
+outputs:
+  default:
+    type: '@facets/kubernetes_nodepool'
+    title: GKE Node Pool Output
+    description: Basic output information for the GKE node pool
+  attributes.node_pool_details:
+    type: '@facets/gke_node_pool_details'
+    title: GKE Node Pool Details
+    description: Detailed information about the GKE node pool including configuration
+      and status
+spec:
+  title: Kubernetes Node Pool
+  description: Specification of the custom GKE node pool with advanced configuration
+  type: object
+  properties:
+    instance_type:
+      title: Instance Type
+      description: Instance type for nodes in node pool
+      type: string
+      x-ui-placeholder: e.g. 'e2-standard-2'
+    min_node_count:
+      title: Min Node Count
+      description: Minimum number of nodes which should exist within this node pool
+      type: integer
+      minimum: 0
+      maximum: 100
+    max_node_count:
+      title: Max Node Count
+      description: Maximum number of nodes which should exist within this node pool
+      type: integer
+      minimum: 0
+      maximum: 100
+    autoscaling_per_zone:
+      title: Autoscaling Per Zone
+      description: If true, min/max nodes apply per zone. If false, applies as total
+        across all zones.
+      type: boolean
+      default: false
+    is_public:
+      title: Is Public
+      description: Set this to true to deploy the node pool in public subnets
+      type: boolean
+    disk_size:
+      title: Disk Size
+      description: Size of the Disk in GiB for node in this node pool
+      type: integer
+      minimum: 50
+      maximum: 1000
+    taints:
+      title: Taints
+      description: "Array of Kubernetes taints which should be applied to nodes in\
+        \ the node pool. Enter array of object in YAML format. Eg. \n- key: special\
+        \ \nvalue: \"true\"\neffect: PreferNoSchedule.\nSet this to [] if no taints\
+        \ are required."
+      type: object
+      x-ui-yaml-editor: true
+      x-ui-placeholder: "Eg. \n- key: CriticalAddonsOnly \nvalue: \"true\"\neffect:\
+        \ NoSchedule"
+    labels:
+      title: Labels
+      description: 'Map of labels to be added to nodes in node pool. Enter key-value
+        pair for labels in YAML format. Eg. key: value (provide a space after '':''
+        as expected in the YAML format)'
+      x-ui-placeholder: 'Eg. key1: value1'
+      type: object
+      x-ui-yaml-editor: true
+    iam:
+      title: IAM
+      description: IAM specification for kubernetes nodepool
+      type: object
+      properties:
+        roles:
+          title: IAM Roles
+          description: Iam roles to be assigned to nodepool service account
+          type: object
+          patternProperties:
+            ^[a-zA-Z][a-zA-Z0-9_.-]*$:
+              title: Key Name For Role
+              description: Key name for role
+              type: object
+              properties:
+                role:
+                  title: Role
+                  description: Role to be added to the nodepool service account
+                  type: string
+                  x-ui-placeholder: e.g. roles/container.defaultNodeServiceAccount
+              x-ui-error-message: Key name should start with an alphabet and should
+                contain alpha numeric characters with allowed special characters like
+                underscore, period and hypen
+  required:
+  - instance_type
+  - min_node_count
+  - max_node_count
+  - disk_size
+  - taints
+  - labels
+sample:
+  flavor: gke_custom_node_pool
+  version: '1.0'
+  kind: kubernetes_node_pool
+  metadata: {}
+  disabled: true
+  spec:
+    instance_type: n2d-standard-2
+    min_node_count: 1
+    max_node_count: 20
+    disk_size: 100
+    taints: []
+    labels: {}
