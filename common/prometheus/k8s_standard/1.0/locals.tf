@@ -347,7 +347,7 @@ locals {
   }
 
   irsa_config = {
-    enabled              = var.environment.cloud == "AWS" ? 1 : 0
+    enabled              = var.inputs.kubernetes_details.attributes.cloud_provider == "AWS" ? 1 : 0
     service_account_name = "facets-${module.name.name}-ec2-ro-sa"
   }
 
