@@ -1,0 +1,178 @@
+locals {
+  aws_advanced_config   = lookup(lookup(var.instance, "advanced", {}), "aws", {})
+  aws_cloud_permissions = lookup(lookup(local.spec, "cloud_permissions", {}), "aws", {})
+  enable_irsa           = lookup(local.aws_cloud_permissions, "enable_irsa", lookup(local.aws_advanced_config, "enable_irsa", false))
+  iam_arns              = lookup(local.aws_cloud_permissions, "iam_policies", lookup(local.aws_advanced_config, "iam", {}))
+  sa_name               = lower(var.instance_name)
+  release_metadata_labels = {
+    "facets.cloud/blueprint_version" = tostring(lookup(local.release_metadata.metadata, "blueprint_version", "NA")) == null ? "NA" : tostring(lookup(local.release_metadata.metadata, "blueprint_version", "NA"))
+    "facets.cloud/override_version"  = tostring(lookup(local.release_metadata.metadata, "override_version", "NA")) == null ? "NA" : tostring(lookup(local.release_metadata.metadata, "override_version", "NA"))
+  }
+  namespace = lookup(var.instance.metadata, "namespace", null) == null ? var.environment.namespace : var.instance.metadata.namespace
+  annotations = merge(
+    local.enable_irsa ? { "eks.amazonaws.com/role-arn" = module.irsa.0.iam_role_arn } : { "iam.amazonaws.com/role" = aws_iam_role.application-role.0.arn },
+    lookup(var.instance.metadata, "annotations", {})
+  )
+  labels        = merge(lookup(var.instance.metadata, "labels", {}), local.release_metadata_labels)
+  name          = "${module.sr-name.name}-ar"
+  resource_type = "service"
+  resource_name = var.instance_name
+
+  from_artifactories      = lookup(lookup(lookup(var.inputs, "artifactories", {}), "attributes", {}), "registry_secrets_list", [])
+  from_kubernetes_cluster = []
+
+  # Transform taints from object format to string format for utility module compatibility
+  kubernetes_node_pool_details = lookup(var.inputs, "kubernetes_node_pool_details", {})
+  node_pool_taints             = lookup(local.kubernetes_node_pool_details, "taints", [])
+  node_pool_labels             = lookup(local.kubernetes_node_pool_details, "node_selector", [])
+
+  # Convert taints from {key: "key", value: "value", effect: "effect"} to "key=value:effect" format
+  transformed_taints = [
+    for taint_name, taint_config in local.node_pool_taints :
+    "${taint_config.key}=${taint_config.value}:${taint_config.effect}"
+  ]
+
+  # Create modified inputs with transformed taints
+  modified_inputs = merge(var.inputs, {
+    kubernetes_node_pool_details = merge(local.kubernetes_node_pool_details, {
+      taints        = local.transformed_taints
+      node_selector = local.node_pool_labels
+    })
+  })
+
+  # Check if VPA is available and configure accordingly
+  vpa_available = lookup(var.inputs, "vpa_details", null) != null
+
+  # Configure pod distribution directly from spec
+  enable_host_anti_affinity = lookup(local.spec, "enable_host_anti_affinity", false)
+  pod_distribution_enabled  = lookup(local.spec, "pod_distribution_enabled", false)
+  pod_distribution_spec     = lookup(local.spec, "pod_distribution", {})
+
+  # Convert pod_distribution object to array format expected by helm chart
+  pod_distribution_array = [
+    for key, config in local.pod_distribution_spec : {
+      topology_key         = config.topology_key
+      when_unsatisfiable   = config.when_unsatisfiable
+      max_skew             = config.max_skew
+      node_taints_policy   = lookup(config, "node_taints_policy", null)
+      node_affinity_policy = lookup(config, "node_affinity_policy", null)
+    }
+  ]
+
+  # Determine final pod_distribution configuration
+  pod_distribution = local.pod_distribution_enabled ? (
+    length(local.pod_distribution_spec) > 0 ? local.pod_distribution_array : (
+      local.enable_host_anti_affinity ? [{
+        topology_key       = "kubernetes.io/hostname"
+        when_unsatisfiable = "DoNotSchedule"
+        max_skew           = 1
+      }] : []
+    )
+  ) : []
+
+  # Create instance configuration with VPA settings and topology spread constraints
+  instance_with_vpa_config = merge(var.instance, {
+    advanced = merge(
+      lookup(var.instance, "advanced", {}),
+      {
+        common = merge(
+          lookup(lookup(var.instance, "advanced", {}), "common", {}),
+          {
+            app_chart = merge(
+              lookup(lookup(lookup(var.instance, "advanced", {}), "common", {}), "app_chart", {}),
+              {
+                values = merge(
+                  lookup(lookup(lookup(lookup(var.instance, "advanced", {}), "common", {}), "app_chart", {}), "values", {}),
+                  {
+                    enable_vpa = local.vpa_available
+                    # Configure pod distribution for the application chart
+                    pod_distribution_enabled = local.pod_distribution_enabled
+                    pod_distribution         = local.pod_distribution
+                  }
+                )
+              }
+            )
+          }
+        )
+      }
+    )
+  })
+}
+
+module "sr-name" {
+  source          = "github.com/Facets-cloud/facets-utility-modules//name"
+  is_k8s          = false
+  globally_unique = true
+  resource_name   = local.resource_name
+  resource_type   = local.resource_type
+  limit           = 60
+  environment     = var.environment
+}
+
+module "irsa" {
+  count                 = local.enable_irsa ? 1 : 0
+  source                = "github.com/Facets-cloud/facets-utility-modules//aws_irsa"
+  iam_arns              = local.iam_arns
+  iam_role_name         = "${module.sr-name.name}-sr"
+  namespace             = local.namespace
+  sa_name               = "${local.sa_name}-sa"
+  eks_oidc_provider_arn = var.inputs.kubernetes_details.attributes.oidc_provider_arn
+}
+
+module "app-helm-chart" {
+  depends_on = [
+    module.irsa, aws_iam_role.application-role,
+    aws_iam_role_policy_attachment.policy-attach
+  ]
+  source                  = "github.com/Facets-cloud/facets-utility-modules//application"
+  namespace               = local.namespace
+  chart_name              = lower(var.instance_name)
+  values                  = local.instance_with_vpa_config
+  annotations             = local.annotations
+  registry_secret_objects = length(local.from_artifactories) > 0 ? local.from_artifactories : local.from_kubernetes_cluster
+  cc_metadata             = var.cc_metadata
+  baseinfra               = var.baseinfra
+  labels                  = local.labels
+  cluster                 = var.cluster
+  environment             = var.environment
+  inputs                  = local.modified_inputs
+  vpa_release_id          = lookup(lookup(lookup(var.inputs, "vpa_details", {}), "attributes", {}), "helm_release_id", "")
+}
+
+####### kube2iam policies ######
+resource "aws_iam_role" "application-role" {
+  count              = local.enable_irsa && length(local.iam_arns) > 0 ? 0 : 1
+  name               = local.name
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    },
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${var.inputs.kubernetes_details.node_iam_role_arn}"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+  lifecycle {
+    ignore_changes = [name]
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "policy-attach" {
+  for_each   = local.enable_irsa && length(local.iam_arns) > 0 ? {} : local.iam_arns
+  role       = aws_iam_role.application-role.0.name
+  policy_arn = lookup(each.value, "arn", null)
+}

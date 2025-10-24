@@ -1,0 +1,31 @@
+out:
+  interfaces: {}
+  attributes:
+    vpc_id:
+      type: string
+    vpc_cidr_block:
+      type: string
+    nat_gateway_ids:
+      type: string
+    public_subnet_ids:
+      type: string
+    availability_zones:
+      type: string
+    private_subnet_ids:
+      type: string
+    database_subnet_ids:
+      type: string
+    database_subnet_group_name:
+      type: string
+    internet_gateway_id:
+      type: string
+    vpc_endpoint_s3_id:
+      type: string
+    vpc_endpoint_dynamodb_id:
+      type: string
+    vpc_endpoint_ecr_api_id:
+      type: string
+    vpc_endpoint_ecr_dkr_id:
+      type: string
+    vpc_endpoints_security_group_id:
+      type: string
