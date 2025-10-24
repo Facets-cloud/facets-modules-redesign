@@ -1,0 +1,57 @@
+out:
+  interfaces: {}
+  attributes:
+    resource_group_id:
+      type: string
+    resource_group_name:
+      type: string
+    vnet_id:
+      type: string
+    vnet_name:
+      type: string
+    vnet_cidr_block:
+      type: string
+    region:
+      type: string
+    availability_zones:
+      type: string
+    nat_gateway_ids:
+      type: string
+    nat_gateway_public_ip_ids:
+      type: string
+    public_subnet_ids:
+      type: string
+    private_subnet_ids:
+      type: string
+    public_subnet_cidrs:
+      type: string
+    private_subnet_cidrs:
+      type: string
+    default_security_group_id:
+      type: string
+    database_general_subnet_id:
+      type: string
+    database_general_subnet_name:
+      type: string
+    database_general_subnet_cidr:
+      type: string
+    database_postgresql_subnet_id:
+      type: string
+    database_postgresql_subnet_name:
+      type: string
+    database_postgresql_subnet_cidr:
+      type: string
+    database_mysql_subnet_id:
+      type: string
+    database_mysql_subnet_name:
+      type: string
+    database_mysql_subnet_cidr:
+      type: string
+    postgresql_dns_zone_id:
+      type: string
+    postgresql_dns_zone_name:
+      type: string
+    mysql_dns_zone_id:
+      type: string
+    mysql_dns_zone_name:
+      type: string

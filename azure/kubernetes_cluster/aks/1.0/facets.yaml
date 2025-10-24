@@ -1,0 +1,362 @@
+intent: kubernetes_cluster
+flavor: aks
+version: '1.0'
+clouds:
+- azure
+title: AKS Cluster with Auto-Upgrade Support
+description: A Kubernetes AKS cluster module with auto-upgrade enabled by default
+  and all necessary configurations preset.
+allow_skipping_module_on_selective_release: false
+spec:
+  type: object
+  x-ui-order:
+  - cluster
+  - auto_upgrade_settings
+  - node_pools
+  - tags
+  properties:
+    cluster:
+      type: object
+      title: Cluster
+      description: Configuration for the AKS cluster.
+      x-ui-toggle: false
+      properties:
+        cluster_endpoint_public_access_cidrs:
+          type: array
+          title: Cluster Endpoint Public Access CIDRs
+          description: List of CIDR blocks which can access the AKS public API server
+            endpoint.
+          default:
+          - 0.0.0.0/0
+          x-ui-override-disable: true
+        sku_tier:
+          type: string
+          title: SKU Tier
+          description: SKU tier for the AKS cluster.
+          default: Free
+          enum:
+          - Free
+          - Standard
+      required:
+      - sku_tier
+    auto_upgrade_settings:
+      type: object
+      title: Auto-Upgrade Settings
+      description: Configuration for automatic cluster upgrades.
+      x-ui-toggle: false
+      properties:
+        automatic_channel_upgrade:
+          type: string
+          title: Automatic Channel Upgrade
+          description: Auto-upgrade channel for the cluster. The Kubernetes version
+            will be managed automatically by Azure based on the selected channel.
+          default: stable
+          enum:
+          - rapid
+          - regular
+          - stable
+          - patch
+          - node-image
+        max_surge:
+          type: string
+          title: Max Surge
+          description: Maximum number of nodes that can be added during upgrade (number
+            or percentage).
+          default: '1'
+          pattern: ^([0-9]+%?|[0-9]+)$
+          x-ui-error-message: Max surge must be a number or percentage (e.g., 1, 33%)
+        maintenance_window:
+          type: object
+          title: Maintenance Window
+          description: Maintenance window configuration for upgrades.
+          x-ui-toggle: false
+          properties:
+            is_enabled:
+              type: boolean
+              title: Enable Maintenance Window
+              description: Enable maintenance window for scheduled upgrades.
+              default: true
+            frequency:
+              type: string
+              title: Maintenance Frequency
+              description: How often maintenance should occur.
+              default: Weekly
+              enum:
+              - Daily
+              - Weekly
+              - AbsoluteMonthly
+              - RelativeMonthly
+              x-ui-visible-if:
+                field: spec.auto_upgrade_settings.maintenance_window.is_enabled
+                values:
+                - true
+            interval:
+              type: integer
+              title: Maintenance Interval
+              description: Interval for maintenance (e.g., every N weeks for Weekly,
+                every N days for Daily, every N months for monthly).
+              default: 1
+              minimum: 1
+              maximum: 12
+              x-ui-visible-if:
+                field: spec.auto_upgrade_settings.maintenance_window.is_enabled
+                values:
+                - true
+            day_of_week:
+              type: string
+              title: Day of Week
+              description: Day of week for maintenance (used for Weekly and RelativeMonthly
+                frequencies).
+              default: Sunday
+              enum:
+              - Sunday
+              - Monday
+              - Tuesday
+              - Wednesday
+              - Thursday
+              - Friday
+              - Saturday
+              x-ui-visible-if:
+                field: spec.auto_upgrade_settings.maintenance_window.frequency
+                values:
+                - Weekly
+                - RelativeMonthly
+            day_of_month:
+              type: integer
+              title: Day of Month
+              description: Day of month for maintenance (used for AbsoluteMonthly
+                frequency).
+              default: 1
+              minimum: 1
+              maximum: 31
+              x-ui-visible-if:
+                field: spec.auto_upgrade_settings.maintenance_window.frequency
+                values:
+                - AbsoluteMonthly
+            week_index:
+              type: string
+              title: Week Index
+              description: Which week of the month (used for RelativeMonthly frequency).
+              default: First
+              enum:
+              - First
+              - Second
+              - Third
+              - Fourth
+              - Last
+              x-ui-visible-if:
+                field: spec.auto_upgrade_settings.maintenance_window.frequency
+                values:
+                - RelativeMonthly
+            start_time:
+              type: integer
+              title: Start Time
+              description: Start hour for maintenance window (24-hour format).
+              default: 2
+              minimum: 0
+              maximum: 23
+              x-ui-visible-if:
+                field: spec.auto_upgrade_settings.maintenance_window.is_enabled
+                values:
+                - true
+            end_time:
+              type: integer
+              title: End Time
+              description: End hour for maintenance window (24-hour format).
+              default: 6
+              minimum: 0
+              maximum: 23
+              x-ui-visible-if:
+                field: spec.auto_upgrade_settings.maintenance_window.is_enabled
+                values:
+                - true
+          required:
+          - is_enabled
+          - frequency
+          - interval
+      required:
+      - automatic_channel_upgrade
+    tags:
+      type: object
+      title: Tags
+      description: Tags to apply to the AKS cluster.
+      x-ui-toggle: false
+      x-ui-yaml-editor: true
+    node_pools:
+      type: object
+      title: Node Pools
+      description: Configuration for managed node pools.
+      x-ui-toggle: false
+      properties:
+        system_np:
+          type: object
+          title: System Node Pool
+          description: Configuration for system node pool (required for AKS).
+          x-ui-toggle: false
+          properties:
+            enabled:
+              type: boolean
+              title: Enabled
+              description: Enable system node pool.
+              default: true
+              readOnly: true
+            node_count:
+              type: integer
+              title: Node Count
+              description: Initial number of nodes.
+              default: 1
+              minimum: 1
+              maximum: 1000
+              x-ui-visible-if:
+                field: spec.node_pools.system_np.enabled
+                values:
+                - true
+            instance_type:
+              type: string
+              title: Instance Type
+              description: Azure VM size for system nodes.
+              default: Standard_D2_v4
+              x-ui-visible-if:
+                field: spec.node_pools.system_np.enabled
+                values:
+                - true
+            max_pods:
+              type: integer
+              title: Max Pods
+              description: Maximum pods per node.
+              default: 30
+              minimum: 10
+              maximum: 250
+              x-ui-visible-if:
+                field: spec.node_pools.system_np.enabled
+                values:
+                - true
+            os_disk_size_gb:
+              type: integer
+              title: OS Disk Size (GB)
+              description: OS disk size in GB.
+              default: 50
+              minimum: 30
+              maximum: 2048
+              x-ui-visible-if:
+                field: spec.node_pools.system_np.enabled
+                values:
+                - true
+            enable_auto_scaling:
+              type: boolean
+              title: Enable Auto Scaling
+              description: Enable auto-scaling for system node pool.
+              default: false
+              x-ui-visible-if:
+                field: spec.node_pools.system_np.enabled
+                values:
+                - true
+            labels:
+              type: object
+              title: Node Labels
+              description: Kubernetes labels to apply to system nodes.
+              default:
+                facets.cloud/node-type: system
+                managed-by: facets
+              x-ui-yaml-editor: true
+              x-ui-visible-if:
+                field: spec.node_pools.system_np.enabled
+                values:
+                - true
+          required:
+          - enabled
+      required:
+      - system_np
+  required:
+  - cluster
+  - auto_upgrade_settings
+  - node_pools
+inputs:
+  network_details:
+    type: '@facets/azure-network-details'
+    displayName: Network
+    default:
+      resource_type: network
+      resource_name: default
+  cloud_account:
+    type: '@facets/azure_cloud_account'
+    displayName: Cloud Account
+    description: The Azure Cloud Account where the AKS cluster will be created
+    optional: false
+    providers:
+    - azurerm
+    - azapi
+outputs:
+  default:
+    type: '@facets/kubernetes-details'
+    title: Kubernetes Cluster Output
+    description: The output for the Kubernetes cluster
+  attributes:
+    type: '@facets/azure_aks'
+    title: Kubernetes Cluster Output
+    description: The output for the Kubernetes cluster
+    providers:
+      kubernetes:
+        source: hashicorp/kubernetes
+        version: 2.38.0
+        attributes:
+          host: cluster_endpoint
+          client_certificate: client_certificate
+          client_key: client_key
+          cluster_ca_certificate: cluster_ca_certificate
+      helm:
+        source: hashicorp/helm
+        version: 2.8.0
+        attributes:
+          kubernetes:
+            host: cluster_endpoint
+            client_certificate: client_certificate
+            client_key: client_key
+            cluster_ca_certificate: cluster_ca_certificate
+      kubernetes-alpha:
+        source: hashicorp/kubernetes-alpha
+        version: 0.6.0
+        attributes:
+          host: cluster_endpoint
+          client_certificate: client_certificate
+          client_key: client_key
+          cluster_ca_certificate: cluster_ca_certificate
+sample:
+  kind: kubernetes_cluster
+  flavor: aks
+  version: '1.0'
+  metadata:
+    name: aks-cluster
+  spec:
+    cluster:
+      cluster_endpoint_public_access_cidrs:
+      - 0.0.0.0/0
+      sku_tier: Free
+    auto_upgrade_settings:
+      automatic_channel_upgrade: stable
+      max_surge: '1'
+      maintenance_window:
+        is_enabled: true
+        frequency: Weekly
+        interval: 1
+        day_of_week: Sunday
+        start_time: 2
+        end_time: 6
+    node_pools:
+      system_np:
+        enabled: true
+        node_count: 1
+        instance_type: Standard_D2_v4
+        max_pods: 30
+        os_disk_size_gb: 50
+        enable_auto_scaling: false
+        labels:
+          facets.cloud/node-type: system
+          managed-by: facets
+    tags: {}
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+  - locals.tf

@@ -1,0 +1,17 @@
+out:
+  interfaces:
+    placeholder:
+      type: string
+  attributes:
+    node_pool_name:
+      type: string
+    node_taints:
+      type: string
+    node_labels:
+      type: string
+    disk_size_gb:
+      type: string
+    node_count:
+      type: string
+    node_pool_id:
+      type: string
