@@ -1,6 +1,6 @@
 intent: cert_manager
 flavor: standard
-version: '0.1'
+version: '1.0'
 description: Deploys Cert Manager for managing ssl certificates
 clouds:
 - aws
@@ -85,7 +85,7 @@ sample:
   flavor: standard
   disabled: true
   metadata: {}
-  version: '0.1'
+  version: '1.0'
   spec:
     cname_strategy: Follow
     cert_manager: {}

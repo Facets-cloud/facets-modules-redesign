@@ -1,6 +1,6 @@
 intent: vpa
 flavor: standard
-version: '0.1'
+version: '1.0'
 description: Deploys Vertical Pod Autoscaler (VPA) for automatic resource recommendations
   and right-sizing
 clouds:
@@ -194,7 +194,7 @@ sample:
   flavor: standard
   disabled: false
   metadata: {}
-  version: '0.1'
+  version: '1.0'
   spec:
     version: 2.5.1
     namespace: vpa-system

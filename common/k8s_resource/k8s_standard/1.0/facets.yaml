@@ -1,6 +1,6 @@
 intent: k8s_resource
 flavor: k8s-custom
-version: '0.3'
+version: '1.0'
 description: Adds kubernetes objects inside the cluster via yaml manifests
 clouds:
 - aws
@@ -63,7 +63,7 @@ sample:
   kind: k8s_resource
   metadata: {}
   flavor: k8s-custom
-  version: '0.3'
+  version: '1.0'
   disabled: true
   spec:
     additional_resources: {}

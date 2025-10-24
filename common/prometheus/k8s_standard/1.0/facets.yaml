@@ -1,6 +1,6 @@
 intent: prometheus
 flavor: k8s-custom
-version: '0.1'
+version: '1.0'
 description: Prometheus monitoring stack for Kubernetes with Grafana, Alertmanager,
   and kube-state-metrics
 clouds:
@@ -452,7 +452,7 @@ sample:
   metadata:
     namespace: default
   kind: prometheus
-  version: '0.1'
+  version: '1.0'
   disabled: true
   spec:
     enable_crds: true

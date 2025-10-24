@@ -1,6 +1,6 @@
 intent: helm
 flavor: k8s-custom
-version: '0.1'
+version: '1.0'
 description: Adds Helm module
 clouds:
 - aws
@@ -111,7 +111,7 @@ sample:
   flavor: k8s-custom
   disabled: true
   metadata: {}
-  version: '0.1'
+  version: '1.0'
   spec:
     helm:
       repository: https://helm.datadoghq.com

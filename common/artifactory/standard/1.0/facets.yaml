@@ -1,6 +1,6 @@
 intent: artifactories
 flavor: standard
-version: '0.2'
+version: '1.0'
 description: Adds artifactories - default flavor
 clouds:
 - gcp
@@ -58,7 +58,7 @@ outputs:
     type: '@facets/artifactories'
     title: Artifactories Details
 sample:
-  version: '0.2'
+  version: '1.0'
   flavor: standard
   kind: artifactories
   disabled: true

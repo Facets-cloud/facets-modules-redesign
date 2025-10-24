@@ -1,6 +1,6 @@
 intent: config_map
 flavor: k8s-custom
-version: '0.3'
+version: '1.0'
 description: config_map - k8s
 clouds:
 - aws
@@ -49,7 +49,7 @@ sample:
   $schema: https://facets-cloud.github.io/facets-schemas/schemas/config_map/config_map.schema.json
   kind: config_map
   flavor: k8s-custom
-  version: '0.3'
+  version: '1.0'
   metadata: {}
   disabled: true
   spec:
