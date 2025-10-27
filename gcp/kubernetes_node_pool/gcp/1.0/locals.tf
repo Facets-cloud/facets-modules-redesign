@@ -10,7 +10,7 @@ locals {
   # Management settings from spec
   auto_repair = lookup(lookup(local.spec, "management", {}), "auto_repair", true)
   # auto_upgrade follows cluster auto_upgrade setting
-  auto_upgrade = var.inputs.kubernetes_details.attributes.auto_upgrade
+  auto_upgrade = var.inputs.kubernetes_details.auto_upgrade
 
   # Network configuration
   pod_ip_range_name = lookup(var.inputs.network_details.attributes, "gke_pods_range_name", "")
@@ -18,7 +18,9 @@ locals {
   # Node configuration from spec
   max_pods_per_node = lookup(local.spec, "max_pods_per_node", null)
 
-  # Zones from network module (will be empty list if not provided, meaning all zones in region)
-  network_zones  = lookup(var.inputs.network_details.attributes, "zones", [])
-  node_locations = length(local.network_zones) > 0 ? local.network_zones : null
+  # Zones from network module and single-AZ logic
+  single_az     = lookup(local.spec, "single_az", false)
+  network_zones = lookup(var.inputs.network_details.attributes, "zones", [])
+  # If single_az is true, use first zone only; otherwise use all network zones
+  node_locations = local.single_az ? (length(local.network_zones) > 0 ? [local.network_zones[0]] : null) : (length(local.network_zones) > 0 ? local.network_zones : null)
 }

@@ -32,6 +32,7 @@ inputs:
     optional: false
     providers:
     - google
+    - google-beta
 outputs:
   default:
     type: '@facets/kubernetes_nodepool'
@@ -121,6 +122,18 @@ spec:
               x-ui-error-message: Key name should start with an alphabet and should
                 contain alpha numeric characters with allowed special characters like
                 underscore, period and hypen
+    single_az:
+      title: Single AZ
+      description: Deploy node pool in single availability zone (uses first zone from
+        network configuration)
+      type: boolean
+      default: false
+    spot:
+      title: Spot Instances
+      description: Enable spot/preemptible instances for cost savings (~70% cheaper,
+        but can be terminated)
+      type: boolean
+      default: false
   required:
   - instance_type
   - min_node_count
@@ -139,5 +152,7 @@ sample:
     min_node_count: 1
     max_node_count: 20
     disk_size: 100
+    single_az: false
+    spot: false
     taints: []
     labels: {}
