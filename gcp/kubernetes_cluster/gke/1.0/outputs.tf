@@ -41,7 +41,10 @@ locals {
     # Maintenance window
     maintenance_policy_enabled = local.auto_upgrade
 
+    cloud_provider = "GCP"
+
     secrets = "[\"cluster_ca_certificate\"]"
+
   }
 
   output_interfaces = {
