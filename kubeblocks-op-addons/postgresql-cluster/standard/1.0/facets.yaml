@@ -1,0 +1,377 @@
+intent: postgresql-cluster
+flavor: standard
+version: '1.0'
+clouds:
+- kubernetes
+description: Creates and manages PostgreSQL database clusters using KubeBlocks operator
+  v0.9.5
+inputs:
+  kubeblocks_operator:
+    type: '@outputs/kubeblocks-operator'
+    optional: false
+    displayName: KubeBlocks Operator
+    description: KubeBlocks operator installation (CRDs must be ready)
+  kubernetes_cluster:
+    type: '@outputs/kubernetes'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Target Kubernetes cluster
+    providers:
+    - kubernetes
+    - helm
+spec:
+  title: PostgreSQL Cluster Configuration
+  description: PostgreSQL database cluster managed by KubeBlocks
+  type: object
+  properties:
+    cluster_name:
+      type: string
+      title: Cluster Name
+      description: PostgreSQL cluster name (must be DNS-compatible).
+      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+      minLength: 1
+      maxLength: 63
+    namespace_override:
+      type: string
+      title: Namespace Override
+      description: (Optional) Specify a custom namespace for the cluster. If not set, the namespace from the environment will be used.
+      default: ''
+    termination_policy:
+      type: string
+      title: Termination Policy
+      description: Controls cluster deletion behavior
+      enum:
+      - Delete
+      - DoNotTerminate
+      - Halt
+      - WipeOut
+      default: Delete
+      x-enum-descriptions:
+        Delete: Delete pods and PVCs
+        DoNotTerminate: Block cluster deletion
+        Halt: Delete pods but keep PVCs
+        WipeOut: Delete everything including backups
+    postgres_version:
+      type: string
+      title: PostgreSQL Version
+      description: PostgreSQL major version to deploy
+      enum:
+      - 12.15.0
+      - 14.8.0
+      - 15.7.0
+      - 16.4.0
+      default: 14.8.0
+    mode:
+      type: string
+      title: Cluster Mode
+      description: Deployment mode - standalone for single instance, replication for
+        high availability
+      enum:
+      - standalone
+      - replication
+      default: replication
+    replicas:
+      type: integer
+      title: Number of Replicas
+      description: Number of PostgreSQL instances (only for replication mode)
+      default: 2
+      minimum: 1
+      maximum: 5
+      x-ui-visible-if:
+        field: spec.mode
+        values:
+        - replication
+    resources:
+      type: object
+      title: Resource Allocation
+      description: CPU and memory resources for PostgreSQL pods
+      properties:
+        cpu_request:
+          type: string
+          title: CPU Request
+          description: Minimum CPU allocation
+          default: 500m
+        cpu_limit:
+          type: string
+          title: CPU Limit
+          description: Maximum CPU allocation
+          default: 1000m
+        memory_request:
+          type: string
+          title: Memory Request
+          description: Minimum memory allocation
+          default: 512Mi
+        memory_limit:
+          type: string
+          title: Memory Limit
+          description: Maximum memory allocation
+          default: 1Gi
+    storage:
+      type: object
+      title: Storage Configuration
+      description: Persistent storage settings for PostgreSQL data
+      properties:
+        size:
+          type: string
+          title: Storage Size
+          description: Size of persistent volume (can be expanded later, cannot be
+            reduced)
+          default: 20Gi
+        storage_class:
+          type: string
+          title: Storage Class
+          description: Kubernetes storage class name (leave empty for default)
+          default: ''
+      required:
+      - size
+    high_availability:
+      type: object
+      title: High Availability Settings
+      description: HA configuration for replication mode
+      x-ui-visible-if:
+        field: spec.mode
+        values:
+        - replication
+      properties:
+        enable_pod_anti_affinity:
+          type: boolean
+          title: Enable Pod Anti-Affinity
+          description: Distribute replicas across different nodes for better availability
+          default: true
+        anti_affinity_type:
+          type: string
+          title: Anti-Affinity Type
+          description: Preferred allows same-node scheduling if needed, Required enforces
+            strict separation
+          enum:
+          - Preferred
+          - Required
+          default: Preferred
+        create_read_service:
+          type: boolean
+          title: Create Read-Only Service
+          description: Creates a separate service endpoint for read replicas
+          default: true
+    backup:
+      type: object
+      title: Backup Configuration
+      description: Optional backup repository and schedule configuration
+      properties:
+        enabled:
+          type: boolean
+          title: Enable Backup
+          description: Enable backup configuration for this cluster
+          default: false
+        backup_method:
+          type: string
+          title: Backup Method
+          description: Method to use for backups
+          enum:
+          - volume-snapshot
+          - basebackup
+          default: volume-snapshot
+          x-ui-visible-if:
+            field: spec.backup.enabled
+            values:
+            - true
+        create_backup_repo:
+          type: boolean
+          title: Create Backup Repository
+          description: Create a new cluster-scoped BackupRepo, or use existing one if disabled
+          default: true
+          x-ui-visible-if:
+            - field: spec.backup.enabled
+              values:
+              - true
+            - field: spec.backup.backup_method
+              values:
+              - basebackup
+        backup_repo_name:
+          type: string
+          title: Shared Backup Repository Name
+          description: Name of existing shared BackupRepo to use (required when create_backup_repo
+            is false)
+          x-ui-visible-if:
+            - field: spec.backup.enabled
+              values:
+              - true
+            - field: spec.backup.backup_method
+              values:
+              - basebackup
+            - field: spec.backup.create_backup_repo
+              values:
+              - false
+          x-ui-required-if:
+            - field: spec.backup.backup_method
+              values:
+              - basebackup
+            - field: spec.backup.create_backup_repo
+              values:
+              - false
+        backup_repo_storage_size:
+          type: string
+          title: Backup Storage Size
+          description: Storage size for backup repository (only if creating new repo)
+          default: 20Gi
+          x-ui-visible-if:
+            - field: spec.backup.enabled
+              values:
+              - true
+            - field: spec.backup.create_backup_repo
+              values:
+              - true
+            - field: spec.backup.backup_method
+              values:
+              - basebackup
+        backup_repo_storage_class:
+          type: string
+          title: Backup Storage Class
+          description: Storage class for backup repository (leave empty for default)
+          default: ''
+          x-ui-visible-if:
+            - field: spec.backup.enabled
+              values:
+              - true
+            - field: spec.backup.create_backup_repo
+              values:
+              - true
+            - field: spec.backup.backup_method
+              values:
+              - basebackup
+        enable_schedule:
+          type: boolean
+          title: Enable Backup Schedule
+          description: Enable automatic scheduled backups
+          default: false
+          x-ui-visible-if:
+            field: spec.backup.enabled
+            values:
+            - true
+        schedule_cron:
+          type: string
+          title: Backup Schedule (Cron)
+          description: Cron expression for backup schedule (e.g., "0 2 * * *" for
+            daily at 2 AM)
+          default: 0 2 * * *
+          x-ui-visible-if:
+            field: spec.backup.enable_schedule
+            values:
+            - true
+        retention_period:
+          type: string
+          title: Backup Retention Period
+          description: How long to retain backups (e.g., "7d", "30d", "1y")
+          default: 7d
+          x-ui-visible-if:
+            field: spec.backup.enable_schedule
+            values:
+            - true
+        pitr_enabled:
+          type: boolean
+          title: Enable Point-in-Time Recovery (PITR)
+          description: Enable continuous archiving for point-in-time recovery (only available with basebackup method)
+          default: false
+          x-ui-visible-if:
+            - field: spec.backup.enabled
+              values:
+              - true
+            - field: spec.backup.backup_method
+              values:
+              - basebackup
+    restore:
+      type: object
+      title: Restore Configuration
+      description: Restore cluster from existing backup instead of creating fresh cluster
+      properties:
+        enabled:
+          type: boolean
+          title: Enable Restore
+          description: Restore from backup instead of creating fresh cluster
+          default: false
+        backup_name:
+          type: string
+          title: Backup Name
+          description: Name of the backup to restore from (e.g., 'pg-cluster-backup-20250125')
+          x-ui-visible-if:
+            field: spec.restore.enabled
+            values:
+            - true
+          x-ui-required-if:
+            field: spec.restore.enabled
+            values:
+            - true
+        pitr_enabled:
+          type: boolean
+          title: Enable Point-in-Time Recovery
+          description: Restore to a specific point in time using WAL archives
+          default: false
+          x-ui-visible-if:
+            field: spec.restore.enabled
+            values:
+            - true
+        pitr_timestamp:
+          type: string
+          title: PITR Target Timestamp
+          description: RFC3339 timestamp to restore to (e.g., '2025-01-25T10:30:00Z')
+          default: ''
+          x-ui-visible-if:
+            field: spec.restore.pitr_enabled
+            values:
+            - true
+          x-ui-required-if:
+            field: spec.restore.pitr_enabled
+            values:
+            - true
+
+  required:
+  - cluster_name
+  - postgres_version
+  - mode
+outputs:
+  default:
+    type: '@outputs/postgresql-cluster'
+    title: PostgreSQL Cluster Credentials
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+sample:
+  kind: postgresql-cluster
+  flavor: standard
+  version: '1.0'
+  disabled: true
+  spec:
+    cluster_name: myapp-postgres
+    namespace_override: ''
+    termination_policy: Delete
+    postgres_version: 14.8.0
+    mode: replication
+    replicas: 2
+    resources:
+      cpu_request: 500m
+      cpu_limit: 1000m
+      memory_request: 512Mi
+      memory_limit: 1Gi
+    storage:
+      size: 20Gi
+      storage_class: ''
+    high_availability:
+      enable_pod_anti_affinity: true
+      anti_affinity_type: Preferred
+      create_read_service: true
+    backup:
+      enabled: false
+      backup_method: volume-snapshot
+      create_backup_repo: false
+      backup_repo_storage_size: 20Gi
+      backup_repo_storage_class: ''
+      enable_schedule: false
+      schedule_cron: 0 2 * * *
+      retention_period: 7d
+      pitr_enabled: false
+    restore:
+      enabled: false
+      backup_name: ''
+      pitr_enabled: false
+      pitr_timestamp: ''
