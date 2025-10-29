@@ -76,7 +76,7 @@ locals {
     advanced = lookup(local.autoscaling_config, "keda_advanced", {
       restoreToOriginalReplicaCount = false
     })
-    triggers = values(lookup(local.autoscaling_config, "keda_triggers", {}))
+    triggers = [for trigger in values(lookup(local.autoscaling_config, "keda_triggers", {})) : trigger.configuration]
   } : {}
 
   # Configure pod distribution directly from spec

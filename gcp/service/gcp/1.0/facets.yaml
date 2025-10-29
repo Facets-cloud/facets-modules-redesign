@@ -549,15 +549,24 @@ spec:
                   type: object
                   title: Trigger Configuration
                   description: KEDA trigger configuration
-                  x-ui-yaml-editor: true
+                  properties:
+                    configuration:
+                      type: object
+                      title: Trigger Specification
+                      description: Complete KEDA trigger specification including type,
+                        metadata, and other fields
+                      x-ui-yaml-editor: true
+                  required:
+                  - configuration
               default:
                 prometheus_trigger:
-                  type: prometheus
-                  metadata:
-                    serverAddress: http://prometheus-server.monitoring.svc.cluster.local:80
-                    metricName: http_requests_per_second
-                    threshold: '100'
-                    query: sum(rate(http_requests_total[1m]))
+                  configuration:
+                    type: prometheus
+                    metadata:
+                      serverAddress: http://prometheus-server.monitoring.svc.cluster.local:80
+                      metricName: http_requests_per_second
+                      threshold: '100'
+                      query: sum(rate(http_requests_total[1m]))
         metrics:
           type: object
           title: Metrics
