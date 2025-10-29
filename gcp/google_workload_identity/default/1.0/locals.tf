@@ -6,7 +6,7 @@ locals {
   use_existing_gcp_sa             = lookup(var.instance.spec, "use_existing_gcp_sa", false)
   use_existing_k8s_sa             = lookup(var.instance.spec, "use_existing_k8s_sa", false)
   namespace                       = lookup(var.instance.spec, "namespace", var.environment.namespace)
-  project_id                      = var.inputs.kubernetes_details.attributes.legacy_outputs.gcp_cloud.project_id
+  project_id                      = var.inputs.gke_cluster.project_id
   gcp_sa_description              = lookup(var.instance.spec, "gcp_sa_description", "GCP Service Account bound to K8S Service Account ${local.project_id} ${local.k8s_given_name}")
   automount_service_account_token = lookup(var.instance.spec, "automount_service_account_token", false)
   annotate_k8s_sa                 = lookup(var.instance.spec, "annotate_k8s_sa", true)

@@ -22,23 +22,16 @@ variable "environment" {
   })
 }
 variable "inputs" {
-  description = "A map of inputs requested by the module developer."
+  description = "Input dependencies from other resources defined in facets.yaml inputs section"
   type = object({
-    kubernetes_details = object({
-      attributes = object({
-        legacy_outputs = object({
-          k8s_details = object({
-            auth = object({
-              host                   = string
-              cluster_ca_certificate = string
-              token                  = string
-            })
-          })
-          gcp_cloud = object({
-            project_id = string
-          })
-          registry_secret_objects = any
-        })
+    gke_cluster = object({
+      project_id             = string
+      cluster_endpoint       = string
+      cluster_ca_certificate = string
+      kubernetes_provider_exec = object({
+        api_version = string
+        command     = string
+        args        = list(string)
       })
     })
   })

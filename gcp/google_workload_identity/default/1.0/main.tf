@@ -30,12 +30,6 @@ resource "kubernetes_service_account" "main" {
 
   automount_service_account_token = local.automount_service_account_token
 
-  dynamic "image_pull_secret" {
-    for_each = var.inputs.kubernetes_details.attributes.legacy_outputs.registry_secret_objects
-    content {
-      name = image_pull_secret.value["name"]
-    }
-  }
 
   metadata {
     name      = local.k8s_given_name
@@ -54,7 +48,7 @@ resource "null_resource" "annotate-sa" {
   count = local.use_existing_k8s_sa && local.annotate_k8s_sa ? 1 : 0
 
   triggers = {
-    auth          = base64encode(jsonencode(var.inputs.kubernetes_details.attributes.legacy_outputs.k8s_details.auth))
+    cluster_auth  = base64encode(jsonencode(var.inputs.gke_cluster.attributes))
     ksa_namespace = local.output_k8s_namespace
     ksa_name      = local.k8s_given_name
     gcp_sa_email  = local.gcp_sa_email
@@ -63,12 +57,14 @@ resource "null_resource" "annotate-sa" {
   provisioner "local-exec" {
     when = create
     environment = {
-      SERVER = sensitive(var.inputs.kubernetes_details.attributes.legacy_outputs.k8s_details.auth.host)
-      CA     = sensitive(base64encode(var.inputs.kubernetes_details.attributes.legacy_outputs.k8s_details.auth.cluster_ca_certificate))
-      TOKEN  = sensitive(var.inputs.kubernetes_details.attributes.legacy_outputs.k8s_details.auth.token)
+      CLUSTER_ENDPOINT = sensitive(var.inputs.gke_cluster.cluster_endpoint)
+      CLUSTER_CA_CERT  = sensitive(base64encode(var.inputs.gke_cluster.cluster_ca_certificate))
+      EXEC_API_VERSION = sensitive(var.inputs.gke_cluster.kubernetes_provider_exec.api_version)
+      EXEC_COMMAND     = sensitive(var.inputs.gke_cluster.kubernetes_provider_exec.command)
+      EXEC_ARGS        = sensitive(jsonencode(var.inputs.gke_cluster.kubernetes_provider_exec.args))
     }
     command = <<EOT
-    /bin/bash ../tfmain/scripts/run_with_kubeconfig.sh kubectl annotate --overwrite sa -n ${self.triggers.ksa_namespace} ${self.triggers.ksa_name} iam.gke.io/gcp-service-account=${self.triggers.gcp_sa_email}
+    /bin/bash scripts/run_with_exec_kubeconfig.sh kubectl annotate --overwrite sa -n ${self.triggers.ksa_namespace} ${self.triggers.ksa_name} iam.gke.io/gcp-service-account=${self.triggers.gcp_sa_email}
     EOT
   }
 }

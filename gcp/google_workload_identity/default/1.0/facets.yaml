@@ -1,19 +1,23 @@
 intent: google_workload_identity
 flavor: default
-version: "1.0"
-clouds: [gcp]
+version: '2.0'
+clouds:
+- gcp
 description: Workload Identity is the recommended way to access GCP services from
   Kubernetes. [Read more] (https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity).
 inputs:
-  kubernetes_details:
+  gke_cluster:
     optional: false
-    type: "@outputs/kubernetes"
-    displayName: Kubernetes Cluster
-    description: Details of Kubernetes where the kubernetes service account will be
-      created.
+    type: '@facets/gke'
+    displayName: GKE Cluster
+    description: GKE cluster where the kubernetes service account will be created
     default:
       resource_type: kubernetes_cluster
       resource_name: default
+    providers:
+    - kubernetes
+    - kubernetes-alpha
+    - helm
 spec:
   title: Google Workload Identity
   description: Workload Identity is the recommended way to access GCP services from
@@ -27,34 +31,35 @@ spec:
         will be truncated to the first 30 chars if necessary. Use GCP SA Name to override
         the name of the GCP SA and Kubernetes SA Name to override the name of the
         Kubernetes SA.
-      pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"
+      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
       minLength: 6
       maxLength: 253
-      x-ui-error-message: "Workload identity pool ids must be <= 30 chars matching
-        regex ^[a-z](?:[-a-z0-9]{4,28}[a-z0-9])$"
-      x-ui-placeholder: "Enter the name of the workload identity pool"
+      x-ui-error-message: Workload identity pool ids must be <= 30 chars matching
+        regex ^[a-z](?:[-a-z0-9]{4,28}[a-z0-9])$
+      x-ui-placeholder: Enter the name of the workload identity pool
     gcp_sa_name:
       type: string
       title: GCP Service Account Name
       description: The name of the GCP Service Account. Overrides the common name
         given above.
-      pattern: "^[a-z](?:[-a-z0-9]{4,28}[a-z0-9])$"
+      pattern: ^[a-z](?:[-a-z0-9]{4,28}[a-z0-9])$
       minLength: 6
       maxLength: 30
-      x-ui-error-message: "GCP service account ids must be <= 30 chars matching regex
-        ^[a-z](?:[-a-z0-9]{4,28}[a-z0-9])$"
-      x-ui-placeholder: "Enter the name of the GCP service account"
+      x-ui-error-message: GCP service account ids must be <= 30 chars matching regex
+        ^[a-z](?:[-a-z0-9]{4,28}[a-z0-9])$
+      x-ui-placeholder: Enter the name of the GCP service account
     gcp_sa_description:
       type: string
       title: GCP Service Account Description
       description: The description of the GCP Service Account.
       minLength: 0
       maxLength: 1024
-      x-ui-error-message: "GCP service account description must be <= 1024 chars"
-      x-ui-placeholder: "Enter the description of the GCP service account"
+      x-ui-error-message: GCP service account description must be <= 1024 chars
+      x-ui-placeholder: Enter the description of the GCP service account
       x-ui-visible-if:
         field: spec.use_existing_gcp_sa
-        values: [false]
+        values:
+        - false
     use_existing_gcp_sa:
       type: boolean
       title: Use Existing GCP Service Account
@@ -66,23 +71,23 @@ spec:
       title: Kubernetes Service Account Name
       description: The name of the Kubernetes Service Account. Overrides the common
         name given above.
-      pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"
+      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
       minLength: 6
       maxLength: 253
-      x-ui-error-message: "Kubernetes service account must match regex ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\
-        .[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$ and must be <= 253 chars"
-      x-ui-placeholder: "Enter the name of the Kubernetes service account."
+      x-ui-error-message: Kubernetes service account must match regex ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\
+        .[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$ and must be <= 253 chars
+      x-ui-placeholder: Enter the name of the Kubernetes service account.
     namespace:
       type: string
       title: Namespace
       description: The namespace in which the Kubernetes Service Account will be created.
         If not provided, the default namespace of the environment will be used.
-      pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"
+      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
       minLength: 1
       maxLength: 63
-      x-ui-error-message: "Namespace must match regex ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\
-        .[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$ and must be <= 63 chars"
-      x-ui-placeholder: "Enter the name of the namespace. Eg. default"
+      x-ui-error-message: Namespace must match regex ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\
+        .[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$ and must be <= 63 chars
+      x-ui-placeholder: Enter the name of the namespace. Eg. default
     use_existing_k8s_sa:
       type: boolean
       title: Use Existing Kubernetes Service Account
@@ -97,7 +102,8 @@ spec:
       default: false
       x-ui-visible-if:
         field: spec.use_existing_k8s_sa
-        values: [true]
+        values:
+        - true
     roles:
       title: Roles
       description: Map of keys to roles that should be assigned to the GCP Service
@@ -105,7 +111,7 @@ spec:
         valid GCP roles defined in the GCP IAM roles.
       type: object
       patternProperties:
-        "^[a-zA-Z0-9_]+$":
+        ^[a-zA-Z0-9_]+$:
           title: Role Key
           type: object
           description: Role Object which contains the role to be assigned to the service
@@ -126,7 +132,7 @@ spec:
 sample:
   kind: google_workload_identity
   flavor: default
-  version: "1.0"
+  version: '2.0'
   disabled: true
   spec:
     name: petclinic
