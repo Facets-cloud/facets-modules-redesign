@@ -19,6 +19,13 @@ inputs:
     - kubernetes
     - kubernetes-alpha
     - helm
+  kubernetes_node_pool_details:
+    type: '@facets/kubernetes_nodepool'
+    displayName: Node Pool
+    optional: true
+    default:
+      resource_type: kubernetes_node_pool
+      resource_name: general-purpose
 spec:
   title: Artifactories
   type: object
