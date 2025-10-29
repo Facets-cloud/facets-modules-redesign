@@ -494,6 +494,7 @@ spec:
               enum:
               - CPU
               - RAM
+              - KEDA
             cpu_threshold:
               type: string
               title: CPU Threshold
@@ -512,6 +513,91 @@ spec:
                 field: spec.runtime.autoscaling.scaling_on
                 values:
                 - RAM
+            keda_polling_interval:
+              type: integer
+              title: Polling Interval
+              description: How often KEDA checks metrics (in seconds)
+              default: 30
+              minimum: 1
+              maximum: 3600
+              x-ui-visible-if:
+                field: spec.runtime.autoscaling.scaling_on
+                values:
+                - KEDA
+            keda_cooldown_period:
+              type: integer
+              title: Cooldown Period
+              description: How long to wait after scaling down before scaling again (in seconds)
+              default: 300
+              minimum: 1
+              maximum: 7200
+              x-ui-visible-if:
+                field: spec.runtime.autoscaling.scaling_on
+                values:
+                - KEDA
+            keda_fallback:
+              type: object
+              title: KEDA Fallback Configuration
+              description: Fallback behavior when scalers fail
+              x-ui-yaml-editor: true
+              x-ui-visible-if:
+                field: spec.runtime.autoscaling.scaling_on
+                values:
+                - KEDA
+              default:
+                failureThreshold: 3
+                replicas: 6
+            keda_advanced:
+              type: object
+              title: KEDA Advanced Configuration
+              description: Advanced KEDA settings and HPA behavior
+              x-ui-yaml-editor: true
+              x-ui-visible-if:
+                field: spec.runtime.autoscaling.scaling_on
+                values:
+                - KEDA
+              default:
+                restoreToOriginalReplicaCount: false
+                horizontalPodAutoscalerConfig:
+                  behavior:
+                    scaleDown:
+                      stabilizationWindowSeconds: 300
+                      policies:
+                      - type: Percent
+                        value: 10
+                        periodSeconds: 60
+                    scaleUp:
+                      stabilizationWindowSeconds: 0
+                      policies:
+                      - type: Percent
+                        value: 100
+                        periodSeconds: 15
+                      - type: Pods
+                        value: 4
+                        periodSeconds: 15
+                      selectPolicy: Max
+            keda_triggers:
+              type: object
+              title: KEDA Triggers
+              description: KEDA triggers for scaling metrics
+              x-ui-visible-if:
+                field: spec.runtime.autoscaling.scaling_on
+                values:
+                - KEDA
+              patternProperties:
+                ^[a-zA-Z0-9_-]*$:
+                  type: object
+                  title: Trigger Configuration
+                  description: KEDA trigger configuration
+                  x-ui-yaml-editor: true
+              default:
+                prometheus_trigger:
+                  type: prometheus
+                  metadata:
+                    serverAddress: http://prometheus-server.monitoring.svc.cluster.local:80
+                    metricName: http_requests_per_second
+                    threshold: '100'
+                    query: 'sum(rate(http_requests_total[1m]))'
         metrics:
           type: object
           title: Metrics

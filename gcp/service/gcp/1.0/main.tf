@@ -60,6 +60,25 @@ locals {
   # Check if VPA is available and configure accordingly
   vpa_available = lookup(var.inputs, "vpa_details", null) != null
 
+  # KEDA configuration
+  autoscaling_config = lookup(local.runtime, "autoscaling", {})
+  scaling_on         = lookup(local.autoscaling_config, "scaling_on", "CPU")
+  enable_keda        = local.scaling_on == "KEDA"
+
+  # Build KEDA configuration object when KEDA is enabled
+  keda_config = local.enable_keda ? {
+    polling_interval = lookup(local.autoscaling_config, "keda_polling_interval", 30)
+    cooldown_period  = lookup(local.autoscaling_config, "keda_cooldown_period", 300)
+    fallback = lookup(local.autoscaling_config, "keda_fallback", {
+      failureThreshold = 3
+      replicas         = 6
+    })
+    advanced = lookup(local.autoscaling_config, "keda_advanced", {
+      restoreToOriginalReplicaCount = false
+    })
+    triggers = values(lookup(local.autoscaling_config, "keda_triggers", {}))
+  } : {}
+
   # Configure pod distribution directly from spec
   enable_host_anti_affinity = lookup(local.spec, "enable_host_anti_affinity", false)
   pod_distribution_enabled  = lookup(local.spec, "pod_distribution_enabled", false)
@@ -87,7 +106,7 @@ locals {
     )
   ) : []
 
-  # Create instance configuration with VPA settings and topology spread constraints
+  # Create instance configuration with VPA settings, topology spread constraints, and KEDA configuration
   instance_with_vpa_config = merge(var.instance, {
     advanced = merge(
       lookup(var.instance, "advanced", {}),
@@ -105,7 +124,9 @@ locals {
                     # Configure pod distribution for the application chart
                     pod_distribution_enabled = local.pod_distribution_enabled
                     pod_distribution         = local.pod_distribution
-                  }
+                  },
+                  # Add KEDA configuration when enabled
+                  local.enable_keda ? { keda = local.keda_config } : {}
                 )
               }
             )

@@ -91,11 +91,16 @@ variable "instance" {
 
         # Autoscaling
         autoscaling = optional(object({
-          min           = number
-          max           = number
-          scaling_on    = string
-          cpu_threshold = optional(string)
-          ram_threshold = optional(string)
+          min                   = number
+          max                   = number
+          scaling_on            = string
+          cpu_threshold         = optional(string)
+          ram_threshold         = optional(string)
+          keda_polling_interval = optional(number)
+          keda_cooldown_period  = optional(number)
+          keda_fallback         = optional(any)
+          keda_advanced         = optional(any)
+          keda_triggers         = optional(map(any))
         }))
 
         # Metrics configuration
