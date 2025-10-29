@@ -66,7 +66,7 @@ locals {
   enable_keda        = local.scaling_on == "KEDA"
 
   # Build KEDA configuration object when KEDA is enabled
-  keda_config = local.enable_keda ? {
+  keda_config = jsondecode(local.enable_keda ? jsonencode({
     polling_interval = lookup(local.autoscaling_config, "keda_polling_interval", 30)
     cooldown_period  = lookup(local.autoscaling_config, "keda_cooldown_period", 300)
     fallback = lookup(local.autoscaling_config, "keda_fallback", {
@@ -77,7 +77,7 @@ locals {
       restoreToOriginalReplicaCount = false
     })
     triggers = [for trigger in values(lookup(local.autoscaling_config, "keda_triggers", {})) : trigger.configuration]
-  } : {}
+  }) : jsonencode({}))
 
   # Configure pod distribution directly from spec
   enable_host_anti_affinity = lookup(local.spec, "enable_host_anti_affinity", false)
