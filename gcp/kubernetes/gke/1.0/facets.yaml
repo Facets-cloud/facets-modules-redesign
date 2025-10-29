@@ -37,6 +37,7 @@ inputs:
     optional: false
     providers:
     - google
+    - google-beta
 outputs:
   default:
     type: '@facets/kubernetes-details'

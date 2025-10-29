@@ -1,4 +1,12 @@
 locals {
+  # Core instance spec and platform-provided variables
+  spec = lookup(var.instance, "spec", {})
+
+  # Platform-provided variables with fallbacks for validation
+  # Get project ID from cloud account input dependency
+  gcp_cloud_account        = lookup(var.inputs, "gcp_cloud_account", {})
+  cloud_account_attributes = lookup(local.gcp_cloud_account, "attributes", {})
+  cluster_project          = lookup(local.cloud_account_attributes, "project_id", "validation-project")
   gcp_annotations = {
     "cloud.google.com/neg" = "{\"ingress\":true}"
   }
@@ -126,7 +134,7 @@ module "gcp-workload-identity" {
   name                = module.sr-name.0.name
   k8s_sa_name         = "${local.sa_name}-sa"
   namespace           = local.namespace
-  project_id          = var.cluster.project
+  project_id          = local.cluster_project
   roles               = local.roles
   use_existing_k8s_sa = true
   annotate_k8s_sa     = false

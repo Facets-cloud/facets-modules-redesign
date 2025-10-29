@@ -1,0 +1,69 @@
+clouds:
+- gcp
+description: Creates a GCP Pub/Sub topic with optional subscription and IAM role outputs
+  for Workload Identity
+flavor: gcp
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+inputs:
+  cloud_account:
+    description: The GCP project where Pub/Sub topics will be created
+    displayName: GCP Cloud Account
+    optional: false
+    providers:
+    - google
+    type: '@facets/gcp_cloud_account'
+intent: pubsub
+outputs:
+  default:
+    title: Pub/Sub Topic Details
+    type: '@facets/pubsub'
+sample:
+  disabled: true
+  flavor: gcp
+  kind: pubsub
+  spec:
+    create_subscription: true
+    message_retention_duration: 604800s
+    subscription_ack_deadline: 10
+    topic_name: my-topic
+  version: '1.0'
+spec:
+  description: Specification for creating a single Pub/Sub topic with optional subscription
+  properties:
+    create_subscription:
+      default: true
+      description: Auto-create a pull subscription for this topic
+      title: Create Subscription
+      type: boolean
+    message_retention_duration:
+      default: 604800s
+      description: Message retention duration in seconds format (e.g., '604800s' for
+        7 days)
+      pattern: ^\d+s$
+      title: Message Retention Duration
+      type: string
+      x-ui-error-message: Duration must be in seconds format (e.g., '604800s')
+    subscription_ack_deadline:
+      default: 10
+      description: Acknowledgment deadline in seconds
+      maximum: 600
+      minimum: 10
+      title: Subscription Ack Deadline
+      type: integer
+      x-ui-visible-if:
+        field: spec.create_subscription
+        values:
+        - true
+    topic_name:
+      description: Name of the Pub/Sub topic to create
+      title: Topic Name
+      type: string
+      x-ui-placeholder: e.g., 'customer1-processor1'
+  required:
+  - topic_name
+  title: GCP Pub/Sub Topic
+  type: object
+version: '1.0'

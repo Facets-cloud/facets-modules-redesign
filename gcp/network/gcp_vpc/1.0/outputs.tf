@@ -42,6 +42,17 @@ locals {
     google_services_network = google_service_networking_connection.google_services.network
     google_services_cidr    = "${google_compute_global_address.google_services.address}/${google_compute_global_address.google_services.prefix_length}"
 
+    # Private Services Connection (for Memorystore, Cloud SQL, etc.)
+    # Redis and other managed services require these attributes
+    database_subnet_ids                 = [google_compute_subnetwork.database.id]
+    database_subnet_cidrs               = [google_compute_subnetwork.database.ip_cidr_range]
+    private_services_connection_id      = google_service_networking_connection.google_services.id
+    private_services_connection_status  = true
+    private_services_peering_connection = google_service_networking_connection.google_services.peering
+    private_services_range_address      = google_compute_global_address.google_services.address
+    private_services_range_id           = google_compute_global_address.google_services.id
+    private_services_range_name         = google_compute_global_address.google_services.name
+
     # Firewall Rules - compact list of enabled rules only
     firewall_rule_ids = compact([
       lookup(local.firewall_rules, "allow_internal", true) ? google_compute_firewall.allow_internal[0].id : "",
