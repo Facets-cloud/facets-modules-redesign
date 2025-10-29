@@ -144,7 +144,7 @@ module "app-helm-chart" {
   depends_on = [
     module.gcp-workload-identity
   ]
-  source                  = "github.com/Facets-cloud/facets-utility-modules//application"
+  source                  = "./application"
   namespace               = local.namespace
   chart_name              = lower(var.instance_name)
   values                  = local.instance_with_vpa_config
