@@ -6,6 +6,13 @@ clouds:
 description: Workload Identity is the recommended way to access GCP services from
   Kubernetes. [Read more] (https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity).
 inputs:
+  cloud_account:
+    description: The GCP project where Pub/Sub topics will be created
+    displayName: GCP Cloud Account
+    optional: false
+    providers:
+    - google
+    type: '@facets/gcp_cloud_account'
   gke_cluster:
     optional: false
     type: '@facets/gke'
