@@ -7,11 +7,11 @@ locals {
     master_username                 = local.master_username
     master_password                 = sensitive(local.master_password)
     engine_version                  = local.cosmos_account.mongo_server_version
-    resource_group_name             = local.cosmos_account.resource_group_name
-    location                        = local.cosmos_account.location
-    consistency_level               = lower(local.cosmos_account.consistency_policy[0].consistency_level)
-    enable_automatic_failover       = local.cosmos_account.automatic_failover_enabled
-    enable_multiple_write_locations = local.cosmos_account.multiple_write_locations_enabled
+    # resource_group_name             = local.cosmos_account.resource_group_name
+    # location                        = local.cosmos_account.location
+    # consistency_level               = lower(local.cosmos_account.consistency_policy[0].consistency_level)
+    # enable_automatic_failover       = local.cosmos_account.automatic_failover_enabled
+    # enable_multiple_write_locations = local.cosmos_account.multiple_write_locations_enabled
     secrets                         = ["master_password"]
   }
   output_interfaces = {
