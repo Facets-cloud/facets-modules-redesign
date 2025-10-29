@@ -91,6 +91,7 @@ variable "instance" {
 
         # Autoscaling
         autoscaling = optional(object({
+          enabled               = optional(bool, true)
           min                   = number
           max                   = number
           scaling_on            = string

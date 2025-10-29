@@ -473,6 +473,11 @@ spec:
             - application
             - statefulset
           properties:
+            enabled:
+              type: boolean
+              title: Enable Autoscaling
+              description: Whether to enable autoscaling for this service
+              default: true
             min:
               type: integer
               title: Min
@@ -480,6 +485,10 @@ spec:
               minimum: 1
               maximum: 200
               description: Min replicas
+              x-ui-visible-if:
+                field: spec.runtime.autoscaling.enabled
+                values:
+                - true
             max:
               type: integer
               title: Max
@@ -487,6 +496,10 @@ spec:
               minimum: 1
               maximum: 200
               description: Max replicas
+              x-ui-visible-if:
+                field: spec.runtime.autoscaling.enabled
+                values:
+                - true
             scaling_on:
               type: string
               title: Scale based on
@@ -495,6 +508,10 @@ spec:
               - CPU
               - RAM
               - KEDA
+              x-ui-visible-if:
+                field: spec.runtime.autoscaling.enabled
+                values:
+                - true
             cpu_threshold:
               type: string
               title: CPU Threshold
