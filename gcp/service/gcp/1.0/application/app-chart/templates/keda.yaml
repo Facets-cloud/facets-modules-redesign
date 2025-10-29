@@ -39,20 +39,6 @@ spec:
 {{- end }}
 {{- end }}
   triggers:
-{{- range $key, $value := .Values.advanced.common.app_chart.values.keda.triggers }}
-  {{- if eq $value.type "prometheus" }}
-  - type: {{ $value.type }}
-    {{- $metadata := $value.metadata }}
-    {{- if not $metadata.serverAddress }}
-      {{- $metadata = merge $metadata (dict "serverAddress" "http://prometheus-operator-prometheus.default.svc.cluster.local:9090") }}
-    {{- end }}
-    metadata:
-      {{- $metadata | toYaml | nindent 6 }}
-  {{- else }}
-  - type: {{ $value.type }}
-    metadata:
-      {{- $value.metadata | toYaml | nindent 6 }}
-  {{- end }}
-{{- end }}
+{{- .Values.advanced.common.app_chart.values.keda.triggers | toYaml | nindent 2 }}
 {{- end }}
 {{- end }}
