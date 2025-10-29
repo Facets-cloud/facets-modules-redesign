@@ -28,7 +28,7 @@ spec:
             endpoint.
           default:
           - 0.0.0.0/0
-          x-ui-override-disable: true
+          x-ui-overrides-only: true
         sku_tier:
           type: string
           title: SKU Tier
