@@ -184,7 +184,7 @@ resource "helm_release" "app-chart" {
 module "sts-pvc" {
   for_each = local.sts_pvcs
 
-  source          = "../pvc"
+  source          = "github.com/Facets-cloud/facets-utility-modules//pvc"
   name            = each.key
   namespace       = var.namespace
   access_modes    = [each.value.access_mode]
