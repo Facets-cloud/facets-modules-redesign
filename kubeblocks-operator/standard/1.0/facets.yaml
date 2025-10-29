@@ -1,0 +1,183 @@
+intent: kubeblocks-operator
+flavor: standard
+version: '1.0'
+clouds:
+- kubernetes
+description: Installs and configures KubeBlocks operator for managing databases on
+  Kubernetes
+inputs:
+  kubernetes_cluster:
+    type: '@outputs/kubernetes'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Target Kubernetes cluster for KubeBlocks installation
+    providers:
+    - kubernetes
+    - helm
+spec:
+  title: KubeBlocks Database Operator
+  description: Installs and configures KubeBlocks operator for managing databases
+    on Kubernetes
+  type: object
+  properties:
+    version:
+      type: string
+      title: KubeBlocks Version
+      description: KubeBlocks version to install
+      default: 0.9.5
+    namespace:
+      type: string
+      title: Installation Namespace
+      description: Kubernetes namespace for KubeBlocks
+      default: kb-system
+    data_protection:
+      type: object
+      title: Data Protection Configuration
+      properties:
+        enabled:
+          type: boolean
+          title: Enable Data Protection
+          description: Enable data protection controllers
+          default: true
+        backup_encryption:
+          type: boolean
+          title: Enable Backup Encryption
+          description: Enable encryption for backups
+          default: false
+      required:
+      - enabled
+    backup_repository:
+      type: object
+      title: Backup Repository Configuration
+      description: Configure backup repository (created via Helm chart)
+      properties:
+        create:
+          type: boolean
+          title: Create Backup Repository
+          description: Create a default backup repository during installation
+          default: false
+        storage_provider:
+          type: string
+          title: Storage Provider
+          description: Backup storage provider
+          x-ui-visible-if:
+            field: spec.backup_repository.create
+            values:
+            - true
+          enum:
+          - s3
+          - oss
+          - minio
+          - pvc
+          default: pvc
+        volume_capacity:
+          type: string
+          title: Volume Capacity
+          description: Storage capacity for backup repository
+          x-ui-visible-if:
+            field: spec.backup_repository.create
+            values:
+            - true
+          default: 20Gi
+      required:
+      - create
+    feature_gates:
+      type: object
+      title: Feature Gates
+      description: Enable experimental features
+      properties:
+        in_place_pod_vertical_scaling:
+          type: boolean
+          title: In-Place Pod Vertical Scaling
+          description: Enable in-place pod vertical scaling feature
+          default: false
+    controller_resources:
+      type: object
+      title: KubeBlocks Controller Resources
+      properties:
+        cpu_limit:
+          type: string
+          title: CPU Limit
+          description: CPU limit for KubeBlocks controller
+          default: 1000m
+        memory_limit:
+          type: string
+          title: Memory Limit
+          description: Memory limit for KubeBlocks controller
+          default: 1Gi
+        cpu_request:
+          type: string
+          title: CPU Request
+          description: CPU request for KubeBlocks controller
+          default: 500m
+        memory_request:
+          type: string
+          title: Memory Request
+          description: Memory request for KubeBlocks controller
+          default: 512Mi
+    database_addons:
+      type: object
+      title: Database Addons
+      description: Install database addons (ClusterDefinitions and ComponentDefinitions)
+        as Terraform-managed Helm releases
+      properties:
+        postgresql:
+          type: boolean
+          title: PostgreSQL
+          description: Install PostgreSQL addon
+          default: false
+        mysql:
+          type: boolean
+          title: MySQL
+          description: Install MySQL addon
+          default: false
+        mongodb:
+          type: boolean
+          title: MongoDB
+          description: Install MongoDB addon
+          default: false
+        redis:
+          type: boolean
+          title: Redis
+          description: Install Redis addon
+          default: false
+        kafka:
+          type: boolean
+          title: Kafka
+          description: Install Kafka addon
+          default: false
+  required:
+  - version
+  - namespace
+outputs:
+  default:
+    type: '@outputs/kubeblocks-operator'
+    title: KubeBlocks Operator
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+sample:
+  kind: kubeblocks-operator
+  flavor: standard
+  version: '1.0'
+  disabled: true
+  spec:
+    version: 0.9.5
+    namespace: kb-system
+    data_protection:
+      enabled: true
+      backup_encryption: false
+    backup_repository:
+      create: false
+    controller_resources:
+      cpu_limit: 1000m
+      memory_limit: 1Gi
+      cpu_request: 500m
+      memory_request: 512Mi
+    database_addons:
+      postgresql: false
+      mysql: false
+      mongodb: false
+      redis: false
+      kafka: false
