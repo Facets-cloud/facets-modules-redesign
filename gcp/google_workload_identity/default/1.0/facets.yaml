@@ -1,6 +1,6 @@
 intent: google_workload_identity
-flavor: default
-version: '2.0'
+flavor: gcp
+version: '1.0'
 clouds:
 - gcp
 description: Workload Identity is the recommended way to access GCP services from
@@ -131,8 +131,8 @@ spec:
   - roles
 sample:
   kind: google_workload_identity
-  flavor: default
-  version: '2.0'
+  flavor: gcp
+  version: '1.0'
   disabled: true
   spec:
     name: petclinic
