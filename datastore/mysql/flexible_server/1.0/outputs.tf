@@ -1,27 +1,5 @@
 locals {
-  # output_attributes = {
-  #   identifier              = azurerm_mysql_flexible_server.main.name
-  #   id                      = azurerm_mysql_flexible_server.main.id
-  #   writer_endpoint         = azurerm_mysql_flexible_server.main.fqdn
-  #   reader_endpoint         = length(azurerm_mysql_flexible_server.replicas) > 0 ? azurerm_mysql_flexible_server.replicas[*].fqdn : []
-  #   port                    = 3306
-  #   database_name           = local.restore_enabled ? [] : [for db in azurerm_mysql_flexible_database.databases : db.name]
-  #   master_username         = azurerm_mysql_flexible_server.main.administrator_login
-  #   master_password         = sensitive(local.restore_enabled ? try(var.instance.spec.restore_config.administrator_password, "") : (local.administrator_password != null ? local.administrator_password : ""))
-  #   engine_version          = azurerm_mysql_flexible_server.main.version
-  #   # location                = local.location
-  #   # sku_name                = azurerm_mysql_flexible_server.main.sku_name
-  #   # storage_gb              = azurerm_mysql_flexible_server.main.storage != null ? azurerm_mysql_flexible_server.main.storage[0].size_gb : null
-  #   # private_dns_zone_id     = local.mysql_dns_zone_id
-  #   # resource_group_name     = local.resource_group_name
-  #   backup_retention_period = azurerm_mysql_flexible_server.main.backup_retention_days
-  #   # create_mode             = azurerm_mysql_flexible_server.main.create_mode
-  #   # source_server_id        = azurerm_mysql_flexible_server.main.source_server_id
-  #   # restore_point_in_time   = azurerm_mysql_flexible_server.main.point_in_time_restore_time_in_utc
-  #   is_restored_from_snapshot = local.restore_enabled
-  #   is_imported               = local.is_import
-  #   secrets                 = ["master_password"]
-  # }
+  output_attributes = {}
   output_interfaces = {
     reader = sensitive({
       host              = length(azurerm_mysql_flexible_server.replicas) > 0 ? azurerm_mysql_flexible_server.replicas[0].fqdn : azurerm_mysql_flexible_server.main.fqdn
