@@ -61,9 +61,10 @@ locals {
   vpa_available = lookup(var.inputs, "vpa_details", null) != null
 
   # KEDA configuration
-  autoscaling_config = lookup(local.runtime, "autoscaling", {})
-  scaling_on         = lookup(local.autoscaling_config, "scaling_on", "CPU")
-  enable_keda        = local.scaling_on == "KEDA"
+  autoscaling_config  = lookup(local.runtime, "autoscaling", {})
+  autoscaling_enabled = lookup(local.autoscaling_config, "enabled", true)
+  scaling_on          = lookup(local.autoscaling_config, "scaling_on", "CPU")
+  enable_keda         = local.autoscaling_enabled && local.scaling_on == "KEDA"
 
   # Build KEDA configuration object when KEDA is enabled
   keda_config = jsondecode(local.enable_keda ? jsonencode({
