@@ -1,0 +1,15 @@
+{
+    "provides": "kubernetes_node_pool",
+    "flavors": [
+        "node_fleet"
+    ],
+    "supported_clouds": [
+        "gcp"
+    ],
+    "inputs": {},
+    "lifecycle": "ENVIRONMENT",
+    "version": "0.1",
+    "depends_on": [],
+    "input_type": "instance",
+    "composition": {}
+}
