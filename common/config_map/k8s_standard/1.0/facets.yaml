@@ -1,5 +1,5 @@
 intent: config_map
-flavor: k8s-custom
+flavor: k8s_standard
 version: '1.0'
 description: config_map - k8s
 clouds:
@@ -48,7 +48,7 @@ outputs:
 sample:
   $schema: https://facets-cloud.github.io/facets-schemas/schemas/config_map/config_map.schema.json
   kind: config_map
-  flavor: k8s-custom
+  flavor: k8s_standard
   version: '1.0'
   metadata: {}
   disabled: true

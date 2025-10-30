@@ -1,5 +1,5 @@
 intent: prometheus
-flavor: k8s-custom
+flavor: k8s_standard
 version: '1.0'
 description: Prometheus monitoring stack for Kubernetes with Grafana, Alertmanager,
   and kube-state-metrics
@@ -448,7 +448,7 @@ spec:
   - values
 sample:
   $schema: https://facets-cloud.github.io/facets-schemas/schemas/prometheus/prometheus.schema.json
-  flavor: k8s-custom
+  flavor: k8s_standard
   metadata:
     namespace: default
   kind: prometheus

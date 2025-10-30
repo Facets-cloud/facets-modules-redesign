@@ -1,5 +1,5 @@
 intent: kubernetes_secret
-flavor: k8s-custom
+flavor: k8s_standard
 version: '1.0'
 description: kubernetes_secret - k8s
 clouds:
@@ -49,7 +49,7 @@ sample:
   $schema: https://facets-cloud.github.io/facets-schemas/schemas/kubernetes_secret/kubernetes_secret.schema.json
   kind: kubernetes_secret
   disabled: true
-  flavor: k8s-custom
+  flavor: k8s_standard
   version: '1.0'
   metadata: {}
   spec:
