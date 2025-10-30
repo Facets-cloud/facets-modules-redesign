@@ -9,7 +9,30 @@ locals {
   host                   = local.kubernetes_details.cluster_endpoint
   cluster_ca_certificate = base64encode(local.kubernetes_details.cluster_ca_certificate)
   token                  = lookup(local.kubernetes_details, "token", "")
-  artifactory_list       = jsondecode(file("../deploymentcontext.json"))["artifactoryDetails"]
+
+  # Node pool configuration
+  kubernetes_node_pool_details = lookup(var.inputs, "kubernetes_node_pool_details", {})
+  node_pool_labels             = lookup(local.kubernetes_node_pool_details, "node_selector", {})
+  node_pool_taints_raw         = lookup(local.kubernetes_node_pool_details, "taints", {})
+
+  # Transform taints from object format to Kubernetes toleration format
+  node_pool_tolerations = [
+    for taint_name, taint_config in local.node_pool_taints_raw : {
+      key      = taint_config.key
+      operator = "Equal"
+      value    = taint_config.value
+      effect   = taint_config.effect
+    }
+  ]
+
+  # Combine arch selector with node pool labels
+  node_selector = merge(
+    {
+      "kubernetes.io/arch" = "amd64"
+    },
+    local.node_pool_labels
+  )
+  artifactory_list = jsondecode(file("../deploymentcontext.json"))["artifactoryDetails"]
   artifactories_ecr = {
     for artifactory in local.artifactory_list :
     artifactory["name"] => artifactory if lookup(artifactory, "artifactoryType", "ECR") == "ECR" && (local.include_all || contains([for key, value in local.artifactories : value["name"]], artifactory["name"]))

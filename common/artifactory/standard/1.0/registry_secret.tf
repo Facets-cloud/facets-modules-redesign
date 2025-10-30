@@ -4,7 +4,7 @@ module "name_dockerhub" {
   is_k8s          = true
   globally_unique = false
   resource_type   = "registry"
-  resource_name   = "${local.name}-${each.key}"
+  resource_name   = replace(lower("${local.name}-${each.key}"), "_", "-")
   environment     = var.environment
   limit           = 63
 }

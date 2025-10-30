@@ -695,7 +695,6 @@ spec:
       required:
       - ports
       - size
-      - health_checks
     release:
       title: Release
       description: Manage version releases to deploy updates and maintain software
