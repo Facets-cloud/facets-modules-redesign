@@ -95,14 +95,21 @@ spec:
               description: Deploy this node pool in public subnets
               type: boolean
               default: false
-            type:
-              title: Node Type
-              description: Type of nodes (regular or spot)
-              type: string
-              enum:
-              - regular
-              - spot
-              default: regular
+            spot:
+              title: Spot Instances
+              description: Enable spot/preemptible instances for cost savings (~70% cheaper, but can be terminated)
+              type: boolean
+              default: false
+            autoscaling_per_zone:
+              title: Autoscaling Per Zone
+              description: If true, min/max nodes apply per zone. If false, applies as total across all zones.
+              type: boolean
+              default: false
+            single_az:
+              title: Single AZ
+              description: Deploy node pool in single availability zone (uses first zone from network configuration)
+              type: boolean
+              default: false
             azs:
               title: Availability Zones
               description: Specific zones for this node pool (optional)
@@ -175,7 +182,9 @@ sample:
         disk_size: 100
         disk_type: pd-standard
         is_public: false
-        type: regular
+        spot: false
+        autoscaling_per_zone: false
+        single_az: false
       spot-pool:
         instance_type: e2-standard-4
         min_node_count: 0
@@ -183,7 +192,9 @@ sample:
         disk_size: 100
         disk_type: pd-standard
         is_public: false
-        type: spot
+        spot: true
+        autoscaling_per_zone: false
+        single_az: false
     labels:
       environment: production
       fleet: example

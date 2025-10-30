@@ -12,10 +12,12 @@ variable "instance" {
         min_node_count = number
         max_node_count = number
         disk_size      = number
-        disk_type      = optional(string, "pd-standard")
-        is_public      = optional(bool, false)
-        type           = optional(string, "regular")
-        azs            = optional(list(string))
+        disk_type            = optional(string, "pd-standard")
+        is_public            = optional(bool, false)
+        spot                 = optional(bool, false)
+        autoscaling_per_zone = optional(bool, false)
+        single_az            = optional(bool, false)
+        azs                  = optional(list(string))
         iam = optional(object({
           roles = optional(map(object({
             role = string
