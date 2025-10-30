@@ -21,7 +21,7 @@ locals {
   output_k8s_name         = local.use_existing_k8s_sa ? local.k8s_given_name : kubernetes_service_account.main[0].metadata[0].name
   output_k8s_namespace    = local.use_existing_k8s_sa ? local.namespace : kubernetes_service_account.main[0].metadata[0].namespace
   k8s_sa_gcp_derived_name = "serviceAccount:${local.project_id}.svc.id.goog[${local.namespace}/${local.output_k8s_name}]"
-  kubeconfig_content = yamlencode({
+  kubeconfig_content = sensitive(yamlencode({
     apiVersion = "v1"
     kind       = "Config"
     clusters = [{
@@ -49,6 +49,6 @@ locals {
         }
       }
     }]
-  })
+  }))
   kubeconfig_filename = "/tmp/${var.environment.unique_name}_workloadidentity_${var.instance_name}.yaml"
 }
