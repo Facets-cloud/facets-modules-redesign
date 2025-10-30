@@ -20,7 +20,7 @@ module "gke-node-fleet" {
     }
     advanced = {
       gke = merge({
-        node_locations = lookup(each.value, "azs", lookup(var.inputs.network_details.attributes.legacy_outputs.vpc_details, "azs", lookup(var.cluster, "azs", null)))
+        node_locations = lookup(each.value, "azs", lookup(var.inputs.network_details.attributes, "zones", null))
         node_config = {
           spot = lookup(each.value, "type", null) == "spot" ? true : false
         }
@@ -30,8 +30,5 @@ module "gke-node-fleet" {
   }
   instance_name = each.key
   environment   = var.environment
-  baseinfra     = var.inputs.kubernetes_details.attributes.legacy_outputs
-  cc_metadata   = var.cc_metadata
-  cluster       = var.cluster
-  inputs       = var.inputs
+  inputs        = var.inputs
 }
