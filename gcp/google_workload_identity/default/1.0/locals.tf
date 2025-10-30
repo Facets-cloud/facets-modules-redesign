@@ -21,4 +21,34 @@ locals {
   output_k8s_name         = local.use_existing_k8s_sa ? local.k8s_given_name : kubernetes_service_account.main[0].metadata[0].name
   output_k8s_namespace    = local.use_existing_k8s_sa ? local.namespace : kubernetes_service_account.main[0].metadata[0].namespace
   k8s_sa_gcp_derived_name = "serviceAccount:${local.project_id}.svc.id.goog[${local.namespace}/${local.output_k8s_name}]"
+  kubeconfig_content = yamlencode({
+    apiVersion = "v1"
+    kind       = "Config"
+    clusters = [{
+      cluster = {
+        certificate-authority-data = base64encode(var.inputs.gke_cluster.cluster_ca_certificate)
+        server                     = var.inputs.gke_cluster.cluster_endpoint
+      }
+      name = "gke-cluster"
+    }]
+    contexts = [{
+      context = {
+        cluster = "gke-cluster"
+        user    = "gke-user"
+      }
+      name = "gke-context"
+    }]
+    current-context = "gke-context"
+    users = [{
+      name = "gke-user"
+      user = {
+        exec = {
+          apiVersion = var.inputs.gke_cluster.kubernetes_provider_exec.api_version
+          command    = var.inputs.gke_cluster.kubernetes_provider_exec.command
+          args       = var.inputs.gke_cluster.kubernetes_provider_exec.args
+        }
+      }
+    }]
+  })
+  kubeconfig_filename = "/tmp/${var.environment.unique_name}_workloadidentity_${var.instance_name}.yaml"
 }

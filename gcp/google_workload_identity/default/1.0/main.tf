@@ -48,23 +48,20 @@ resource "null_resource" "annotate-sa" {
   count = local.use_existing_k8s_sa && local.annotate_k8s_sa ? 1 : 0
 
   triggers = {
-    cluster_auth  = base64encode(jsonencode(var.inputs.gke_cluster.attributes))
+    cluster_auth  = base64encode(jsonencode(var.inputs.gke_cluster))
     ksa_namespace = local.output_k8s_namespace
     ksa_name      = local.k8s_given_name
     gcp_sa_email  = local.gcp_sa_email
   }
 
   provisioner "local-exec" {
-    when = create
-    environment = {
-      CLUSTER_ENDPOINT = sensitive(var.inputs.gke_cluster.cluster_endpoint)
-      CLUSTER_CA_CERT  = sensitive(base64encode(var.inputs.gke_cluster.cluster_ca_certificate))
-      EXEC_API_VERSION = sensitive(var.inputs.gke_cluster.kubernetes_provider_exec.api_version)
-      EXEC_COMMAND     = sensitive(var.inputs.gke_cluster.kubernetes_provider_exec.command)
-      EXEC_ARGS        = sensitive(jsonencode(var.inputs.gke_cluster.kubernetes_provider_exec.args))
-    }
+    when    = create
     command = <<EOT
-    /bin/bash scripts/run_with_exec_kubeconfig.sh kubectl annotate --overwrite sa -n ${self.triggers.ksa_namespace} ${self.triggers.ksa_name} iam.gke.io/gcp-service-account=${self.triggers.gcp_sa_email}
+    cat > "${local.kubeconfig_filename}" << 'EOF'
+${local.kubeconfig_content}
+EOF
+    
+    KUBECONFIG="${local.kubeconfig_filename}" kubectl annotate --overwrite sa -n ${self.triggers.ksa_namespace} ${self.triggers.ksa_name} iam.gke.io/gcp-service-account=${self.triggers.gcp_sa_email}
     EOT
   }
 }
