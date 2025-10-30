@@ -8,10 +8,10 @@ variable "instance" {
     }), {})
     spec = object({
       node_pools = map(object({
-        instance_type  = string
-        min_node_count = number
-        max_node_count = number
-        disk_size      = number
+        instance_type        = string
+        min_node_count       = number
+        max_node_count       = number
+        disk_size            = number
         disk_type            = optional(string, "pd-standard")
         is_public            = optional(bool, false)
         spot                 = optional(bool, false)
@@ -71,7 +71,6 @@ variable "environment" {
   type = object({
     name        = string
     unique_name = string
-    project     = string
     namespace   = string
   })
 }

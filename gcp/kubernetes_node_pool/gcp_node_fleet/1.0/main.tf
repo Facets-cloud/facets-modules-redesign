@@ -6,16 +6,16 @@ module "gke-node-fleet" {
       name = each.key
     }
     spec = {
-      instance_type       = lookup(each.value, "instance_type", null)
-      disk_size          = lookup(each.value, "disk_size", null)
-      disk_type          = lookup(each.value, "disk_type", "pd-standard")
-      min_node_count     = lookup(each.value, "min_node_count", null)
-      max_node_count     = lookup(each.value, "max_node_count", null)
+      instance_type        = lookup(each.value, "instance_type", null)
+      disk_size            = lookup(each.value, "disk_size", null)
+      disk_type            = lookup(each.value, "disk_type", "pd-standard")
+      min_node_count       = lookup(each.value, "min_node_count", null)
+      max_node_count       = lookup(each.value, "max_node_count", null)
       autoscaling_per_zone = lookup(each.value, "autoscaling_per_zone", false)
-      taints             = local.processed_taints
-      is_public          = lookup(each.value, "is_public", false)
-      single_az          = lookup(each.value, "single_az", false)
-      spot               = lookup(each.value, "spot", false)
+      taints               = local.processed_taints
+      is_public            = lookup(each.value, "is_public", false)
+      single_az            = lookup(each.value, "single_az", false)
+      spot                 = lookup(each.value, "spot", false)
       labels = merge(local.labels, {
         "facets-cloud-fleet-${var.instance_name}" = each.key
       })

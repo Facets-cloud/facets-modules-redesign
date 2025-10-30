@@ -97,17 +97,20 @@ spec:
               default: false
             spot:
               title: Spot Instances
-              description: Enable spot/preemptible instances for cost savings (~70% cheaper, but can be terminated)
+              description: Enable spot/preemptible instances for cost savings (~70%
+                cheaper, but can be terminated)
               type: boolean
               default: false
             autoscaling_per_zone:
               title: Autoscaling Per Zone
-              description: If true, min/max nodes apply per zone. If false, applies as total across all zones.
+              description: If true, min/max nodes apply per zone. If false, applies
+                as total across all zones.
               type: boolean
               default: false
             single_az:
               title: Single AZ
-              description: Deploy node pool in single availability zone (uses first zone from network configuration)
+              description: Deploy node pool in single availability zone (uses first
+                zone from network configuration)
               type: boolean
               default: false
             azs:

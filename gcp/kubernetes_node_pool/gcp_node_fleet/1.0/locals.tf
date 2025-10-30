@@ -3,8 +3,8 @@ locals {
   node_pools   = local.spec.node_pools
   advanced     = lookup(var.instance, "advanced", {})
   gke_advanced = lookup(local.advanced, "gke", {})
-  labels       = local.spec.labels
-  taints       = local.spec.taints
+  labels       = lookup(local.spec, "labels", {})
+  taints       = lookup(local.spec, "taints", [])
 
   gcp_taints = {
     "NoSchedule" : "NO_SCHEDULE",
