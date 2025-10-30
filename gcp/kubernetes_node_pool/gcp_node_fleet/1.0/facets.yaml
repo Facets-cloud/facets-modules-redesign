@@ -1,3 +1,9 @@
+intent: kubernetes_node_pool
+flavor: gcp_node_fleet
+version: '1.0'
+description: GCP GKE Node Fleet module for provisioning multiple node pools
+clouds:
+- gcp
 inputs:
   network_details:
     optional: false
@@ -35,4 +41,150 @@ outputs:
   attributes.node_fleet_details:
     type: '@facets/gke_node_pool_details'
     title: GKE Node Fleet Details
-    description: Detailed information about the GKE node fleet including configuration and status
+    description: Detailed information about the GKE node fleet including configuration
+      and status
+spec:
+  title: GKE Node Fleet
+  description: Specification for provisioning multiple GKE node pools as a fleet
+  type: object
+  properties:
+    node_pools:
+      title: Node Pools
+      description: Configuration for multiple node pools in the fleet
+      type: object
+      patternProperties:
+        ^[a-zA-Z][a-zA-Z0-9_-]*$:
+          title: Node Pool Configuration
+          description: Individual node pool configuration
+          type: object
+          properties:
+            instance_type:
+              title: Instance Type
+              description: Instance type for nodes in this node pool
+              type: string
+              x-ui-placeholder: e.g. 'e2-standard-2'
+            min_node_count:
+              title: Min Node Count
+              description: Minimum number of nodes in this node pool
+              type: integer
+              minimum: 0
+              maximum: 100
+            max_node_count:
+              title: Max Node Count
+              description: Maximum number of nodes in this node pool
+              type: integer
+              minimum: 0
+              maximum: 100
+            disk_size:
+              title: Disk Size
+              description: Size of the disk in GiB for nodes in this node pool
+              type: integer
+              minimum: 50
+              maximum: 1000
+            disk_type:
+              title: Disk Type
+              description: Type of disk for nodes
+              type: string
+              default: pd-standard
+              enum:
+              - pd-standard
+              - pd-ssd
+              - pd-balanced
+            is_public:
+              title: Is Public
+              description: Deploy this node pool in public subnets
+              type: boolean
+              default: false
+            type:
+              title: Node Type
+              description: Type of nodes (regular or spot)
+              type: string
+              enum:
+              - regular
+              - spot
+              default: regular
+            azs:
+              title: Availability Zones
+              description: Specific zones for this node pool (optional)
+              type: array
+              items:
+                type: string
+              x-ui-override-disable: true
+            iam:
+              title: IAM Configuration
+              description: IAM roles for this node pool
+              type: object
+              properties:
+                roles:
+                  title: IAM Roles
+                  description: IAM roles to be assigned to node pool service account
+                  type: object
+                  patternProperties:
+                    ^[a-zA-Z][a-zA-Z0-9_.-]*$:
+                      title: Role Configuration
+                      type: object
+                      properties:
+                        role:
+                          title: Role
+                          description: IAM role to assign
+                          type: string
+          required:
+          - instance_type
+          - min_node_count
+          - max_node_count
+          - disk_size
+    labels:
+      title: Fleet Labels
+      description: Common labels applied to all node pools in the fleet
+      type: object
+      x-ui-yaml-editor: true
+      x-ui-placeholder: 'key1: value1'
+    taints:
+      title: Fleet Taints
+      description: Common taints applied to all node pools in the fleet
+      type: array
+      items:
+        type: object
+        properties:
+          key:
+            type: string
+          value:
+            type: string
+          effect:
+            type: string
+            enum:
+            - NoSchedule
+            - PreferNoSchedule
+            - NoExecute
+      x-ui-yaml-editor: true
+      x-ui-override-disable: true
+  required:
+  - node_pools
+sample:
+  flavor: gcp_node_fleet
+  version: '1.0'
+  kind: kubernetes_node_pool
+  metadata:
+    name: example-fleet
+  spec:
+    node_pools:
+      worker-pool:
+        instance_type: e2-standard-2
+        min_node_count: 1
+        max_node_count: 5
+        disk_size: 100
+        disk_type: pd-standard
+        is_public: false
+        type: regular
+      spot-pool:
+        instance_type: e2-standard-4
+        min_node_count: 0
+        max_node_count: 10
+        disk_size: 100
+        disk_type: pd-standard
+        is_public: false
+        type: spot
+    labels:
+      environment: production
+      fleet: example
+    taints: []

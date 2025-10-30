@@ -1,11 +1,10 @@
 locals {
-  spec         = lookup(var.instance, "spec", {})
-  node_pools   = lookup(local.spec, "node_pools", {})
-  cloud        = var.environment.cloud
+  spec         = var.instance.spec
+  node_pools   = local.spec.node_pools
   advanced     = lookup(var.instance, "advanced", {})
   gke_advanced = lookup(local.advanced, "gke", {})
-  labels       = lookup(local.spec, "labels", {})
-  taints       = lookup(local.spec, "taints", [])
+  labels       = local.spec.labels
+  taints       = local.spec.taints
 
   gcp_taints = {
     "NoSchedule" : "NO_SCHEDULE",
