@@ -192,11 +192,8 @@ inputs:
       = true)
 outputs:
   default:
-    type: '@outputs/mysql'
-    title: Azure MySQL Flexible Server
-  interfaces:
-    type: '@facets/mysql-interface'
-    title: MySQL Database Interface
+    type: '@facets/mysql'
+    title: MySQL Flexible Server
 imports:
 - name: server_id
   resource_address: azurerm_mysql_flexible_server.main

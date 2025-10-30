@@ -171,11 +171,8 @@ inputs:
     description: VPC configuration for database networking
 outputs:
   default:
-    type: '@facets/mysql-aws-rds'
+    type: '@@facets/mysql'
     title: MySQL RDS Instance
-  interfaces:
-    type: '@facets/mysql-interface'
-    title: MySQL Database Interface
 iac:
   validated_files:
   - main.tf
