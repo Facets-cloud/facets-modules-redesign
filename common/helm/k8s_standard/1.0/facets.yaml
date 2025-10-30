@@ -1,5 +1,5 @@
 intent: helm
-flavor: k8s-custom
+flavor: k8s_standard
 version: '1.0'
 description: Adds Helm module
 clouds:
@@ -108,7 +108,7 @@ outputs:
 sample:
   $schema: https://facets-cloud.github.io/facets-schemas/schemas/helm/helm.schema.json
   kind: helm
-  flavor: k8s-custom
+  flavor: k8s_standard
   disabled: true
   metadata: {}
   version: '1.0'

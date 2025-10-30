@@ -1,5 +1,5 @@
 intent: k8s_callback
-flavor: default
+flavor: k8s_standard
 version: '1.0'
 description: Creates ServiceAccount with admin role and registers OVH K8s credentials
   with Facets control plane
@@ -20,7 +20,7 @@ spec:
   properties: {}
 sample:
   kind: k8s_callback
-  flavor: default
+  flavor: k8s_standard
   version: '1.0'
   disabled: false
   spec: {}
