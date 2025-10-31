@@ -1,6 +1,9 @@
 locals {
   spec         = var.instance.spec
-  node_pools   = local.spec.node_pools
+  node_pools   = {
+    for key, value in local.spec.node_pools:
+      "${var.instance_name}_${key}" => value
+  }
   advanced     = lookup(var.instance, "advanced", {})
   gke_advanced = lookup(local.advanced, "gke", {})
   labels       = lookup(local.spec, "labels", {})
