@@ -10,7 +10,7 @@ locals {
   build_id_lookup              = lookup(lookup(lookup(local.all_artifactories, local.artifactory, {}), local.artifact_name, {}), "buildId", lookup(lookup(local.all_artifacts, local._artifact_name, {}), "buildId", "NOT_FOUND"))
   image_lookup                 = lookup(var.values.spec.release, "image", "NOT_FOUND")
   advanced_config_values       = lookup(local.advanced_config, "values", {})
-  kubernetes_node_pool_details = lookup(lookup(var.inputs, "kubernetes_node_pool_details", {}), "attributes", {})
+  kubernetes_node_pool_details = lookup(var.inputs, "kubernetes_node_pool_details", {})
   image_id                     = local.artifactUri == "NOT_FOUND" ? local.image_lookup : local.artifactUri
   build_id                     = local.build_id_lookup == "NOT_FOUND" ? (local.image_lookup != "NOT_FOUND" ? "NA" : "NOT_FOUND") : local.build_id_lookup
   common_advanced              = lookup(lookup(var.values, "advanced", {}), "common", {})
@@ -79,19 +79,8 @@ locals {
     for idx in range(local.instance_count) : {
       for pvc_name, pvc_spec in local.pvcs : "${pvc_name}-vol-${var.chart_name}-${idx}" => merge(pvc_spec, { index = idx })
   }]), 0, local.instance_count)...) : {}
-
-  # Pod distribution config - spec.runtime takes precedence over advanced
-  pod_distribution_config = lookup(var.values.spec.runtime, "pod_distribution", {})
-  pod_distribution_enabled = lookup(local.pod_distribution_config, "enabled", lookup(local.advanced_config_values, "pod_distribution_enabled", true))
-  topology_spread_strategy = lookup(local.pod_distribution_config, "strategy", "DoNotSchedule")
   
-  pod_distribution = local.pod_distribution_enabled ? length(lookup(var.inputs, "kubernetes_node_pool_details", {})) > 0 ? {
-    "facets-pod-topology-spread" = {
-      max_skew           = 1
-      when_unsatisfiable = local.topology_spread_strategy
-      topology_key       = lookup(local.kubernetes_node_pool_details, "topology_spread_key", "")
-    }
-  } : lookup(local.advanced_config_values, "pod_distribution", {}) : null
+  pod_distribution = lookup(local.advanced_config_values, "pod_distribution", {})
   sidecars        = lookup(var.values.spec, "sidecars", lookup(local.advanced_config_values, "sidecars", {}))
   init_containers = lookup(var.values.spec, "init_containers", lookup(local.advanced_config_values, "init_containers", {}))
   exclude_env_and_secret_values = try(

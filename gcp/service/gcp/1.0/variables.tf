@@ -24,14 +24,6 @@ variable "instance" {
 
       # Pod distribution settings
       enable_host_anti_affinity = optional(bool, false)
-      pod_distribution_enabled  = optional(bool, false)
-      pod_distribution = optional(map(object({
-        topology_key         = string
-        when_unsatisfiable   = string
-        max_skew             = number
-        node_taints_policy   = optional(string)
-        node_affinity_policy = optional(string)
-      })), {})
 
       # Cronjob configuration
       cronjob = optional(object({
@@ -262,8 +254,9 @@ variable "inputs" {
 
     # Optional: Node pool details
     kubernetes_node_pool_details = optional(object({
-      attributes = optional(any, {})
-      interfaces = optional(any, {})
+      topology_spread_key = string
+      taints              = string
+      node_selector       = string
     }))
   })
 }
