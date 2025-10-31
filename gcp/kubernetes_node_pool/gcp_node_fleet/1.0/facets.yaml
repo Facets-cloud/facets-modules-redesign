@@ -38,7 +38,7 @@ outputs:
     type: '@facets/kubernetes_nodepool'
     title: GKE Node Fleet Output
     description: Basic output information for the GKE node fleet
-  attributes.node_fleet_details:
+  attributes:
     type: '@facets/gke_node_pool_details'
     title: GKE Node Fleet Details
     description: Detailed information about the GKE node fleet including configuration
