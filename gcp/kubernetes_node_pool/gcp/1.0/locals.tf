@@ -1,8 +1,12 @@
 locals {
   spec = lookup(var.instance, "spec", {})
 
+  topology_spread_key = "facets-cloud-np-${var.instance_name}"
+
   # Node pool configuration from spec
-  labels               = lookup(local.spec, "labels", {})
+  labels               = merge(lookup(local.spec, "labels", {}), {
+    "${local.topology_spread_key}" = var.instance_name
+  })
   spot                 = lookup(local.spec, "spot", false)
   iam_roles            = lookup(lookup(local.spec, "iam", {}), "roles", {})
   autoscaling_per_zone = lookup(local.spec, "autoscaling_per_zone", false)

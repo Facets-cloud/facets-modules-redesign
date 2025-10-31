@@ -4,6 +4,8 @@ locals {
     node_pool_name = google_container_node_pool.node_pool.name
     node_pool_id   = google_container_node_pool.node_pool.id
 
+    topology_spread_key = local.topology_spread_key
+
     # Kubernetes scheduling configurations
     taints        = lookup(local.spec, "taints", [])
     node_selector = local.labels
