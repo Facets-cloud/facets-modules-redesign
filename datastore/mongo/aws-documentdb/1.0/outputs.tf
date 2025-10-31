@@ -23,5 +23,6 @@ locals {
       password          = local.master_password
       connection_string = local.is_import ? "*** IMPORTED - CONNECTION STRING NOT ACCESSIBLE ***" : local.connection_string
     }
+    secrets = ["writer", "reader", "cluster"]
   }
 }

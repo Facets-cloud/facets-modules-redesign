@@ -17,5 +17,6 @@ locals {
       port              = local.mysql_port
       database          = local.database_name
     }
+    secrets = ["writer", "reader"]
   }
 }
