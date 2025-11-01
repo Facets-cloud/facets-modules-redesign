@@ -11,12 +11,8 @@ artifact_inputs:
     artifact_type: docker_image
 inputs:
   kubernetes_details:
-    optional: false
     type: '@facets/kubernetes-details'
     displayName: Kubernetes Cluster
-    default:
-      resource_type: kubernetes_cluster
-      resource_name: default
     providers:
     - kubernetes
     - kubernetes-alpha
@@ -25,26 +21,15 @@ inputs:
     type: '@facets/gke_node_pool_details'
     displayName: Node Pool
   artifactories:
-    optional: true
     type: '@facets/artifactories'
     displayName: Container Registries
-    default:
-      resource_type: artifactories
-      resource_name: default
   vpa_details:
     optional: true
     type: '@facets/vpa'
     displayName: Vertical Pod Autoscaler
-    default:
-      resource_type: vpa
-      resource_name: default
   gcp_cloud_account:
-    optional: false
     type: '@facets/gcp_cloud_account'
     displayName: GCP Cloud Account
-    default:
-      resource_type: gcp_cloud_account
-      resource_name: default
     providers:
     - google
     - google-beta
