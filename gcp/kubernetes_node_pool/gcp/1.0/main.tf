@@ -1,11 +1,3 @@
-terraform {
-  required_providers {
-    random = {
-      source  = "hashicorp/random"
-      version = "3.7.2"
-    }
-  }
-}
 module "sa-name" {
   source          = "github.com/Facets-cloud/facets-utility-modules//name"
   environment     = var.environment
