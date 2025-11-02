@@ -150,24 +150,16 @@ spec:
       x-ui-yaml-editor: true
       x-ui-placeholder: 'key1: value1'
     taints:
-      title: Fleet Taints
-      description: Common taints applied to all node pools in the fleet
+      title: Taints
+      description: "Array of Kubernetes taints which should be applied to nodes in\
+        \ the node pool. Enter array of object in YAML format."
       type: array
-      items:
-        type: object
-        properties:
-          key:
-            type: string
-          value:
-            type: string
-          effect:
-            type: string
-            enum:
-            - NoSchedule
-            - PreferNoSchedule
-            - NoExecute
       x-ui-yaml-editor: true
       x-ui-override-disable: true
+      default:
+        - key: CriticalAddonsOnly
+          value: 'true'
+          effect: NoSchedule
   required:
   - node_pools
 sample:

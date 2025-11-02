@@ -12,7 +12,7 @@ module "gke-node-fleet" {
       min_node_count       = lookup(each.value, "min_node_count", null)
       max_node_count       = lookup(each.value, "max_node_count", null)
       autoscaling_per_zone = lookup(each.value, "autoscaling_per_zone", false)
-      taints               = local.processed_taints
+      taints               = var.instance.spec.taints
       is_public            = lookup(each.value, "is_public", false)
       single_az            = lookup(each.value, "single_az", false)
       spot                 = lookup(each.value, "spot", false)

@@ -58,7 +58,7 @@ resource "google_container_node_pool" "node_pool" {
     image_type   = "COS_CONTAINERD"
     disk_size_gb = lookup(local.spec, "disk_size", null)
     dynamic "taint" {
-      for_each = lookup(local.spec, "taints", [])
+      for_each = local.taints
       content {
         key    = taint.value["key"]
         value  = taint.value["value"]

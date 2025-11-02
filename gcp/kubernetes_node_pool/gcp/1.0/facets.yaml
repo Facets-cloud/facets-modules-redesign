@@ -84,13 +84,14 @@ spec:
     taints:
       title: Taints
       description: "Array of Kubernetes taints which should be applied to nodes in\
-        \ the node pool. Enter array of object in YAML format. Eg. \n- key: special\
-        \ \nvalue: \"true\"\neffect: PreferNoSchedule.\nSet this to [] if no taints\
-        \ are required."
-      type: object
+        \ the node pool. Enter array of object in YAML format."
+      type: array
       x-ui-yaml-editor: true
-      x-ui-placeholder: "Eg. \n- key: CriticalAddonsOnly \nvalue: \"true\"\neffect:\
-        \ NoSchedule"
+      x-ui-override-disable: true
+      default:
+      - key: CriticalAddonsOnly
+        value: 'true'
+        effect: NoSchedule
     labels:
       title: Labels
       description: 'Map of labels to be added to nodes in node pool. Enter key-value

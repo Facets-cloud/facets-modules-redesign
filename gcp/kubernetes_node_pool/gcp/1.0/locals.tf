@@ -4,7 +4,7 @@ locals {
   topology_spread_key = "facets-cloud-np-${var.instance_name}"
 
   # Node pool configuration from spec
-  labels               = merge(lookup(local.spec, "labels", {}), {
+  labels = merge(lookup(local.spec, "labels", {}), {
     "${local.topology_spread_key}" = var.instance_name
   })
   spot                 = lookup(local.spec, "spot", false)
@@ -27,4 +27,12 @@ locals {
   network_zones = lookup(var.inputs.network_details.attributes, "zones", [])
   # If single_az is true, use first zone only; otherwise use all network zones
   node_locations = local.single_az ? (length(local.network_zones) > 0 ? [local.network_zones[0]] : null) : (length(local.network_zones) > 0 ? local.network_zones : null)
+  gcp_taints_effects = {
+    "NoSchedule" : "NO_SCHEDULE",
+    "PreferNoSchedule" : "PREFER_NO_SCHEDULE",
+    "NoExecute" : "NO_EXECUTE"
+  }
+  taints = [for value in var.instance.spec.taints : merge(value, {
+    effect = lookup(local.gcp_taints_effects, value.effect, "NoSchedule")
+  })]
 }

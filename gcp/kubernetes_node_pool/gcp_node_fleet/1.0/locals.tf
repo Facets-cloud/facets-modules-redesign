@@ -14,13 +14,5 @@ locals {
     "PreferNoSchedule" : "PREFER_NO_SCHEDULE",
     "NoExecute" : "NO_EXECUTE"
   }
-
-  processed_taints = [
-    for taint in local.taints : {
-      key    = taint.key
-      value  = taint.value
-      effect = lookup(local.gcp_taints, taint.effect, taint.effect)
-    }
-  ]
 }
 
