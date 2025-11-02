@@ -83,8 +83,8 @@ spec:
       maximum: 1000
     taints:
       title: Taints
-      description: "Array of Kubernetes taints which should be applied to nodes in\
-        \ the node pool. Enter array of object in YAML format."
+      description: Array of Kubernetes taints which should be applied to nodes in
+        the node pool. Enter array of object in YAML format.
       type: array
       x-ui-yaml-editor: true
       x-ui-override-disable: true

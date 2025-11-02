@@ -28,5 +28,6 @@ variable "environment" {
     name        = string
     unique_name = string
     namespace   = string
+    cloud_tags  = map(string)
   })
 }

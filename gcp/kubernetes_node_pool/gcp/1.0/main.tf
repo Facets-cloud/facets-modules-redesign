@@ -66,7 +66,7 @@ resource "google_container_node_pool" "node_pool" {
       }
     }
     labels          = local.labels
-    resource_labels = merge(local.labels, lookup(lookup(var.instance, "metadata", {}), "labels", {}))
+    resource_labels = merge(var.environment.cloud_tags, lookup(lookup(var.instance, "metadata", {}), "labels", {}))
     # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
     service_account = length(local.iam_roles) > 0 ? google_service_account.sa[0].email : null
     oauth_scopes = [
@@ -116,7 +116,7 @@ resource "google_container_node_pool" "node_pool" {
   }
 
   lifecycle {
-    ignore_changes        = [version, node_config.0.image_type, initial_node_count, network_config.0.enable_private_nodes, node_config.0.resource_labels]
+    ignore_changes        = [version, node_config.0.image_type, initial_node_count, network_config.0.enable_private_nodes]
     create_before_destroy = true
     prevent_destroy       = true
   }
