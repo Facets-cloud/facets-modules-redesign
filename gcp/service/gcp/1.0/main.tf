@@ -153,7 +153,7 @@ module "app-helm-chart" {
   chart_name              = lower(var.instance_name)
   values                  = local.instance
   annotations             = local.annotations
-  registry_secret_objects = var.inputs.artifactories.attributes.registry_secrets_objects
+  registry_secret_objects = var.inputs.artifactories.attributes.registry_secret_objects
   labels                  = local.labels
   cluster                 = var.cluster
   environment             = var.environment

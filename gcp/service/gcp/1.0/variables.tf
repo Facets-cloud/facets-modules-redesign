@@ -240,7 +240,7 @@ variable "inputs" {
     artifactories = optional(object({
       attributes = object({
         registry_secrets_list = list(any)
-        registry_secrets_objects = map(list(object({
+        registry_secret_objects = map(list(object({
           name = string
         })))
       })
