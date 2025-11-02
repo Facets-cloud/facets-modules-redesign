@@ -151,15 +151,15 @@ spec:
       x-ui-placeholder: 'key1: value1'
     taints:
       title: Taints
-      description: "Array of Kubernetes taints which should be applied to nodes in\
-        \ the node pool. Enter array of object in YAML format."
+      description: Array of Kubernetes taints which should be applied to nodes in
+        the node pool. Enter array of object in YAML format.
       type: array
       x-ui-yaml-editor: true
       x-ui-override-disable: true
       default:
-        - key: CriticalAddonsOnly
-          value: 'true'
-          effect: NoSchedule
+      - key: CriticalAddonsOnly
+        value: 'true'
+        effect: NoSchedule
   required:
   - node_pools
 sample:
@@ -191,6 +191,5 @@ sample:
         autoscaling_per_zone: false
         single_az: false
     labels:
-      environment: production
       fleet: example
     taints: []

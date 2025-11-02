@@ -12,7 +12,7 @@ module "name" {
 resource "kubernetes_secret_v1" "ecr-token-refresher-configs" {
   for_each = local.artifactories_ecr
   metadata {
-    name      = module.name[each.key].name
+    name      = "${module.name[each.key].name}-config"
     namespace = local.namespace
   }
   data = {
