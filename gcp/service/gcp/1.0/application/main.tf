@@ -159,7 +159,6 @@ resource "helm_release" "app-chart" {
               tolerations        = local.all_tolerations
               node_selector      = local.node_selector
               pod_distribution   = local.pod_distribution
-              image_pull_secrets = var.registry_secret_objects
               init_containers    = local.init_containers
               sidecars           = local.sidecars
             }

@@ -18,10 +18,6 @@ variable "labels" {
   type = any
 }
 
-variable "registry_secret_objects" {
-  type = any
-}
-
 variable "cluster" {
   type = any
 }

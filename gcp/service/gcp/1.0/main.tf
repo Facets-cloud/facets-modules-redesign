@@ -109,7 +109,11 @@ locals {
                     pod_distribution         = local.pod_distribution
                   },
                   # Add KEDA configuration when enabled
-                  local.enable_keda ? { keda = local.keda_config } : {}
+                  local.enable_keda ? { keda = local.keda_config } : {},
+
+                  {
+                    image_pull_secrets = var.inputs.artifactories.attributes.registry_secrets_list
+                  }
                 )
               }
             )
@@ -148,17 +152,16 @@ module "app-helm-chart" {
   depends_on = [
     module.gcp-workload-identity
   ]
-  source                  = "./application"
-  namespace               = local.namespace
-  chart_name              = lower(var.instance_name)
-  values                  = local.instance
-  annotations             = local.annotations
-  registry_secret_objects = var.inputs.artifactories.attributes.registry_secret_objects
-  labels                  = local.labels
-  cluster                 = var.cluster
-  environment             = var.environment
-  inputs                  = var.inputs
-  vpa_release_id          = lookup(lookup(lookup(var.inputs, "vpa_details", {}), "attributes", {}), "helm_release_id", "")
+  source         = "./application"
+  namespace      = local.namespace
+  chart_name     = lower(var.instance_name)
+  values         = local.instance
+  annotations    = local.annotations
+  labels         = local.labels
+  cluster        = var.cluster
+  environment    = var.environment
+  inputs         = var.inputs
+  vpa_release_id = lookup(lookup(lookup(var.inputs, "vpa_details", {}), "attributes", {}), "helm_release_id", "")
 }
 
 module "backend_config" {
