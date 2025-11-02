@@ -22,14 +22,6 @@ variable "registry_secret_objects" {
   type = any
 }
 
-variable "cc_metadata" {
-  type = any
-}
-
-variable "baseinfra" {
-  type = any
-}
-
 variable "cluster" {
   type = any
 }

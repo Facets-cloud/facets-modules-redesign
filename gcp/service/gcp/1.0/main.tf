@@ -54,8 +54,6 @@ locals {
   resource_type = "service"
   resource_name = var.instance_name
 
-  from_artifactories      = var.inputs.artifactories.attributes.registry_secrets_list
-
   # Check if VPA is available and configure accordingly
   vpa_available = lookup(var.inputs, "vpa_details", null) != null
 
@@ -155,10 +153,8 @@ module "app-helm-chart" {
   chart_name              = lower(var.instance_name)
   values                  = local.instance
   annotations             = local.annotations
-  registry_secret_objects = local.from_artifactories
-  cc_metadata             = var.cc_metadata
+  registry_secret_objects = var.inputs.artifactories.attributes.registry_secrets_objects
   labels                  = local.labels
-  baseinfra               = var.baseinfra
   cluster                 = var.cluster
   environment             = var.environment
   inputs                  = var.inputs
