@@ -93,7 +93,7 @@ locals {
   }
 
   # Create instance configuration with VPA settings, topology spread constraints, and KEDA configuration
-  instance_with_vpa_config = merge(var.instance, {
+  instance = merge(var.instance, {
     advanced = merge(
       lookup(var.instance, "advanced", {}),
       {
@@ -154,7 +154,7 @@ module "app-helm-chart" {
   source                  = "./application"
   namespace               = local.namespace
   chart_name              = lower(var.instance_name)
-  values                  = local.instance_with_vpa_config
+  values                  = local.instance
   annotations             = local.annotations
   registry_secret_objects = length(local.from_artifactories) > 0 ? local.from_artifactories : local.from_kubernetes_cluster
   cc_metadata             = var.cc_metadata
