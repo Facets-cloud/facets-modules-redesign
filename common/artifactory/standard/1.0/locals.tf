@@ -6,9 +6,6 @@ locals {
   artifactories          = lookup(local.spec, "artifactories", {})
   include_all            = lookup(local.spec, "include_all", length(local.artifactories) > 0 ? "false" : "true")
   kubernetes_details     = var.inputs.kubernetes_details.attributes
-  host                   = local.kubernetes_details.cluster_endpoint
-  cluster_ca_certificate = base64encode(local.kubernetes_details.cluster_ca_certificate)
-  token                  = lookup(local.kubernetes_details, "token", "")
   artifactory_list       = jsondecode(file("../deploymentcontext.json"))["artifactoryDetails"]
   artifactories_ecr = {
     for artifactory in local.artifactory_list :
