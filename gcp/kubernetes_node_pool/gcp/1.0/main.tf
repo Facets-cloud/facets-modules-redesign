@@ -1,3 +1,11 @@
+terraform {
+  required_providers {
+    random = {
+      source  = "hashicorp/random"
+      version = "3.7.2"
+    }
+  }
+}
 module "sa-name" {
   source          = "github.com/Facets-cloud/facets-utility-modules//name"
   environment     = var.environment
@@ -24,10 +32,17 @@ resource "google_project_iam_member" "np-account-iam" {
   member  = "serviceAccount:${google_service_account.sa[0].email}"
 }
 
+resource "random_string" "name_suffix" {
+  length = 4
+  special = false
+  lower = true
+  upper = false
+}
+
 resource "google_container_node_pool" "node_pool" {
   project     = var.inputs.cloud_account.attributes.project_id
   provider    = google-beta
-  name_prefix = "${var.instance_name}-"
+  name        = "${var.instance_name}-${random_string.name_suffix.result}"
   cluster     = var.inputs.kubernetes_details.cluster_name
   location    = var.inputs.cloud_account.attributes.region
 
