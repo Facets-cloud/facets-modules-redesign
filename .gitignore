@@ -1,1 +1,23 @@
 .mcp.json
+
+# IntelliJ IDEA files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VSCode files
+.vscode/
+*.code-workspace
+
+# Terraform generated/temporary files (keep .tf files but ignore generated ones)
+**/*.tfstate
+**/*.tfstate.*
+**/*.tfplan
+**/*.tfvars
+**/.terraform/
+**/.terraform.lock.hcl
+
+# Facets output files
+**/output.facets.yaml
+**/output-lookup-tree.json
