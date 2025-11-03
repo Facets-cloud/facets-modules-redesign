@@ -116,7 +116,7 @@ sample:
     helm:
       repository: https://helm.datadoghq.com
       chart: datadog
-      version: '3.135.0'
+      version: 3.135.0
       namespace: default
       wait: false
     values: null
