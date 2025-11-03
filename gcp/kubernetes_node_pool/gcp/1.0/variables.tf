@@ -23,6 +23,11 @@ variable "inputs" {
 }
 
 variable "environment" {
-  type    = map(any)
-  default = {}
+  description = "An object containing details about the environment."
+  type = object({
+    name        = string
+    unique_name = string
+    namespace   = string
+    cloud_tags  = map(string)
+  })
 }

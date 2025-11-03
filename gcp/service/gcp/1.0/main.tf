@@ -54,41 +54,43 @@ locals {
   resource_type = "service"
   resource_name = var.instance_name
 
-  from_artifactories      = lookup(lookup(lookup(var.inputs, "artifactories", {}), "attributes", {}), "registry_secrets_list", [])
-  from_kubernetes_cluster = []
-
   # Check if VPA is available and configure accordingly
   vpa_available = lookup(var.inputs, "vpa_details", null) != null
 
+  # KEDA configuration
+  autoscaling_config  = lookup(local.runtime, "autoscaling", {})
+  autoscaling_enabled = lookup(local.autoscaling_config, "enabled", true)
+  scaling_on          = lookup(local.autoscaling_config, "scaling_on", "CPU")
+  enable_keda         = local.autoscaling_enabled && local.scaling_on == "KEDA"
+
+  # Build KEDA configuration object when KEDA is enabled
+  keda_config = jsondecode(local.enable_keda ? jsonencode({
+    polling_interval = lookup(local.autoscaling_config, "keda_polling_interval", 30)
+    cooldown_period  = lookup(local.autoscaling_config, "keda_cooldown_period", 300)
+    fallback = lookup(local.autoscaling_config, "keda_fallback", {
+      failureThreshold = 3
+      replicas         = 6
+    })
+    advanced = lookup(local.autoscaling_config, "keda_advanced", {
+      restoreToOriginalReplicaCount = false
+    })
+    triggers = [for trigger in values(lookup(local.autoscaling_config, "keda_triggers", {})) : trigger.configuration]
+  }) : jsonencode({}))
+
   # Configure pod distribution directly from spec
   enable_host_anti_affinity = lookup(local.spec, "enable_host_anti_affinity", false)
-  pod_distribution_enabled  = lookup(local.spec, "pod_distribution_enabled", false)
-  pod_distribution_spec     = lookup(local.spec, "pod_distribution", {})
-
-  # Convert pod_distribution object to array format expected by helm chart
-  pod_distribution_array = [
-    for key, config in local.pod_distribution_spec : {
-      topology_key         = config.topology_key
-      when_unsatisfiable   = config.when_unsatisfiable
-      max_skew             = config.max_skew
-      node_taints_policy   = lookup(config, "node_taints_policy", null)
-      node_affinity_policy = lookup(config, "node_affinity_policy", null)
-    }
-  ]
 
   # Determine final pod_distribution configuration
-  pod_distribution = local.pod_distribution_enabled ? (
-    length(local.pod_distribution_spec) > 0 ? local.pod_distribution_array : (
-      local.enable_host_anti_affinity ? [{
-        topology_key       = "kubernetes.io/hostname"
-        when_unsatisfiable = "DoNotSchedule"
-        max_skew           = 1
-      }] : []
-    )
-  ) : []
+  pod_distribution = {
+    "facets-pod-topology-spread" = {
+      max_skew           = 1
+      when_unsatisfiable = "DoNotSchedule"
+      topology_key       = var.inputs.kubernetes_node_pool_details.topology_spread_key
+    }
+  }
 
-  # Create instance configuration with VPA settings and topology spread constraints
-  instance_with_vpa_config = merge(var.instance, {
+  # Create instance configuration with VPA settings, topology spread constraints, and KEDA configuration
+  instance = merge(var.instance, {
     advanced = merge(
       lookup(var.instance, "advanced", {}),
       {
@@ -103,8 +105,14 @@ locals {
                   {
                     enable_vpa = local.vpa_available
                     # Configure pod distribution for the application chart
-                    pod_distribution_enabled = local.pod_distribution_enabled
+                    pod_distribution_enabled = true
                     pod_distribution         = local.pod_distribution
+                  },
+                  # Add KEDA configuration when enabled
+                  local.enable_keda ? { keda = local.keda_config } : {},
+
+                  {
+                    image_pull_secrets = var.inputs.artifactories.attributes.registry_secrets_list
                   }
                 )
               }
@@ -144,19 +152,16 @@ module "app-helm-chart" {
   depends_on = [
     module.gcp-workload-identity
   ]
-  source                  = "github.com/Facets-cloud/facets-utility-modules//application"
-  namespace               = local.namespace
-  chart_name              = lower(var.instance_name)
-  values                  = local.instance_with_vpa_config
-  annotations             = local.annotations
-  registry_secret_objects = length(local.from_artifactories) > 0 ? local.from_artifactories : local.from_kubernetes_cluster
-  cc_metadata             = var.cc_metadata
-  labels                  = local.labels
-  baseinfra               = var.baseinfra
-  cluster                 = var.cluster
-  environment             = var.environment
-  inputs                  = var.inputs
-  vpa_release_id          = lookup(lookup(lookup(var.inputs, "vpa_details", {}), "attributes", {}), "helm_release_id", "")
+  source         = "./application"
+  namespace      = local.namespace
+  chart_name     = lower(var.instance_name)
+  values         = local.instance
+  annotations    = local.annotations
+  labels         = local.labels
+  cluster        = var.cluster
+  environment    = var.environment
+  inputs         = var.inputs
+  vpa_release_id = lookup(lookup(lookup(var.inputs, "vpa_details", {}), "attributes", {}), "helm_release_id", "")
 }
 
 module "backend_config" {

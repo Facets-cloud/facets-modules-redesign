@@ -12,7 +12,7 @@ module "name" {
 resource "kubernetes_secret_v1" "ecr-token-refresher-configs" {
   for_each = local.artifactories_ecr
   metadata {
-    name      = module.name[each.key].name
+    name      = "${module.name[each.key].name}-config"
     namespace = local.namespace
   }
   data = {
@@ -78,7 +78,7 @@ resource "kubernetes_cron_job_v1" "ecr-token-refresher-cron" {
                 value_from {
                   secret_key_ref {
                     key  = "aws_account"
-                    name = module.name[each.key].name
+                    name = kubernetes_secret_v1.ecr-token-refresher-configs[each.key].metadata[0].name
                   }
                 }
               }
@@ -87,7 +87,7 @@ resource "kubernetes_cron_job_v1" "ecr-token-refresher-cron" {
                 value_from {
                   secret_key_ref {
                     key  = "aws_access_key_id"
-                    name = module.name[each.key].name
+                    name = kubernetes_secret_v1.ecr-token-refresher-configs[each.key].metadata[0].name
                   }
                 }
               }
@@ -96,7 +96,7 @@ resource "kubernetes_cron_job_v1" "ecr-token-refresher-cron" {
                 value_from {
                   secret_key_ref {
                     key  = "aws_access_secret_key"
-                    name = module.name[each.key].name
+                    name = kubernetes_secret_v1.ecr-token-refresher-configs[each.key].metadata[0].name
                   }
                 }
               }
@@ -105,7 +105,7 @@ resource "kubernetes_cron_job_v1" "ecr-token-refresher-cron" {
                 value_from {
                   secret_key_ref {
                     key  = "aws_region"
-                    name = module.name[each.key].name
+                    name = kubernetes_secret_v1.ecr-token-refresher-configs[each.key].metadata[0].name
                   }
                 }
               }
@@ -114,7 +114,7 @@ resource "kubernetes_cron_job_v1" "ecr-token-refresher-cron" {
                 value_from {
                   secret_key_ref {
                     key  = "secret_name"
-                    name = module.name[each.key].name
+                    name = kubernetes_secret_v1.ecr-token-refresher-configs[each.key].metadata[0].name
                   }
                 }
               }
@@ -123,7 +123,7 @@ resource "kubernetes_cron_job_v1" "ecr-token-refresher-cron" {
                 value_from {
                   secret_key_ref {
                     key  = "registry_url"
-                    name = module.name[each.key].name
+                    name = kubernetes_secret_v1.ecr-token-refresher-configs[each.key].metadata[0].name
                   }
                 }
               }
@@ -233,7 +233,7 @@ resource "kubernetes_job_v1" "ecr-token-refresher-initial" {
             value_from {
               secret_key_ref {
                 key  = "aws_account"
-                name = module.name[each.key].name
+                name = kubernetes_secret_v1.ecr-token-refresher-configs[each.key].metadata[0].name
               }
             }
           }
@@ -242,7 +242,7 @@ resource "kubernetes_job_v1" "ecr-token-refresher-initial" {
             value_from {
               secret_key_ref {
                 key  = "aws_access_key_id"
-                name = module.name[each.key].name
+                name = kubernetes_secret_v1.ecr-token-refresher-configs[each.key].metadata[0].name
               }
             }
           }
@@ -251,7 +251,7 @@ resource "kubernetes_job_v1" "ecr-token-refresher-initial" {
             value_from {
               secret_key_ref {
                 key  = "aws_access_secret_key"
-                name = module.name[each.key].name
+                name = kubernetes_secret_v1.ecr-token-refresher-configs[each.key].metadata[0].name
               }
             }
           }
@@ -260,7 +260,7 @@ resource "kubernetes_job_v1" "ecr-token-refresher-initial" {
             value_from {
               secret_key_ref {
                 key  = "aws_region"
-                name = module.name[each.key].name
+                name = kubernetes_secret_v1.ecr-token-refresher-configs[each.key].metadata[0].name
               }
             }
           }
@@ -269,7 +269,7 @@ resource "kubernetes_job_v1" "ecr-token-refresher-initial" {
             value_from {
               secret_key_ref {
                 key  = "secret_name"
-                name = module.name[each.key].name
+                name = kubernetes_secret_v1.ecr-token-refresher-configs[each.key].metadata[0].name
               }
             }
           }
@@ -278,7 +278,7 @@ resource "kubernetes_job_v1" "ecr-token-refresher-initial" {
             value_from {
               secret_key_ref {
                 key  = "registry_url"
-                name = module.name[each.key].name
+                name = kubernetes_secret_v1.ecr-token-refresher-configs[each.key].metadata[0].name
               }
             }
           }

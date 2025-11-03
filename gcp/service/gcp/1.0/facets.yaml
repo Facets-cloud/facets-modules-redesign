@@ -11,41 +11,25 @@ artifact_inputs:
     artifact_type: docker_image
 inputs:
   kubernetes_details:
-    optional: false
     type: '@facets/kubernetes-details'
     displayName: Kubernetes Cluster
-    default:
-      resource_type: kubernetes_cluster
-      resource_name: default
     providers:
     - kubernetes
     - kubernetes-alpha
     - helm
   kubernetes_node_pool_details:
-    type: '@facets/kubernetes_nodepool'
+    type: '@facets/gke_node_pool_details'
     displayName: Node Pool
-    optional: true
   artifactories:
-    optional: true
     type: '@facets/artifactories'
     displayName: Container Registries
-    default:
-      resource_type: artifactories
-      resource_name: default
   vpa_details:
     optional: true
     type: '@facets/vpa'
     displayName: Vertical Pod Autoscaler
-    default:
-      resource_type: vpa
-      resource_name: default
   gcp_cloud_account:
-    optional: false
     type: '@facets/gcp_cloud_account'
     displayName: GCP Cloud Account
-    default:
-      resource_type: gcp_cloud_account
-      resource_name: default
     providers:
     - google
     - google-beta
@@ -97,74 +81,6 @@ spec:
         values:
         - application
         - statefulset
-    pod_distribution_enabled:
-      type: boolean
-      title: Enable Pod Distribution
-      description: Enable topology spread constraints for pod distribution
-      default: false
-      x-ui-visible-if:
-        field: spec.type
-        values:
-        - application
-        - statefulset
-    pod_distribution:
-      type: object
-      title: Pod Distribution
-      description: Configure how pods are distributed across the cluster topology
-      x-ui-toggle: true
-      x-ui-visible-if:
-        field: spec.pod_distribution_enabled
-        values:
-        - true
-      patternProperties:
-        ^[a-zA-Z0-9_-]*$:
-          type: object
-          title: Topology Configuration
-          properties:
-            topology_key:
-              type: string
-              title: Topology Key
-              description: The key of node labels used for grouping nodes
-              default: kubernetes.io/hostname
-              enum:
-              - kubernetes.io/hostname
-              - topology.kubernetes.io/zone
-              - kubernetes.io/arch
-              - lifecycle
-            when_unsatisfiable:
-              type: string
-              title: When Unsatisfiable
-              description: How to deal with pods that don't satisfy the spread constraints
-              default: DoNotSchedule
-              enum:
-              - DoNotSchedule
-              - ScheduleAnyway
-            max_skew:
-              type: integer
-              title: Max Skew
-              description: Maximum difference between the number of matching pods
-                in any two topology domains
-              default: 1
-              minimum: 1
-              maximum: 100
-            node_taints_policy:
-              type: string
-              title: Node Taints Policy
-              description: How to handle node taints when scheduling pods
-              enum:
-              - Honor
-              - Ignore
-            node_affinity_policy:
-              type: string
-              title: Node Affinity Policy
-              description: How to handle node affinity when scheduling pods
-              enum:
-              - Honor
-              - Ignore
-          required:
-          - topology_key
-          - when_unsatisfiable
-          - max_skew
     cronjob:
       type: object
       title: Cronjob
@@ -473,6 +389,11 @@ spec:
             - application
             - statefulset
           properties:
+            enabled:
+              type: boolean
+              title: Enable Autoscaling
+              description: Whether to enable autoscaling for this service
+              default: true
             min:
               type: integer
               title: Min
@@ -480,6 +401,10 @@ spec:
               minimum: 1
               maximum: 200
               description: Min replicas
+              x-ui-visible-if:
+                field: spec.runtime.autoscaling.enabled
+                values:
+                - true
             max:
               type: integer
               title: Max
@@ -487,6 +412,10 @@ spec:
               minimum: 1
               maximum: 200
               description: Max replicas
+              x-ui-visible-if:
+                field: spec.runtime.autoscaling.enabled
+                values:
+                - true
             scaling_on:
               type: string
               title: Scale based on
@@ -494,6 +423,11 @@ spec:
               enum:
               - CPU
               - RAM
+              - KEDA
+              x-ui-visible-if:
+                field: spec.runtime.autoscaling.enabled
+                values:
+                - true
             cpu_threshold:
               type: string
               title: CPU Threshold
@@ -512,6 +446,60 @@ spec:
                 field: spec.runtime.autoscaling.scaling_on
                 values:
                 - RAM
+            keda_polling_interval:
+              type: integer
+              title: Polling Interval
+              description: How often KEDA checks metrics (in seconds)
+              default: 30
+              minimum: 1
+              maximum: 3600
+              x-ui-visible-if:
+                field: spec.runtime.autoscaling.scaling_on
+                values:
+                - KEDA
+            keda_cooldown_period:
+              type: integer
+              title: Cooldown Period
+              description: How long to wait after scaling down before scaling again
+                (in seconds)
+              default: 300
+              minimum: 1
+              maximum: 7200
+              x-ui-visible-if:
+                field: spec.runtime.autoscaling.scaling_on
+                values:
+                - KEDA
+            keda_triggers:
+              type: object
+              title: KEDA Triggers
+              description: KEDA triggers for scaling metrics
+              x-ui-visible-if:
+                field: spec.runtime.autoscaling.scaling_on
+                values:
+                - KEDA
+              patternProperties:
+                ^[a-zA-Z0-9_-]*$:
+                  type: object
+                  title: Trigger Configuration
+                  description: KEDA trigger configuration
+                  properties:
+                    configuration:
+                      type: object
+                      title: Trigger Specification
+                      description: Complete KEDA trigger specification including type,
+                        metadata, and other fields
+                      x-ui-yaml-editor: true
+                  required:
+                  - configuration
+              default:
+                prometheus_trigger:
+                  configuration:
+                    type: prometheus
+                    metadata:
+                      serverAddress: http://prometheus-server.monitoring.svc.cluster.local:80
+                      metricName: http_requests_per_second
+                      threshold: '100'
+                      query: sum(rate(http_requests_total[1m]))
         metrics:
           type: object
           title: Metrics
@@ -1646,8 +1634,6 @@ spec:
   - type
   - restart_policy
   - enable_host_anti_affinity
-  - pod_distribution_enabled
-  - pod_distribution
   - cronjob
   - job
   - runtime
@@ -1670,8 +1656,6 @@ sample:
     type: application
     enable_host_anti_affinity: false
     restart_policy: Always
-    pod_distribution_enabled: false
-    pod_distribution: {}
     release:
       strategy:
         type: RollingUpdate

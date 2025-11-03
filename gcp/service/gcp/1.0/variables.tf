@@ -24,14 +24,6 @@ variable "instance" {
 
       # Pod distribution settings
       enable_host_anti_affinity = optional(bool, false)
-      pod_distribution_enabled  = optional(bool, false)
-      pod_distribution = optional(map(object({
-        topology_key         = string
-        when_unsatisfiable   = string
-        max_skew             = number
-        node_taints_policy   = optional(string)
-        node_affinity_policy = optional(string)
-      })), {})
 
       # Cronjob configuration
       cronjob = optional(object({
@@ -91,11 +83,19 @@ variable "instance" {
 
         # Autoscaling
         autoscaling = optional(object({
-          min           = number
-          max           = number
-          scaling_on    = string
-          cpu_threshold = optional(string)
-          ram_threshold = optional(string)
+          enabled               = optional(bool, true)
+          min                   = number
+          max                   = number
+          scaling_on            = string
+          cpu_threshold         = optional(string)
+          ram_threshold         = optional(string)
+          keda_polling_interval = optional(number)
+          keda_cooldown_period  = optional(number)
+          keda_fallback         = optional(any)
+          keda_advanced         = optional(any)
+          keda_triggers = optional(map(object({
+            configuration = any
+          })))
         }))
 
         # Metrics configuration
@@ -239,7 +239,10 @@ variable "inputs" {
     # Optional: Container registry access
     artifactories = optional(object({
       attributes = object({
-        registry_secrets_list = optional(list(any), [])
+        registry_secrets_list = list(any)
+        registry_secret_objects = map(list(object({
+          name = string
+        })))
       })
       interfaces = optional(any, {})
     }))
@@ -254,8 +257,9 @@ variable "inputs" {
 
     # Optional: Node pool details
     kubernetes_node_pool_details = optional(object({
-      attributes = optional(any, {})
-      interfaces = optional(any, {})
+      topology_spread_key = string
+      taints              = string
+      node_selector       = string
     }))
   })
 }

@@ -38,7 +38,7 @@ outputs:
     type: '@facets/kubernetes_nodepool'
     title: GKE Node Pool Output
     description: Basic output information for the GKE node pool
-  attributes.node_pool_details:
+  attributes:
     type: '@facets/gke_node_pool_details'
     title: GKE Node Pool Details
     description: Detailed information about the GKE node pool including configuration
@@ -83,14 +83,15 @@ spec:
       maximum: 1000
     taints:
       title: Taints
-      description: "Array of Kubernetes taints which should be applied to nodes in\
-        \ the node pool. Enter array of object in YAML format. Eg. \n- key: special\
-        \ \nvalue: \"true\"\neffect: PreferNoSchedule.\nSet this to [] if no taints\
-        \ are required."
-      type: object
+      description: Array of Kubernetes taints which should be applied to nodes in
+        the node pool. Enter array of object in YAML format.
+      type: array
       x-ui-yaml-editor: true
-      x-ui-placeholder: "Eg. \n- key: CriticalAddonsOnly \nvalue: \"true\"\neffect:\
-        \ NoSchedule"
+      x-ui-override-disable: true
+      default:
+      - key: CriticalAddonsOnly
+        value: 'true'
+        effect: NoSchedule
     labels:
       title: Labels
       description: 'Map of labels to be added to nodes in node pool. Enter key-value

@@ -1,14 +1,11 @@
 locals {
-  spec                   = lookup(var.instance, "spec", {})
-  metadata               = lookup(var.instance, "metadata", {})
-  name                   = lookup(local.metadata, "name", var.instance_name)
-  namespace              = lookup(local.metadata, "namespace", lookup(var.environment, "namespace", "default"))
-  artifactories          = lookup(local.spec, "artifactories", {})
-  include_all            = lookup(local.spec, "include_all", length(local.artifactories) > 0 ? "false" : "true")
-  kubernetes_details     = var.inputs.kubernetes_details.attributes
-  host                   = local.kubernetes_details.cluster_endpoint
-  cluster_ca_certificate = base64encode(local.kubernetes_details.cluster_ca_certificate)
-  token                  = lookup(local.kubernetes_details, "token", "")
+  spec               = lookup(var.instance, "spec", {})
+  metadata           = lookup(var.instance, "metadata", {})
+  name               = lookup(local.metadata, "name", var.instance_name)
+  namespace          = lookup(local.metadata, "namespace", lookup(var.environment, "namespace", "default"))
+  artifactories      = lookup(local.spec, "artifactories", {})
+  include_all        = lookup(local.spec, "include_all", length(local.artifactories) > 0 ? "false" : "true")
+  kubernetes_details = var.inputs.kubernetes_details.attributes
 
   # Node pool configuration
   kubernetes_node_pool_details = lookup(var.inputs, "kubernetes_node_pool_details", {})

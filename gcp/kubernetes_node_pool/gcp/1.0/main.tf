@@ -24,10 +24,17 @@ resource "google_project_iam_member" "np-account-iam" {
   member  = "serviceAccount:${google_service_account.sa[0].email}"
 }
 
+resource "random_string" "name_suffix" {
+  length = 4
+  special = false
+  lower = true
+  upper = false
+}
+
 resource "google_container_node_pool" "node_pool" {
   project     = var.inputs.cloud_account.attributes.project_id
   provider    = google-beta
-  name_prefix = "${var.instance_name}-"
+  name        = "${var.instance_name}-${random_string.name_suffix.result}"
   cluster     = var.inputs.kubernetes_details.cluster_name
   location    = var.inputs.cloud_account.attributes.region
 
@@ -58,7 +65,7 @@ resource "google_container_node_pool" "node_pool" {
     image_type   = "COS_CONTAINERD"
     disk_size_gb = lookup(local.spec, "disk_size", null)
     dynamic "taint" {
-      for_each = lookup(local.spec, "taints", [])
+      for_each = local.taints
       content {
         key    = taint.value["key"]
         value  = taint.value["value"]
@@ -66,7 +73,7 @@ resource "google_container_node_pool" "node_pool" {
       }
     }
     labels          = local.labels
-    resource_labels = merge(local.labels, lookup(lookup(var.instance, "metadata", {}), "labels", {}))
+    resource_labels = merge(var.environment.cloud_tags, lookup(lookup(var.instance, "metadata", {}), "labels", {}))
     # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
     service_account = length(local.iam_roles) > 0 ? google_service_account.sa[0].email : null
     oauth_scopes = [
@@ -116,7 +123,7 @@ resource "google_container_node_pool" "node_pool" {
   }
 
   lifecycle {
-    ignore_changes        = [version, node_config.0.image_type, initial_node_count, network_config.0.enable_private_nodes, node_config.0.resource_labels]
+    ignore_changes        = [version, node_config.0.image_type, initial_node_count, network_config.0.enable_private_nodes]
     create_before_destroy = true
     prevent_destroy       = true
   }
