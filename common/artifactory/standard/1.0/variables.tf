@@ -37,6 +37,14 @@ variable "inputs" {
         token                  = optional(string)
       })
     })
+    kubernetes_node_pool_details = optional(object({
+      node_selector = optional(map(string))
+      taints = optional(map(object({
+        key    = string
+        value  = string
+        effect = string
+      })))
+    }), {})
   })
   default = {
     kubernetes_details = {
@@ -46,6 +54,7 @@ variable "inputs" {
         token                  = ""
       }
     }
+    kubernetes_node_pool_details = {}
   }
   description = "Input dependencies from other modules"
 }

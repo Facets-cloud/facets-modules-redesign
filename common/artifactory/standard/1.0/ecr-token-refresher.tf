@@ -4,7 +4,7 @@ module "name" {
   is_k8s          = true
   globally_unique = false
   resource_type   = "artifactory"
-  resource_name   = "${local.name}-${each.key}"
+  resource_name   = replace(lower("${local.name}-${each.key}"), "_", "-")
   environment     = var.environment
   limit           = 52
 }
@@ -54,14 +54,20 @@ resource "kubernetes_cron_job_v1" "ecr-token-refresher-cron" {
           metadata {}
           spec {
             priority_class_name = "facets-critical"
-            toleration {
-              operator = "Exists"
+            dynamic "toleration" {
+              for_each = length(local.node_pool_tolerations) > 0 ? local.node_pool_tolerations : [{
+                operator = "Exists"
+              }]
+              content {
+                key      = lookup(toleration.value, "key", null)
+                operator = toleration.value.operator
+                value    = lookup(toleration.value, "value", null)
+                effect   = lookup(toleration.value, "effect", null)
+              }
             }
             service_account_name            = kubernetes_service_account.ecr-token-refresher-sa[each.key].metadata.0.name
             automount_service_account_token = true
-            node_selector = {
-              "kubernetes.io/arch" = "amd64"
-            }
+            node_selector                   = local.node_selector
             container {
               name              = "kubectl"
               image             = "xynova/aws-kubectl"
@@ -203,14 +209,20 @@ resource "kubernetes_job_v1" "ecr-token-refresher-initial" {
       metadata {}
       spec {
         priority_class_name = "facets-critical"
-        toleration {
-          operator = "Exists"
+        dynamic "toleration" {
+          for_each = length(local.node_pool_tolerations) > 0 ? local.node_pool_tolerations : [{
+            operator = "Exists"
+          }]
+          content {
+            key      = lookup(toleration.value, "key", null)
+            operator = toleration.value.operator
+            value    = lookup(toleration.value, "value", null)
+            effect   = lookup(toleration.value, "effect", null)
+          }
         }
         service_account_name            = kubernetes_service_account.ecr-token-refresher-sa[each.key].metadata.0.name
         automount_service_account_token = true
-        node_selector = {
-          "kubernetes.io/arch" = "amd64"
-        }
+        node_selector                   = local.node_selector
         container {
           name              = "kubectl"
           image             = "xynova/aws-kubectl"
