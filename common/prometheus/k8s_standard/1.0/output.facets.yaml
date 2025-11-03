@@ -1,9 +1,0 @@
-out:
-  interfaces: {}
-  attributes:
-    prometheus_url:
-      type: string
-    alertmanager_url:
-      type: string
-    helm_release_id:
-      type: string

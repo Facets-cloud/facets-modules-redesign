@@ -254,9 +254,6 @@ locals {
     }
     grafana = {
       enabled = lookup(local.grafanaSpec, "enabled", false)
-      image = {
-        tag = "9.2.15"
-      }
       sidecar = {
         datasources = {
           defaultDatasourceEnabled = false
