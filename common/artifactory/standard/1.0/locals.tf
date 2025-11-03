@@ -1,12 +1,4 @@
 locals {
-  spec               = lookup(var.instance, "spec", {})
-  metadata           = lookup(var.instance, "metadata", {})
-  name               = lookup(local.metadata, "name", var.instance_name)
-  namespace          = lookup(local.metadata, "namespace", lookup(var.environment, "namespace", "default"))
-  artifactories      = lookup(local.spec, "artifactories", {})
-  include_all        = lookup(local.spec, "include_all", length(local.artifactories) > 0 ? "false" : "true")
-  kubernetes_details = var.inputs.kubernetes_details.attributes
-  artifactory_list   = jsondecode(file("../deploymentcontext.json"))["artifactoryDetails"]
   spec                   = lookup(var.instance, "spec", {})
   metadata               = lookup(var.instance, "metadata", {})
   name                   = lookup(local.metadata, "name", var.instance_name)
