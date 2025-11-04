@@ -51,7 +51,7 @@ inputs:
       resource_name: default
 outputs:
   default:
-    type: '@facets/aws_service'
+    type: '@facets/service'
 metadata:
   title: Metadata of service
   type: object
