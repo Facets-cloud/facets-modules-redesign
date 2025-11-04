@@ -1,0 +1,17 @@
+name: '@facets/kafka'
+properties:
+    attributes: {}
+    interfaces:
+        cluster:
+            connection_string:
+                type: string
+            endpoint:
+                type: string
+            endpoints:
+                type: string
+            password:
+                type: string
+            username:
+                type: string
+providers: []
+

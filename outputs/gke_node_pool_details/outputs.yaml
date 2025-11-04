@@ -1,0 +1,16 @@
+name: '@facets/gke_node_pool_details'
+properties:
+    attributes:
+        node_pool_id:
+            type: string
+        node_pool_name:
+            type: string
+        node_selector:
+            type: string
+        service_account:
+            type: string
+        taints:
+            type: string
+    interfaces: {}
+providers: []
+

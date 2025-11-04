@@ -1,0 +1,12 @@
+name: '@facets/prometheus'
+properties:
+    attributes:
+        alertmanager_url:
+            type: string
+        helm_release_id:
+            type: string
+        prometheus_url:
+            type: string
+    interfaces: {}
+providers: []
+

@@ -1,0 +1,45 @@
+name: '@facets/mongo'
+properties:
+    attributes: {}
+    interfaces:
+        cluster:
+            connection_string:
+                type: string
+            endpoint:
+                type: string
+            password:
+                type: string
+            username:
+                type: string
+        reader:
+            connection_string:
+                type: string
+            host:
+                type: string
+            name:
+                type: string
+            password:
+                type: string
+            port:
+                type: string
+            username:
+                type: string
+        secrets:
+            items:
+                type: string
+            type: array
+        writer:
+            connection_string:
+                type: string
+            host:
+                type: string
+            name:
+                type: string
+            password:
+                type: string
+            port:
+                type: string
+            username:
+                type: string
+providers: []
+
