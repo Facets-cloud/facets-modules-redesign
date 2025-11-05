@@ -1,0 +1,284 @@
+# Base Blueprint for Azure Projects
+# These resources serve as examples/templates when creating a new Azure project
+# Users can enable/disable or customize these resources as needed
+
+resources:
+  # ============================================================================
+  # AZURE CORE INFRASTRUCTURE
+  # ============================================================================
+
+  - kind: cloud_account
+    flavor: azure_provider
+    version: "1.0"
+    metadata:
+      name: main-azure-account
+    spec:
+      subscription_id: ""  # User must provide their Azure subscription ID
+      location: eastus
+      resource_group_name: "main-rg"
+      # tenant_id, client_id, client_secret should be provided via variables
+
+  - kind: network
+    flavor: azure_network
+    version: "1.0"
+    metadata:
+      name: main-vnet
+    spec:
+      resource_group_name: "${cloud_account.main-azure-account.out.resource_group_name}"
+      location: "eastus"
+      vnet_name: "main-vnet"
+      address_space:
+        - "10.0.0.0/16"
+      subnets:
+        - name: "default"
+          address_prefix: "10.0.1.0/24"
+        - name: "aks"
+          address_prefix: "10.0.10.0/23"
+        - name: "database"
+          address_prefix: "10.0.20.0/24"
+      dns_servers: []
+      enable_ddos_protection: false
+
+  - kind: kubernetes_cluster
+    flavor: aks
+    version: "1.0"
+    metadata:
+      name: main-aks-cluster
+    spec:
+      cluster_name: "main-aks"
+      resource_group_name: "${cloud_account.main-azure-account.out.resource_group_name}"
+      location: "eastus"
+      dns_prefix: "main-aks"
+      kubernetes_version: "1.28"
+      network_profile:
+        network_plugin: azure
+        network_policy: azure
+        service_cidr: "10.1.0.0/16"
+        dns_service_ip: "10.1.0.10"
+        docker_bridge_cidr: "172.17.0.1/16"
+      default_node_pool:
+        name: "default"
+        vm_size: "Standard_D2_v2"
+        node_count: 2
+        vnet_subnet_id: "${network.main-vnet.out.subnets.aks.id}"
+        enable_auto_scaling: true
+        min_count: 1
+        max_count: 5
+      identity:
+        type: SystemAssigned
+      sku_tier: Free
+
+  - kind: kubernetes_node_pool
+    flavor: azure
+    version: "1.0"
+    metadata:
+      name: worker-pool
+    spec:
+      cluster_name: "${kubernetes_cluster.main-aks-cluster.out.cluster_name}"
+      resource_group_name: "${cloud_account.main-azure-account.out.resource_group_name}"
+      node_pool_name: "workers"
+      vm_size: "Standard_D4_v2"
+      node_count: 2
+      vnet_subnet_id: "${network.main-vnet.out.subnets.aks.id}"
+      enable_auto_scaling: true
+      min_count: 1
+      max_count: 10
+      node_labels:
+        role: worker
+        environment: production
+      node_taints: []
+
+  - kind: service
+    flavor: azure
+    version: "1.0"
+    metadata:
+      name: sample-app
+    spec:
+      k8s:
+        kind: Deployment
+        metadata:
+          name: sample-app
+          namespace: default
+        replicas: 2
+        containers:
+          - name: app
+            image: mcr.microsoft.com/azuredocs/aks-helloworld:v1
+            ports:
+              - containerPort: 80
+                protocol: TCP
+            resources:
+              requests:
+                cpu: "100m"
+                memory: "128Mi"
+              limits:
+                cpu: "200m"
+                memory: "256Mi"
+
+  # ============================================================================
+  # COMMON KUBERNETES RESOURCES
+  # ============================================================================
+
+  - kind: artifactory
+    flavor: standard
+    version: "1.0"
+    metadata:
+      name: acr-registry
+    spec:
+      registry_type: acr
+      registry_name: "mainacr"
+      resource_group_name: "${cloud_account.main-azure-account.out.resource_group_name}"
+      location: "eastus"
+      sku: "Basic"
+      create_pull_secret: true
+      pull_secret_name: acr-credentials
+      namespaces:
+        - default
+        - production
+
+  - kind: cert_manager
+    flavor: standard
+    version: "1.0"
+    metadata:
+      name: cert-manager
+    spec:
+      namespace: cert-manager
+      create_namespace: true
+      install_crds: true
+      version: "v1.17.1"
+      cluster_issuer:
+        enabled: true
+        email: admin@example.com
+        server: https://acme-v02.api.letsencrypt.org/directory
+
+  - kind: config_map
+    flavor: k8s_standard
+    version: "1.0"
+    metadata:
+      name: app-config
+    spec:
+      namespace: default
+      data:
+        APP_ENV: production
+        LOG_LEVEL: info
+        AZURE_SUBSCRIPTION_ID: "${cloud_account.main-azure-account.out.subscription_id}"
+        RESOURCE_GROUP: "${cloud_account.main-azure-account.out.resource_group_name}"
+
+  - kind: helm
+    flavor: k8s_standard
+    version: "1.0"
+    metadata:
+      name: nginx-ingress
+    spec:
+      chart: ingress-nginx
+      repository: https://kubernetes.github.io/ingress-nginx
+      version: "4.7.1"
+      namespace: ingress-nginx
+      create_namespace: true
+      values:
+        controller:
+          service:
+            type: LoadBalancer
+            annotations:
+              service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz
+          metrics:
+            enabled: true
+
+  - kind: ingress
+    flavor: nginx_k8s
+    version: "1.0"
+    metadata:
+      name: app-ingress
+    spec:
+      namespace: default
+      ingress_class: nginx
+      rules:
+        - host: app.example.com
+          http:
+            paths:
+              - path: /
+                pathType: Prefix
+                backend:
+                  service:
+                    name: sample-app
+                    port: 80
+      tls:
+        - hosts:
+            - app.example.com
+          secretName: app-tls-cert
+
+  - kind: k8s_callback
+    flavor: k8s_standard
+    version: "1.0"
+    metadata:
+      name: post-deployment-hook
+    spec:
+      callback_type: post_deployment
+      script: |
+        #!/bin/bash
+        echo "Running post-deployment tasks..."
+        kubectl get pods -A
+
+  - kind: k8s_resource
+    flavor: k8s_standard
+    version: "1.0"
+    metadata:
+      name: custom-resource
+    spec:
+      manifest: |
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: custom-sa
+          namespace: default
+
+  - kind: kubernetes_secret
+    flavor: k8s_standard
+    version: "1.0"
+    metadata:
+      name: app-secrets
+    spec:
+      namespace: default
+      type: Opaque
+      data:
+        DATABASE_PASSWORD: ${var.db_password}
+        API_KEY: ${var.api_key}
+        AZURE_CLIENT_SECRET: ${var.azure_client_secret}
+
+  - kind: prometheus
+    flavor: k8s_standard
+    version: "1.0"
+    metadata:
+      name: monitoring
+    spec:
+      namespace: monitoring
+      create_namespace: true
+      storage_size: 50Gi
+      retention: 15d
+      scrape_interval: 30s
+      service_monitors:
+        - name: app-metrics
+          selector:
+            app: sample-app
+          endpoints:
+            - port: metrics
+              interval: 30s
+
+  - kind: vpa
+    flavor: standard
+    version: "1.0"
+    metadata:
+      name: app-vpa
+    spec:
+      target_ref:
+        kind: Deployment
+        name: sample-app
+      update_mode: Auto
+      resource_policy:
+        container_policies:
+          - containerName: app
+            min_allowed:
+              cpu: 100m
+              memory: 128Mi
+            max_allowed:
+              cpu: 1000m
+              memory: 1Gi

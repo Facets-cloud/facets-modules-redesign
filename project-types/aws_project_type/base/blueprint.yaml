@@ -1,0 +1,265 @@
+# Base Blueprint for AWS Projects
+# These resources serve as examples/templates when creating a new AWS project
+# Users can enable/disable or customize these resources as needed
+
+resources:
+  # ============================================================================
+  # AWS CORE INFRASTRUCTURE
+  # ============================================================================
+
+  - kind: cloud_account
+    flavor: aws_provider
+    version: "1.0"
+    metadata:
+      name: main-aws-account
+    spec:
+      region: us-east-1
+      # Add AWS credentials configuration here
+      # access_key and secret_key should be provided via variables
+
+  - kind: network
+    flavor: aws_vpc
+    version: "1.0"
+    metadata:
+      name: main-vpc
+    spec:
+      vpc_cidr: "10.0.0.0/16"
+      availability_zones: 2
+      enable_nat_gateway: true
+      enable_dns_hostnames: true
+      enable_dns_support: true
+      public_subnets:
+        - "10.0.1.0/24"
+        - "10.0.2.0/24"
+      private_subnets:
+        - "10.0.10.0/24"
+        - "10.0.11.0/24"
+
+  - kind: kubernetes_cluster
+    flavor: eks
+    version: "1.0"
+    metadata:
+      name: main-eks-cluster
+    spec:
+      cluster_version: "1.28"
+      cluster_name: "main-eks"
+      vpc_id: "${network.main-vpc.out.vpc_id}"
+      subnet_ids: "${network.main-vpc.out.private_subnet_ids}"
+      cluster_endpoint_private_access: true
+      cluster_endpoint_public_access: true
+      enable_cluster_creator_admin_permissions: true
+      cluster_addons:
+        - name: vpc-cni
+          version: latest
+        - name: coredns
+          version: latest
+        - name: kube-proxy
+          version: latest
+
+  - kind: kubernetes_node_pool
+    flavor: aws
+    version: "1.0"
+    metadata:
+      name: default-node-pool
+    spec:
+      cluster_name: "${kubernetes_cluster.main-eks-cluster.out.cluster_name}"
+      node_group_name: "default-pool"
+      instance_types:
+        - t3.medium
+      desired_size: 2
+      min_size: 1
+      max_size: 5
+      disk_size: 50
+      capacity_type: ON_DEMAND
+      labels:
+        role: worker
+        environment: production
+
+  - kind: service
+    flavor: aws
+    version: "1.0"
+    metadata:
+      name: sample-app
+    spec:
+      k8s:
+        kind: Deployment
+        metadata:
+          name: sample-app
+          namespace: default
+        replicas: 2
+        containers:
+          - name: app
+            image: nginx:latest
+            ports:
+              - containerPort: 80
+                protocol: TCP
+            resources:
+              requests:
+                cpu: "100m"
+                memory: "128Mi"
+              limits:
+                cpu: "200m"
+                memory: "256Mi"
+
+  # ============================================================================
+  # COMMON KUBERNETES RESOURCES
+  # ============================================================================
+
+  - kind: artifactory
+    flavor: standard
+    version: "1.0"
+    metadata:
+      name: ecr-registry
+    spec:
+      registry_type: ecr
+      region: "${cloud_account.main-aws-account.out.region}"
+      create_pull_secret: true
+      pull_secret_name: ecr-credentials
+      namespaces:
+        - default
+        - production
+
+  - kind: cert_manager
+    flavor: standard
+    version: "1.0"
+    metadata:
+      name: cert-manager
+    spec:
+      namespace: cert-manager
+      create_namespace: true
+      install_crds: true
+      version: "v1.17.1"
+      cluster_issuer:
+        enabled: true
+        email: admin@example.com
+        server: https://acme-v02.api.letsencrypt.org/directory
+
+  - kind: config_map
+    flavor: k8s_standard
+    version: "1.0"
+    metadata:
+      name: app-config
+    spec:
+      namespace: default
+      data:
+        APP_ENV: production
+        LOG_LEVEL: info
+        DATABASE_HOST: "${postgres.main-db.out.attributes.host}"
+        REDIS_HOST: "${redis.main-cache.out.attributes.host}"
+
+  - kind: helm
+    flavor: k8s_standard
+    version: "1.0"
+    metadata:
+      name: nginx-ingress
+    spec:
+      chart: ingress-nginx
+      repository: https://kubernetes.github.io/ingress-nginx
+      version: "4.7.1"
+      namespace: ingress-nginx
+      create_namespace: true
+      values:
+        controller:
+          service:
+            type: LoadBalancer
+          metrics:
+            enabled: true
+
+  - kind: ingress
+    flavor: nginx_k8s
+    version: "1.0"
+    metadata:
+      name: app-ingress
+    spec:
+      namespace: default
+      ingress_class: nginx
+      rules:
+        - host: app.example.com
+          http:
+            paths:
+              - path: /
+                pathType: Prefix
+                backend:
+                  service:
+                    name: sample-app
+                    port: 80
+      tls:
+        - hosts:
+            - app.example.com
+          secretName: app-tls-cert
+
+  - kind: k8s_callback
+    flavor: k8s_standard
+    version: "1.0"
+    metadata:
+      name: post-deployment-hook
+    spec:
+      callback_type: post_deployment
+      script: |
+        #!/bin/bash
+        echo "Running post-deployment tasks..."
+        kubectl get pods -A
+
+  - kind: k8s_resource
+    flavor: k8s_standard
+    version: "1.0"
+    metadata:
+      name: custom-resource
+    spec:
+      manifest: |
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: custom-sa
+          namespace: default
+
+  - kind: kubernetes_secret
+    flavor: k8s_standard
+    version: "1.0"
+    metadata:
+      name: app-secrets
+    spec:
+      namespace: default
+      type: Opaque
+      data:
+        DATABASE_PASSWORD: ${var.db_password}
+        API_KEY: ${var.api_key}
+
+  - kind: prometheus
+    flavor: k8s_standard
+    version: "1.0"
+    metadata:
+      name: monitoring
+    spec:
+      namespace: monitoring
+      create_namespace: true
+      storage_size: 50Gi
+      retention: 15d
+      scrape_interval: 30s
+      service_monitors:
+        - name: app-metrics
+          selector:
+            app: sample-app
+          endpoints:
+            - port: metrics
+              interval: 30s
+
+  - kind: vpa
+    flavor: standard
+    version: "1.0"
+    metadata:
+      name: app-vpa
+    spec:
+      target_ref:
+        kind: Deployment
+        name: sample-app
+      update_mode: Auto
+      resource_policy:
+        container_policies:
+          - containerName: app
+            min_allowed:
+              cpu: 100m
+              memory: 128Mi
+            max_allowed:
+              cpu: 1000m
+              memory: 1Gi

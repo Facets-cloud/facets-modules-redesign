@@ -1,0 +1,308 @@
+# Base Blueprint for GCP Projects
+# These resources serve as examples/templates when creating a new GCP project
+# Users can enable/disable or customize these resources as needed
+
+resources:
+  # ============================================================================
+  # GCP CORE INFRASTRUCTURE
+  # ============================================================================
+
+  - kind: cloud_account
+    flavor: gcp_provider
+    version: "1.0"
+    metadata:
+      name: main-gcp-account
+    spec:
+      project_id: ""  # User must provide their GCP project ID
+      region: us-central1
+      zone: us-central1-a
+      # credentials should be provided via variables
+
+  - kind: network
+    flavor: gcp_vpc
+    version: "1.0"
+    metadata:
+      name: main-vpc
+    spec:
+      network_name: "main-vpc"
+      auto_create_subnetworks: false
+      routing_mode: REGIONAL
+      subnets:
+        - name: "subnet-us-central1"
+          ip_cidr_range: "10.0.0.0/24"
+          region: "us-central1"
+          private_ip_google_access: true
+        - name: "subnet-us-east1"
+          ip_cidr_range: "10.1.0.0/24"
+          region: "us-east1"
+          private_ip_google_access: true
+
+  - kind: kubernetes_cluster
+    flavor: gke
+    version: "1.0"
+    metadata:
+      name: main-gke-cluster
+    spec:
+      cluster_name: "main-gke"
+      location: "us-central1"
+      network: "${network.main-vpc.out.network_name}"
+      subnetwork: "${network.main-vpc.out.subnets[0].name}"
+      release_channel: REGULAR
+      min_master_version: "1.28"
+      remove_default_node_pool: true
+      initial_node_count: 1
+      networking_mode: VPC_NATIVE
+      ip_allocation_policy:
+        cluster_secondary_range_name: "pods"
+        services_secondary_range_name: "services"
+      workload_identity_config:
+        workload_pool: "${cloud_account.main-gcp-account.out.project_id}.svc.id.goog"
+      addons_config:
+        http_load_balancing:
+          disabled: false
+        horizontal_pod_autoscaling:
+          disabled: false
+
+  - kind: kubernetes_node_pool
+    flavor: gcp
+    version: "1.0"
+    metadata:
+      name: default-node-pool
+    spec:
+      cluster_name: "${kubernetes_cluster.main-gke-cluster.out.cluster_name}"
+      node_pool_name: "default-pool"
+      location: "us-central1"
+      node_count: 2
+      autoscaling:
+        min_node_count: 1
+        max_node_count: 5
+      node_config:
+        machine_type: "e2-medium"
+        disk_size_gb: 50
+        disk_type: "pd-standard"
+        preemptible: false
+        oauth_scopes:
+          - "https://www.googleapis.com/auth/cloud-platform"
+        labels:
+          role: worker
+          environment: production
+
+  - kind: google_workload_identity
+    flavor: default
+    version: "1.0"
+    metadata:
+      name: app-workload-identity
+    spec:
+      project_id: "${cloud_account.main-gcp-account.out.project_id}"
+      service_account_name: "app-sa"
+      namespace: "default"
+      k8s_service_account: "app-k8s-sa"
+      roles:
+        - "roles/storage.objectViewer"
+        - "roles/cloudsql.client"
+
+  - kind: service
+    flavor: gcp
+    version: "1.0"
+    metadata:
+      name: sample-app
+    spec:
+      k8s:
+        kind: Deployment
+        metadata:
+          name: sample-app
+          namespace: default
+        replicas: 2
+        containers:
+          - name: app
+            image: gcr.io/google-samples/hello-app:1.0
+            ports:
+              - containerPort: 8080
+                protocol: TCP
+            resources:
+              requests:
+                cpu: "100m"
+                memory: "128Mi"
+              limits:
+                cpu: "200m"
+                memory: "256Mi"
+
+  - kind: pubsub
+    flavor: gcp
+    version: "1.0"
+    metadata:
+      name: main-topic
+    spec:
+      topic_name: "main-events"
+      project_id: "${cloud_account.main-gcp-account.out.project_id}"
+      message_retention_duration: "604800s"  # 7 days
+      subscriptions:
+        - name: "event-processor"
+          ack_deadline_seconds: 20
+          retain_acked_messages: false
+          message_retention_duration: "604800s"
+
+  # ============================================================================
+  # COMMON KUBERNETES RESOURCES
+  # ============================================================================
+
+  - kind: artifactory
+    flavor: standard
+    version: "1.0"
+    metadata:
+      name: gcr-registry
+    spec:
+      registry_type: gcr
+      project_id: "${cloud_account.main-gcp-account.out.project_id}"
+      create_pull_secret: true
+      pull_secret_name: gcr-credentials
+      namespaces:
+        - default
+        - production
+
+  - kind: cert_manager
+    flavor: standard
+    version: "1.0"
+    metadata:
+      name: cert-manager
+    spec:
+      namespace: cert-manager
+      create_namespace: true
+      install_crds: true
+      version: "v1.17.1"
+      cluster_issuer:
+        enabled: true
+        email: admin@example.com
+        server: https://acme-v02.api.letsencrypt.org/directory
+
+  - kind: config_map
+    flavor: k8s_standard
+    version: "1.0"
+    metadata:
+      name: app-config
+    spec:
+      namespace: default
+      data:
+        APP_ENV: production
+        LOG_LEVEL: info
+        GCP_PROJECT_ID: "${cloud_account.main-gcp-account.out.project_id}"
+        PUBSUB_TOPIC: "${pubsub.main-topic.out.topic_name}"
+
+  - kind: helm
+    flavor: k8s_standard
+    version: "1.0"
+    metadata:
+      name: nginx-ingress
+    spec:
+      chart: ingress-nginx
+      repository: https://kubernetes.github.io/ingress-nginx
+      version: "4.7.1"
+      namespace: ingress-nginx
+      create_namespace: true
+      values:
+        controller:
+          service:
+            type: LoadBalancer
+          metrics:
+            enabled: true
+
+  - kind: ingress
+    flavor: nginx_k8s
+    version: "1.0"
+    metadata:
+      name: app-ingress
+    spec:
+      namespace: default
+      ingress_class: nginx
+      rules:
+        - host: app.example.com
+          http:
+            paths:
+              - path: /
+                pathType: Prefix
+                backend:
+                  service:
+                    name: sample-app
+                    port: 8080
+      tls:
+        - hosts:
+            - app.example.com
+          secretName: app-tls-cert
+
+  - kind: k8s_callback
+    flavor: k8s_standard
+    version: "1.0"
+    metadata:
+      name: post-deployment-hook
+    spec:
+      callback_type: post_deployment
+      script: |
+        #!/bin/bash
+        echo "Running post-deployment tasks..."
+        kubectl get pods -A
+
+  - kind: k8s_resource
+    flavor: k8s_standard
+    version: "1.0"
+    metadata:
+      name: custom-resource
+    spec:
+      manifest: |
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: custom-sa
+          namespace: default
+          annotations:
+            iam.gke.io/gcp-service-account: app-sa@${cloud_account.main-gcp-account.out.project_id}.iam.gserviceaccount.com
+
+  - kind: kubernetes_secret
+    flavor: k8s_standard
+    version: "1.0"
+    metadata:
+      name: app-secrets
+    spec:
+      namespace: default
+      type: Opaque
+      data:
+        DATABASE_PASSWORD: ${var.db_password}
+        API_KEY: ${var.api_key}
+
+  - kind: prometheus
+    flavor: k8s_standard
+    version: "1.0"
+    metadata:
+      name: monitoring
+    spec:
+      namespace: monitoring
+      create_namespace: true
+      storage_size: 50Gi
+      retention: 15d
+      scrape_interval: 30s
+      service_monitors:
+        - name: app-metrics
+          selector:
+            app: sample-app
+          endpoints:
+            - port: metrics
+              interval: 30s
+
+  - kind: vpa
+    flavor: standard
+    version: "1.0"
+    metadata:
+      name: app-vpa
+    spec:
+      target_ref:
+        kind: Deployment
+        name: sample-app
+      update_mode: Auto
+      resource_policy:
+        container_policies:
+          - containerName: app
+            min_allowed:
+              cpu: 100m
+              memory: 128Mi
+            max_allowed:
+              cpu: 1000m
+              memory: 1Gi

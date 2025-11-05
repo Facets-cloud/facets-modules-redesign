@@ -1,0 +1,145 @@
+name: gcp_project_type
+description: GCP project type with GKE and common Kubernetes resources
+version: "1.0"
+legacy: false
+
+# Supported cloud providers
+clouds:
+  - gcp
+
+# Resource types available in this project type
+resource_types:
+  # GCP Core Infrastructure
+  - name: cloud_account
+    flavor: gcp_provider
+    version: "1.0"
+    description: GCP Cloud Account Provider configuration
+    category: default
+    required: true
+
+  - name: network
+    flavor: gcp_vpc
+    version: "1.0"
+    description: GCP VPC Network configuration with subnets
+    category: networking
+    required: false
+
+  - name: kubernetes_cluster
+    flavor: gke
+    version: "1.0"
+    description: Google GKE Kubernetes Cluster
+    category: k8s
+    required: false
+
+  - name: kubernetes_node_pool
+    flavor: gcp
+    version: "1.0"
+    description: GCP GKE Node Pool configuration
+    category: k8s
+    required: false
+
+  - name: google_workload_identity
+    flavor: default
+    version: "1.0"
+    description: Google Workload Identity for K8s service accounts
+    category: security
+    required: false
+
+  - name: service
+    flavor: gcp
+    version: "1.0"
+    description: GCP Kubernetes Service deployment (supports deployment, cronjob, job, statefulset)
+    category: application
+    required: false
+
+  - name: pubsub
+    flavor: gcp
+    version: "1.0"
+    description: Google Cloud Pub/Sub messaging
+    category: messaging
+    required: false
+
+  # Common Kubernetes Resources
+  - name: artifactory
+    flavor: standard
+    version: "1.0"
+    description: Container Registry configuration for managing Docker images
+    category: default
+    required: false
+
+  - name: cert_manager
+    flavor: standard
+    version: "1.0"
+    description: Certificate Manager for automated TLS certificate management
+    category: security
+    required: false
+
+  - name: config_map
+    flavor: k8s_standard
+    version: "1.0"
+    description: Kubernetes ConfigMap for configuration data
+    category: k8s
+    required: false
+
+  - name: helm
+    flavor: k8s_standard
+    version: "1.0"
+    description: Helm Chart deployment for Kubernetes applications
+    category: k8s
+    required: false
+
+  - name: ingress
+    flavor: nginx_k8s
+    version: "1.0"
+    description: NGINX Ingress Controller for HTTP/HTTPS routing
+    category: networking
+    required: false
+
+  - name: k8s_callback
+    flavor: k8s_standard
+    version: "1.0"
+    description: Kubernetes Callback resource for custom actions
+    category: k8s
+    required: false
+
+  - name: k8s_resource
+    flavor: k8s_standard
+    version: "1.0"
+    description: Generic Kubernetes resource for custom YAML
+    category: k8s
+    required: false
+
+  - name: kubernetes_secret
+    flavor: k8s_standard
+    version: "1.0"
+    description: Kubernetes Secret for sensitive data
+    category: security
+    required: false
+
+  - name: prometheus
+    flavor: k8s_standard
+    version: "1.0"
+    description: Prometheus monitoring and alerting
+    category: monitoring
+    required: false
+
+  - name: vpa
+    flavor: standard
+    version: "1.0"
+    description: Vertical Pod Autoscaler for automatic resource adjustment
+    category: k8s
+    required: false
+
+# Default resources to be created in new projects
+default_resources:
+  - cloud_account
+  - network
+
+# Tags for categorization
+tags:
+  - gcp
+  - gke
+  - kubernetes
+  - microservices
+  - containers
+  - google-cloud

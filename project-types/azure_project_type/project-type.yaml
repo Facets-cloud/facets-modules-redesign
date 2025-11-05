@@ -1,0 +1,131 @@
+name: azure_project_type
+description: Azure project type with AKS and common Kubernetes resources
+version: "1.0"
+legacy: false
+
+# Supported cloud providers
+clouds:
+  - azure
+
+# Resource types available in this project type
+resource_types:
+  # Azure Core Infrastructure
+  - name: cloud_account
+    flavor: azure_provider
+    version: "1.0"
+    description: Azure Cloud Account Provider configuration
+    category: default
+    required: true
+
+  - name: network
+    flavor: azure_network
+    version: "1.0"
+    description: Azure VNet Network configuration with subnets and routing
+    category: networking
+    required: false
+
+  - name: kubernetes_cluster
+    flavor: aks
+    version: "1.0"
+    description: Azure AKS Kubernetes Cluster
+    category: k8s
+    required: false
+
+  - name: kubernetes_node_pool
+    flavor: azure
+    version: "1.0"
+    description: Azure AKS Node Pool configuration
+    category: k8s
+    required: false
+
+  - name: service
+    flavor: azure
+    version: "1.0"
+    description: Azure Kubernetes Service deployment (supports deployment, cronjob, job, statefulset)
+    category: application
+    required: false
+
+  # Common Kubernetes Resources
+  - name: artifactory
+    flavor: standard
+    version: "1.0"
+    description: Container Registry configuration for managing Docker images
+    category: default
+    required: false
+
+  - name: cert_manager
+    flavor: standard
+    version: "1.0"
+    description: Certificate Manager for automated TLS certificate management
+    category: security
+    required: false
+
+  - name: config_map
+    flavor: k8s_standard
+    version: "1.0"
+    description: Kubernetes ConfigMap for configuration data
+    category: k8s
+    required: false
+
+  - name: helm
+    flavor: k8s_standard
+    version: "1.0"
+    description: Helm Chart deployment for Kubernetes applications
+    category: k8s
+    required: false
+
+  - name: ingress
+    flavor: nginx_k8s
+    version: "1.0"
+    description: NGINX Ingress Controller for HTTP/HTTPS routing
+    category: networking
+    required: false
+
+  - name: k8s_callback
+    flavor: k8s_standard
+    version: "1.0"
+    description: Kubernetes Callback resource for custom actions
+    category: k8s
+    required: false
+
+  - name: k8s_resource
+    flavor: k8s_standard
+    version: "1.0"
+    description: Generic Kubernetes resource for custom YAML
+    category: k8s
+    required: false
+
+  - name: kubernetes_secret
+    flavor: k8s_standard
+    version: "1.0"
+    description: Kubernetes Secret for sensitive data
+    category: security
+    required: false
+
+  - name: prometheus
+    flavor: k8s_standard
+    version: "1.0"
+    description: Prometheus monitoring and alerting
+    category: monitoring
+    required: false
+
+  - name: vpa
+    flavor: standard
+    version: "1.0"
+    description: Vertical Pod Autoscaler for automatic resource adjustment
+    category: k8s
+    required: false
+
+# Default resources to be created in new projects
+default_resources:
+  - cloud_account
+  - network
+
+# Tags for categorization
+tags:
+  - azure
+  - aks
+  - kubernetes
+  - microservices
+  - containers
+  - microsoft-azure
