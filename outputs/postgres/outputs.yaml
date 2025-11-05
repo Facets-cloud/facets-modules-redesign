@@ -11,12 +11,12 @@ properties:
                 type: string
             port:
                 type: string
-            username:
-                type: string
             secrets:
                 items:
                     type: string
                 type: array
+            username:
+                type: string
         writer:
             connection_string:
                 type: string
@@ -26,11 +26,11 @@ properties:
                 type: string
             port:
                 type: string
-            username:
-                type: string
             secrets:
                 items:
                     type: string
                 type: array
+            username:
+                type: string
 providers: []
 
