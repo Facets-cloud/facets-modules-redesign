@@ -24,6 +24,7 @@ locals {
         aws_rds_cluster.aurora.port,
         aws_rds_cluster.aurora.database_name
       )
+      secrets = ["password", "connection_string"]
     }
 
     writer = {
@@ -48,7 +49,7 @@ locals {
         aws_rds_cluster.aurora.port,
         aws_rds_cluster.aurora.database_name
       )
+      secrets = ["password", "connection_string"]
     }
-    secrets = ["writer", "reader"]
   }
 }

@@ -7,7 +7,7 @@ locals {
       username          = "\"\""
       password          = "\"\""
       endpoints         = { for idx, broker in split(",", aws_msk_cluster.main.bootstrap_brokers_tls != "" ? aws_msk_cluster.main.bootstrap_brokers_tls : aws_msk_cluster.main.bootstrap_brokers) : tostring(idx) => broker }
+      secrets           = ["password", "connection_string"]
     }
-    secrets = ["cluster"]
   }
 }

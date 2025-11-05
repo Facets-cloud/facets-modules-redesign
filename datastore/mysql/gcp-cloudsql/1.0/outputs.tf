@@ -8,6 +8,7 @@ locals {
       connection_string = local.master_password != null ? "mysql://${local.master_username}:${local.master_password}@${local.reader_endpoint}:${local.mysql_port}/${local.database_name}" : "mysql://${local.master_username}:PASSWORD_MANAGED_EXTERNALLY@${local.reader_endpoint}:${local.mysql_port}/${local.database_name}"
       port              = local.mysql_port
       database          = local.database_name
+      secrets           = ["password", "connection_string"]
     }
     writer = {
       host              = local.master_endpoint
@@ -16,7 +17,7 @@ locals {
       connection_string = local.master_password != null ? "mysql://${local.master_username}:${local.master_password}@${local.master_endpoint}:${local.mysql_port}/${local.database_name}" : "mysql://${local.master_username}:PASSWORD_MANAGED_EXTERNALLY@${local.master_endpoint}:${local.mysql_port}/${local.database_name}"
       port              = local.mysql_port
       database          = local.database_name
+      secrets           = ["password", "connection_string"]
     }
-    secrets = ["writer", "reader"]
   }
 }

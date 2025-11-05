@@ -43,6 +43,7 @@ locals {
           aws_db_instance.mysql.db_name
         )
       )
+      secrets = ["password", "connection_string"]
     }
 
     writer = {
@@ -52,7 +53,7 @@ locals {
       password          = local.is_db_instance_import ? "[IMPORTED-NOT-AVAILABLE]" : local.master_password
       database          = aws_db_instance.mysql.db_name
       connection_string = local.is_db_instance_import ? "mysql://${aws_db_instance.mysql.username}:[PASSWORD]@${aws_db_instance.mysql.address}:${aws_db_instance.mysql.port}/${aws_db_instance.mysql.db_name}" : "mysql://${aws_db_instance.mysql.username}:${local.master_password}@${aws_db_instance.mysql.address}:${aws_db_instance.mysql.port}/${aws_db_instance.mysql.db_name}"
+      secrets           = ["password", "connection_string"]
     }
-    secrets = ["writer", "reader"]
   }
 }

@@ -6,7 +6,7 @@ locals {
       endpoint          = "${google_redis_instance.main.host}:${google_redis_instance.main.port}"
       auth_token        = google_redis_instance.main.auth_string
       connection_string = "redis://:${google_redis_instance.main.auth_string}@${google_redis_instance.main.host}:${google_redis_instance.main.port}"
+      secrets           = ["auth_token", "connection_string"]
     }
-    secrets = ["cluster"]
   }
 }

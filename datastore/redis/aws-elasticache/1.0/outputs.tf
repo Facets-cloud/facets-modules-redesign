@@ -6,7 +6,7 @@ locals {
       connection_string = var.instance.spec.imports.cluster_id != null && var.instance.spec.imports.cluster_id != "" ? "redis://:YOUR_AUTH_TOKEN@${local.primary_endpoint}:${local.redis_port}" : "redis://:${local.auth_token}@${local.primary_endpoint}:${local.redis_port}"
       auth_token        = local.auth_token
       port              = local.redis_port
+      secrets           = ["auth_token", "connection_string"]
     }
-    secrets = ["cluster"]
   }
 }

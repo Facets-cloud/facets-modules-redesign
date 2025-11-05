@@ -7,6 +7,7 @@ locals {
       username = local.master_username
       password = local.is_import ? null : local.master_password
       connection_string = local.is_import ? null : "postgres://${local.master_username}:${local.master_password}@${local.reader_endpoint}:${local.postgres_port}/${local.database_name}"
+      secrets           = ["password", "connection_string"]
     }
     writer = {
       host = local.master_endpoint
@@ -14,7 +15,7 @@ locals {
       username = local.master_username
       password = local.is_import ? null : local.master_password
       connection_string = local.is_import ? null : "postgres://${local.master_username}:${local.master_password}@${local.master_endpoint}:${local.postgres_port}/${local.database_name}"
+      secrets           = ["password", "connection_string"]
     }
-    secrets = ["writer", "reader"]
   }
 }
