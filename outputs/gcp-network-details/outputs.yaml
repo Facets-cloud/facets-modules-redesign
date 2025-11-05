@@ -88,8 +88,4 @@ properties:
                     type: array
             type: object
     type: object
-providers:
-    - name: google
-      source: hashicorp/google
-      version: 6.43.0
 

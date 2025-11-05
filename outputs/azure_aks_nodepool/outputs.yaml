@@ -25,8 +25,4 @@ properties:
                     type: array
             type: object
     type: object
-providers:
-    - name: azurerm
-      source: hashicorp/azurerm
-      version: ~> 3.105.0
 
