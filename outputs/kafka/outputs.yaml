@@ -11,6 +11,10 @@ properties:
                 type: string
             password:
                 type: string
+            secrets:
+                items:
+                    type: string
+                type: array
             username:
                 type: string
 providers: []

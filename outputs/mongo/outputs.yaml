@@ -9,6 +9,10 @@ properties:
                 type: string
             password:
                 type: string
+            secrets:
+                items:
+                    type: string
+                type: array
             username:
                 type: string
         reader:
@@ -22,12 +26,12 @@ properties:
                 type: string
             port:
                 type: string
+            secrets:
+                items:
+                    type: string
+                type: array
             username:
                 type: string
-        secrets:
-            items:
-                type: string
-            type: array
         writer:
             connection_string:
                 type: string
@@ -39,6 +43,10 @@ properties:
                 type: string
             port:
                 type: string
+            secrets:
+                items:
+                    type: string
+                type: array
             username:
                 type: string
 providers: []

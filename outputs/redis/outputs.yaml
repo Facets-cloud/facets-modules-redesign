@@ -11,9 +11,9 @@ properties:
                 type: string
             port:
                 type: string
-        secrets:
-            items:
-                type: string
-            type: array
+            secrets:
+                items:
+                    type: string
+                type: array
 providers: []
 

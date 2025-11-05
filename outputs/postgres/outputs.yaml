@@ -13,10 +13,10 @@ properties:
                 type: string
             username:
                 type: string
-        secrets:
-            items:
-                type: string
-            type: array
+            secrets:
+                items:
+                    type: string
+                type: array
         writer:
             connection_string:
                 type: string
@@ -28,5 +28,9 @@ properties:
                 type: string
             username:
                 type: string
+            secrets:
+                items:
+                    type: string
+                type: array
 providers: []
 
