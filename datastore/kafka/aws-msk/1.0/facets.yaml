@@ -1,5 +1,5 @@
 intent: kafka
-flavor: aws-msk-test
+flavor: aws-msk
 version: '1.0'
 clouds:
 - aws
@@ -118,7 +118,7 @@ iac:
   - locals.tf
 sample:
   kind: kafka
-  flavor: aws-msk-test
+  flavor: aws-msk
   version: '1.0'
   spec:
     version_config:
