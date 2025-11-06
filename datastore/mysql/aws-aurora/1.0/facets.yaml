@@ -135,6 +135,12 @@ spec:
           type: string
           title: Reader Instance Identifiers
           description: Existing reader instance identifiers to import (comma-separated)
+        master_password:
+          type: string
+          title: Master Password
+          description: Master password for the imported cluster (8+ characters)
+          minLength: 8
+          x-ui-secret-ref: true
   required:
   - version_config
   - sizing

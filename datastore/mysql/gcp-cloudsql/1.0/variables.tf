@@ -22,6 +22,7 @@ variable "instance" {
       })
       imports = optional(object({
         instance_name = optional(string)
+        master_password = optional(string)
       }))
     })
   })

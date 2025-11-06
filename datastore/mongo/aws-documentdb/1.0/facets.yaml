@@ -103,6 +103,12 @@ spec:
           type: string
           title: Subnet Group Name
           description: Name of existing DocumentDB subnet group to import
+        master_password:
+          type: string
+          title: Master Password
+          description: Master password for the imported cluster (8+ characters)
+          minLength: 8
+          x-ui-secret-ref: true
   required:
   - version_config
   - sizing

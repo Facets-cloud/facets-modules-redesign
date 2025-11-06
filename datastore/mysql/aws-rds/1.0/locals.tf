@@ -25,13 +25,12 @@ locals {
   # Database configuration
   is_restore_operation = var.instance.spec.restore_config.restore_from_backup
 
-  # Master credentials - don't set when importing (set to null)
-  # When importing, username and password should be null to avoid overriding existing values
-  master_username = local.is_db_instance_import ? null : (local.is_restore_operation ? var.instance.spec.restore_config.restore_master_username : var.instance.spec.version_config.master_username)
-  master_password = local.is_db_instance_import ? null : (local.is_restore_operation ? var.instance.spec.restore_config.restore_master_password : (length(random_password.master_password) > 0 ? random_password.master_password[0].result : ""))
+  # When importing, username and password should be same as the original to avoid overriding existing values
+  master_username = (local.is_restore_operation ? var.instance.spec.restore_config.restore_master_username : var.instance.spec.version_config.master_username)
+  master_password = (local.is_db_instance_import ? var.instance.spec.imports.master_password : local.is_restore_operation ? var.instance.spec.restore_config.restore_master_password : random_password.master_password[0].result)
 
-  # Database name - don't set when importing
-  database_name = local.is_db_instance_import ? null : var.instance.spec.version_config.database_name
+  # Database name - should be same when importing
+  database_name = var.instance.spec.version_config.database_name
 
   # Max allocated storage (0 means disabled)
   max_allocated_storage = var.instance.spec.sizing.max_allocated_storage > 0 ? var.instance.spec.sizing.max_allocated_storage : null

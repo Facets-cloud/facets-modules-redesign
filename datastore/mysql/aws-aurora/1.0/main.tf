@@ -21,8 +21,8 @@ locals {
   imported_writer_id = try(var.instance.spec.imports.writer_instance_identifier, null)
 
   # Handle password - don't create for restore or import
-  master_password = local.restore_from_backup ? var.instance.spec.restore_config.master_password : (local.is_import ? null : random_password.master_password[0].result)
-  master_username = local.restore_from_backup ? var.instance.spec.restore_config.master_username : (local.is_import ? null : "admin")
+  master_password = (local.restore_from_backup ? var.instance.spec.restore_config.master_password : local.is_import ? var.instance.spec.imports.master_password : random_password.master_password[0].result)
+  master_username = local.restore_from_backup ? var.instance.spec.restore_config.master_username : "admin"
 
   # Split reader instance identifiers if provided for import
   reader_instance_ids = try(var.instance.spec.imports.reader_instance_identifiers, null) != null && var.instance.spec.imports.reader_instance_identifiers != "" ? split(",", trimspace(var.instance.spec.imports.reader_instance_identifiers)) : []
@@ -83,10 +83,10 @@ resource "aws_rds_cluster" "aurora" {
   engine             = "aurora-mysql"
 
   # When restoring from snapshot or importing, these fields must be omitted or ignored
-  engine_version  = (local.restore_from_backup || local.is_import) ? null : var.instance.spec.version_config.engine_version
-  database_name   = (local.restore_from_backup || local.is_import) ? null : var.instance.spec.version_config.database_name
-  master_username = (local.restore_from_backup || local.is_import) ? null : local.master_username
-  master_password = (local.restore_from_backup || local.is_import) ? null : local.master_password
+  engine_version  = var.instance.spec.version_config.engine_version
+  database_name   = var.instance.spec.version_config.database_name
+  master_username = local.master_username
+  master_password = local.master_password
 
   # Backup configuration
   backup_retention_period      = 7 # Hardcoded - 7 days retention

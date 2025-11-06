@@ -156,6 +156,12 @@ spec:
           pattern: ^[a-z0-9/_-]+$
           minLength: 1
           maxLength: 200
+        master_password:
+          type: string
+          title: Master Password
+          description: Master password for the imported resource (8+ characters)
+          minLength: 8
+          x-ui-secret-ref: true
   required:
   - version_config
   - sizing

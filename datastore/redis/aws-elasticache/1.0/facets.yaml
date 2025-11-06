@@ -75,6 +75,11 @@ spec:
             field: spec.restore_config.restore_from_snapshot
             values:
             - true
+        auth_token:
+          type: string
+          title: Auth Token
+          description: Auth token for accessing the Redis cluster
+          minLength: 64
     imports:
       type: object
       title: Import Existing Resources
@@ -92,6 +97,12 @@ spec:
           type: string
           title: Security Group ID
           description: Security group ID for importing existing security group
+        auth_token:
+          type: string
+          title: Auth Token
+          description: Auth token for accessing the imported Redis cluster
+          minLength: 64
+          x-ui-secret-ref: true
   required:
   - version_config
 inputs:
