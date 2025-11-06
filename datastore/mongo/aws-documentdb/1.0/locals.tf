@@ -13,9 +13,11 @@ locals {
   cluster_port     = aws_docdb_cluster.main.port
   master_username  = aws_docdb_cluster.main.master_username
 
-  # Handle password for imported vs new clusters
-  # For imported clusters, we can't access the actual password
-  master_password = local.is_import ? "*** IMPORTED - PASSWORD NOT ACCESSIBLE ***" : (try(var.instance.spec.restore_config.restore_from_snapshot, false) ? var.instance.spec.restore_config.master_password : random_password.master[0].result)
+  # Handle password logic:
+  # - restore_from_snapshot → use restore password
+  # - import → use imported master password
+  # - new cluster → use generated random password
+  master_password = (var.instance.spec.restore_config.restore_from_snapshot ? var.instance.spec.restore_config.master_password : local.is_import ? var.instance.spec.imports.master_password : random_password.master[0].result)
 
   # Connection string for MongoDB
   connection_string = "mongodb://${local.master_username}:${local.master_password}@${local.cluster_endpoint}:${local.cluster_port}/?tls=true&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"

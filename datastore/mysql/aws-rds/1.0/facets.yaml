@@ -144,6 +144,12 @@ spec:
           type: string
           title: Security Group ID
           description: ID of existing security group to import
+        master_password:
+          type: string
+          title: Master Password
+          description: Master password for the imported resource (8+ characters)
+          minLength: 8
+          x-ui-secret-ref: true
   required:
   - version_config
 imports:

@@ -61,7 +61,7 @@ locals {
 
   # Generate admin password (skip during restore or import)
   admin_username = "psqladmin"
-  admin_password = local.is_restore || local.is_import ? null : random_password.admin_password[0].result
+  admin_password = local.is_restore ? var.instance.spec.restore_config.admin_password : (local.is_import ? var.instance.spec.imports.admin_password : random_password.admin_password[0].result)
 
   # Tags
   common_tags = merge(

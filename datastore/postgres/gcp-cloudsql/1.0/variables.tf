@@ -24,6 +24,7 @@ variable "instance" {
         instance_id   = optional(string)
         database_name = optional(string)
         user_name     = optional(string)
+        master_password = optional(string)
       }))
     })
   })

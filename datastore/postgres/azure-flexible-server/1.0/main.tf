@@ -11,8 +11,8 @@ resource "azurerm_postgresql_flexible_server" "main" {
   resource_group_name = local.resource_group_name
   location            = local.location
 
-  administrator_login    = local.is_restore ? null : local.admin_username
-  administrator_password = local.is_restore ? null : local.admin_password
+  administrator_login    = local.admin_username
+  administrator_password = local.admin_password
 
   sku_name   = local.sku_name
   version    = local.postgres_version
