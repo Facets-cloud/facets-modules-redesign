@@ -62,7 +62,7 @@ inputs:
     - kubernetes
     - helm
   node_pool:
-    type: '@facets/aws_karpenter_nodepool'
+    type: '@facets/kubernetes_nodepool'
     optional: false
     displayName: Node Pool
     description: Node pool for Elasticsearch pods
