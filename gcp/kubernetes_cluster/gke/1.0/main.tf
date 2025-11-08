@@ -102,7 +102,7 @@ resource "google_container_cluster" "primary" {
 
   # Logging configuration
   logging_config {
-    enable_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
+    enable_components = local.enabled_logging_components
   }
 
   # Monitoring configuration
