@@ -25,16 +25,7 @@ locals {
   whitelisted_cidrs = lookup(local.spec, "whitelisted_cidrs", ["0.0.0.0/0"])
 
   # Logging configuration
-  logging_components_config = lookup(local.spec, "logging_components", {
-    system = {
-      name    = "SYSTEM_COMPONENTS"
-      enabled = true
-    }
-    workloads = {
-      name    = "WORKLOADS"
-      enabled = true
-    }
-  })
+  logging_components_config = lookup(local.spec, "logging_components", {})
 
   # Extract enabled logging components
   enabled_logging_components = [

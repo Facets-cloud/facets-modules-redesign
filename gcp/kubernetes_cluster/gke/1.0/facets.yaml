@@ -49,10 +49,6 @@ spec:
               - APISERVER
               - CONTROLLER_MANAGER
               - SCHEDULER
-              - KCP_CONNECTION
-              - KCP_SSHD
-              - KCP_HPA
-              x-ui-typeable: true
               x-ui-overrides-only: false
               x-ui-unique: true
             enabled:
@@ -127,7 +123,4 @@ sample:
     logging_components:
       system:
         name: SYSTEM_COMPONENTS
-        enabled: true
-      workloads:
-        name: WORKLOADS
         enabled: true
