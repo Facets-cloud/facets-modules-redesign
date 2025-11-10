@@ -5,7 +5,7 @@ locals {
     cluster_name     = google_container_cluster.primary.name
     cluster_location = google_container_cluster.primary.location
     cluster_version  = google_container_cluster.primary.master_version
-
+    cloud_provider   = "GCP"
     # Authentication - standard names matching EKS/AKS
     cluster_endpoint       = "https://${google_container_cluster.primary.endpoint}"
     cluster_ca_certificate = base64decode(google_container_cluster.primary.master_auth[0].cluster_ca_certificate)
