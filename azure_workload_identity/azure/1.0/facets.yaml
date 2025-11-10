@@ -1,0 +1,161 @@
+intent: azure_workload_identity
+flavor: azure
+version: '1.0'
+clouds:
+- azure
+description: 'Creates and configures Microsoft Entra Workload Identity for AKS: user-assigned
+  managed identity, federated identity credential to the AKS OIDC issuer, and annotated
+  Kubernetes ServiceAccount for pod authentication.'
+inputs:
+  cloud_account:
+    type: '@facets/azure_cloud_account'
+    displayName: Azure Cloud Account
+    description: Azure subscription and credential context used for identity and federated
+      credential operations.
+    optional: false
+    providers:
+    - azurerm
+    - azapi
+  aks_cluster:
+    type: '@facets/azure_aks'
+    displayName: AKS Cluster
+    description: AKS cluster where the Kubernetes ServiceAccount will be created and
+      federated with the managed identity.
+    optional: false
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+    - kubernetes
+    - kubernetes-alpha
+    - helm
+spec:
+  title: Azure Workload Identity
+  description: 'Creates and configures Microsoft Entra Workload Identity for AKS:
+    user-assigned managed identity, federated identity credential to the AKS OIDC
+    issuer, and annotated Kubernetes ServiceAccount for pod authentication.'
+  type: object
+  properties:
+    identity_name:
+      type: string
+      title: Managed Identity Name
+      description: Name for the user-assigned managed identity that will back the
+        workload identity.
+      pattern: ^[a-zA-Z0-9-_().]{3,128}$
+      x-ui-placeholder: workload-identity
+    use_existing_identity:
+      type: boolean
+      title: Use Existing Managed Identity
+      description: If true, the module will reuse an existing user-assigned managed
+        identity instead of creating a new one.
+      default: false
+    existing_identity_resource_id:
+      type: string
+      title: Existing Managed Identity Resource ID
+      description: Full Azure resource ID of the user-assigned managed identity to
+        reuse (required when using an existing identity).
+      pattern: ^/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[A-Za-z0-9_.()-]+/providers/Microsoft\.ManagedIdentity/userAssignedIdentities/[A-Za-z0-9_.()-]+$
+      x-ui-visible-if:
+        field: spec.use_existing_identity
+        values:
+        - true
+      x-ui-placeholder: /subscriptions/.../resourceGroups/.../providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity-name
+    existing_identity_client_id:
+      type: string
+      title: Existing Managed Identity Client ID
+      description: Client ID (GUID) of the existing user-assigned managed identity
+        (required when using an existing identity).
+      pattern: ^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$
+      x-ui-visible-if:
+        field: spec.use_existing_identity
+        values:
+        - true
+      x-ui-placeholder: 00000000-0000-0000-0000-000000000000
+    service_account_namespace:
+      type: string
+      title: Kubernetes ServiceAccount Namespace
+      description: Namespace where the ServiceAccount will be created.
+      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+      minLength: 1
+      maxLength: 63
+      default: default
+      x-ui-placeholder: default
+    service_account_name:
+      type: string
+      title: Kubernetes ServiceAccount Name
+      description: Name of the ServiceAccount to federate with the managed identity.
+      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+      minLength: 3
+      maxLength: 253
+      default: workload-identity-sa
+      x-ui-placeholder: workload-identity-sa
+    federated_credential_name:
+      type: string
+      title: Federated Credential Name
+      description: Name for the Microsoft Entra federated identity credential that
+        links the AKS OIDC issuer to the managed identity.
+      pattern: ^[a-zA-Z0-9-_().]{3,120}$
+      x-ui-placeholder: workload-identity-federation
+    federated_credential_audience:
+      type: string
+      title: Federated Credential Audience
+      description: Audience accepted by the federated credential. Typically left as
+        api://AzureADTokenExchange.
+      default: api://AzureADTokenExchange
+    role_assignments:
+      type: object
+      title: Additional Azure Role Assignments
+      description: Optional map of role assignments to grant the managed identity
+        additional permissions (e.g., Key Vault access).
+      patternProperties:
+        ^[a-zA-Z0-9_-]+$:
+          type: object
+          title: Role Assignment
+          properties:
+            scope:
+              type: string
+              title: Role Assignment Scope
+              description: Azure resource scope for the role assignment (e.g., Key
+                Vault resource ID).
+              pattern: ^/subscriptions/[0-9a-fA-F-]{36}/.+$
+            role_definition_id:
+              type: string
+              title: Role Definition ID or Name
+              description: Role definition ID (GUID) or built-in role name to assign
+                at the specified scope.
+          required:
+          - scope
+          - role_definition_id
+    tags:
+      type: object
+      title: Azure Tags
+      description: Optional tags applied to the user-assigned managed identity when
+        the module creates it.
+      x-ui-yaml-editor: true
+  required:
+  - identity_name
+  - use_existing_identity
+  - service_account_namespace
+  - service_account_name
+outputs:
+  default:
+    type: '@facets/azure_workload_identity'
+    title: Azure Workload Identity Output
+    description: Managed identity and ServiceAccount details required for workload
+      identity-enabled pods.
+iac:
+  validated_files:
+  - variables.tf
+  - locals.tf
+  - main.tf
+  - outputs.tf
+sample:
+  kind: azure_workload_identity
+  flavor: azure
+  version: '1.0'
+  disabled: true
+  spec:
+    use_existing_identity: false
+    service_account_namespace: default
+    service_account_name: workload-identity-sa
+    federated_credential_audience: api://AzureADTokenExchange
