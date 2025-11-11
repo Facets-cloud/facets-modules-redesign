@@ -23,7 +23,7 @@ locals {
 
   # Azure configuration
   resource_group_name = var.inputs.aks_cluster.resource_group_name
-  location            = var.inputs.aks_cluster.location
+  location            = var.inputs.aks_cluster.cluster_location
   oidc_issuer_url     = var.inputs.aks_cluster.oidc_issuer_url
 
   # Tags
@@ -62,11 +62,8 @@ locals {
     users = [{
       name = "aks-user"
       user = {
-        exec = {
-          apiVersion = var.inputs.aks_cluster.kubernetes_provider_exec.api_version
-          command    = var.inputs.aks_cluster.kubernetes_provider_exec.command
-          args       = var.inputs.aks_cluster.kubernetes_provider_exec.args
-        }
+        client-certificate-data = base64encode(var.inputs.aks_cluster.client_certificate)
+        client-key-data         = base64encode(var.inputs.aks_cluster.client_key)
       }
     }]
   }))

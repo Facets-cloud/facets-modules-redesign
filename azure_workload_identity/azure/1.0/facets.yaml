@@ -15,7 +15,6 @@ inputs:
     optional: false
     providers:
     - azurerm
-    - azapi
   aks_cluster:
     type: '@facets/azure_aks'
     displayName: AKS Cluster
