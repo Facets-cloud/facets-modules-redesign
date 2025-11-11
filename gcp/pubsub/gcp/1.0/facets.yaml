@@ -24,11 +24,12 @@ sample:
   disabled: true
   flavor: gcp
   kind: pubsub
+  metadata:
+    name: my-topic
   spec:
     create_subscription: true
     message_retention_duration: 604800s
     subscription_ack_deadline: 10
-    topic_name: my-topic
   version: '1.0'
 spec:
   description: Specification for creating a single Pub/Sub topic with optional subscription
@@ -57,13 +58,7 @@ spec:
         field: spec.create_subscription
         values:
         - true
-    topic_name:
-      description: Name of the Pub/Sub topic to create
-      title: Topic Name
-      type: string
-      x-ui-placeholder: e.g., 'customer1-processor1'
-  required:
-  - topic_name
+  required: []
   title: GCP Pub/Sub Topic
   type: object
 version: '1.0'

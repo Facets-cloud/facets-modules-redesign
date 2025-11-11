@@ -1,7 +1,8 @@
 locals {
   spec = lookup(var.instance, "spec", {})
 
-  topic_name                 = lookup(local.spec, "topic_name", var.instance_name)
+  # Use instance_name with environment unique name as suffix - never allow spec-based naming override
+  topic_name                 = "${var.instance_name}-${var.environment.unique_name}"
   message_retention_duration = lookup(local.spec, "message_retention_duration", "604800s")
   create_subscription        = lookup(local.spec, "create_subscription", true)
   subscription_ack_deadline  = lookup(local.spec, "subscription_ack_deadline", 10)
@@ -13,6 +14,7 @@ locals {
     var.environment.cloud_tags,
     {
       instance_name = var.instance_name
+      environment   = var.environment.name
       managed_by    = "facets"
     }
   )
@@ -26,6 +28,11 @@ resource "google_pubsub_topic" "topic" {
   message_retention_duration = local.message_retention_duration
 
   labels = local.labels
+
+  # Ignore name changes for backward compatibility with older implementations
+  lifecycle {
+    ignore_changes = [name]
+  }
 }
 
 # Create subscription if requested
@@ -39,4 +46,9 @@ resource "google_pubsub_subscription" "subscription" {
   ack_deadline_seconds = local.subscription_ack_deadline
 
   labels = local.labels
+
+  # Ignore name changes for backward compatibility with older implementations
+  lifecycle {
+    ignore_changes = [name]
+  }
 }
