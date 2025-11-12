@@ -24,6 +24,7 @@ spec:
       type: string
       x-ui-typeable: true
       x-ui-overrides-only: true
+      x-ui-show-label-selected: true
       x-ui-api-source:
         endpoint: /cc-ui/v1/accounts/
         method: GET
