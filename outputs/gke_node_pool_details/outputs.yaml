@@ -11,6 +11,8 @@ properties:
             type: string
         taints:
             type: string
+        topology_spread_key:
+            type: string
     interfaces: {}
 providers: []
 
