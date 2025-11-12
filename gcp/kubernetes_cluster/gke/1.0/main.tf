@@ -109,7 +109,7 @@ resource "google_container_cluster" "primary" {
   monitoring_config {
     enable_components = ["SYSTEM_COMPONENTS"]
     managed_prometheus {
-      enabled = true
+      enabled = false
     }
   }
 
@@ -126,4 +126,8 @@ resource "google_container_cluster" "primary" {
 
   # Resource labels
   resource_labels = local.cluster_labels
+
+  lifecycle {
+    ignore_changes = [monitoring_config]
+  }
 }
