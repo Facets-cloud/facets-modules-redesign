@@ -6,9 +6,10 @@ variable "instance_name" {
 variable "environment" {
   description = "Environment configuration"
   type = object({
-    name        = string
-    unique_name = string
-    cloud_tags  = map(string)
+    name         = string
+    unique_name  = string
+    cloud_tags   = map(string)
+    cluster_code = optional(string, "")
   })
 }
 
