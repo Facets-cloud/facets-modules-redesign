@@ -126,8 +126,4 @@ resource "google_container_cluster" "primary" {
 
   # Resource labels
   resource_labels = local.cluster_labels
-
-  lifecycle {
-    ignore_changes = [monitoring_config]
-  }
 }
