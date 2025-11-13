@@ -4,10 +4,9 @@ locals {
   # Get dashboard configurations
   dashboards = lookup(local.spec, "dashboards", {})
 
-  # Get Grafana configuration
-  grafana_config    = lookup(local.spec, "grafana_config", {})
-  instance_selector = lookup(local.grafana_config, "instance_selector", "grafana_dashboard")
-  folder_annotation = lookup(local.grafana_config, "folder_annotation", true)
+  # Standard kube-prometheus-stack label for Grafana sidecar auto-discovery
+  # This is the convention used by kube-prometheus-stack Helm chart
+  instance_selector = "grafana_dashboard"
 
   # Get Grafana namespace from prometheus input (grafana is deployed in same namespace as prometheus)
   grafana_namespace = lookup(var.inputs.prometheus.attributes, "namespace", var.environment.namespace)
@@ -108,14 +107,16 @@ resource "kubernetes_config_map" "grafana_dashboard" {
     )
 
     annotations = merge(
-      local.folder_annotation ? {
-        "grafana_folder" = lookup(each.value, "folder", "General")
-      } : {},
       {
+        # Grafana folder organization - always enabled
+        "grafana_folder" = lookup(each.value, "folder", "General")
+
+        # Facets metadata
         "facets.cloud/instance"    = var.instance_name
         "facets.cloud/environment" = var.environment.name
         "facets.cloud/source-type" = lookup(each.value, "source_type", "json")
       },
+      # Add dashboard ID annotation for grafana_id source type
       lookup(each.value, "source_type", "json") == "grafana_id" ? {
         "facets.cloud/grafana-dashboard-id" = lookup(each.value, "dashboard_id", "")
       } : {}

@@ -92,27 +92,8 @@ spec:
               description: Extra labels to add to the ConfigMap
               x-ui-yaml-editor: true
               default: {}
-    grafana_config:
-      type: object
-      title: Grafana Configuration
-      description: Configuration for Grafana dashboard auto-discovery
-      properties:
-        instance_selector:
-          type: string
-          title: Instance Selector
-          description: Grafana instance selector label value (must match Grafana sidecar
-            dashboardLabel config)
-          default: grafana_dashboard
-          pattern: ^[a-zA-Z0-9_.-]*$
-          x-ui-help-text: Default 'grafana_dashboard' works with standard kube-prometheus-stack
-        folder_annotation:
-          type: boolean
-          title: Enable Folder Annotation
-          description: Add grafana_folder annotation to organize dashboards into folders
-          default: true
   x-ui-order:
   - dashboards
-  - grafana_config
 sample:
   kind: grafana_dashboards
   flavor: k8s
@@ -134,6 +115,3 @@ sample:
         json: '{}'
         folder: Applications
         labels: {}
-    grafana_config:
-      instance_selector: grafana_dashboard
-      folder_annotation: true
