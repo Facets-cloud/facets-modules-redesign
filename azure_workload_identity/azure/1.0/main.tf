@@ -40,6 +40,22 @@ resource "kubernetes_service_account" "main" {
   ]
 }
 
+# Federated Identity Credential - establishes trust between Managed Identity and K8s ServiceAccount
+resource "azurerm_federated_identity_credential" "main" {
+  name                = "${var.instance_name}-federated-credential"
+  resource_group_name = local.resource_group_name
+  audience            = ["api://AzureADTokenExchange"]
+  issuer              = var.inputs.aks_cluster.oidc_issuer_url
+  parent_id           = local.managed_identity_id
+  subject             = "system:serviceaccount:${local.k8s_sa_namespace}:${local.k8s_sa_name}"
+
+  depends_on = [
+    azurerm_user_assigned_identity.main,
+    data.azurerm_user_assigned_identity.existing,
+    kubernetes_service_account.main
+  ]
+}
+
 # Annotate existing Kubernetes ServiceAccount (if using existing)
 resource "null_resource" "annotate_k8s_sa" {
   count = local.use_existing_k8s_sa && local.annotate_k8s_sa ? 1 : 0
@@ -62,21 +78,6 @@ EOF
     KUBECONFIG="${local.kubeconfig_filename}" kubectl label --overwrite sa -n ${self.triggers.ksa_namespace} ${self.triggers.ksa_name} azure.workload.identity/use=true
     EOT
   }
-}
-
-# Federated Identity Credential (establishes trust between AKS OIDC and Managed Identity)
-resource "azurerm_federated_identity_credential" "main" {
-  name                = local.federated_credential_name
-  resource_group_name = local.resource_group_name
-  parent_id           = local.managed_identity_id
-  audience            = [local.federated_credential_audience]
-  issuer              = local.oidc_issuer_url
-  subject             = local.federated_subject
-
-  depends_on = [
-    azurerm_user_assigned_identity.main,
-    kubernetes_service_account.main
-  ]
 }
 
 # Azure Role Assignments for the Managed Identity

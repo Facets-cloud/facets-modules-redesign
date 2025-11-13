@@ -4,22 +4,21 @@ version: '1.0'
 clouds:
 - azure
 description: 'Creates and configures Microsoft Entra Workload Identity for AKS: user-assigned
-  managed identity, federated identity credential to the AKS OIDC issuer, and annotated
-  Kubernetes ServiceAccount for pod authentication.'
+  managed identity, federated identity credential, and annotated Kubernetes ServiceAccount
+  for secure pod authentication without secrets.'
 inputs:
   cloud_account:
     type: '@facets/azure_cloud_account'
     displayName: Azure Cloud Account
-    description: Azure subscription and credential context used for identity and federated
-      credential operations.
+    description: Azure subscription and credential context used for identity operations.
     optional: false
     providers:
     - azurerm
   aks_cluster:
     type: '@facets/azure_aks'
     displayName: AKS Cluster
-    description: AKS cluster where the Kubernetes ServiceAccount will be created and
-      federated with the managed identity.
+    description: AKS cluster where the Kubernetes ServiceAccount will be created for
+      workload identity.
     optional: false
     default:
       resource_type: kubernetes_cluster
@@ -31,8 +30,8 @@ inputs:
 spec:
   title: Azure Workload Identity
   description: 'Creates and configures Microsoft Entra Workload Identity for AKS:
-    user-assigned managed identity, federated identity credential to the AKS OIDC
-    issuer, and annotated Kubernetes ServiceAccount for pod authentication.'
+    user-assigned managed identity, federated identity credential, and annotated Kubernetes
+    ServiceAccount for secure pod authentication without secrets.'
   type: object
   properties:
     identity_name:
@@ -59,17 +58,6 @@ spec:
         values:
         - true
       x-ui-placeholder: /subscriptions/.../resourceGroups/.../providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity-name
-    existing_identity_client_id:
-      type: string
-      title: Existing Managed Identity Client ID
-      description: Client ID (GUID) of the existing user-assigned managed identity
-        (required when using an existing identity).
-      pattern: ^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$
-      x-ui-visible-if:
-        field: spec.use_existing_identity
-        values:
-        - true
-      x-ui-placeholder: 00000000-0000-0000-0000-000000000000
     service_account_namespace:
       type: string
       title: Kubernetes ServiceAccount Namespace
@@ -88,19 +76,6 @@ spec:
       maxLength: 253
       default: workload-identity-sa
       x-ui-placeholder: workload-identity-sa
-    federated_credential_name:
-      type: string
-      title: Federated Credential Name
-      description: Name for the Microsoft Entra federated identity credential that
-        links the AKS OIDC issuer to the managed identity.
-      pattern: ^[a-zA-Z0-9-_().]{3,120}$
-      x-ui-placeholder: workload-identity-federation
-    federated_credential_audience:
-      type: string
-      title: Federated Credential Audience
-      description: Audience accepted by the federated credential. Typically left as
-        api://AzureADTokenExchange.
-      default: api://AzureADTokenExchange
     role_assignments:
       type: object
       title: Additional Azure Role Assignments
@@ -154,7 +129,7 @@ sample:
   version: '1.0'
   disabled: true
   spec:
+    identity_name: my-app-identity
     use_existing_identity: false
     service_account_namespace: default
     service_account_name: workload-identity-sa
-    federated_credential_audience: api://AzureADTokenExchange

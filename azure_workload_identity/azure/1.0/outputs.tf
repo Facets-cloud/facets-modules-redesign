@@ -6,6 +6,5 @@ locals {
     "managed_identity_id"           = local.managed_identity_id
     "managed_identity_client_id"    = local.managed_identity_client_id
     "managed_identity_principal_id" = local.managed_identity_principal_id
-    "federated_credential_name"     = local.federated_credential_name
   }
 }
