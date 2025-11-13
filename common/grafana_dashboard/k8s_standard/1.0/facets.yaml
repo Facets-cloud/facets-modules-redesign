@@ -1,0 +1,88 @@
+intent: grafana_dashboard
+flavor: k8s_standard
+version: '1.0'
+description: Creates a Kubernetes ConfigMap containing Grafana dashboard JSON for automatic discovery by Grafana Operator
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+inputs:
+  kubernetes_details:
+    optional: false
+    type: '@facets/kubernetes-details'
+    displayName: Kubernetes Cluster
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+    - kubernetes
+    - kubernetes-alpha
+spec:
+  type: object
+  properties:
+    dashboard:
+      title: Dashboard JSON
+      description: The Grafana dashboard configuration as a JSON object. This will be automatically discovered by Grafana Operator via the ConfigMap
+      type: object
+      x-ui-yaml-editor: true
+      x-ui-placeholder: Enter Grafana dashboard JSON configuration
+    preserve_uid:
+      title: Preserve UID
+      description: If true, the UID from the dashboard JSON will be preserved. If false, a random UID will be generated and override the dashboard UID
+      type: boolean
+      default: false
+  required:
+  - dashboard
+advanced:
+  type: object
+  properties:
+    default:
+      title: Default Advanced Configuration
+      description: Advanced configuration options
+      type: object
+      properties:
+        preserve_uid:
+          title: Preserve UID (Advanced)
+          description: Alternative way to set preserve_uid via advanced configuration
+          type: boolean
+          default: false
+outputs:
+  default:
+    type: '@facets/grafana_dashboard'
+    title: Grafana Dashboard Details
+sample:
+  $schema: https://facets-cloud.github.io/facets-schemas/schemas/grafana_dashboard/grafana_dashboard.schema.json
+  kind: grafana_dashboard
+  flavor: k8s_standard
+  version: '1.0'
+  metadata:
+    labels:
+      app: my-dashboard
+  disabled: false
+  spec:
+    dashboard:
+      annotations:
+        list: []
+      editable: true
+      fiscalYearStartMonth: 0
+      graphTooltip: 1
+      links: []
+      panels: []
+      refresh: 30s
+      schemaVersion: 37
+      style: dark
+      tags:
+      - sample
+      templating:
+        list: []
+      time:
+        from: now-1h
+        to: now
+      timezone: utc
+      title: Sample Dashboard
+      version: 1
+    preserve_uid: false
+iac:
+  validated_files:
+  - variables.tf
