@@ -1,0 +1,17 @@
+{
+  "$schema": "https://facets-cloud.github.io/facets-schemas/schemas/config_map/config_map.schema.json",
+  "kind": "config_map",
+  "flavor": "k8s_standard",
+  "version": "1.0",
+  "metadata": {},
+  "disabled": true,
+  "spec": {
+    "data": {}
+  },
+  "inputs": {
+    "kubernetes_details": {
+      "resource_name": "aws-cluster",
+      "resource_type": "kubernetes_cluster"
+    }
+  }
+}

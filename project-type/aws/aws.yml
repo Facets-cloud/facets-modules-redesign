@@ -1,0 +1,53 @@
+name: AWS
+description: AWS project type with common configurations.
+allowedClouds:
+    - AWS
+mappedResources:
+    # AWS Modules
+    - intent: cloud_account
+      flavor: aws_provider
+      intentType: aws
+    - intent: kubernetes_cluster
+      flavor: eks
+      intentType: aws
+    - intent: kubernetes_node_pool
+      flavor: aws
+      intentType: aws
+    - intent: network
+      flavor: aws_vpc
+      intentType: aws
+    - intent: service
+      flavor: aws
+      intentType: aws
+
+    # Common Modules
+    - intent: artifactory
+      flavor: standard
+      intentType: common
+    - intent: cert_manager
+      flavor: standard
+      intentType: common
+    - intent: config_map
+      flavor: k8s_standard
+      intentType: common
+    - intent: helm
+      flavor: k8s_standard
+      intentType: common
+    - intent: ingress
+      flavor: nginx_k8s
+      intentType: common
+    - intent: k8s_callback
+      flavor: k8s_standard
+      intentType: common
+    - intent: k8s_resource
+      flavor: k8s_standard
+      intentType: common
+    - intent: kubernetes_secret
+      flavor: k8s_standard
+      intentType: common
+    - intent: prometheus
+      flavor: k8s_standard
+      intentType: common
+    - intent: vpa
+      flavor: standard
+      intentType: common
