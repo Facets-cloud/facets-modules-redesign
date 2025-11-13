@@ -1,117 +1,76 @@
-intent: grafana_dashboards
-flavor: k8s
-version: '1.0'
-description: Deploy Grafana dashboards as ConfigMaps with auto-discovery labels. Supports
-  both manual JSON paste and Grafana.com dashboard ID fetching.
 clouds:
-- aws
-- azure
-- gcp
-- kubernetes
-inputs:
-  kubernetes_details:
-    type: '@facets/kubernetes-details'
-    optional: false
-    displayName: Kubernetes Cluster
-    providers:
+    - aws
+    - azure
+    - gcp
     - kubernetes
-  prometheus:
-    type: '@facets/prometheus'
-    optional: false
-    displayName: Prometheus with Grafana
-    description: Reference to Prometheus instance (provides Grafana namespace)
+description: Deploy Grafana dashboards as ConfigMaps with auto-discovery labels. Paste dashboard JSON exported from Grafana.
+flavor: k8s
+inputs:
+    kubernetes_details:
+        displayName: Kubernetes Cluster
+        optional: false
+        providers:
+            - kubernetes
+        type: '@facets/kubernetes-details'
+    prometheus:
+        description: Reference to Prometheus instance (provides Grafana namespace)
+        displayName: Prometheus with Grafana
+        optional: false
+        type: '@facets/prometheus'
+intent: grafana_dashboards
 outputs:
-  default:
-    type: '@facets/grafana_dashboards'
-    title: Grafana Dashboards Configuration
-spec:
-  type: object
-  required:
-  - dashboards
-  properties:
-    dashboards:
-      type: object
-      title: Dashboards
-      description: Map of dashboard configurations. Each dashboard can either use
-        a Grafana.com dashboard ID or provide JSON directly.
-      patternProperties:
-        ^[a-zA-Z0-9_.-]*$:
-          type: object
-          required:
-          - name
-          - source_type
-          properties:
-            name:
-              type: string
-              title: Dashboard Name
-              description: Display name of the dashboard
-              x-ui-placeholder: e.g., Node Exporter Full, Custom App Dashboard
-            source_type:
-              type: string
-              title: Source Type
-              description: How to provide the dashboard - either from Grafana.com
-                by ID or manual JSON paste
-              enum:
-              - json
-              - grafana_id
-              default: json
-              x-ui-help-text: 'grafana_id: Fetch from grafana.com | json: Paste dashboard
-                JSON'
-            dashboard_id:
-              type: string
-              title: Grafana.com Dashboard ID
-              description: Dashboard ID from grafana.com (e.g., 1860 for Node Exporter
-                Full). Required when source_type is 'grafana_id'.
-              pattern: ^\d+$
-              x-ui-visible-if:
-                field: spec.source_type
-                values:
-                - grafana_id
-              x-ui-placeholder: e.g., 1860, 315, 7362
-              x-ui-help-text: Find dashboard IDs at https://grafana.com/grafana/dashboards/
-            json:
-              type: string
-              title: Dashboard JSON
-              description: "Complete dashboard JSON exported from Grafana (File \u2192\
-                \ Export \u2192 Save to file). Required when source_type is 'json'."
-              x-ui-visible-if:
-                field: spec.source_type
-                values:
-                - json
-              x-ui-textarea: true
-              x-ui-placeholder: Paste complete dashboard JSON here
-            folder:
-              type: string
-              title: Folder
-              description: Folder name for organizing dashboards in Grafana UI
-              default: General
-              x-ui-placeholder: e.g., General, Infrastructure, Applications
-            labels:
-              type: object
-              title: Additional Labels
-              description: Extra labels to add to the ConfigMap
-              x-ui-yaml-editor: true
-              default: {}
-  x-ui-order:
-  - dashboards
+    default:
+        mock:
+            attributes:
+                configmap_names: mock-string-value
+                dashboard_count: mock-string-value
+                dashboard_names: mock-string-value
+                namespace: mock-string-value
+            interfaces: {}
+        title: Grafana Dashboards Configuration
+        type: '@facets/grafana_dashboards'
 sample:
-  kind: grafana_dashboards
-  flavor: k8s
-  version: '1.0'
-  disabled: true
-  metadata:
-    name: my-dashboards
-  spec:
-    dashboards:
-      node-exporter:
-        name: Node Exporter Full
-        source_type: grafana_id
-        dashboard_id: '1860'
-        folder: Infrastructure
-        labels: {}
-      custom-dashboard:
-        name: Custom Application Dashboard
-        source_type: json
-        json: '{}'
-        folder: Applications
-        labels: {}
+    disabled: true
+    flavor: k8s
+    kind: grafana_dashboards
+    metadata:
+        name: my-dashboards
+    spec:
+        dashboards: {}
+    version: "1.0"
+spec:
+    properties:
+        dashboards:
+            description: Map of dashboard configurations. Paste dashboard JSON exported from Grafana.
+            patternProperties:
+                ^[a-zA-Z0-9_.-]*$:
+                    properties:
+                        folder:
+                            default: General
+                            description: Folder name for organizing dashboards in Grafana UI
+                            title: Folder
+                            type: string
+                            x-ui-placeholder: e.g., General, Infrastructure, Applications
+                        json:
+                            description: Complete dashboard JSON exported from Grafana (File → Export → Save to file)
+                            title: Dashboard JSON
+                            type: string
+                            x-ui-placeholder: Paste complete dashboard JSON here
+                            x-ui-textarea: true
+                        name:
+                            description: Display name of the dashboard
+                            title: Dashboard Name
+                            type: string
+                            x-ui-placeholder: e.g., Node Exporter Full, Custom App Dashboard
+                    required:
+                        - name
+                        - json
+                    type: object
+            title: Dashboards
+            type: object
+    required:
+        - dashboards
+    type: object
+    x-ui-order:
+        - dashboards
+version: "1.0"
