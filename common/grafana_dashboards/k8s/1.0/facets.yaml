@@ -1,0 +1,131 @@
+intent: grafana_dashboards
+flavor: k8s
+version: '1.0'
+description: Deploy Grafana dashboards as ConfigMaps with auto-discovery labels. Supports
+  both manual JSON paste and Grafana.com dashboard ID fetching.
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+inputs:
+  kubernetes_details:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    providers:
+    - kubernetes
+  prometheus:
+    type: '@facets/prometheus'
+    optional: false
+    displayName: Prometheus with Grafana
+    description: Reference to Prometheus instance (provides Grafana namespace)
+outputs:
+  default:
+    type: '@facets/grafana_dashboards'
+    title: Grafana Dashboards Configuration
+spec:
+  type: object
+  required:
+  - dashboards
+  properties:
+    dashboards:
+      type: object
+      title: Dashboards
+      description: Map of dashboard configurations. Each dashboard can either use
+        a Grafana.com dashboard ID or provide JSON directly.
+      patternProperties:
+        ^[a-zA-Z0-9_.-]*$:
+          type: object
+          required:
+          - name
+          - source_type
+          properties:
+            name:
+              type: string
+              title: Dashboard Name
+              description: Display name of the dashboard
+              x-ui-placeholder: e.g., Node Exporter Full, Custom App Dashboard
+            source_type:
+              type: string
+              title: Source Type
+              description: How to provide the dashboard - either from Grafana.com
+                by ID or manual JSON paste
+              enum:
+              - json
+              - grafana_id
+              default: json
+              x-ui-help-text: 'grafana_id: Fetch from grafana.com | json: Paste dashboard
+                JSON'
+            dashboard_id:
+              type: string
+              title: Grafana.com Dashboard ID
+              description: Dashboard ID from grafana.com (e.g., 1860 for Node Exporter
+                Full). Required when source_type is 'grafana_id'.
+              pattern: ^\d+$
+              x-ui-placeholder: e.g., 1860, 315, 7362
+              x-ui-help-text: Find dashboard IDs at https://grafana.com/grafana/dashboards/
+            json:
+              type: string
+              title: Dashboard JSON
+              description: "Complete dashboard JSON exported from Grafana (File \u2192\
+                \ Export \u2192 Save to file). Required when source_type is 'json'."
+              x-ui-textarea: true
+              x-ui-placeholder: Paste complete dashboard JSON here
+            folder:
+              type: string
+              title: Folder
+              description: Folder name for organizing dashboards in Grafana UI
+              default: General
+              x-ui-placeholder: e.g., General, Infrastructure, Applications
+            labels:
+              type: object
+              title: Additional Labels
+              description: Extra labels to add to the ConfigMap
+              x-ui-yaml-editor: true
+              default: {}
+    grafana_config:
+      type: object
+      title: Grafana Configuration
+      description: Configuration for Grafana dashboard auto-discovery
+      properties:
+        instance_selector:
+          type: string
+          title: Instance Selector
+          description: Grafana instance selector label value (must match Grafana sidecar
+            dashboardLabel config)
+          default: grafana_dashboard
+          pattern: ^[a-zA-Z0-9_.-]*$
+          x-ui-help-text: Default 'grafana_dashboard' works with standard kube-prometheus-stack
+        folder_annotation:
+          type: boolean
+          title: Enable Folder Annotation
+          description: Add grafana_folder annotation to organize dashboards into folders
+          default: true
+  x-ui-order:
+  - dashboards
+  - grafana_config
+sample:
+  kind: grafana_dashboards
+  flavor: k8s
+  version: '1.0'
+  disabled: true
+  metadata:
+    name: my-dashboards
+  spec:
+    dashboards:
+      node-exporter:
+        name: Node Exporter Full
+        source_type: grafana_id
+        dashboard_id: '1860'
+        folder: Infrastructure
+        labels: {}
+      custom-dashboard:
+        name: Custom Application Dashboard
+        source_type: json
+        json: '{}'
+        folder: Applications
+        labels: {}
+    grafana_config:
+      instance_selector: grafana_dashboard
+      folder_annotation: true
