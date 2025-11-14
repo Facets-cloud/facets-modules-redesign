@@ -7,8 +7,8 @@ locals {
   # Create PDB configuration for remote chart
   pdb_helm_values = {
     controller = {
-      minAvailable   = lookup(lookup(var.instance.spec, "pdb", {}), "minAvailable", null)
-      maxUnavailable = lookup(lookup(var.instance.spec, "pdb", {}), "maxUnavailable", null)
+      minAvailable = lookup(lookup(var.instance.spec, "pdb", {}), "minAvailable", 1)
+      #maxUnavailable = lookup(lookup(var.instance.spec, "pdb", {}), "maxUnavailable", null)
     }
   }
 
@@ -233,9 +233,9 @@ locals {
   error_pages_checksum = local.enable_custom_error_pages ? md5(jsonencode(local.error_pages_data)) : ""
 
   # Extract PDB configuration from facets.yaml (only for remote charts)
-  pdb_config                      = lookup(var.instance.spec, "pdb", {})
-  pdb_min_available               = lookup(local.pdb_config, "minAvailable", null)
-  pdb_max_unavailable             = lookup(local.pdb_config, "maxUnavailable", null)
+  pdb_config        = lookup(var.instance.spec, "pdb", {})
+  pdb_min_available = lookup(local.pdb_config, "minAvailable", 1)
+  #pdb_max_unavailable             = lookup(local.pdb_config, "maxUnavailable", null)
   user_supplied_proxy_set_headers = lookup(lookup(local.user_supplied_helm_values, "controller", {}), "proxySetHeaders", {})
   request_id_exists               = can(regex(".*\\$request_id.*", join(" ", values(local.user_supplied_proxy_set_headers))))
   proxy_set_headers = {
@@ -342,8 +342,7 @@ controller:
     enabled: true
     controllerValue: "k8s.io/${local.name}-ingress-nginx"
   ingressClass: ${local.name}
-  minAvailable: ${local.pdb_min_available != null ? local.pdb_min_available : "null"}
-  maxUnavailable: ${local.pdb_min_available == null && local.pdb_max_unavailable != null ? local.pdb_max_unavailable : "null"}
+  minAvailable: ${local.pdb_min_available}
   rbac:
     create: true
   resources:
