@@ -253,7 +253,9 @@ locals {
       }
     }
     grafana = {
-      enabled = lookup(local.grafanaSpec, "enabled", false)
+      enabled       = lookup(local.grafanaSpec, "enabled", true)
+      adminUser     = "admin"
+      adminPassword = "prom-operator"
       sidecar = {
         datasources = {
           defaultDatasourceEnabled = false
@@ -278,10 +280,16 @@ locals {
       "grafana.ini" = {
         security = {
           allow_embedding = true
+          cookie_secure   = true
+          cookie_samesite = "none"
         }
         server = {
+          domain              = var.cc_metadata.cc_host
           root_url            = "%(protocol)s://%(domain)s:%(http_port)s/tunnel/${var.environment.cloud_tags.facetsclusterid}/grafana/"
           serve_from_sub_path = true
+        }
+        live = {
+          allowed_origins = "https://${var.cc_metadata.cc_host}"
         }
         "auth.anonymous" = {
           enabled  = true
