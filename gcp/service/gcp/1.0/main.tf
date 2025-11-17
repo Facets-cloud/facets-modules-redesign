@@ -84,7 +84,7 @@ locals {
   pod_distribution = {
     "facets-pod-topology-spread" = {
       max_skew           = 1
-      when_unsatisfiable = "DoNotSchedule"
+      when_unsatisfiable = "ScheduleAnyway"
       topology_key       = var.inputs.kubernetes_node_pool_details.topology_spread_key
     }
   }
