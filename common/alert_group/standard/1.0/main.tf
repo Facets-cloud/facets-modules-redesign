@@ -4,9 +4,8 @@ locals {
   # Get alert rules from spec
   rules = lookup(local.spec, "rules", {})
 
-  # Get Prometheus namespace and release name from prometheus input
-  prometheus_namespace = lookup(var.inputs.prometheus.attributes, "namespace", var.environment.namespace)
-  prometheus_release   = lookup(var.inputs.prometheus.attributes, "helm_release_name", "prometheus")
+  # Get Prometheus release ID from prometheus input
+  prometheus_release = lookup(var.inputs.prometheus.attributes, "helm_release_id", "prometheus")
 
   # Transform rules into PrometheusRule format, filtering out disabled rules
   alert_rules = [
@@ -38,40 +37,37 @@ locals {
 
   # Extract rule names for outputs
   rule_names = [for key, rule in local.rules : key if !lookup(rule, "disabled", false)]
-}
 
-# Create PrometheusRule CRD for alert rules
-resource "kubernetes_manifest" "prometheus_rule" {
-  manifest = {
+  # Metadata for PrometheusRule
+  prometheus_rule_metadata = {
+    name      = "${var.instance_name}-alert-group"
+    namespace = var.environment.namespace
+    labels = merge(
+      {
+        alert_group_name               = var.instance_name
+        role                           = "alert-rules"
+        release                        = local.prometheus_release
+        "app.kubernetes.io/name"       = var.instance_name
+        "app.kubernetes.io/instance"   = var.instance_name
+        "app.kubernetes.io/component"  = "alert-rules"
+        "app.kubernetes.io/managed-by" = "facets"
+      },
+      var.environment.cloud_tags
+    )
+    annotations = merge(
+      {
+        owner                      = "facets"
+        "facets.cloud/instance"    = var.instance_name
+        "facets.cloud/environment" = var.environment.name
+      }
+    )
+  }
+
+  # PrometheusRule manifest
+  prometheus_rule_manifest = {
     apiVersion = "monitoring.coreos.com/v1"
     kind       = "PrometheusRule"
-
-    metadata = {
-      name      = "${var.instance_name}-alert-group"
-      namespace = local.prometheus_namespace
-
-      labels = merge(
-        {
-          alert_group_name               = var.instance_name
-          role                           = "alert-rules"
-          release                        = local.prometheus_release
-          "app.kubernetes.io/name"       = var.instance_name
-          "app.kubernetes.io/instance"   = var.instance_name
-          "app.kubernetes.io/component"  = "alert-rules"
-          "app.kubernetes.io/managed-by" = "facets"
-        },
-        var.environment.cloud_tags
-      )
-
-      annotations = merge(
-        {
-          owner                      = "facets"
-          "facets.cloud/instance"    = var.instance_name
-          "facets.cloud/environment" = var.environment.name
-        }
-      )
-    }
-
+    metadata   = local.prometheus_rule_metadata
     spec = {
       groups = [
         {
@@ -81,4 +77,26 @@ resource "kubernetes_manifest" "prometheus_rule" {
       ]
     }
   }
+}
+
+# Deploy PrometheusRule using helm_release with any-k8s-resource chart
+resource "helm_release" "alert_group" {
+  name             = "${var.instance_name}-alert-group"
+  chart            = "https://github.com/Facets-cloud/facets-utility-modules/raw/master/any-k8s-resource/dynamic-k8s-resource-0.1.0.tgz"
+  namespace        = var.environment.namespace
+  create_namespace = true
+  version          = "0.1.0"
+  timeout          = 300
+  cleanup_on_fail  = true
+  wait             = false
+  max_history      = 10
+
+  values = [
+    yamlencode({
+      prometheusId = local.prometheus_release
+    }),
+    yamlencode({
+      resource = local.prometheus_rule_manifest
+    })
+  ]
 }

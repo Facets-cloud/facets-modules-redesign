@@ -259,13 +259,6 @@ outputs:
   default:
     type: '@facets/alert_group'
     title: Alert Group Configuration
-    mock:
-      attributes:
-        alert_count: mock-string-value
-        alert_names: mock-string-value
-        namespace: mock-string-value
-        prometheus_rule_name: mock-string-value
-      interfaces: {}
 sample:
   version: '1.0'
   flavor: standard
