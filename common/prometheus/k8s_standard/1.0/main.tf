@@ -48,6 +48,9 @@ resource "helm_release" "prometheus-operator" {
           }
         },
         alertmanager = {
+          annotations = {
+            "cluster-autoscaler.kubernetes.io/safe-to-evict" = "true"
+          }
           alertmanagerSpec = {
             storage = {
               volumeClaimTemplate = {
@@ -67,6 +70,37 @@ resource "helm_release" "prometheus-operator" {
                 }
               }
             }
+          }
+          config = {
+            global = {
+              resolve_timeout = "60m"
+            }
+            route = {
+              receiver        = "default"
+              group_by        = ["alertname", "entity"]
+              routes          = []
+              group_wait      = "30s"
+              group_interval  = "5m"
+              repeat_interval = "6h"
+            }
+            receivers : [
+              {
+                name = "default"
+                webhook_configs : [
+                  {
+                    url           = "http://alertmanager-webhook.default/alerts"
+                    send_resolved = true
+                  },
+                  {
+                    url           = "https://${var.cc_metadata.cc_host}/cc/v1/clusters/${var.cluster.id}/alerts"
+                    send_resolved = true
+                    http_config = {
+                      bearer_token = var.cc_metadata.cc_auth_token
+                    }
+                  }
+                ]
+              }
+            ]
           }
         },
         kube-state-metrics = {
