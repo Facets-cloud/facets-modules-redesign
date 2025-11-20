@@ -219,32 +219,6 @@ spec:
               x-ui-yaml-editor: true
               x-ui-error-message: Annotations should be key-value pairs providing
                 additional context
-            notification_channels:
-              type: object
-              title: Notification Channels
-              description: Specific notification channels for this alert
-              x-ui-toggle: true
-              properties:
-                slack:
-                  type: boolean
-                  title: Slack Notifications
-                  description: Send notifications to Slack
-                  default: false
-                email:
-                  type: boolean
-                  title: Email Notifications
-                  description: Send notifications via email
-                  default: true
-                pagerduty:
-                  type: boolean
-                  title: PagerDuty Integration
-                  description: Create incidents in PagerDuty
-                  default: false
-                webhook:
-                  type: boolean
-                  title: Webhook Notifications
-                  description: Send notifications to custom webhook
-                  default: false
           required:
           - expr
           - for

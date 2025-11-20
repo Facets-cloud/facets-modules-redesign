@@ -93,9 +93,6 @@ resource "helm_release" "alert_group" {
 
   values = [
     yamlencode({
-      prometheusId = local.prometheus_release
-    }),
-    yamlencode({
       resource = local.prometheus_rule_manifest
     })
   ]
