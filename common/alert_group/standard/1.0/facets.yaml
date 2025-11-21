@@ -98,7 +98,7 @@ spec:
               title: Resource Name
               description: Name of the resource being monitored (must follow Kubernetes
                 naming conventions)
-              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+              pattern: ^(\{\{.*\}\}|[a-z0-9]([-a-z0-9]*[a-z0-9])?)$
               minLength: 1
               maxLength: 63
               x-ui-api-source:
