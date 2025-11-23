@@ -9,7 +9,7 @@ locals {
   kafka_version  = lookup(local.spec, "kafka_version", "4.0.0")
   replica_count  = lookup(local.spec, "replica_count", 3)
   storage_size   = lookup(local.spec, "storage_size", "10Gi")
-  admin_username = lookup(local.spec, "admin_username", "admin")
+  admin_username = "admin"
 
   # Extract resources
   resources = lookup(local.spec, "resources", {})

@@ -4,10 +4,10 @@ locals {
   spec            = var.instance.spec
   namespace_meta  = lookup(var.instance, "metadata", {})
   namespace       = lookup(local.namespace_meta, "namespace", "default")
-  database_name   = lookup(local.spec, "database_name", "admin")
+  database_name   = "admin"
   mongodb_version = lookup(local.spec, "mongodb_version", "7.0.15")
   replica_count   = lookup(local.spec, "replica_count", 3)
-  admin_username  = lookup(local.spec, "admin_username", "admin")
+  admin_username  = "admin"
   resources       = lookup(local.spec, "resources", {})
   cpu             = lookup(local.resources, "cpu", "1")
   memory          = lookup(local.resources, "memory", "2Gi")

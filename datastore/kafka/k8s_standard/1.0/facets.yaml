@@ -48,11 +48,6 @@ spec:
       description: Persistent volume size per replica
       default: 10Gi
       pattern: ^[0-9]+[GM]i$
-    admin_username:
-      type: string
-      title: Admin Username
-      description: Admin user for Kafka authentication
-      default: admin
     listeners:
       type: object
       title: Listeners
@@ -98,7 +93,7 @@ spec:
   - replica_count
 inputs:
   kubernetes_cluster:
-    type: '@facets/eks'
+    type: '@facets/kubernetes-details'
     optional: false
     displayName: Kubernetes Cluster
     description: Target Kubernetes cluster for Kafka deployment

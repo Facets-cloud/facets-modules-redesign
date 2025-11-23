@@ -9,11 +9,6 @@ spec:
   description: MongoDB replica set deployed using MongoDB Kubernetes Operator
   type: object
   properties:
-    database_name:
-      type: string
-      title: Database Name
-      description: Name of the default database to create
-      default: admin
     mongodb_version:
       type: string
       title: MongoDB Version
@@ -30,11 +25,6 @@ spec:
       default: 3
       minimum: 1
       maximum: 7
-    admin_username:
-      type: string
-      title: Admin Username
-      description: Username for MongoDB admin user
-      default: admin
     resources:
       type: object
       title: Resources
@@ -58,13 +48,11 @@ spec:
       default: 10Gi
       pattern: ^[0-9]+[GM]i$
   required:
-  - database_name
   - mongodb_version
   - replica_count
-  - admin_username
 inputs:
   kubernetes_cluster:
-    type: '@facets/eks'
+    type: '@facets/kubernetes-details'
     optional: false
     displayName: Kubernetes Cluster
     description: Target Kubernetes cluster for MongoDB deployment
@@ -96,7 +84,5 @@ sample:
   version: '1.0'
   disabled: false
   spec:
-    database_name: admin
     mongodb_version: 7.0.15
     replica_count: 3
-    admin_username: admin
