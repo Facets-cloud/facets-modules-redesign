@@ -1,0 +1,65 @@
+intent: eck-operator
+flavor: helm
+version: '1.0'
+clouds:
+  - kubernetes
+description: Elastic Cloud on Kubernetes (ECK) Operator deployed via Helm chart
+
+spec:
+  title: ECK Operator
+  description: Installs and manages the ECK Operator using Helm
+  type: object
+  properties:
+    chart_version:
+      type: string
+      title: Chart Version
+      description: ECK Operator Helm chart version
+      default: "2.11.0"
+      enum:
+        - "2.9.0"
+        - "2.10.0"
+        - "2.11.0"
+    create_namespace:
+      type: boolean
+      title: Create Namespace
+      description: Whether to create the namespace if it doesn't exist
+      default: true
+    helm_values:
+      type: object
+      title: Helm Values
+      description: Additional Helm values to override defaults
+      additionalProperties: true
+  required:
+    - chart_version
+
+inputs:
+  kubernetes_cluster:
+    type: '@facets/kubernetes-cluster'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Target Kubernetes cluster for ECK Operator deployment
+    providers:
+      - kubernetes
+      - helm
+
+outputs:
+  default:
+    type: '@facets/eck-operator'
+    title: ECK Operator
+
+iac:
+  validated_files:
+    - main.tf
+    - variables.tf
+    - locals.tf
+
+sample:
+  kind: eck-operator
+  flavor: helm
+  version: '1.0'
+  disabled: false
+  spec:
+    chart_version: "2.11.0"
+    create_namespace: true
+    helm_values:
+      installCRDs: true
