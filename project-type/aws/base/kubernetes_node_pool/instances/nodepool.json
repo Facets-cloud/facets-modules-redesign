@@ -42,12 +42,12 @@
   "disabled": true,
   "inputs": {
     "kubernetes_details": {
-      "resource_name": "aws-cluster",
+      "resource_name": "cluster",
       "resource_type": "kubernetes_cluster",
       "output_name": "attributes"
     },
     "network_details": {
-      "resource_name": "aws-network",
+      "resource_name": "network",
       "resource_type": "network"
     }
   }

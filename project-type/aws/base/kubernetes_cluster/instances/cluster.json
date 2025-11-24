@@ -6,11 +6,11 @@
   "kind": "kubernetes_cluster",
   "inputs": {
     "cloud_account": {
-      "resource_name": "aws-cloud",
+      "resource_name": "cloud",
       "resource_type": "cloud_account"
     },
     "network_details": {
-      "resource_name": "aws-network",
+      "resource_name": "network",
       "resource_type": "network"
     }
   },
