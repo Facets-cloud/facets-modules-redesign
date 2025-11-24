@@ -2,36 +2,52 @@ intent: eck-operator
 flavor: helm
 version: '1.0'
 clouds:
-  - kubernetes
+- kubernetes
 description: Elastic Cloud on Kubernetes (ECK) Operator deployed via Helm chart
-
 spec:
   title: ECK Operator
   description: Installs and manages the ECK Operator using Helm
   type: object
   properties:
-    chart_version:
+    namespace:
       type: string
-      title: Chart Version
-      description: ECK Operator Helm chart version
-      default: "2.11.0"
-      enum:
-        - "2.9.0"
-        - "2.10.0"
-        - "2.11.0"
-    create_namespace:
-      type: boolean
-      title: Create Namespace
-      description: Whether to create the namespace if it doesn't exist
-      default: true
+      title: Namespace
+      description: Kubernetes namespace for ECK Operator installation. If not specified,
+        uses the environment namespace.
+      default: elastic-system
+      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+      maxLength: 63
+    resources:
+      type: object
+      title: Resource Allocation
+      description: CPU and memory resources for ECK Operator pods
+      properties:
+        cpu_request:
+          type: string
+          title: CPU Request
+          description: Minimum CPU allocation
+          default: 100m
+        cpu_limit:
+          type: string
+          title: CPU Limit
+          description: Maximum CPU allocation
+          default: '1'
+        memory_request:
+          type: string
+          title: Memory Request
+          description: Minimum memory allocation
+          default: 150Mi
+        memory_limit:
+          type: string
+          title: Memory Limit
+          description: Maximum memory allocation
+          default: 1Gi
     helm_values:
       type: object
       title: Helm Values
       description: Additional Helm values to override defaults
-      additionalProperties: true
   required:
-    - chart_version
-
+  - resources
 inputs:
   kubernetes_cluster:
     type: '@facets/kubernetes-cluster'
@@ -39,27 +55,34 @@ inputs:
     displayName: Kubernetes Cluster
     description: Target Kubernetes cluster for ECK Operator deployment
     providers:
-      - kubernetes
-      - helm
-
+    - kubernetes
+    - helm
+  node_pool:
+    type: '@facets/kubernetes_nodepool'
+    optional: false
+    displayName: Node Pool
+    description: Node pool for Elasticsearch pods
 outputs:
   default:
     type: '@facets/eck-operator'
     title: ECK Operator
-
 iac:
   validated_files:
-    - main.tf
-    - variables.tf
-    - locals.tf
-
+  - main.tf
+  - variables.tf
+  - locals.tf
+  - outputs.tf
 sample:
   kind: eck-operator
   flavor: helm
   version: '1.0'
   disabled: false
   spec:
-    chart_version: "2.11.0"
-    create_namespace: true
+    namespace: elastic-system
+    resources:
+      cpu_request: 100m
+      cpu_limit: '1'
+      memory_request: 150Mi
+      memory_limit: 1Gi
     helm_values:
       installCRDs: true
