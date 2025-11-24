@@ -156,11 +156,8 @@ inputs:
     description: Azure VNet with PostgreSQL delegated subnet and DNS zone configuration
 outputs:
   default:
-    type: '@facets/postgres-azure-flexible-server'
+    type: '@facets/postgres'
     title: PostgreSQL Azure Flexible Server
-  interfaces:
-    type: '@facets/postgres-interface'
-    title: PostgreSQL Database Interface
 imports:
 - name: flexible_server_id
   resource_address: azurerm_postgresql_flexible_server.main

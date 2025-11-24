@@ -120,7 +120,7 @@ inputs:
     description: AWS VPC configuration for ElastiCache deployment
 outputs:
   default:
-    type: '@facets/redis-elasticache'
+    type: '@facets/redis'
     title: Redis AWS ElastiCache Cluster
 imports:
 - name: cluster_id

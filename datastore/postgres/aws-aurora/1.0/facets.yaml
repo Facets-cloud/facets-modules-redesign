@@ -164,11 +164,8 @@ inputs:
     description: VPC and networking configuration for Aurora cluster
 outputs:
   default:
-    type: '@facets/postgres-aws-aurora'
+    type: '@facets/postgres'
     title: PostgreSQL Aurora Cluster
-  interfaces:
-    type: '@facets/postgres-interface'
-    title: PostgreSQL Database Interface
 imports:
 - name: cluster_identifier
   resource_address: aws_rds_cluster.aurora
