@@ -1,0 +1,18 @@
+{
+  "kind": "ingress",
+  "flavor": "nginx_k8s",
+  "$schema": "https://facets-cloud.github.io/facets-schemas/schemas/ingress/ingress.schema.json",
+  "disabled": true,
+  "version": "1.0",
+  "metadata": {
+    "annotations": {}
+  },
+  "spec": {
+    "private": false,
+    "basic_auth": false,
+    "grpc": false,
+    "domains": {},
+    "rules": {},
+    "force_ssl_redirection": true
+  }
+}

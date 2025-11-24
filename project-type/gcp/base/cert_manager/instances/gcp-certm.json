@@ -1,0 +1,11 @@
+{
+  "kind": "cert_manager",
+  "flavor": "standard",
+  "disabled": true,
+  "metadata": {},
+  "version": "1.0",
+  "spec": {
+    "cname_strategy": "Follow",
+    "cert_manager": {}
+  }
+}

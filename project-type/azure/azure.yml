@@ -1,0 +1,45 @@
+name: Azure
+description: Azure project type with AKS and common services
+allowedClouds:
+    - AZURE
+
+# Git repository details
+gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
+gitRef: master
+baseTemplatePath: project-type/azure/base
+
+# IaC modules to include
+modules:
+    # Azure Core Modules
+    - intent: cloud_account
+      flavor: azure_provider
+    - intent: kubernetes_cluster
+      flavor: aks
+    - intent: kubernetes_node_pool
+      flavor: azure
+    - intent: network
+      flavor: azure_network
+    - intent: service
+      flavor: azure
+
+    # Common Modules
+    - intent: artifactory
+      flavor: standard
+    - intent: cert_manager
+      flavor: standard
+    - intent: config_map
+      flavor: k8s_standard
+    - intent: helm
+      flavor: k8s_standard
+    - intent: ingress
+      flavor: nginx_k8s
+    - intent: k8s_callback
+      flavor: k8s_standard
+    - intent: k8s_resource
+      flavor: k8s_standard
+    - intent: kubernetes_secret
+      flavor: k8s_standard
+    - intent: prometheus
+      flavor: k8s_standard
+    - intent: vpa
+      flavor: standard

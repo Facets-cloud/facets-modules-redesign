@@ -1,0 +1,21 @@
+{
+  "kind": "google_workload_identity",
+  "flavor": "gcp",
+  "version": "1.0",
+  "disabled": true,
+  "spec": {
+    "name": "petclinic",
+    "use_existing_gcp_sa": false,
+    "gcp_sa_description": "GCP Service Account for petclinic application",
+    "use_existing_k8s_sa": false,
+    "namespace": "default",
+    "roles": {
+      "storage-admin": {
+        "role": "roles/storage.admin"
+      },
+      "compute-admin": {
+        "role": "roles/compute.admin"
+      }
+    }
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "$schema": "https://facets-cloud.github.io/facets-schemas/schemas/prometheus/prometheus.schema.json",
+  "flavor": "k8s_standard",
+  "metadata": {
+    "namespace": "default"
+  },
+  "kind": "prometheus",
+  "version": "1.0",
+  "disabled": true,
+  "spec": {
+    "enable_crds": true,
+    "node_selector": {},
+    "tolerations": [],
+    "values": {},
+    "operator": {
+      "enabled": true,
+      "size": {
+        "resources": {
+          "requests": {
+            "cpu": "200m",
+            "memory": "512Mi"
+          },
+          "limits": {
+            "cpu": "200m",
+            "memory": "512Mi"
+          }
+        }
+      }
+    },
+    "prometheus": {
+      "enabled": true,
+      "retention": "100d",
+      "size": {
+        "volume": "100Gi",
+        "resources": {
+          "requests": {
+            "cpu": "1000m",
+            "memory": "4Gi"
+          },
+          "limits": {
+            "cpu": "1000m",
+            "memory": "4Gi"
+          }
+        }
+      }
+    },
+    "grafana": {
+      "enabled": true,
+      "size": {
+        "resources": {
+          "requests": {
+            "cpu": "200m",
+            "memory": "512Mi"
+          },
+          "limits": {
+            "cpu": "200m",
+            "memory": "512Mi"
+          }
+        }
+      }
+    },
+    "alertmanager": {
+      "enabled": true,
+      "size": {
+        "volume": "10Gi",
+        "resources": {
+          "requests": {
+            "cpu": "1000m",
+            "memory": "2Gi"
+          },
+          "limits": {
+            "cpu": "1000m",
+            "memory": "2Gi"
+          }
+        }
+      }
+    },
+    "kube-state-metrics": {
+      "enabled": true,
+      "collectors": [],
+      "size": {
+        "resources": {
+          "requests": {
+            "cpu": "200m",
+            "memory": "512Mi"
+          },
+          "limits": {
+            "cpu": "200m",
+            "memory": "512Mi"
+          }
+        }
+      }
+    }
+  }
+}

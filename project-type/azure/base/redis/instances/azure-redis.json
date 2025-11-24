@@ -1,0 +1,16 @@
+{
+  "kind": "redis",
+  "flavor": "azure_cache_custom",
+  "version": "1.0",
+  "disabled": true,
+  "spec": {
+    "version_config": {
+      "redis_version": "6",
+      "family": "P"
+    },
+    "sizing": {
+      "sku_name": "Premium",
+      "capacity": 1
+    }
+  }
+}

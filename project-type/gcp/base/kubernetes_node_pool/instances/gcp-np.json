@@ -1,0 +1,17 @@
+{
+  "flavor": "gke_custom_node_pool",
+  "version": "1.0",
+  "kind": "kubernetes_node_pool",
+  "metadata": {},
+  "disabled": true,
+  "spec": {
+    "instance_type": "n2d-standard-2",
+    "min_node_count": 1,
+    "max_node_count": 20,
+    "disk_size": 100,
+    "single_az": false,
+    "spot": false,
+    "taints": [],
+    "labels": {}
+  }
+}
