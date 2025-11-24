@@ -1,0 +1,39 @@
+{
+  "flavor": "gcp_node_fleet",
+  "version": "1.0",
+  "kind": "kubernetes_node_pool",
+  "metadata": {
+    "name": "example-fleet"
+  },
+  "spec": {
+    "node_pools": {
+      "worker-pool": {
+        "instance_type": "e2-standard-2",
+        "min_node_count": 1,
+        "max_node_count": 5,
+        "disk_size": 100,
+        "disk_type": "pd-standard",
+        "is_public": false,
+        "spot": false,
+        "autoscaling_per_zone": false,
+        "single_az": false
+      },
+      "spot-pool": {
+        "instance_type": "e2-standard-4",
+        "min_node_count": 0,
+        "max_node_count": 10,
+        "disk_size": 100,
+        "disk_type": "pd-standard",
+        "is_public": false,
+        "spot": true,
+        "autoscaling_per_zone": false,
+        "single_az": false
+      }
+    },
+    "labels": {
+      "fleet": "example"
+    },
+    "taints": []
+  },
+  "disabled": true
+}

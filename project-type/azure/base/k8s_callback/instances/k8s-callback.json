@@ -1,0 +1,7 @@
+{
+  "kind": "k8s_callback",
+  "flavor": "k8s_standard",
+  "version": "1.0",
+  "disabled": false,
+  "spec": {}
+}

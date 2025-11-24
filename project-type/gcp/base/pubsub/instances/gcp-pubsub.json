@@ -1,0 +1,14 @@
+{
+  "disabled": true,
+  "flavor": "gcp",
+  "kind": "pubsub",
+  "metadata": {
+    "name": "my-topic"
+  },
+  "spec": {
+    "create_subscription": true,
+    "message_retention_duration": "604800s",
+    "subscription_ack_deadline": 10
+  },
+  "version": "1.0"
+}

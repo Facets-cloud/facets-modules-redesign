@@ -1,0 +1,18 @@
+{
+  "$schema": "https://facets-cloud.github.io/facets-schemas/schemas/helm/helm.schema.json",
+  "kind": "helm",
+  "flavor": "k8s_standard",
+  "disabled": true,
+  "metadata": {},
+  "version": "1.0",
+  "spec": {
+    "helm": {
+      "repository": "https://helm.datadoghq.com",
+      "chart": "datadog",
+      "version": "3.135.0",
+      "namespace": "default",
+      "wait": false
+    },
+    "values": null
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "flavor": "azure",
+  "kind": "kubernetes_node_pool",
+  "metadata": {
+    "tags": {
+      "managed-by": "facets"
+    },
+    "annotations": {}
+  },
+  "disabled": true,
+  "version": "1.0",
+  "spec": {
+    "instance_type": "Standard_F8",
+    "min_node_count": 0,
+    "max_node_count": 100,
+    "disk_size": "50G",
+    "taints": {},
+    "labels": {}
+  }
+}
