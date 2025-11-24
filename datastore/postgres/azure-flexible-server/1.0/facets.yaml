@@ -105,16 +105,6 @@ spec:
             field: spec.restore_config.restore_from_backup
             values:
             - true
-        admin_password:
-          type: string
-          title: Admin Password
-          description: Admin password for the restored server (required for restore
-            operations)
-          minLength: 8
-          x-ui-visible-if:
-            field: spec.restore_config.restore_from_backup
-            values:
-            - true
       required: []
     imports:
       type: object
@@ -131,12 +121,6 @@ spec:
           title: Custom Database ID (Optional)
           description: Full Azure resource ID of custom database for import - NOT
             for "postgres" system database (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DBforPostgreSQL/flexibleServers/{server}/databases/{name})
-        admin_password:
-          type: string
-          title: Admin Password
-          description: Admin password for the imported server (8+ characters)
-          minLength: 8
-          x-ui-secret-ref: true
       required: []
   required:
   - version_config

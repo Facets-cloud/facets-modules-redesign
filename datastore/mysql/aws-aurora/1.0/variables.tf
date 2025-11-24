@@ -25,7 +25,6 @@ variable "instance" {
         cluster_identifier          = optional(string)
         writer_instance_identifier  = optional(string)
         reader_instance_identifiers = optional(string)
-        master_password             = optional(string)
       }), {})
     })
   })

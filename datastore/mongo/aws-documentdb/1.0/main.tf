@@ -80,7 +80,8 @@ resource "aws_docdb_cluster" "main" {
   engine                    = "docdb"
   engine_version            = var.instance.spec.version_config.engine_version == "6.0.0" ? "5.0.0" : var.instance.spec.version_config.engine_version
   master_username           = var.instance.spec.restore_config.restore_from_snapshot ? var.instance.spec.restore_config.master_username : "docdbadmin"
-  master_password           = local.master_password
+  master_password           = local.is_import ? null : (var.instance.spec.restore_config.restore_from_snapshot ? var.instance.spec.restore_config.master_password : random_password.master[0].result)
+  port                      = var.instance.spec.version_config.port
   backup_retention_period   = 7
   preferred_backup_window   = "07:00-09:00"
   skip_final_snapshot       = false

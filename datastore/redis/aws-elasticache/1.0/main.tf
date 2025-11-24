@@ -95,7 +95,7 @@ resource "aws_elasticache_replication_group" "redis" {
   at_rest_encryption_enabled = true
   transit_encryption_enabled = true
   # Only set auth_token for new clusters, not for imported ones
-  auth_token                 = var.instance.spec.imports.cluster_id != null && var.instance.spec.imports.cluster_id != "" ? var.instance.spec.imports.auth_token : random_password.redis_auth_token[0].result
+  auth_token                 = var.instance.spec.imports.cluster_id != null && var.instance.spec.imports.cluster_id != "" ? null : random_password.redis_auth_token[0].result
   auth_token_update_strategy = var.instance.spec.imports.cluster_id != null && var.instance.spec.imports.cluster_id != "" ? null : "ROTATE"
 
   # High availability - only enable if we have multiple nodes

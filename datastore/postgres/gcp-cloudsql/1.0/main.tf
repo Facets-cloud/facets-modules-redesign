@@ -128,7 +128,7 @@ resource "google_sql_database" "initial_database" {
 resource "google_sql_user" "postgres_user" {
   name     = local.user_name
   instance = google_sql_database_instance.postgres_instance.name
-  password = local.is_import ? var.instance.spec.imports.master_password : (var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_password : random_password.postgres_password[0].result)
+  password = local.is_import ? null : (var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_password : random_password.postgres_password[0].result)
 
   lifecycle {
     ignore_changes = [

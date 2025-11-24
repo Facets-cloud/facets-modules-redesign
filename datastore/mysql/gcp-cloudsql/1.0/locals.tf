@@ -4,7 +4,7 @@ locals {
   master_endpoint = google_sql_database_instance.mysql_instance.private_ip_address
   mysql_port      = 3306
   master_username = google_sql_user.mysql_root_user.name
-  master_password = var.instance.spec.imports.master_password != null ? var.instance.spec.imports.master_password : google_sql_user.mysql_root_user.password
+  master_password = try(google_sql_user.mysql_root_user.password, null)
   database_name   = google_sql_database.initial_database.name
 
   # Read replica endpoints (if any)

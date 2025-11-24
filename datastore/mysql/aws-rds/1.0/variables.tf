@@ -27,7 +27,6 @@ variable "instance" {
         db_instance_identifier = optional(string)
         db_subnet_group_name   = optional(string)
         security_group_id      = optional(string)
-        master_password        = optional(string)
       }))
     })
   })

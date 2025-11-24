@@ -111,12 +111,6 @@ spec:
           type: string
           title: User Name
           description: Name of existing database user to import
-        master_password:
-          type: string
-          title: Master Password
-          description: Master password for the imported resource (8+ characters)
-          minLength: 8
-          x-ui-secret-ref: true
   required:
   - version_config
   - sizing
