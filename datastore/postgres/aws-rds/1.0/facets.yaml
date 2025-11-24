@@ -173,11 +173,8 @@ inputs:
     description: AWS VPC infrastructure for database deployment
 outputs:
   default:
-    type: '@facets/postgres-aws-rds'
+    type: '@facets/postgres'
     title: PostgreSQL RDS Instance
-  interfaces:
-    type: '@facets/postgres-interface'
-    title: PostgreSQL Database Interface
 iac:
   validated_files:
   - main.tf
