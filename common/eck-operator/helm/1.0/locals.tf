@@ -9,9 +9,8 @@ locals {
   chart_name    = "eck-operator"
   chart_version = "2.14.0"
 
-  # Only create namespace if using the default fallback value (not user-provided)
-  # If user provides a custom namespace, assume it already exists or will be managed elsewhere
-  create_namespace = var.instance.spec.namespace == "" ? true : false
+  # Whether to create the namespace
+  create_namespace = true
 
   # Get Kubernetes cluster details
   k8s_cluster_input = lookup(var.inputs, "kubernetes_cluster", {})
@@ -55,25 +54,6 @@ locals {
     # Node pool configuration for operator pods
     nodeSelector = local.node_selector
     tolerations  = local.tolerations
-
-    # Affinity rules (optional - for better pod distribution)
-    affinity = length(local.node_selector) > 0 ? {
-      nodeAffinity = {
-        requiredDuringSchedulingIgnoredDuringExecution = {
-          nodeSelectorTerms = [
-            {
-              matchExpressions = [
-                for key, value in local.node_selector : {
-                  key      = key
-                  operator = "In"
-                  values   = [value]
-                }
-              ]
-            }
-          ]
-        }
-      }
-    } : {}
   }
 
   # Merge default and custom values (helm_values override defaults)

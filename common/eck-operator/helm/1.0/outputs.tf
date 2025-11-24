@@ -14,7 +14,7 @@ locals {
   output_interfaces = {
     operator = {
       namespace       = local.namespace
-      release_name    = var.instance_name
+      release_name    = helm_release.eck_operator.name
       operator_name   = "elastic-operator"
       webhook_service = "elastic-webhook-server"
       webhook_port    = 9443
@@ -25,14 +25,4 @@ locals {
       path    = "/validate"
     }
   }
-}
-
-output "attributes" {
-  description = "All attributes of the ECK Operator instance"
-  value       = local.output_attributes
-}
-
-output "interfaces" {
-  description = "Interface endpoints for the ECK Operator"
-  value       = local.output_interfaces
 }
