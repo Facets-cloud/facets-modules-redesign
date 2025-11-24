@@ -20,6 +20,7 @@ locals {
   # Get ECK operator Helm release name for dependency
   eck_operator_input  = lookup(var.inputs, "eck_operator", {})
   operator_attributes = lookup(local.eck_operator_input, "attributes", {})
+  operator_interfaces = lookup(local.eck_operator_input, "interfaces", {})
   operator_release    = lookup(local.operator_attributes, "release_name", "unknown")
 
   # Convert taints from {key: "key", value: "value", effect: "effect"} to tolerations format
