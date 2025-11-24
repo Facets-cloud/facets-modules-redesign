@@ -49,5 +49,29 @@
     },
     "init_containers": {},
     "sidecars": {}
+  },
+  "inputs": {
+    "kubernetes_details": {
+      "resource_name": "cluster",
+      "resource_type": "kubernetes_cluster",
+      "output_name": "attributes"
+    },
+    "cloud_account": {
+      "resource_name": "cloud",
+      "resource_type": "cloud_account"
+    },
+    "artifactories": {
+      "resource_name": "artifactory",
+      "resource_type": "artifactory"
+    },
+    "vpa_details": {
+      "resource_name": "vpa",
+      "resource_type": "vpa"
+    },
+    "kubernetes_node_pool_details": {
+      "resource_name": "nodepool",
+      "resource_type": "kubernetes_node_pool",
+      "output_name": "attributes"
+    }
   }
 }

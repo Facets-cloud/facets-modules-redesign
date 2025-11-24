@@ -3,5 +3,11 @@
   "flavor": "k8s_standard",
   "version": "1.0",
   "disabled": false,
-  "spec": {}
+  "spec": {},
+  "inputs": {
+    "kubernetes_details": {
+      "resource_name": "cluster",
+      "resource_type": "kubernetes_cluster"
+    }
+  }
 }

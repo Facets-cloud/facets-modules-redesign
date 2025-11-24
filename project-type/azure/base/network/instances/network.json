@@ -19,5 +19,11 @@
       "enable_mysql_flexible_subnet": false
     }
   },
-  "disabled": true
+  "disabled": true,
+  "inputs": {
+    "cloud_account": {
+      "resource_name": "cloud",
+      "resource_type": "cloud_account"
+    }
+  }
 }

@@ -14,5 +14,11 @@
     "vpc_cidr": "10.0.0.0/16"
   },
   "version": "1.0",
-  "disabled": true
+  "disabled": true,
+  "inputs": {
+    "cloud_account": {
+      "resource_name": "cloud",
+      "resource_type": "cloud_account"
+    }
+  }
 }

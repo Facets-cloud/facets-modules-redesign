@@ -40,5 +40,15 @@
     },
     "tags": {}
   },
-  "disabled": true
+  "disabled": true,
+  "inputs": {
+    "cloud_account": {
+      "resource_name": "cloud",
+      "resource_type": "cloud_account"
+    },
+    "network_details": {
+      "resource_name": "network",
+      "resource_type": "network"
+    }
+  }
 }
