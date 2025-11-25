@@ -13,14 +13,13 @@ locals {
 
   # Get node pool details from input
   node_pool_input  = lookup(var.inputs, "node_pool", {})
-  node_pool_attrs  = lookup(local.node_pool_input, "attributes", {})
+  node_pool_attrs  = lookup(local.node_pool_input, "output_attributes", {})
   node_selector    = lookup(local.node_pool_attrs, "node_selector", {})
   node_pool_taints = lookup(local.node_pool_attrs, "taints", {})
 
   # Get ECK operator Helm release name for dependency
   eck_operator_input  = lookup(var.inputs, "eck_operator", {})
-  operator_attributes = lookup(local.eck_operator_input, "attributes", {})
-  operator_interfaces = lookup(local.eck_operator_input, "interfaces", {})
+  operator_attributes = lookup(local.eck_operator_input, "output_attributes", {})
   operator_release    = lookup(local.operator_attributes, "release_name", "unknown")
 
   # Convert taints from {key: "key", value: "value", effect: "effect"} to tolerations format

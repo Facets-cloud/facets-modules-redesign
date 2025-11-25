@@ -65,7 +65,7 @@ inputs:
     displayName: Node Pool
     description: Node pool for MongoDB pods
   mongodb_operator:
-    type: '@facets/helm'
+    type: '@facets/mongodb-operator'
     optional: false
     displayName: MongoDB Kubernetes Operator
     description: MongoDB Kubernetes Operator Helm release

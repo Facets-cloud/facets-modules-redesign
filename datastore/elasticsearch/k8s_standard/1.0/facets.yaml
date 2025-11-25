@@ -67,7 +67,7 @@ inputs:
     displayName: Node Pool
     description: Node pool for Elasticsearch pods
   eck_operator:
-    type: '@facets/helm'
+    type: '@facets/eck-operator'
     optional: false
     displayName: ECK Operator
     description: Elastic Cloud on Kubernetes (ECK) Operator Helm release

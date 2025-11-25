@@ -106,7 +106,7 @@ inputs:
     displayName: Node Pool
     description: Node pool for Kafka pods
   strimzi_operator:
-    type: '@facets/helm'
+    type: '@facets/strimzi-operator'
     optional: false
     displayName: Strimzi Kafka Operator
     description: Strimzi Kafka Operator Helm release
