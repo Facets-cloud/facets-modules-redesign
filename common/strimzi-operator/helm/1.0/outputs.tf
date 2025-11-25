@@ -10,3 +10,6 @@ locals {
     revision      = helm_release.strimzi_operator.metadata[0].revision
   }
 }
+output "output_attributes" {
+  value = local.output_attributes
+}
