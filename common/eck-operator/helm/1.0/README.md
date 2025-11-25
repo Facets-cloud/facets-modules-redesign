@@ -71,27 +71,12 @@ The ECK Operator requires cluster-level permissions to manage Elastic resources 
 - **Secret Access**: Read/write access to secrets for certificate management and credentials
 - **Pod Management**: Create, update, and delete pods for Elastic components
 
-### Webhook Security
-
-The validating and mutating admission webhooks enforce security policies:
-
-- **TLS Communication**: Webhooks use TLS certificates for secure API server communication
-- **Resource Validation**: Prevents invalid Elastic resource configurations
-- **Mutation Control**: Automatically applies best practices and security defaults
-
 ### Network Policies
 
 Consider implementing Kubernetes NetworkPolicies to:
 - Restrict operator pod communication to necessary services only
 - Isolate webhook traffic to the Kubernetes API server
 - Control egress for image pulls and external integrations
-
-### Secrets Management
-
-The operator creates and manages TLS certificates and credentials as Kubernetes secrets. Ensure:
-- Secret encryption at rest is enabled in the cluster
-- RBAC policies limit access to operator-managed secrets
-- Secret rotation policies are in place for production environments
 
 ## Advanced Configuration
 
