@@ -2,15 +2,22 @@
 
 # Random password generation for new clusters (when not restoring or importing)
 resource "random_password" "master" {
-  count            = local.is_import || var.instance.spec.restore_config.restore_from_snapshot ? 0 : 1
+  count            = var.instance.spec.restore_config.restore_from_snapshot ? 0 : 1
   length           = 16
   special          = true
   override_special = "!#$%&*+-=?^_`{|}~" # Exclude problematic characters: /, @, ", and space
+
+  lifecycle {
+    ignore_changes = [
+      length,
+      override_special,
+    ]
+  }
 }
 
 # DocumentDB Subnet Group (only for new clusters, not imported)
 resource "aws_docdb_subnet_group" "main" {
-  count      = local.is_import ? 0 : 1
+  count      = 1
   name       = "${var.instance_name}-${var.environment.unique_name}"
   subnet_ids = var.inputs.vpc_details.attributes.private_subnet_ids
 
@@ -21,13 +28,14 @@ resource "aws_docdb_subnet_group" "main" {
   lifecycle {
     ignore_changes = [
       name,
+      subnet_ids,
     ]
   }
 }
 
 # Security Group for DocumentDB (only for new clusters, not imported)
 resource "aws_security_group" "documentdb" {
-  count       = local.is_import ? 0 : 1
+  count       = 1
   name_prefix = "${var.instance_name}-${var.environment.unique_name}-"
   vpc_id      = var.inputs.vpc_details.attributes.vpc_id
 
@@ -54,6 +62,7 @@ resource "aws_security_group" "documentdb" {
     ignore_changes = [
       name_prefix,
       name,
+      vpc_id,
     ]
   }
 }

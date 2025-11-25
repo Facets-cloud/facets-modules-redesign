@@ -55,6 +55,7 @@ spec:
     restore_config:
       type: object
       title: Restore Operations
+      x-ui-overrides-only: true
       properties:
         restore_from_snapshot:
           type: boolean
@@ -90,6 +91,7 @@ spec:
     imports:
       type: object
       title: Import Existing Resources
+      x-ui-overrides-only: true
       properties:
         cluster_identifier:
           type: string
@@ -108,7 +110,6 @@ spec:
           title: Master Password
           description: Master password for the imported cluster (8+ characters)
           minLength: 8
-          x-ui-secret-ref: true
   required:
   - version_config
   - sizing
@@ -134,10 +135,13 @@ imports:
   resource_address: aws_docdb_cluster.main
   required: true
 - name: security_group_id
-  resource_address: aws_security_group.documentdb
+  resource_address: aws_security_group.documentdb[0]
   required: true
 - name: subnet_group_name
-  resource_address: aws_docdb_subnet_group.main
+  resource_address: aws_docdb_subnet_group.main[0]
+  required: true
+- name: master_password
+  resource_address: random_password.master[0]
   required: true
 iac:
   validated_files:
