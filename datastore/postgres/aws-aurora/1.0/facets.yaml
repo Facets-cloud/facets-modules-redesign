@@ -146,7 +146,6 @@ spec:
           title: Master Password
           description: Master password for the imported cluster (8+ characters)
           minLength: 8
-          x-ui-secret-ref: true
   required:
   - version_config
   - sizing
@@ -178,6 +177,9 @@ imports:
 - name: reader_instance_identifiers
   resource_address: aws_rds_cluster_instance.aurora_readers[0]
   required: false
+- name: master_password
+  resource_address: random_password.master_password[0]
+  required: true
 iac:
   validated_files:
   - main.tf

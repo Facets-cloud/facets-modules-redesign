@@ -1,8 +1,15 @@
 # Generate random password for PostgreSQL admin (skip during restore or import)
 resource "random_password" "admin_password" {
-  count   = local.is_restore || local.is_import ? 0 : 1
+  count   = local.is_restore ? 0 : 1
   length  = 16
   special = true
+
+  lifecycle {
+    ignore_changes = [
+      length,
+      special,
+    ]
+  }
 }
 
 # PostgreSQL Flexible Server - Using network module resources

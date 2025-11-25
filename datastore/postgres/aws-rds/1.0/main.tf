@@ -1,7 +1,7 @@
 # PostgreSQL RDS Instance Implementation
 
 resource "random_password" "master_password" {
-  count   = (var.instance.spec.restore_config.restore_from_backup || lookup(var.instance.spec, "imports", null) != null && lookup(var.instance.spec.imports, "db_instance_identifier", null) != null) ? 0 : 1
+  count   = var.instance.spec.restore_config.restore_from_backup ? 0 : 1
   length  = 16
   special = true
   upper   = true
@@ -9,6 +9,13 @@ resource "random_password" "master_password" {
   numeric = true
   # Exclude RDS-forbidden characters: /, @, ", space
   override_special = "!#$%&*()-_=+[]{}<>:?"
+
+  lifecycle {
+    ignore_changes = [
+      length,
+      override_special,
+    ]
+  }
 }
 
 # Random username generation (when not restoring from backup or importing)

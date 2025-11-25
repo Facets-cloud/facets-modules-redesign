@@ -90,7 +90,6 @@ spec:
           type: string
           title: Master Password
           description: Master password for restored database (required when restoring)
-          x-ui-secret-ref: true
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
             values:
@@ -118,7 +117,6 @@ spec:
           title: Master Password
           description: Master password for the imported resource (8+ characters)
           minLength: 8
-          x-ui-secret-ref: true
   required:
   - version_config
   - sizing
@@ -132,6 +130,9 @@ imports:
 - name: user_name
   resource_address: google_sql_user.postgres_user
   required: false
+- name: master_password
+  resource_address: random_password.postgres_password[0]
+  required: true
 inputs:
   gcp_provider:
     type: '@facets/gcp_cloud_account'

@@ -4,7 +4,7 @@
 
 # Random password for MySQL root user (when not restoring from backup or importing user)
 resource "random_password" "mysql_password" {
-  count   = (var.instance.spec.restore_config.restore_from_backup || try(var.instance.spec.imports.root_user, "") != "") ? 0 : 1
+  count   = var.instance.spec.restore_config.restore_from_backup ? 0 : 1
   length  = 16
   special = true
 

@@ -1,10 +1,17 @@
 # Generate a random password only when NOT restoring from backup AND NOT importing
 # PostgreSQL password requirements: no '/', '@', '"', ' ' (space), but allows other special characters
 resource "random_password" "master_password" {
-  count            = (var.instance.spec.restore_config.restore_from_backup || try(var.instance.spec.imports.cluster_identifier, null) != null) ? 0 : 1
+  count            = var.instance.spec.restore_config.restore_from_backup ? 0 : 1
   length           = 16
   special          = true
   override_special = "!#$%&*+-=?^_`{|}~" # Safe special characters for Aurora PostgreSQL
+
+  lifecycle {
+    ignore_changes = [
+      length,
+      override_special,
+    ]
+  }
 }
 
 # Generate unique cluster identifier

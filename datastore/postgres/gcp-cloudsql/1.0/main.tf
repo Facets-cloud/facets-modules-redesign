@@ -4,9 +4,16 @@
 
 # Random password for PostgreSQL user (when not restoring from backup or importing)
 resource "random_password" "postgres_password" {
-  count   = (var.instance.spec.restore_config.restore_from_backup || local.is_import) ? 0 : 1
+  count   = var.instance.spec.restore_config.restore_from_backup ? 0 : 1
   length  = 16
   special = true
+
+  lifecycle {
+    ignore_changes = [
+      length,
+      special,
+    ]
+  }
 }
 
 # CloudSQL PostgreSQL instance

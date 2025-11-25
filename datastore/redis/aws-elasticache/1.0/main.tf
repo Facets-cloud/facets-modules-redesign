@@ -1,8 +1,15 @@
 # Generate secure auth token for Redis (only for new clusters)
 resource "random_password" "redis_auth_token" {
-  count   = var.instance.spec.imports.cluster_id != null && var.instance.spec.imports.cluster_id != "" ? 0 : 1
+  count   = 1
   length  = 64
   special = false
+
+  lifecycle {
+    ignore_changes = [
+      length,
+      special,
+    ]
+  }
 }
 
 # ElastiCache subnet group

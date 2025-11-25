@@ -151,7 +151,6 @@ spec:
           title: Master Password
           description: Master password for the imported resource (8+ characters)
           minLength: 8
-          x-ui-secret-ref: true
   required:
   - version_config
 imports:
@@ -164,6 +163,9 @@ imports:
 - name: security_group_id
   resource_address: aws_security_group.mysql
   required: false
+- name: master_password
+  resource_address: random_password.master_password[0]
+  required: true
 inputs:
   aws_cloud_account:
     type: '@facets/aws_cloud_account'

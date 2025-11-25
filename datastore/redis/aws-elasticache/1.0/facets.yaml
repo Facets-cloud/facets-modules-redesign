@@ -104,7 +104,6 @@ spec:
           title: Auth Token
           description: Auth token for accessing the imported Redis cluster
           minLength: 64
-          x-ui-secret-ref: true
   required:
   - version_config
 inputs:
@@ -134,6 +133,9 @@ imports:
 - name: security_group_id
   resource_address: aws_security_group.redis
   required: false
+- name: auth_token
+  resource_address: random_password.redis_auth_token[0]
+  required: true
 iac:
   validated_files:
   - main.tf
