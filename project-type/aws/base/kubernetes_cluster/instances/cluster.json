@@ -1,0 +1,45 @@
+{
+  "flavor": "eks",
+  "metadata": {
+    "name": "eks-cluster"
+  },
+  "kind": "kubernetes_cluster",
+  "inputs": {
+    "cloud_account": {
+      "resource_name": "cloud",
+      "resource_type": "cloud_account"
+    },
+    "network_details": {
+      "resource_name": "network",
+      "resource_type": "network"
+    }
+  },
+  "alias-flavors": [
+    "default"
+  ],
+  "disabled": true,
+  "version": "1.0",
+  "spec": {
+    "cluster": {
+      "cluster_endpoint_public_access": true,
+      "cluster_endpoint_public_access_cidrs": [
+        "0.0.0.0/0"
+      ],
+      "cluster_addons": {
+        "eks-cluster-addons1": {
+          "name": "snapshot-controller",
+          "enabled": true,
+          "preserve": false
+        },
+        "eks-cluster-addons2": {
+          "name": "metrics-server",
+          "enabled": true
+        }
+      },
+      "cloudwatch": {
+        "log_group_retention_in_days": 90
+      }
+    }
+  },
+  "uiProps": {}
+}
