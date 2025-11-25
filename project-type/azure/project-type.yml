@@ -1,26 +1,24 @@
-name: AWS
-description: AWS project type with common configurations.
-allowedClouds:
-    - AWS
+name: Azure
+description: Azure project type with AKS and common services
 
 # Git repository details
 gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
 gitRef: master
-baseTemplatePath: project-type/aws/base
+baseTemplatePath: project-type/azure/base
 
 # IaC modules to include
 modules:
-    # AWS Modules
+    # Azure Core Modules
     - intent: cloud_account
-      flavor: aws_provider
+      flavor: azure_provider
     - intent: kubernetes_cluster
-      flavor: eks
+      flavor: aks
     - intent: kubernetes_node_pool
-      flavor: aws
+      flavor: azure
     - intent: network
-      flavor: aws_vpc
+      flavor: azure_network
     - intent: service
-      flavor: aws
+      flavor: azure
 
     # Common Modules
     - intent: artifactory

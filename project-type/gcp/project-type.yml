@@ -1,26 +1,32 @@
-name: Azure
-description: Azure project type with AKS and common services
-allowedClouds:
-    - AZURE
+name: GCP
+description: GCP project type with GKE and common services
 
 # Git repository details
 gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
 gitRef: master
-baseTemplatePath: project-type/azure/base
+baseTemplatePath: project-type/gcp/base
 
 # IaC modules to include
 modules:
-    # Azure Core Modules
+    # GCP Core Modules
     - intent: cloud_account
-      flavor: azure_provider
+      flavor: gcp_provider
     - intent: kubernetes_cluster
-      flavor: aks
+      flavor: gke
     - intent: kubernetes_node_pool
-      flavor: azure
+      flavor: gke_custom_node_pool
+    - intent: kubernetes_node_pool
+      flavor: gcp_node_fleet
     - intent: network
-      flavor: azure_network
+      flavor: gcp-vpc
     - intent: service
-      flavor: azure
+      flavor: gcp
+
+    # GCP-Specific Modules
+    - intent: google_workload_identity
+      flavor: gcp
+    - intent: pubsub
+      flavor: gcp
 
     # Common Modules
     - intent: artifactory

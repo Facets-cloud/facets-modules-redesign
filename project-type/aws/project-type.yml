@@ -1,34 +1,24 @@
-name: GCP
-description: GCP project type with GKE and common services
-allowedClouds:
-    - GCP
+name: AWS
+description: AWS project type with common configurations.
 
 # Git repository details
 gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
 gitRef: master
-baseTemplatePath: project-type/gcp/base
+baseTemplatePath: project-type/aws/base
 
 # IaC modules to include
 modules:
-    # GCP Core Modules
+    # AWS Modules
     - intent: cloud_account
-      flavor: gcp_provider
+      flavor: aws_provider
     - intent: kubernetes_cluster
-      flavor: gke
+      flavor: eks
     - intent: kubernetes_node_pool
-      flavor: gke_custom_node_pool
-    - intent: kubernetes_node_pool
-      flavor: gcp_node_fleet
+      flavor: aws
     - intent: network
-      flavor: gcp-vpc
+      flavor: aws_vpc
     - intent: service
-      flavor: gcp
-
-    # GCP-Specific Modules
-    - intent: google_workload_identity
-      flavor: gcp
-    - intent: pubsub
-      flavor: gcp
+      flavor: aws
 
     # Common Modules
     - intent: artifactory
