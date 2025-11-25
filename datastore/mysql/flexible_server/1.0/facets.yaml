@@ -117,6 +117,7 @@ spec:
     restore_config:
       type: object
       title: Restore Operations
+      x-ui-overrides-only: true
       properties:
         restore_from_backup:
           type: boolean
@@ -164,6 +165,7 @@ spec:
     imports:
       type: object
       title: Import Existing Resources
+      x-ui-overrides-only: true
       properties:
         server_id:
           type: string

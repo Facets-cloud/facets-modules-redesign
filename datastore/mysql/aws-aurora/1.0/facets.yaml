@@ -82,6 +82,7 @@ spec:
     restore_config:
       type: object
       title: Restore Operations
+      x-ui-overrides-only: true
       x-ui-toggle: true
       properties:
         restore_from_backup:
@@ -121,6 +122,7 @@ spec:
     imports:
       type: object
       title: Import Existing Resources
+      x-ui-overrides-only: true
       x-ui-toggle: true
       properties:
         cluster_identifier:
