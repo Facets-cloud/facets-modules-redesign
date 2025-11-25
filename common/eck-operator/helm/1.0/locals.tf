@@ -7,7 +7,7 @@ locals {
   # Helm chart configuration
   repository    = "https://helm.elastic.co"
   chart_name    = "eck-operator"
-  chart_version = "2.14.0"
+  chart_version = "3.1.0"
 
   # Whether to create the namespace
   create_namespace = true
