@@ -28,7 +28,7 @@ locals {
   imported_writer_id = try(var.instance.spec.imports.writer_instance_identifier, null)
 
   # Handle password - don't create for restore or import
-  master_password = (local.restore_from_backup ? var.instance.spec.restore_config.master_password : local.is_import ? var.instance.spec.imports.master_password : random_password.master_password[0].result)
+  master_password = local.restore_from_backup ? var.instance.spec.restore_config.master_password : random_password.master_password[0].result
   master_username = local.restore_from_backup ? var.instance.spec.restore_config.master_username : "admin"
 
   # Split reader instance identifiers if provided for import

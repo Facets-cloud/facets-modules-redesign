@@ -59,8 +59,8 @@ locals {
   replica_identifier_base = local.is_importing ? substr("${local.base_cleaned}imp", 0, 47) : substr(local.db_instance_identifier, 0, 52)
 
   # Master credentials
-  master_username = (var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_username : "pgadmin${random_id.master_username[0].hex}")
-  master_password = local.is_importing ? var.instance.spec.imports.master_password : (var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_password : random_password.master_password[0].result)
+  master_username = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_username : "pgadmin${random_id.master_username[0].hex}"
+  master_password = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_password : random_password.master_password[0].result
 
   # Database configuration
   database_name = var.instance.spec.version_config.database_name

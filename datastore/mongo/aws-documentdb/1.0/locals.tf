@@ -17,7 +17,7 @@ locals {
   # - restore_from_snapshot → use restore password
   # - import → use imported master password
   # - new cluster → use generated random password
-  master_password = (var.instance.spec.restore_config.restore_from_snapshot ? var.instance.spec.restore_config.master_password : local.is_import ? var.instance.spec.imports.master_password : random_password.master[0].result)
+  master_password = (var.instance.spec.restore_config.restore_from_snapshot ? var.instance.spec.restore_config.master_password : random_password.master[0].result)
 
   # Connection string for MongoDB
   connection_string = "mongodb://${local.master_username}:${local.master_password}@${local.cluster_endpoint}:${local.cluster_port}/?tls=true&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"

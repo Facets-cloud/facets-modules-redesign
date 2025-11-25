@@ -29,6 +29,8 @@ resource "aws_docdb_subnet_group" "main" {
     ignore_changes = [
       name,
       subnet_ids,
+      tags,
+      Name,
     ]
   }
 }
@@ -63,6 +65,8 @@ resource "aws_security_group" "documentdb" {
       name_prefix,
       name,
       vpc_id,
+      tags,
+      Name,
     ]
   }
 }
