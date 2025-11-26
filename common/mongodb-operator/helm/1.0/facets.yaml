@@ -49,7 +49,7 @@ spec:
   - resources
 inputs:
   kubernetes_cluster:
-    type: '@facets/kubernetes-cluster'
+    type: '@facets/kubernetes-details'
     optional: false
     displayName: Kubernetes Cluster
     description: Target Kubernetes cluster for MongoDB Operator deployment
