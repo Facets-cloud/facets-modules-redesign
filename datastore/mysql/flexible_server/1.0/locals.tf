@@ -47,7 +47,7 @@ locals {
 
   # Credentials - For restore operations, credentials come from source server
   # For new servers, use provided or generated credentials
-  administrator_login    = local.restore_enabled ? try(var.instance.spec.restore_config.administrator_login, "mysqladmin") : "mysqladmin"
+  administrator_login    = "mysqladmin"
   administrator_password = local.restore_enabled ? try(var.instance.spec.restore_config.administrator_password, null) : (length(random_password.mysql_password) > 0 ? random_password.mysql_password[0].result : null)
 
   # Networking - Use MySQL-specific subnet and DNS zone from network module

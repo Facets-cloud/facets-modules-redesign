@@ -32,14 +32,6 @@ spec:
           minLength: 1
           maxLength: 64
           default: myapp
-        master_username:
-          type: string
-          title: Master Username
-          description: Master username for database access
-          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
-          minLength: 1
-          maxLength: 16
-          default: admin
     sizing:
       type: object
       title: Sizing & Performance
@@ -102,18 +94,6 @@ spec:
           type: string
           title: Source DB Instance
           description: Source database instance identifier for restore
-          x-ui-visible-if:
-            field: spec.restore_config.restore_from_backup
-            values:
-            - true
-        restore_master_username:
-          type: string
-          title: Restore Master Username
-          description: Master username for restored database (required for restore
-            operations)
-          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
-          minLength: 1
-          maxLength: 16
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
             values:
@@ -197,7 +177,6 @@ sample:
     version_config:
       version: '8.4'
       database_name: myapp
-      master_username: admin
     sizing:
       instance_class: db.t3.small
       allocated_storage: 100

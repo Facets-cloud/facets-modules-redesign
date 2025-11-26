@@ -17,7 +17,6 @@ resource "random_password" "master" {
 
 # DocumentDB Subnet Group (only for new clusters, not imported)
 resource "aws_docdb_subnet_group" "main" {
-  count      = 1
   name       = "${var.instance_name}-${var.environment.unique_name}"
   subnet_ids = var.inputs.vpc_details.attributes.private_subnet_ids
 
@@ -30,14 +29,12 @@ resource "aws_docdb_subnet_group" "main" {
       name,
       subnet_ids,
       tags,
-      Name,
     ]
   }
 }
 
 # Security Group for DocumentDB (only for new clusters, not imported)
 resource "aws_security_group" "documentdb" {
-  count       = 1
   name_prefix = "${var.instance_name}-${var.environment.unique_name}-"
   vpc_id      = var.inputs.vpc_details.attributes.vpc_id
 
@@ -66,7 +63,6 @@ resource "aws_security_group" "documentdb" {
       name,
       vpc_id,
       tags,
-      Name,
     ]
   }
 }
@@ -104,8 +100,8 @@ resource "aws_docdb_cluster" "main" {
   snapshot_identifier = var.instance.spec.restore_config.restore_from_snapshot ? var.instance.spec.restore_config.snapshot_identifier : null
 
   # Network configuration
-  db_subnet_group_name   = local.is_import ? var.instance.spec.imports.subnet_group_name : aws_docdb_subnet_group.main[0].name
-  vpc_security_group_ids = local.is_import ? [var.instance.spec.imports.security_group_id] : [aws_security_group.documentdb[0].id]
+  db_subnet_group_name   = local.is_import ? var.instance.spec.imports.subnet_group_name : aws_docdb_subnet_group.main.name
+  vpc_security_group_ids = local.is_import ? [var.instance.spec.imports.security_group_id] : [aws_security_group.documentdb.id]
 
   # Parameter group (only for new clusters)
   db_cluster_parameter_group_name = local.is_import ? null : aws_docdb_cluster_parameter_group.main[0].name

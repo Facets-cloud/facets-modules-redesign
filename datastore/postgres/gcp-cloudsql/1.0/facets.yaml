@@ -77,15 +77,6 @@ spec:
             field: spec.restore_config.restore_from_backup
             values:
             - true
-        master_username:
-          type: string
-          title: Master Username
-          description: Master username for restored database (required when restoring)
-          default: postgres
-          x-ui-visible-if:
-            field: spec.restore_config.restore_from_backup
-            values:
-            - true
         master_password:
           type: string
           title: Master Password

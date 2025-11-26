@@ -6,7 +6,7 @@ locals {
 
 
   # Security group ID - use imported one if importing, otherwise use created one
-  security_group_id = local.is_import ? var.instance.spec.imports.security_group_id : aws_security_group.documentdb[0].id
+  security_group_id = local.is_import ? var.instance.spec.imports.security_group_id : aws_security_group.documentdb.id
 
   # Extract cluster information
   cluster_endpoint = aws_docdb_cluster.main.endpoint

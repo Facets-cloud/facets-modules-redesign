@@ -135,10 +135,10 @@ imports:
   resource_address: aws_docdb_cluster.main
   required: true
 - name: security_group_id
-  resource_address: aws_security_group.documentdb[0]
+  resource_address: aws_security_group.documentdb
   required: true
 - name: subnet_group_name
-  resource_address: aws_docdb_subnet_group.main[0]
+  resource_address: aws_docdb_subnet_group.main
   required: true
 - name: master_password
   resource_address: random_password.master[0]

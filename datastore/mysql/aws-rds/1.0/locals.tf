@@ -26,7 +26,7 @@ locals {
   is_restore_operation = var.instance.spec.restore_config.restore_from_backup
 
   # When importing, username and password should be same as the original to avoid overriding existing values
-  master_username = local.is_restore_operation ? var.instance.spec.restore_config.restore_master_username : var.instance.spec.version_config.master_username
+  master_username = "admin"
   master_password = local.is_restore_operation ? var.instance.spec.restore_config.restore_master_password : random_password.master_password[0].result
 
   # Database name - should be same when importing

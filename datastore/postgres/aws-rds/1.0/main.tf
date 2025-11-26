@@ -18,12 +18,6 @@ resource "random_password" "master_password" {
   }
 }
 
-# Random username generation (when not restoring from backup or importing)
-resource "random_id" "master_username" {
-  count       = (var.instance.spec.restore_config.restore_from_backup || lookup(var.instance.spec, "imports", null) != null && lookup(var.instance.spec.imports, "db_instance_identifier", null) != null) ? 0 : 1
-  byte_length = 4
-}
-
 # Locals for computed values
 locals {
   # Check if we're importing
@@ -59,7 +53,7 @@ locals {
   replica_identifier_base = local.is_importing ? substr("${local.base_cleaned}imp", 0, 47) : substr(local.db_instance_identifier, 0, 52)
 
   # Master credentials
-  master_username = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_username : "pgadmin${random_id.master_username[0].hex}"
+  master_username = "pgadmin"
   master_password = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_password : random_password.master_password[0].result
 
   # Database configuration
@@ -148,7 +142,7 @@ resource "aws_db_instance" "postgres" {
   instance_class = var.instance.spec.sizing.instance_class
 
   # Database configuration
-  db_name = local.is_importing ? null : local.database_name
+  db_name = local.database_name
   # Conditional credentials - only set when not restoring from snapshot or importing
   username = local.master_username
   password = local.master_password
