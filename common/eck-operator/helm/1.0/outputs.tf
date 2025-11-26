@@ -10,7 +10,5 @@ locals {
     status          = helm_release.eck_operator.status
     revision        = helm_release.eck_operator.metadata[0].revision
   }
-}
-output "output_attributes" {
-  value = local.output_attributes
+  output_interfaces = {}
 }
