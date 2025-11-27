@@ -103,7 +103,7 @@ resource "helm_release" "kubeblocks" {
   wait             = true
   wait_for_jobs    = true
   timeout          = 600 # 10 minutes
-  max_history      = 3
+  max_history      = 10
 
   # Skip CRDs - they're already installed via kubernetes_manifest resources
   skip_crds = true
@@ -129,8 +129,7 @@ resource "helm_release" "kubeblocks" {
         keepGlobalResources = false
 
         dataProtection = {
-          enabled                = lookup(var.instance.spec.data_protection, "enabled", true)
-          enableBackupEncryption = lookup(var.instance.spec.data_protection, "backup_encryption", false)
+          enabled                = true # Enable data protection features by default
           tolerations = [
             {
               key      = "kubernetes.azure.com/scalesetpriority"
@@ -168,17 +167,6 @@ resource "helm_release" "kubeblocks" {
           }
         ]
       },
-      # Only include backupRepo configuration if create is explicitly set to true
-      lookup(lookup(var.instance.spec, "backup_repository", {}), "create", false) == true ? {
-        backupRepo = {
-          create          = true
-          default         = true
-          accessMethod    = "Tool"
-          storageProvider = var.instance.spec.backup_repository.storage_provider
-          pvReclaimPolicy = "Retain"
-          volumeCapacity  = var.instance.spec.backup_repository.volume_capacity
-        }
-      } : {}
     ))
   ]
 
