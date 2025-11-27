@@ -7,15 +7,6 @@ variable "instance" {
     spec = object({
       version   = string
       namespace = string
-      data_protection = object({
-        enabled           = bool
-        backup_encryption = bool
-      })
-      backup_repository = optional(object({
-        create           = optional(bool)
-        storage_provider = optional(string)
-        volume_capacity  = optional(string)
-      }))
       feature_gates = optional(object({
         in_place_pod_vertical_scaling = optional(bool)
       }))
