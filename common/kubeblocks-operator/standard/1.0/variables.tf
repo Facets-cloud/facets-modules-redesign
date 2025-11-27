@@ -10,7 +10,7 @@ variable "instance" {
       feature_gates = optional(object({
         in_place_pod_vertical_scaling = optional(bool)
       }))
-      controller_resources = optional(object({
+      resources = optional(object({
         cpu_limit      = optional(string)
         memory_limit   = optional(string)
         cpu_request    = optional(string)
