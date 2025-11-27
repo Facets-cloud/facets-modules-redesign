@@ -43,15 +43,10 @@ variable "instance" {
       high_availability = optional(object({
         enable_pod_anti_affinity = optional(bool)
         anti_affinity_type       = optional(string)
-        create_read_service      = optional(bool)
       }))
 
       backup = optional(object({
         enabled                   = optional(bool)
-        create_backup_repo        = optional(bool)
-        backup_repo_name          = optional(string)
-        backup_repo_storage_size  = optional(string)
-        backup_repo_storage_class = optional(string)
         enable_schedule           = optional(bool)
         schedule_cron             = optional(string)
         retention_period          = optional(string)
@@ -60,9 +55,6 @@ variable "instance" {
       restore = optional(object({
         enabled          = optional(bool)
         backup_name      = optional(string)
-        backup_namespace = optional(string)
-        pitr_enabled     = optional(bool)
-        pitr_timestamp   = optional(string)
       }))
     })
   })

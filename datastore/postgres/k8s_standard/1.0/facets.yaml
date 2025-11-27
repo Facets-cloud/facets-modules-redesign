@@ -24,13 +24,6 @@ spec:
   description: PostgreSQL database cluster managed by KubeBlocks
   type: object
   properties:
-    cluster_name:
-      type: string
-      title: Cluster Name
-      description: PostgreSQL cluster name (must be DNS-compatible).
-      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-      minLength: 1
-      maxLength: 63
     namespace_override:
       type: string
       title: Namespace Override
@@ -60,7 +53,7 @@ spec:
       - 14.8.0
       - 15.7.0
       - 16.4.0
-      default: 14.8.0
+      default: 16.4.0
     mode:
       type: string
       title: Cluster Mode
@@ -143,15 +136,7 @@ spec:
           title: Anti-Affinity Type
           description: Preferred allows same-node scheduling if needed, Required enforces
             strict separation
-          enum:
-          - Preferred
-          - Required
           default: Preferred
-        create_read_service:
-          type: boolean
-          title: Create Read-Only Service
-          description: Creates a separate service endpoint for read replicas
-          default: true
     backup:
       type: object
       title: Backup Configuration
@@ -166,78 +151,11 @@ spec:
           type: string
           title: Backup Method
           description: Method to use for backups
-          enum:
-          - volume-snapshot
-          - basebackup
           default: volume-snapshot
           x-ui-visible-if:
             field: spec.backup.enabled
             values:
             - true
-        create_backup_repo:
-          type: boolean
-          title: Create Backup Repository
-          description: Create a new cluster-scoped BackupRepo, or use existing one if disabled
-          default: true
-          x-ui-visible-if:
-            - field: spec.backup.enabled
-              values:
-              - true
-            - field: spec.backup.backup_method
-              values:
-              - basebackup
-        backup_repo_name:
-          type: string
-          title: Shared Backup Repository Name
-          description: Name of existing shared BackupRepo to use (required when create_backup_repo
-            is false)
-          x-ui-visible-if:
-            - field: spec.backup.enabled
-              values:
-              - true
-            - field: spec.backup.backup_method
-              values:
-              - basebackup
-            - field: spec.backup.create_backup_repo
-              values:
-              - false
-          x-ui-required-if:
-            - field: spec.backup.backup_method
-              values:
-              - basebackup
-            - field: spec.backup.create_backup_repo
-              values:
-              - false
-        backup_repo_storage_size:
-          type: string
-          title: Backup Storage Size
-          description: Storage size for backup repository (only if creating new repo)
-          default: 20Gi
-          x-ui-visible-if:
-            - field: spec.backup.enabled
-              values:
-              - true
-            - field: spec.backup.create_backup_repo
-              values:
-              - true
-            - field: spec.backup.backup_method
-              values:
-              - basebackup
-        backup_repo_storage_class:
-          type: string
-          title: Backup Storage Class
-          description: Storage class for backup repository (leave empty for default)
-          default: ''
-          x-ui-visible-if:
-            - field: spec.backup.enabled
-              values:
-              - true
-            - field: spec.backup.create_backup_repo
-              values:
-              - true
-            - field: spec.backup.backup_method
-              values:
-              - basebackup
         enable_schedule:
           type: boolean
           title: Enable Backup Schedule
@@ -266,18 +184,6 @@ spec:
             field: spec.backup.enable_schedule
             values:
             - true
-        pitr_enabled:
-          type: boolean
-          title: Enable Point-in-Time Recovery (PITR)
-          description: Enable continuous archiving for point-in-time recovery (only available with basebackup method)
-          default: false
-          x-ui-visible-if:
-            - field: spec.backup.enabled
-              values:
-              - true
-            - field: spec.backup.backup_method
-              values:
-              - basebackup
     restore:
       type: object
       title: Restore Configuration
@@ -300,29 +206,6 @@ spec:
             field: spec.restore.enabled
             values:
             - true
-        pitr_enabled:
-          type: boolean
-          title: Enable Point-in-Time Recovery
-          description: Restore to a specific point in time using WAL archives
-          default: false
-          x-ui-visible-if:
-            field: spec.restore.enabled
-            values:
-            - true
-        pitr_timestamp:
-          type: string
-          title: PITR Target Timestamp
-          description: RFC3339 timestamp to restore to (e.g., '2025-01-25T10:30:00Z')
-          default: ''
-          x-ui-visible-if:
-            field: spec.restore.pitr_enabled
-            values:
-            - true
-          x-ui-required-if:
-            field: spec.restore.pitr_enabled
-            values:
-            - true
-
   required:
   - cluster_name
   - postgres_version
@@ -342,10 +225,9 @@ sample:
   version: '1.0'
   disabled: true
   spec:
-    cluster_name: myapp-postgres
     namespace_override: ''
     termination_policy: Delete
-    postgres_version: 14.8.0
+    postgres_version: 16.4.0
     mode: replication
     replicas: 2
     resources:
@@ -359,19 +241,12 @@ sample:
     high_availability:
       enable_pod_anti_affinity: true
       anti_affinity_type: Preferred
-      create_read_service: true
     backup:
       enabled: false
       backup_method: volume-snapshot
-      create_backup_repo: false
-      backup_repo_storage_size: 20Gi
-      backup_repo_storage_class: ''
       enable_schedule: false
       schedule_cron: 0 2 * * *
       retention_period: 7d
-      pitr_enabled: false
     restore:
       enabled: false
       backup_name: ''
-      pitr_enabled: false
-      pitr_timestamp: ''

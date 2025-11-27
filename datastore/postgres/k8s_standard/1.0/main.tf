@@ -4,7 +4,7 @@
 
 # Local variables for cleaner code
 locals {
-  cluster_name = var.instance.spec.cluster_name
+  cluster_name = "myapp-postgres"  # Default cluster name
   namespace = try(var.instance.spec.namespace_override, "") != "" ? var.instance.spec.namespace_override : var.environment.namespace
   replicas     = var.instance.spec.mode == "standalone" ? 1 : lookup(var.instance.spec, "replicas", 2)
 
@@ -12,48 +12,27 @@ locals {
   ha_enabled               = var.instance.spec.mode == "replication"
   enable_pod_anti_affinity = local.ha_enabled && lookup(lookup(var.instance.spec, "high_availability", {}), "enable_pod_anti_affinity", true)
   anti_affinity_type       = local.ha_enabled ? lookup(lookup(var.instance.spec, "high_availability", {}), "anti_affinity_type", "Preferred") : "Preferred"
-  create_read_service      = local.ha_enabled && lookup(lookup(var.instance.spec, "high_availability", {}), "create_read_service", true)
+  create_read_service      = true # Always create read service for replication mode
 
   # Backup settings - mapped to ClusterBackup API
   backup_config = lookup(var.instance.spec, "backup", {})
 
   # Check if selected backup method requires BackupRepo
   # volume-snapshot uses AWS EBS snapshots directly (no BackupRepo needed)
-  # basebackup, wal-g methods need BackupRepo for storing backup files
-  backup_method_needs_repo = contains(["basebackup"], local.backup_method)
+
 
   # Ensure boolean types
   backup_enabled     = try(lookup(local.backup_config, "enabled", false), false) == true
   
-  ##create_backup_repo = local.backup_enabled && try(lookup(local.backup_config, "create_backup_repo", true), true) == true
-
-  # BackupRepo creation logic
-  # Only create if:
-  # 1. Backup is enabled
-  # 2. Backup method requires repo (not volume-snapshot)
-  # 3. User wants to create new repo (not use existing shared repo)
-  create_backup_repo = (local.backup_enabled && local.backup_method_needs_repo && try(lookup(local.backup_config, "create_backup_repo", true), true) == true)
-
-  # BackupRepo name - cluster-scoped, must be unique across cluster
-  backup_repo_name = local.backup_enabled && local.backup_method_needs_repo ? (
-    local.create_backup_repo
-    ? "${local.cluster_name}-backup-repo"                          # Auto-generated name for self-managed
-    : try(lookup(local.backup_config, "backup_repo_name", ""), "") # User-provided shared repo name
-  ) : ""
-
-  backup_repo_storage       = try(lookup(local.backup_config, "backup_repo_storage_size", "20Gi"), "20Gi")
-  backup_repo_storage_class = try(lookup(local.backup_config, "backup_repo_storage_class", ""), "")
 
   # Backup schedule settings (for Cluster.spec.backup)
   backup_schedule_enabled = local.backup_enabled && try(lookup(local.backup_config, "enable_schedule", false), false) == true
   backup_cron_expression  = try(lookup(local.backup_config, "schedule_cron", "0 2 * * *"), "0 2 * * *")
   backup_retention_period = try(lookup(local.backup_config, "retention_period", "7d"), "7d")
 
-  # Backup method - determines if BackupRepo is needed (For volume-snapshot, we don't need BackupRepo)
+  # Backup method - determines if BackupRepo is needed (For volume-snapshot, no repo needed)
   backup_method           = try(lookup(local.backup_config, "backup_method", "volume-snapshot"), "volume-snapshot")
 
-  # PITR (Point-in-Time Recovery) settings
-  pitr_enabled = local.backup_enabled && try(lookup(local.backup_config, "pitr_enabled", false), false) == true
 
   # Restore configuration - annotation-based restore from backup
   restore_config = lookup(var.instance.spec, "restore", {})
@@ -61,16 +40,8 @@ locals {
 
   # Restore source details
   # Backup naming pattern from KubeBlocks:
-  # - Scheduled backups: {cluster-name}-{backup-policy-name}-{timestamp}
-  # - Manual backups: {backup-name} (user-provided)
   # - Volume-snapshot backups: {cluster-name}-backup-{timestamp}
   restore_backup_name = lookup(local.restore_config, "backup_name", "")
-
-  # PITR (Point-in-Time Recovery) configuration
-  # Requires continuous WAL archiving to be enabled in source cluster
-  # Format: RFC3339 timestamp (e.g., "2025-01-25T10:30:00Z")
-  restore_pitr_enabled = local.restore_enabled && try(lookup(local.restore_config, "pitr_enabled", false), false) == true
-  restore_pitr_timestamp = try(lookup(local.restore_config, "pitr_timestamp", ""), "")
 
   # Component definition
   component_def_ref   = "postgresql"
@@ -113,68 +84,6 @@ resource "kubernetes_namespace" "postgresql_cluster" {
   }
 }
 
-# BackupRepo - PVC-based backup repository
-# Using any-k8s-resource module to avoid plan-time CRD validation
-# Only created when:
-# 1. Backup is enabled
-# 2. Backup method requires repo (basebackup - NOT volume-snapshot)
-# 3. User wants to create new repo (not use existing shared repo)
-
-module "backup_repo" {
-  count  = local.create_backup_repo ? 1 : 0
-  source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
-
-  name      = local.backup_repo_name
-  namespace = local.namespace
-
-  # Create implicit dependency on operator by including release_id in release name
-  release_name = "backuprepo-${local.backup_repo_name}-${substr(var.inputs.kubeblocks_operator.output_interfaces.output.release_id, 0, 8)}"
-
-  # Explicit dependency on namespace ensures this is created AFTER namespace
-  depends_on = [kubernetes_namespace.postgresql_cluster]
-
-  data = {
-    apiVersion = "dataprotection.kubeblocks.io/v1alpha1"
-    kind       = "BackupRepo"
-
-    metadata = {
-      name = local.backup_repo_name
-      annotations = {
-        "kubeblocks.io/operator-release-id"            = var.inputs.kubeblocks_operator.output_interfaces.output.release_id
-        "kubeblocks.io/operator-dependency-id"         = var.inputs.kubeblocks_operator.output_interfaces.output.dependency_id
-      }
-      labels = {
-        "app.kubernetes.io/name"       = "postgresql-backup-repo"
-        "app.kubernetes.io/instance"   = var.instance_name
-        "app.kubernetes.io/managed-by" = "terraform"
-      }
-    }
-
-    spec = merge(
-      {
-        storageProviderRef = "pvc"
-        volumeCapacity     = local.backup_repo_storage
-        pvReclaimPolicy    = "Retain"
-        config = {
-          mountOptions = ""
-        }
-      },
-      local.backup_repo_storage_class != "" ? {
-        config = {
-          storageClassName = local.backup_repo_storage_class
-          mountOptions     = ""
-        }
-      } : {}
-    )
-  }
-
-  advanced_config = {
-    wait            = true
-    timeout         = 600 # 10 minutes
-    cleanup_on_fail = true
-    max_history     = 3
-  }
-}
 
 # PostgreSQL Cluster with Embedded Backup Configuration
 # Using any-k8s-resource module to avoid plan-time CRD validation
