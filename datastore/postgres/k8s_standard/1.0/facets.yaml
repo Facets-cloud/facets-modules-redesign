@@ -1,5 +1,5 @@
-intent: postgresql-cluster
-flavor: standard
+intent: postgresql
+flavor: k8s_standard
 version: '1.0'
 clouds:
 - kubernetes
@@ -337,8 +337,8 @@ iac:
   - variables.tf
   - outputs.tf
 sample:
-  kind: postgresql-cluster
-  flavor: standard
+  kind: postgresql
+  flavor: k8s_standard
   version: '1.0'
   disabled: true
   spec:
