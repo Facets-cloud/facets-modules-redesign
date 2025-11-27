@@ -7,7 +7,7 @@ description: Installs and configures KubeBlocks operator for managing databases 
   Kubernetes
 inputs:
   kubernetes_cluster:
-    type: '@outputs/kubernetes'
+    type: '@facets/kubernetes-details'
     optional: false
     displayName: Kubernetes Cluster
     description: Target Kubernetes cluster for KubeBlocks installation

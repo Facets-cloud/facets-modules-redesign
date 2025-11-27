@@ -128,13 +128,22 @@ resource "helm_release" "kubeblocks" {
         # This prevents orphaned cluster-scoped resources
         keepGlobalResources = false
 
+        autoInstalledAddons = [] # Disable auto-installed addons
+
         dataProtection = {
-          enabled                = true # Enable data protection features by default
+          enabled = true # Enable data protection features by default
           tolerations = [
             {
               key      = "kubernetes.azure.com/scalesetpriority"
               operator = "Equal"
               value    = "spot"
+              effect   = "NoSchedule"
+            },
+            {
+              # allow running on the mongodb-tainted node
+              key      = "mongodb"
+              operator = "Equal"
+              value    = "true"
               effect   = "NoSchedule"
             }
           ]
@@ -146,12 +155,12 @@ resource "helm_release" "kubeblocks" {
         }
         resources = {
           limits = {
-            cpu    = lookup(lookup(var.instance.spec, "controller_resources", {}), "cpu_limit", "1000m")
-            memory = lookup(lookup(var.instance.spec, "controller_resources", {}), "memory_limit", "1Gi")
+            cpu    = lookup(lookup(var.instance.spec, "resources", {}), "cpu_limit", "1000m")
+            memory = lookup(lookup(var.instance.spec, "resources", {}), "memory_limit", "1Gi")
           }
           requests = {
-            cpu    = lookup(lookup(var.instance.spec, "controller_resources", {}), "cpu_request", "500m")
-            memory = lookup(lookup(var.instance.spec, "controller_resources", {}), "memory_request", "512Mi")
+            cpu    = lookup(lookup(var.instance.spec, "resources", {}), "cpu_request", "500m")
+            memory = lookup(lookup(var.instance.spec, "resources", {}), "memory_request", "512Mi")
           }
         }
         image = {
@@ -163,6 +172,13 @@ resource "helm_release" "kubeblocks" {
             key      = "kubernetes.azure.com/scalesetpriority"
             operator = "Equal"
             value    = "spot"
+            effect   = "NoSchedule"
+          },
+          {
+            # allow running on the mongodb-tainted node
+            key      = "mongodb"
+            operator = "Equal"
+            value    = "true"
             effect   = "NoSchedule"
           }
         ]
@@ -233,10 +249,21 @@ resource "helm_release" "database_addons" {
   wait             = true
   wait_for_jobs    = true
   timeout          = 600
-  max_history      = 3
+  max_history      = 10
 
   # Addons should not install CRDs - operator already installed them
   skip_crds = true
+
+  # key change
+  values = [
+    yamlencode({
+      extra = {
+        keepResource = false
+      }
+    })
+  ]
+
+  
 
   # Ensure operator is fully deployed before installing addons
   depends_on = [helm_release.kubeblocks]
