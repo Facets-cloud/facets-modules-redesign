@@ -14,6 +14,11 @@ inputs:
     providers:
     - kubernetes
     - helm
+  kubeblocks_crd:
+    type: '@outputs/kubeblocks-crd'
+    optional: false
+    displayName: KubeBlocks CRDs
+    description: KubeBlocks Custom Resource Definitions (must be installed first)
 spec:
   title: KubeBlocks Database Operator
   description: Installs and configures KubeBlocks operator for managing databases
@@ -25,11 +30,6 @@ spec:
       title: KubeBlocks Version
       description: KubeBlocks version to install
       default: 0.9.5
-    namespace:
-      type: string
-      title: Installation Namespace
-      description: Kubernetes namespace for KubeBlocks
-      default: kb-system
     feature_gates:
       type: object
       title: Feature Gates
@@ -97,7 +97,6 @@ spec:
           default: false
   required:
   - version
-  - namespace
 outputs:
   default:
     type: '@outputs/kubeblocks-operator'
@@ -113,7 +112,6 @@ sample:
   disabled: true
   spec:
     version: 0.9.5
-    namespace: kb-system
     resources:
       cpu_limit: 1000m
       memory_limit: 1Gi

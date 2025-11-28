@@ -1,69 +1,17 @@
-# KubeBlocks Operator Installation
-# This module installs KubeBlocks core operator on Kubernetes cluster
-#
-# IMPORTANT: Manual Cleanup Required Before Destroy
-# ================================================
-# When running `terraform destroy`, you MUST manually clean up KubeBlocks resources first.
-# The operator creates cluster-scoped Addon CRs that are NOT managed by Terraform/Helm,
-# and these will BLOCK namespace deletion, causing destroy to hang indefinitely.
-#
-# Required Manual Cleanup Steps:
-# -------------------------------
-# Run these commands BEFORE `terraform destroy`:
-#
-#   # 1. Delete Addon CRs (19 cluster-scoped resources created by operator webhook)
-#   kubectl delete addons.extensions.kubeblocks.io --all --force --grace-period=0
-#
-#   # 2. Patch leftover ConfigMaps (kept by Helm resource policy)
-#   kubectl get configmaps -n kb-system -l app.kubernetes.io/managed-by=Helm -o name | xargs -I {} kubectl patch {} -n kb-system -p '{"metadata":{"finalizers":[]}}' --type=merge
-#
-#   # 3. Patch CRD finalizers (prevents stuck CRD deletion)
-#   kubectl get crd -l app.kubernetes.io/name=kubeblocks -o name | xargs -I {} kubectl patch {} --type merge -p '{"metadata":{"finalizers":[]}}'
-
-# Fetch CRDs from GitHub
-data "http" "kubeblocks_crds" {
-  url = "https://github.com/apecloud/kubeblocks/releases/download/v${var.instance.spec.version}/kubeblocks_crds.yaml"
-}
-
-# Split the multi-document YAML into individual CRDs
+# CRDs are installed by the separate kubeblocks-crd module
+# This module depends on that module's release_id to ensure proper ordering
 locals {
-  crds_yaml = data.http.kubeblocks_crds.response_body
-  # Split by document separator and filter out empty documents
-  crd_documents = [for doc in split("\n---\n", local.crds_yaml) : trimspace(doc) if trimspace(doc) != ""]
-}
-
-# Apply each CRD using kubernetes_manifest
-resource "kubernetes_manifest" "kubeblocks_crds" {
-  for_each = { for idx, doc in local.crd_documents : idx => doc }
-
-  manifest = yamldecode(each.value)
-
-  field_manager {
-    name            = "terraform"
-    force_conflicts = true
-  }
-
-  wait {
-    condition {
-      type   = "Established"
-      status = "True"
-    }
-  }
-
-  # Handle computed fields that may change outside Terraform's control
-  # This prevents Terraform from trying to manage finalizers and status
-  computed_fields = [
-    "metadata.finalizers",
-    "metadata.generation",
-    "metadata.resourceVersion",
-    "status"
-  ]
+  crd_input      = var.inputs.kubeblocks_crd
+  crd_interfaces = lookup(local.crd_input, "interfaces", {})
+  crd_output     = lookup(local.crd_interfaces, "output", {})
+  crd_release_id = lookup(local.crd_output, "release_id", "")
+  crd_ready      = lookup(local.crd_output, "ready", "false")
 }
 
 # Kubernetes Namespace for KubeBlocks
 resource "kubernetes_namespace" "kubeblocks" {
   metadata {
-    name = var.instance.spec.namespace
+    name = "kb-system" # Default namespace name
 
     labels = merge(
       {
@@ -74,11 +22,13 @@ resource "kubernetes_namespace" "kubeblocks" {
       },
       var.environment.cloud_tags
     )
+    annotations = {
+      "kubeblocks.io/crd-dependency" = local.crd_release_id
+    }
   }
 
   lifecycle {
     ignore_changes = [
-      metadata[0].annotations,
       metadata[0].labels
     ]
   }
@@ -100,9 +50,9 @@ resource "helm_release" "kubeblocks" {
   namespace  = kubernetes_namespace.kubeblocks.metadata[0].name
 
   create_namespace = false
-  wait             = true
-  wait_for_jobs    = true
-  timeout          = 600 # 10 minutes
+  wait             = false # Disable wait to prevent destroy hang issues
+  wait_for_jobs    = false # Disable wait_for_jobs to prevent timeout issues
+  timeout          = 600
   max_history      = 10
 
   # Skip CRDs - they're already installed via kubernetes_manifest resources
@@ -120,6 +70,8 @@ resource "helm_release" "kubeblocks" {
           enabled = false
         }
 
+        autoInstalledAddons = [] # Disable auto-installed addons
+
         # Prevent retention of addon resources on uninstall
         # This ensures Helm deletes addon resources during destroy
         keepAddons = false
@@ -128,7 +80,7 @@ resource "helm_release" "kubeblocks" {
         # This prevents orphaned cluster-scoped resources
         keepGlobalResources = false
 
-        autoInstalledAddons = [] # Disable auto-installed addons
+        upgradeAddons = false # Prevent automatic addon upgrades
 
         dataProtection = {
           enabled = true # Enable data protection features by default
@@ -188,9 +140,12 @@ resource "helm_release" "kubeblocks" {
 
   # Ensure namespace and CRDs exist before installing the operator
   depends_on = [
-    kubernetes_namespace.kubeblocks,
-    kubernetes_manifest.kubeblocks_crds
+    kubernetes_namespace.kubeblocks
   ]
+}
+resource "time_sleep" "wait_for_kubeblocks" {
+  create_duration = "120s" # Wait 2 minutes
+  depends_on      = [helm_release.kubeblocks]
 }
 
 # Database Addons Installation
@@ -248,23 +203,18 @@ resource "helm_release" "database_addons" {
   create_namespace = false
   wait             = true
   wait_for_jobs    = true
-  timeout          = 600
+  timeout          = 600 # 10 minutes
   max_history      = 10
 
   # Addons should not install CRDs - operator already installed them
   skip_crds = true
 
-  # key change
-  values = [
-    yamlencode({
-      extra = {
-        keepResource = false
-      }
-    })
-  ]
-
-  
+  atomic          = true # Rollback on failure
+  cleanup_on_fail = true # Remove failed resources to allow retries
 
   # Ensure operator is fully deployed before installing addons
-  depends_on = [helm_release.kubeblocks]
+  depends_on = [
+    helm_release.kubeblocks,
+    time_sleep.wait_for_kubeblocks
+  ]
 }
