@@ -1,4 +1,12 @@
 name: '@facets/kubernetes_nodepool'
-properties: null
-providers: []
-
+properties:
+    attributes:
+        node_class_name:
+            type: string
+        node_pool_name:
+            type: string
+        taints:
+            type: string
+        node_selector:
+            type: string
+    interfaces: {}
