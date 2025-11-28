@@ -1,0 +1,43 @@
+intent: kubeblocks-crd
+flavor: standard
+version: '1.0'
+clouds:
+- kubernetes
+description: Installs KubeBlocks Custom Resource Definitions (CRDs) on Kubernetes
+  cluster
+inputs:
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Target Kubernetes cluster for KubeBlocks CRDs installation
+    providers:
+    - kubernetes
+spec:
+  title: KubeBlocks CRDs
+  description: Installs KubeBlocks Custom Resource Definitions (CRDs) required by
+    the operator
+  type: object
+  properties:
+    version:
+      type: string
+      title: KubeBlocks Version
+      description: KubeBlocks version - CRDs will be fetched for this version
+      default: 0.9.5
+  required:
+  - version
+outputs:
+  default:
+    type: '@outputs/kubeblocks-crd'
+    title: KubeBlocks CRDs
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+sample:
+  kind: kubeblocks-crd
+  flavor: standard
+  version: '1.0'
+  disabled: true
+  spec:
+    version: 0.9.5
