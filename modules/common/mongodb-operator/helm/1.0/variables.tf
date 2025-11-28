@@ -12,7 +12,7 @@ variable "instance" {
         memory_request = string
         memory_limit   = string
       })
-      helm_values = map(any)
+      helm_values = optional(map(any), {})
     })
   })
   validation {
@@ -43,19 +43,19 @@ variable "inputs" {
   description = "Module dependencies"
   type = object({
     kubernetes_cluster = object({
-      attributes = map(any)
-      interfaces = map(any)
+      attributes = any
+      interfaces = any
     })
     node_pool = optional(object({
       attributes = object({
-        node_selector = map(string)
-        taints = map(object({
-          key    = string
-          value  = string
-          effect = string
-        }))
+        node_pool_name = string
+        node_pool_id   = string
+        disk_size_gb   = number
+        node_count     = number
+        taints         = optional(list(string), []) # ✅ List of strings, not map
+        node_selector  = optional(map(string), {})  # ✅ Map of strings
       })
-      interfaces = map(any)
+      interfaces = any
     }))
   })
 }

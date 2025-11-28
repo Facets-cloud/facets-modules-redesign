@@ -20,16 +20,31 @@ locals {
   node_pool_input  = lookup(var.inputs, "node_pool", {})
   node_pool_attrs  = lookup(local.node_pool_input, "attributes", {})
   node_selector    = lookup(local.node_pool_attrs, "node_selector", {})
-  node_pool_taints = lookup(local.node_pool_attrs, "taints", {})
+  node_pool_taints = lookup(local.node_pool_attrs, "taints", [])
 
   # Convert taints from {key: "key", value: "value", effect: "effect"} to tolerations format
   tolerations = [
-    for taint_name, taint_config in local.node_pool_taints : {
-      key      = taint_config.key
-      operator = "Equal"
-      value    = taint_config.value
-      effect   = taint_config.effect
-    }
+    for taint_str in local.node_pool_taints : (
+      length(regexall("^([^=:]+)=(.+):([^:]+)$", taint_str)) > 0 ? {
+        # Format: "key=value:effect"
+        key      = regex("^([^=:]+)=(.+):([^:]+)$", taint_str)[0]
+        value    = regex("^([^=:]+)=(.+):([^:]+)$", taint_str)[1]
+        operator = "Equal"
+        effect   = regex("^([^=:]+)=(.+):([^:]+)$", taint_str)[2]
+        } : length(regexall("^([^:]+):([^:]+)$", taint_str)) > 0 ? {
+        # Format: "key:effect"
+        key      = regex("^([^:]+):([^:]+)$", taint_str)[0]
+        value    = ""
+        operator = "Exists"
+        effect   = regex("^([^:]+):([^:]+)$", taint_str)[1]
+        } : {
+        # Fallback for unexpected formats
+        key      = taint_str
+        value    = ""
+        operator = "Exists"
+        effect   = "NoSchedule"
+      }
+    )
   ]
 
   # Helm values from user (advanced overrides)

@@ -3,7 +3,8 @@ flavor: helm
 version: '1.0'
 clouds:
 - kubernetes
-description: MongoDB Kubernetes Operator deployed via Helm chart for managing MongoDB clusters on Kubernetes
+description: MongoDB Kubernetes Operator deployed via Helm chart for managing MongoDB
+  clusters on Kubernetes
 spec:
   title: MongoDB Kubernetes Operator
   description: Installs and manages the MongoDB Operator using Helm for MongoDB deployment
