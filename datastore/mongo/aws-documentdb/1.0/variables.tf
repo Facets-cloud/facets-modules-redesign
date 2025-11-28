@@ -23,6 +23,7 @@ variable "instance" {
         cluster_identifier = optional(string)
         security_group_id  = optional(string)
         subnet_group_name  = optional(string)
+        master_password    = optional(string)
       }), {})
     })
   })

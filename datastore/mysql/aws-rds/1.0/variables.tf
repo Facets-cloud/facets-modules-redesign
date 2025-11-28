@@ -20,13 +20,13 @@ variable "instance" {
       restore_config = object({
         restore_from_backup           = bool
         source_db_instance_identifier = optional(string)
-        restore_master_username       = optional(string)
         restore_master_password       = optional(string)
       })
       imports = optional(object({
         db_instance_identifier = optional(string)
         db_subnet_group_name   = optional(string)
         security_group_id      = optional(string)
+        master_password        = optional(string)
       }))
     })
   })

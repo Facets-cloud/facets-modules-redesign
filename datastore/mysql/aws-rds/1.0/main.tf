@@ -1,12 +1,19 @@
 # Generate random password for master user (only if not restoring and not importing)
 resource "random_password" "master_password" {
-  count            = (local.is_restore_operation || local.is_db_instance_import) ? 0 : 1
+  count            = local.is_restore_operation ? 0 : 1
   length           = 16
   special          = true
   upper            = true
   lower            = true
   numeric          = true
   override_special = "!#$%&*()-_=+[]{}<>:?"
+
+  lifecycle {
+    ignore_changes = [
+      length,
+      override_special,
+    ]
+  }
 }
 
 # Create DB subnet group (only if not importing) - handle existing gracefully

@@ -1,8 +1,15 @@
 # Generate secure auth token for Redis (only for new clusters)
 resource "random_password" "redis_auth_token" {
-  count   = var.instance.spec.imports.cluster_id != null && var.instance.spec.imports.cluster_id != "" ? 0 : 1
+  count   = 1
   length  = 64
   special = false
+
+  lifecycle {
+    ignore_changes = [
+      length,
+      special,
+    ]
+  }
 }
 
 # ElastiCache subnet group
@@ -95,7 +102,7 @@ resource "aws_elasticache_replication_group" "redis" {
   at_rest_encryption_enabled = true
   transit_encryption_enabled = true
   # Only set auth_token for new clusters, not for imported ones
-  auth_token                 = var.instance.spec.imports.cluster_id != null && var.instance.spec.imports.cluster_id != "" ? null : random_password.redis_auth_token[0].result
+  auth_token                 = var.instance.spec.imports.cluster_id != null && var.instance.spec.imports.cluster_id != "" ? var.instance.spec.imports.auth_token : random_password.redis_auth_token[0].result
   auth_token_update_strategy = var.instance.spec.imports.cluster_id != null && var.instance.spec.imports.cluster_id != "" ? null : "ROTATE"
 
   # High availability - only enable if we have multiple nodes

@@ -83,6 +83,7 @@ spec:
     restore_config:
       type: object
       title: Restore Operations
+      x-ui-overrides-only: true
       properties:
         restore_from_backup:
           type: boolean
@@ -93,17 +94,6 @@ spec:
           type: string
           title: Source DB Instance Identifier
           description: Source database instance identifier for restore
-          x-ui-visible-if:
-            field: spec.restore_config.restore_from_backup
-            values:
-            - true
-        master_username:
-          type: string
-          title: Master Username
-          description: Required when restoring from backup
-          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
-          minLength: 1
-          maxLength: 63
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
             values:
@@ -123,6 +113,7 @@ spec:
     imports:
       type: object
       title: Import Existing Resources
+      x-ui-overrides-only: true
       properties:
         db_instance_identifier:
           type: string
@@ -143,6 +134,11 @@ spec:
           title: Security Group ID
           description: ID of existing security group (required when importing)
           pattern: ^sg-[0-9a-fA-F]{8,17}$
+        master_password:
+          type: string
+          title: Master Password
+          description: Master password for the imported cluster (8+ characters)
+          minLength: 8
   required:
   - version_config
   - sizing
@@ -158,6 +154,9 @@ imports:
 - name: security_group_id
   resource_address: aws_security_group.postgres
   required: false
+- name: master_password
+  resource_address: random_password.master_password[0]
+  required: true
 inputs:
   aws_provider:
     type: '@facets/aws_cloud_account'

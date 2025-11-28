@@ -72,6 +72,7 @@ spec:
     restore_config:
       type: object
       title: Restore Operations
+      x-ui-overrides-only: true
       properties:
         restore_from_backup:
           type: boolean
@@ -86,23 +87,11 @@ spec:
             field: spec.restore_config.restore_from_backup
             values:
             - true
-        master_username:
-          type: string
-          title: Master Username
-          description: Username for the master user (required for restore operations)
-          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
-          minLength: 1
-          maxLength: 32
-          x-ui-visible-if:
-            field: spec.restore_config.restore_from_backup
-            values:
-            - true
         master_password:
           type: string
           title: Master Password
           description: Password for the master user (required for restore operations)
           minLength: 8
-          x-ui-secret-ref: true
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
             values:
@@ -110,6 +99,7 @@ spec:
     imports:
       type: object
       title: Import Existing Resources
+      x-ui-overrides-only: true
       x-ui-toggle: true
       properties:
         instance_name:
@@ -156,6 +146,11 @@ spec:
           pattern: ^[a-z0-9/_-]+$
           minLength: 1
           maxLength: 200
+        master_password:
+          type: string
+          title: Master Password
+          description: Master password for the imported resource (8+ characters)
+          minLength: 8
   required:
   - version_config
   - sizing
@@ -178,6 +173,9 @@ imports:
 - name: read_replica_2
   resource_address: google_sql_database_instance.read_replica[2]
   required: false
+- name: master_password
+  resource_address: random_password.mysql_password[0]
+  required: true
 inputs:
   gcp_provider:
     type: '@facets/gcp_cloud_account'

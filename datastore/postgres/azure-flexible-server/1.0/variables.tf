@@ -18,10 +18,12 @@ variable "instance" {
         restore_from_backup   = optional(bool, false)
         source_server_id      = optional(string)
         restore_point_in_time = optional(string)
+        admin_password        = optional(string)
       }), {})
       imports = optional(object({
         flexible_server_id   = optional(string)
         postgres_database_id = optional(string)
+        admin_password       = optional(string)
       }), {})
     })
   })

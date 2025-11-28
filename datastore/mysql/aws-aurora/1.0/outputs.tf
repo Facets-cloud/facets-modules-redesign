@@ -5,18 +5,9 @@ locals {
       host     = aws_rds_cluster.aurora.reader_endpoint
       username = aws_rds_cluster.aurora.master_username
       port     = tostring(aws_rds_cluster.aurora.port)
-      password = local.is_import ? "<imported-password-not-available>" : (
-        local.restore_from_backup ? var.instance.spec.restore_config.master_password : local.master_password
-      )
+      password = local.restore_from_backup ? var.instance.spec.restore_config.master_password : local.master_password
       database = aws_rds_cluster.aurora.database_name
-
-      connection_string = local.is_import ? format(
-        "mysql://%s:<password>@%s:%d/%s",
-        aws_rds_cluster.aurora.master_username,
-        aws_rds_cluster.aurora.reader_endpoint,
-        aws_rds_cluster.aurora.port,
-        coalesce(aws_rds_cluster.aurora.database_name, "")
-        ) : format(
+      connection_string = format(
         "mysql://%s:%s@%s:%d/%s",
         aws_rds_cluster.aurora.master_username,
         local.restore_from_backup ? var.instance.spec.restore_config.master_password : local.master_password,
@@ -31,17 +22,9 @@ locals {
       host     = aws_rds_cluster.aurora.endpoint
       port     = tostring(aws_rds_cluster.aurora.port)
       username = aws_rds_cluster.aurora.master_username
-      password = local.is_import ? "<imported-password-not-available>" : (
-        local.restore_from_backup ? var.instance.spec.restore_config.master_password : local.master_password
-      )
+      password = local.restore_from_backup ? var.instance.spec.restore_config.master_password : local.master_password
       database = aws_rds_cluster.aurora.database_name
-      connection_string = local.is_import ? format(
-        "mysql://%s:<password>@%s:%d/%s",
-        aws_rds_cluster.aurora.master_username,
-        aws_rds_cluster.aurora.endpoint,
-        aws_rds_cluster.aurora.port,
-        coalesce(aws_rds_cluster.aurora.database_name, "")
-        ) : format(
+      connection_string = format(
         "mysql://%s:%s@%s:%d/%s",
         aws_rds_cluster.aurora.master_username,
         local.restore_from_backup ? var.instance.spec.restore_config.master_password : local.master_password,

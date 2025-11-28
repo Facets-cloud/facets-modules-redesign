@@ -16,12 +16,7 @@ locals {
     var.instance.spec.imports.database_name
   ) : var.instance.spec.version_config.database_name
 
-  user_name = local.is_import && var.instance.spec.imports.user_name != null ? (
-    # Extract user name from terraform import address
-    length(split("/", var.instance.spec.imports.user_name)) > 1 ?
-    element(split("/", var.instance.spec.imports.user_name), length(split("/", var.instance.spec.imports.user_name)) - 1) :
-    var.instance.spec.imports.user_name
-  ) : (var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_username : "postgres")
+  user_name = "postgres"
 
   # Connection details
   master_endpoint = google_sql_database_instance.postgres_instance.private_ip_address
