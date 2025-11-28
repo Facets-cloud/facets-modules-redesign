@@ -5,8 +5,7 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
-      version   = string
-      namespace = string
+      version = string
       feature_gates = optional(object({
         in_place_pod_vertical_scaling = optional(bool)
       }))
@@ -30,12 +29,6 @@ variable "instance" {
     condition     = contains(["0.9.5", "0.9.4", "0.9.3"], var.instance.spec.version)
     error_message = "KubeBlocks version must be a supported version (0.9.3, 0.9.4, or 0.9.5)"
   }
-
-  validation {
-    condition     = can(regex("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.instance.spec.namespace))
-    error_message = "Namespace must be a valid Kubernetes namespace name"
-  }
-
 }
 
 variable "instance_name" {
@@ -65,6 +58,20 @@ variable "inputs" {
         kubernetes_host                   = optional(string)
         kubernetes_cluster_ca_certificate = optional(string)
         kubernetes_token                  = optional(string)
+      }))
+    }),
+    kubeblocks_crd = object({
+      attributes = optional(object({
+        version        = optional(string)
+        crds_count     = optional(number)
+        crds_installed = optional(string)
+      }))
+      interfaces = optional(object({
+        output = optional(object({
+          release_id    = optional(string)
+          dependency_id = optional(string)
+          ready         = optional(string)
+        }))
       }))
     })
   })

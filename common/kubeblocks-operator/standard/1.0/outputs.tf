@@ -5,7 +5,7 @@ locals {
     chart_version  = helm_release.kubeblocks.version
     release_name   = helm_release.kubeblocks.name
     release_status = helm_release.kubeblocks.status
-    crds_installed = length(kubernetes_manifest.kubeblocks_crds)
+    crd_dependency = local.crd_release_id
   }
 
   output_interfaces = {
