@@ -1,0 +1,18 @@
+{
+  "kind": "redis",
+  "flavor": "gcp-memorystore",
+  "version": "1.0",
+  "disabled": true,
+  "spec": {
+    "version_config": {
+      "redis_version": "REDIS_7_2"
+    },
+    "sizing": {
+      "memory_size_gb": 5,
+      "tier": "STANDARD_HA"
+    },
+    "restore_config": {
+      "restore_from_backup": false
+    }
+  }
+}

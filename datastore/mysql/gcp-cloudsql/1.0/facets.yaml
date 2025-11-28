@@ -193,11 +193,8 @@ inputs:
     description: VPC network for CloudSQL private IP configuration
 outputs:
   default:
-    type: '@facets/mysql-cloudsql'
-    title: MySQL CloudSQL Instance
-  interfaces:
-    type: '@facets/mysql-interface'
-    title: MySQL Database Interface
+    type: '@facets/mysql'
+    title: MySQL CloudSQL 
 iac:
   validated_files:
   - main.tf

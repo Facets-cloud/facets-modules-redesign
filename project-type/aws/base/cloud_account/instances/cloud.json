@@ -1,0 +1,7 @@
+{
+  "version": "1.0",
+  "flavor": "aws_provider",
+  "kind": "cloud_account",
+  "disabled": true,
+  "spec": {}
+}

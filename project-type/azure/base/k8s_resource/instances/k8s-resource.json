@@ -1,0 +1,41 @@
+{
+  "$schema": "https://facets-cloud.github.io/facets-schemas/schemas/k8s_resource/k8s_resource.schema.json",
+  "kind": "k8s_resource",
+  "metadata": {},
+  "flavor": "k8s_standard",
+  "version": "1.0",
+  "disabled": true,
+  "spec": {
+    "additional_resources": {},
+    "resource": {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "k8s-resource",
+        "annotations": {
+          "service.beta.kubernetes.io/aws-load-balancer-scheme": "internal",
+          "service.beta.kubernetes.io/aws-load-balancer-type": "nlb"
+        }
+      },
+      "spec": {
+        "selector": {
+          "app": "facetsapi"
+        },
+        "type": "ClusterIP",
+        "ports": [
+          {
+            "port": 80,
+            "name": "http",
+            "targetPort": 80
+          }
+        ]
+      }
+    }
+  },
+  "inputs": {
+    "kubernetes_details": {
+      "resource_name": "cluster",
+      "resource_type": "kubernetes_cluster"
+    }
+  }
+}

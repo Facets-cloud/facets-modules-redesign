@@ -154,7 +154,7 @@ inputs:
     description: VPC and networking configuration for Aurora cluster
 outputs:
   default:
-    type: '@outputs/mysql'
+    type: '@facets/mysql'
     title: MySQL Aurora Cluster
 imports:
 - name: cluster_identifier

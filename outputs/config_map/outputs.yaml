@@ -1,0 +1,10 @@
+name: '@facets/config_map'
+properties:
+    attributes:
+        hash:
+            type: string
+        name:
+            type: string
+    interfaces: {}
+providers: []
+

@@ -1,0 +1,36 @@
+name: '@facets/postgres'
+properties:
+    attributes: {}
+    interfaces:
+        reader:
+            connection_string:
+                type: string
+            host:
+                type: string
+            password:
+                type: string
+            port:
+                type: string
+            secrets:
+                items:
+                    type: string
+                type: array
+            username:
+                type: string
+        writer:
+            connection_string:
+                type: string
+            host:
+                type: string
+            password:
+                type: string
+            port:
+                type: string
+            secrets:
+                items:
+                    type: string
+                type: array
+            username:
+                type: string
+providers: []
+

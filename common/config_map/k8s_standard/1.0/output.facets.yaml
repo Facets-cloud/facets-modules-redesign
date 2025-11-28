@@ -1,7 +1,0 @@
-out:
-  interfaces: {}
-  attributes:
-    name:
-      type: string
-    hash:
-      type: string

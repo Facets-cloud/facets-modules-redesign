@@ -1,0 +1,19 @@
+{
+  "version": "1.0",
+  "flavor": "standard",
+  "kind": "artifactories",
+  "disabled": true,
+  "spec": {
+    "include_all": false
+  },
+  "inputs": {
+    "kubernetes_details": {
+      "resource_name": "cluster",
+      "resource_type": "kubernetes_cluster"
+    },
+    "kubernetes_node_pool_details": {
+      "resource_name": "nodepool",
+      "resource_type": "kubernetes_node_pool"
+    }
+  }
+}

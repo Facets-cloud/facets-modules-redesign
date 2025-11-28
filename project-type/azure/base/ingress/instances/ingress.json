@@ -1,0 +1,36 @@
+{
+  "kind": "ingress",
+  "flavor": "nginx_k8s",
+  "$schema": "https://facets-cloud.github.io/facets-schemas/schemas/ingress/ingress.schema.json",
+  "disabled": true,
+  "version": "1.0",
+  "metadata": {
+    "annotations": {}
+  },
+  "spec": {
+    "private": false,
+    "basic_auth": false,
+    "grpc": false,
+    "domains": {},
+    "rules": {},
+    "force_ssl_redirection": true
+  },
+  "inputs": {
+    "kubernetes_details": {
+      "resource_name": "cluster",
+      "resource_type": "kubernetes_cluster"
+    },
+    "cert_manager_details": {
+      "resource_name": "cert-manager",
+      "resource_type": "cert_manager"
+    },
+    "artifactories": {
+      "resource_name": "artifactory",
+      "resource_type": "artifactory"
+    },
+    "kubernetes_node_pool_details": {
+      "resource_name": "nodepool",
+      "resource_type": "kubernetes_node_pool"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+name: '@facets/kubernetes_secret'
+properties:
+    attributes:
+        hash:
+            type: string
+        name:
+            type: string
+    interfaces: {}
+providers: []
+

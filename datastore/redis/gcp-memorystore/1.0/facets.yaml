@@ -96,9 +96,9 @@ inputs:
     description: VPC and subnet configuration for the Redis instance (must have private
       service access enabled)
 outputs:
-  interfaces:
-    type: '@facets/redis-interface'
-    title: Redis Interface
+  default:
+    type: '@facets/redis'
+    title: Redis GCP Memorystore
 imports:
 - name: instance_id
   resource: google_redis_instance.main

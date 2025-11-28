@@ -1,0 +1,54 @@
+{
+  "kind": "kubernetes_node_pool",
+  "flavor": "aws",
+  "version": "1.0",
+  "metadata": {
+    "name": "production-nodepool"
+  },
+  "spec": {
+    "instance_requirements": {
+      "instance_classification": "Instance Types",
+      "instance_types": "m6i.large",
+      "cpu_range": "4,8,16",
+      "architectures": "amd64,arm64",
+      "capacity_types": "spot,on-demand"
+    },
+    "scaling": {
+      "max_cpu": "500",
+      "max_memory": "2000Gi",
+      "consolidation_policy": "WhenEmptyOrUnderutilized",
+      "consolidation_delay": "30s"
+    },
+    "networking": {
+      "subnet_type": "private"
+    },
+    "storage": {
+      "disk_size": "100Gi",
+      "disk_iops": 3000,
+      "disk_throughput": 125
+    },
+    "scheduling": {
+      "node_labels": {
+        "environment": "production",
+        "workload-type": "general"
+      }
+    },
+    "tags": {
+      "Environment": "production",
+      "Team": "platform",
+      "CostCenter": "engineering"
+    }
+  },
+  "disabled": true,
+  "inputs": {
+    "kubernetes_details": {
+      "resource_name": "cluster",
+      "resource_type": "kubernetes_cluster",
+      "output_name": "attributes"
+    },
+    "network_details": {
+      "resource_name": "network",
+      "resource_type": "network"
+    }
+  }
+}

@@ -139,11 +139,8 @@ inputs:
     description: GCP VPC network configuration for database placement
 outputs:
   default:
-    type: '@facets/postgres-gcp-cloudsql'
-    title: PostgreSQL CloudSQL Instance
-  interfaces:
-    type: '@facets/postgres-interface'
-    title: PostgreSQL Interface
+    type: '@facets/postgres'
+    title: PostgreSQL CloudSQL 
 iac:
   validated_files:
   - main.tf

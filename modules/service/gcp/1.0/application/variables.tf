@@ -1,0 +1,35 @@
+variable "namespace" {
+  type = string
+}
+
+variable "chart_name" {
+  type = string
+}
+
+variable "values" {
+  type = any
+}
+
+variable "annotations" {
+  type = any
+}
+
+variable "labels" {
+  type = any
+}
+
+variable "cluster" {
+  type = any
+}
+
+variable "environment" {
+  
+}
+
+variable "inputs" {
+  type = any
+}
+
+variable "vpa_release_id" {
+  type = string
+}

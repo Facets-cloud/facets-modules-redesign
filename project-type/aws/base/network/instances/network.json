@@ -1,0 +1,35 @@
+{
+  "kind": "network",
+  "flavor": "aws_vpc",
+  "version": "1.0",
+  "spec": {
+    "vpc_cidr": "10.0.0.0/16",
+    "auto_select_azs": true,
+    "nat_gateway": {
+      "strategy": "single"
+    },
+    "vpc_endpoints": {
+      "enable_s3": true,
+      "enable_dynamodb": true,
+      "enable_ecr_api": true,
+      "enable_ecr_dkr": true,
+      "enable_eks": false,
+      "enable_ec2": false,
+      "enable_ssm": true,
+      "enable_ssm_messages": true,
+      "enable_ec2_messages": true,
+      "enable_kms": false,
+      "enable_logs": false,
+      "enable_monitoring": false,
+      "enable_sts": false,
+      "enable_lambda": false
+    }
+  },
+  "disabled": true,
+  "inputs": {
+    "cloud_account": {
+      "resource_name": "cloud",
+      "resource_type": "cloud_account"
+    }
+  }
+}

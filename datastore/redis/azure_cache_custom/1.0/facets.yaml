@@ -125,7 +125,7 @@ inputs:
     description: Azure VNet and subnet configuration for cache deployment
 outputs:
   default:
-    type: '@facets/redis-azure-cache'
+    type: '@facets/redis'
     title: Custom Azure Cache for Redis
 imports:
 - name: cache_resource_id

@@ -1,17 +1,3 @@
-# Configure AWS provider from inputs
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "= 6.9.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.1"
-    }
-  }
-}
-
 # Generate random password for master user (only if not restoring and not importing)
 resource "random_password" "master_password" {
   count            = (local.is_restore_operation || local.is_db_instance_import) ? 0 : 1

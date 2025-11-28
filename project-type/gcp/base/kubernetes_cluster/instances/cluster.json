@@ -1,0 +1,28 @@
+{
+  "kind": "kubernetes_cluster",
+  "flavor": "gke",
+  "version": "1.0",
+  "spec": {
+    "auto_upgrade": true,
+    "whitelisted_cidrs": [
+      "0.0.0.0/0"
+    ],
+    "logging_components": {
+      "system": {
+        "name": "SYSTEM_COMPONENTS",
+        "enabled": true
+      }
+    }
+  },
+  "disabled": true,
+  "inputs": {
+    "cloud_account": {
+      "resource_name": "cloud",
+      "resource_type": "cloud_account"
+    },
+    "network_details": {
+      "resource_name": "network",
+      "resource_type": "network"
+    }
+  }
+}

@@ -1,0 +1,8 @@
+name: '@facets/helm'
+properties:
+    attributes:
+        release_name:
+            type: string
+    interfaces: {}
+providers: []
+
