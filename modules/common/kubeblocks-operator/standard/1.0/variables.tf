@@ -24,11 +24,6 @@ variable "instance" {
       }))
     })
   })
-
-  validation {
-    condition     = contains(["0.9.5", "0.9.4", "0.9.3"], var.instance.spec.version)
-    error_message = "KubeBlocks version must be a supported version (0.9.3, 0.9.4, or 0.9.5)"
-  }
 }
 
 variable "instance_name" {
