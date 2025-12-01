@@ -1,0 +1,237 @@
+intent: mysql
+flavor: k8s_standard
+version: '1.0'
+clouds:
+- kubernetes
+description: Creates and manages MySQL database clusters using KubeBlocks operator
+  v1.0.1
+inputs:
+  kubeblocks_operator:
+    type: '@outputs/kubeblocks-operator'
+    optional: false
+    displayName: KubeBlocks Operator
+    description: KubeBlocks operator installation (CRDs must be ready)
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Target Kubernetes cluster
+    providers:
+    - kubernetes
+    - helm
+spec:
+  title: MySQL Cluster Configuration
+  description: MySQL database cluster managed by KubeBlocks
+  type: object
+  properties:
+    namespace_override:
+      type: string
+      title: Namespace Override
+      description: (Optional) Specify a custom namespace for the cluster. If not set,
+        the namespace from the environment will be used.
+      default: ''
+    termination_policy:
+      type: string
+      title: Termination Policy
+      description: Controls cluster deletion behavior
+      enum:
+      - DoNotTerminate
+      - Delete
+      - WipeOut
+      default: Delete
+      x-enum-descriptions:
+        Delete: Delete pods and PVCs
+        DoNotTerminate: Block cluster deletion
+        Halt: Delete pods but keep PVCs
+        WipeOut: Delete everything including backups
+    mysql_version:
+      type: string
+      title: MySQL Version
+      description: MySQL version to deploy
+      enum:
+      - 5.7.44
+      - 8.0.39
+      - 8.4.2
+      default: 8.4.2
+    mode:
+      type: string
+      title: Cluster Mode
+      description: Deployment mode - standalone for single instance, replication for
+        high availability
+      enum:
+      - standalone
+      - replication
+      default: replication
+    replicas:
+      type: integer
+      title: Number of Replicas
+      description: Number of MySQL instances (only for replication mode)
+      default: 2
+      minimum: 1
+      maximum: 5
+      x-ui-visible-if:
+        field: spec.mode
+        values:
+        - replication
+    resources:
+      type: object
+      title: Resource Allocation
+      description: CPU and memory resources for MySQL pods
+      properties:
+        cpu_request:
+          type: string
+          title: CPU Request
+          description: Minimum CPU allocation
+          default: 500m
+        cpu_limit:
+          type: string
+          title: CPU Limit
+          description: Maximum CPU allocation
+          default: 1000m
+        memory_request:
+          type: string
+          title: Memory Request
+          description: Minimum memory allocation
+          default: 512Mi
+        memory_limit:
+          type: string
+          title: Memory Limit
+          description: Maximum memory allocation
+          default: 1Gi
+    storage:
+      type: object
+      title: Storage Configuration
+      description: Persistent storage settings for MySQL data
+      properties:
+        size:
+          type: string
+          title: Storage Size
+          description: Size of persistent volume (can be expanded later, cannot be
+            reduced)
+          default: 20Gi
+        storage_class:
+          type: string
+          title: Storage Class
+          description: Kubernetes storage class name (leave empty for default)
+          default: ''
+      required:
+      - size
+    high_availability:
+      type: object
+      title: High Availability Settings
+      description: HA configuration for replication mode
+      x-ui-visible-if:
+        field: spec.mode
+        values:
+        - replication
+      properties:
+        enable_pod_anti_affinity:
+          type: boolean
+          title: Enable Pod Anti-Affinity
+          description: Distribute replicas across different nodes for better availability
+          default: true
+    backup:
+      type: object
+      title: Backup Configuration
+      description: Optional backup repository and schedule configuration
+      properties:
+        enabled:
+          type: boolean
+          title: Enable Backup
+          description: Enable backup configuration for this cluster
+          default: false
+        enable_schedule:
+          type: boolean
+          title: Enable Backup Schedule
+          description: Enable automatic scheduled backups
+          default: false
+          x-ui-visible-if:
+            field: spec.backup.enabled
+            values:
+            - true
+        schedule_cron:
+          type: string
+          title: Backup Schedule (Cron)
+          description: Cron expression for backup schedule (e.g., "0 2 * * *" for
+            daily at 2 AM)
+          default: 0 2 * * *
+          x-ui-visible-if:
+            field: spec.backup.enable_schedule
+            values:
+            - true
+        retention_period:
+          type: string
+          title: Backup Retention Period
+          description: How long to retain backups (e.g., "7d", "30d", "1y")
+          default: 7d
+          x-ui-visible-if:
+            field: spec.backup.enable_schedule
+            values:
+            - true
+    restore:
+      type: object
+      title: Restore Configuration
+      description: Restore cluster from existing backup instead of creating fresh
+        cluster
+      properties:
+        enabled:
+          type: boolean
+          title: Enable Restore
+          description: Restore from backup instead of creating fresh cluster
+          default: false
+        backup_name:
+          type: string
+          title: Backup Name
+          description: Name of the backup to restore from (e.g., 'mysql-cluster-backup-20250125')
+          x-ui-visible-if:
+            field: spec.restore.enabled
+            values:
+            - true
+          x-ui-required-if:
+            field: spec.restore.enabled
+            values:
+            - true
+  required:
+  - mysql_version
+  - mode
+outputs:
+  default:
+    type: '@outputs/mysql-cluster'
+    title: MySQL Cluster Credentials
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+  - locals.tf
+sample:
+  kind: mysql
+  flavor: k8s_standard
+  version: '1.0'
+  disabled: true
+  spec:
+    namespace_override: ''
+    termination_policy: Delete
+    mysql_version: 8.4.2
+    mode: replication
+    replicas: 2
+    resources:
+      cpu_request: 500m
+      cpu_limit: 1000m
+      memory_request: 512Mi
+      memory_limit: 1Gi
+    storage:
+      size: 20Gi
+      storage_class: ''
+    high_availability:
+      enable_pod_anti_affinity: true
+      anti_affinity_type: Preferred
+    backup:
+      enabled: false
+      backup_method: volume-snapshot
+      enable_schedule: false
+      schedule_cron: 0 2 * * *
+      retention_period: 7d
+    restore:
+      enabled: false
+      backup_name: ''
