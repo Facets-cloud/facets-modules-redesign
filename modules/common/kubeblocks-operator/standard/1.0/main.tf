@@ -157,27 +157,27 @@ locals {
   addon_configs = {
     postgresql = {
       chart_name = "postgresql"
-      version    = "0.9.5"
+      version    = "1.0.1"
       repo       = "https://apecloud.github.io/helm-charts"
     }
     mysql = {
       chart_name = "mysql"
-      version    = "0.9.3"
+      version    = "1.0.1"
       repo       = "https://apecloud.github.io/helm-charts"
     }
     mongodb = {
       chart_name = "mongodb"
-      version    = "0.9.3"
+      version    = "1.0.1"
       repo       = "https://apecloud.github.io/helm-charts"
     }
     redis = {
       chart_name = "redis"
-      version    = "0.9.7"
+      version    = "1.0.1"
       repo       = "https://apecloud.github.io/helm-charts"
     }
     kafka = {
       chart_name = "kafka"
-      version    = "0.9.1"
+      version    = "1.0.1"
       repo       = "https://apecloud.github.io/helm-charts"
     }
   }
