@@ -1,217 +1,301 @@
-# Redis Cluster - KubeBlocks Module
+# **Redis Cluster - KubeBlocks Module**
+
+### Production-grade Redis deployment for Kubernetes using **KubeBlocks v1.0.1**
 
 ![Version](https://img.shields.io/badge/version-1.0-blue)
 ![Cloud](https://img.shields.io/badge/cloud-kubernetes-326CE5)
+![Operator](https://img.shields.io/badge/KubeBlocks-v1.0.1-green)
 
-## Overview
+---
 
-This module creates and manages production-ready Redis clusters on Kubernetes using the KubeBlocks operator (v1.0.1). It provides a developer-friendly interface for deploying Redis instances with built-in high availability, backup/restore capabilities, and automated lifecycle management.
+## **Overview**
 
-KubeBlocks handles cluster operations including provisioning, scaling, failover, and backup orchestration while this module abstracts the complexity behind a simple configuration interface.
+This Terraform module provisions **Redis clusters** on Kubernetes using the **KubeBlocks v1.0.1** operator.
+It fully supports:
 
-## Environment as Dimension
+* **Standalone Redis**
+* **Redis Replication (HA via Sentinel)**
+* **Redis Cluster (Sharded Redis Cluster)**
 
-This module is **environment-aware** and automatically adapts to different deployment contexts:
+The module simplifies complex KubeBlocks CRD definitions into clean Terraform configuration while ensuring:
 
-- **Namespace**: Uses `var.environment.namespace` by default, with optional override via `namespace_override` for multi-tenant scenarios
-- **Cloud Tags**: Automatically applies `var.environment.cloud_tags` to all created resources for cost tracking and governance
-- **Resource Names**: Generates unique cluster names scoped to the environment using standardized naming conventions
-- **Storage Classes**: Can be customized per environment (e.g., premium SSD for production, standard for dev)
+* High availability
+* Automated failover (Sentinel / native cluster)
+* Data sharding (redis-cluster mode)
+* Backup + restore
+* Multi-environment repeatable deployments
+* Read service creation for replication mode
 
-The module respects environment boundaries while allowing configuration overrides where needed, making it suitable for deploying the same Redis cluster configuration across dev, staging, and production environments.
+---
 
-## Resources Created
+## **Environment Awareness**
 
-This module creates the following Kubernetes resources:
+This module automatically adapts to the target environment:
 
-- **Cluster** (KubeBlocks CRD) - Main Redis cluster definition with componentSpecs for primary/replica configuration
-- **Namespace** - Optional custom namespace for cluster isolation (conditionally created when override specified)
-- **Service (Primary)** - Auto-created by KubeBlocks for write operations targeting primary instance (port 6379)
-- **Service (Read)** - Terraform-managed read-only service targeting secondary replicas in replication mode (port 6379)
-- **Secret** - Auto-created by KubeBlocks containing connection credentials with format `{cluster-name}-conn-credential`
-- **PersistentVolumeClaims** - Storage volumes for Redis data (one per replica, expandable via spec updates)
-- **Pods** - Redis instances managed by KubeBlocks StatefulSet controller with configurable resource limits
-- **Sentinel** - Redis Sentinel for high availability in replication mode (automatic failover and monitoring)
-- **BackupPolicy** - Embedded backup configuration when backup scheduling is enabled
-- **Restore Annotations** - Cluster annotations for restore-from-backup functionality
+| Feature        | Behavior                                            |
+| -------------- | --------------------------------------------------- |
+| Namespace      | Uses `environment.namespace` unless overridden      |
+| Cloud Tags     | Applied to all managed resources                    |
+| Cluster Naming | Consistent naming per environment                   |
+| StorageClass   | Configurable per environment (SSD / Standard / CSI) |
 
-## Deployment Modes
+This ensures **the same module works in dev, staging, and production** without modification.
 
-### Standalone Mode
-Single Redis instance suitable for development or non-critical workloads. Provides basic functionality with minimal resource overhead and simplified configuration. No high availability or failover.
+---
 
-### Replication Mode (Recommended for HA)
-High-availability setup with Redis Sentinel managing one primary and configurable read replicas (1-5 instances). Features:
-- Automatic failover when primary fails using Redis Sentinel
-- Read scaling via dedicated read-only service targeting secondary replicas
-- Pod anti-affinity to distribute replicas across different Kubernetes nodes
-- Volume-snapshot backup support for point-in-time recovery
-- Sentinel-based health monitoring and automatic leader election
+## **Resources Created**
 
-### Redis Cluster Mode (Recommended for Scale)
-Sharded Redis Cluster for horizontal scaling with 3-10 shards. Features:
-- Automatic data sharding across multiple master nodes
-- Each shard can have configurable replicas for high availability
-- Horizontal scaling by adding more shards
-- Built-in cluster management and rebalancing
-- Client-side routing with CLUSTER commands
-- Best for datasets larger than single-node memory capacity
+| Resource               | Description                                             |
+| ---------------------- | ------------------------------------------------------- |
+| **Cluster (CRD)**      | Main Redis definition using topology **or** shardings   |
+| **Namespace**          | Created only when overridden                            |
+| **Primary Service**    | Read/write endpoint auto-created by KubeBlocks          |
+| **Read Service**       | Terraform-created (replication mode only)               |
+| **PVCs**               | One per Redis replica or shard-replica                  |
+| **Pods**               | Redis instances managed by KubeBlocks                   |
+| **Sentinel Pods**      | Only in replication mode                                |
+| **Secrets**            | Auto-generated `conn-credential` with username/password |
+| **Backup Config**      | Inline `spec.backup` field when enabled                 |
+| **Restore Annotation** | Added when restore is requested                         |
 
-## High Availability Configuration
+---
 
-In replication and redis-cluster modes, the module provides:
+## **Deployment Modes**
 
-- **Pod Anti-Affinity**: Distributes replicas across different Kubernetes nodes to survive node failures
-- **Topology**: 
-  - Replication mode: Uses Redis Sentinel for automatic failover and monitoring
-  - Redis Cluster mode: Uses native Redis Cluster topology with distributed hash slots
-- **Read Service**: Dedicated endpoint `{cluster-name}-redis-read` for read-only queries (replication mode only)
-- **Failure Handling**: 
-  - Replication: Sentinel automatically promotes secondary to primary during failover
-  - Cluster: Automatic failover within each shard, data remains available
-- **Node Tolerance**: Configured to schedule on spot instances and specialty nodes with appropriate tolerations
+KubeBlocks v1 uses **two different spec shapes** depending on mode:
 
-## Backup & Restore
+---
 
-### Backup Configuration
-Supports automated volume-snapshot backups integrated with KubeBlocks' native backup system:
-- **Method**: Volume-snapshot using Kubernetes CSI snapshots
-- **Schedule**: Configurable cron expression for automated backups (e.g., `"0 2 * * *"` for daily at 2 AM)
-- **Retention**: Configurable retention period (7d, 30d, 1y) managed by KubeBlocks
-- **Integration**: Embedded in cluster spec using KubeBlocks ClusterBackup API
-- **Persistence**: Redis AOF (Append Only File) or RDB snapshots backed up to persistent volumes
+### 1️⃣ **Standalone Mode**
 
-### Restore from Backup
-Clusters can be restored from existing backups using annotation-based restore:
-- Provide backup name in `restore.backup_name` configuration
-- KubeBlocks orchestrates restore process automatically during cluster creation
-- Extended timeout (60 minutes) during restore operations for large datasets
-- Restore status tracked via cluster phase monitoring
-- Data consistency guaranteed through Redis persistence mechanisms
+```
+spec:
+  clusterDef: redis
+  topology: standalone
+  componentSpecs: [ redis ]
+```
 
-## Storage Management
+* Single Redis instance
+* Lowest complexity
+* Best for development or caching workloads
 
-The module supports dynamic storage expansion through KubeBlocks:
-- Initial size specified in `storage.size` configuration
-- Expansion: Update size value and apply - KubeBlocks handles PVC expansion automatically
-- **Cannot be reduced** once provisioned due to Kubernetes PVC limitations
-- Storage class customization per environment supported
-- Automatic volume claim template management
-- Redis persistence modes: AOF and RDB snapshot supported
+---
 
-## Version Support
+### 2️⃣ **Replication Mode (HA via Sentinel)**
 
-Supported Redis versions with KubeBlocks v1.0.1:
-- **7.2.4** (default, latest stable with enhanced features)
-- **7.0.6** (LTS version for stability)
+```
+spec:
+  clusterDef: redis
+  topology: replication
+  componentSpecs:
+    - redis (primary + replicas)
+    - redis-sentinel (quorum)
+```
 
-Component definitions automatically map to KubeBlocks releases (e.g., `redis-7.2-1.0.1`).
+Includes:
 
-## Connection Details
+* Redis Sentinel (3 replicas)
+* Automatic failover
+* Optional read-replica service → **{cluster}-redis-read**
 
-The module exposes two connection interfaces through KubeBlocks auto-generated services:
+Best for **production HA workloads**.
 
-**Writer Interface** (Primary)
-- Direct connection to primary instance for write operations
-- Hostname: `{cluster-name}-redis.{namespace}.svc.cluster.local`
-- Port: 6379
-- Always available regardless of deployment mode
-- Supports all Redis commands including writes
+---
 
-**Reader Interface** (Read Replicas - Replication Mode Only)
-- Load-balanced connection to secondary replicas
-- Hostname: `{cluster-name}-redis-read.{namespace}.svc.cluster.local`
-- Port: 6379
-- Falls back to writer endpoint in standalone/cluster modes
-- Read-only operations for load distribution
+### 3️⃣ **Redis Cluster Mode (Sharded Redis Cluster)**
 
-**Redis Cluster Mode**
-- Applications must use Redis Cluster-aware clients
-- Clients perform client-side routing based on hash slots
-- CLUSTER commands available for topology discovery
-- Connection string includes all cluster nodes
+Uses **shardings** instead of topology:
 
-Connection credentials automatically generated by KubeBlocks and stored in Kubernetes secrets with password protection.
+```
+spec:
+  shardings:
+    - name: shard
+      shards: <number_of_shards>
+      template:
+        componentDef: redis-cluster-7-1.0.1
+        replicas: <per_shard_replicas>
+```
 
-## Security Considerations
+Characteristics:
 
-- **Credentials**: Auto-generated by KubeBlocks, stored in Kubernetes Secrets, marked sensitive in outputs
-- **Authentication**: Redis AUTH enabled by default with secure password generation
-- **Network**: Services use ClusterIP by default (internal cluster access only)
-- **Secrets Management**: All passwords and connection strings marked as sensitive
-- **RBAC**: Requires permissions for CRD management, namespace creation, and service operations
-- **Pod Security**: Tolerations configured for spot nodes and specialty workloads
-- **Cluster Policies**: Configurable termination policies (Delete, DoNotTerminate, WipeOut)
-- **Data Protection**: AOF and RDB persistence for data durability
+* Multi-shard distributed Redis
+* Each shard has its own master + replicas
+* Client-side routing required (`redis-cli --cluster`, or cluster-aware clients)
+* No `clusterDef` or `topology`
 
-## Resource Requirements
+Best for **large datasets or horizontal scaling**.
 
-Default resource allocations per Redis instance:
-- CPU Request: 200m (minimum guaranteed)
-- CPU Limit: 500m (maximum allowed)
-- Memory Request: 256Mi (minimum guaranteed)
-- Memory Limit: 512Mi (maximum allowed)
-- Storage: 10Gi (initial allocation, expandable)
+---
 
-These are fully configurable through the module spec and scale with replica count. For Redis Cluster mode, resources multiply by number of shards.
+## 🔁 **High Availability Features**
 
-## Redis-Specific Features
+| Feature           | Standalone | Replication     | Redis Cluster            |
+| ----------------- | ---------- | --------------- | ------------------------ |
+| Failover          | ❌ No       | ✅ Sentinel      | ✅ Built-in               |
+| Sharding          | ❌ No       | ❌ No            | ✅ Yes                    |
+| Read Scaling      | ❌ No       | ✅ Yes           | ⚠️ Client-dependent      |
+| Pod Anti-Affinity | Optional   | Enabled         | Enabled                  |
+| HA Mode           | None       | Primary/Replica | Multi-shard Multi-master |
 
-### Persistence Options
-- **AOF (Append Only File)**: Write-ahead log for durability
-- **RDB Snapshots**: Point-in-time snapshots for backup
-- **Hybrid Mode**: Combination of AOF and RDB for best performance and durability
+Extras in HA modes:
 
-### Data Structures Supported
-- Strings, Lists, Sets, Sorted Sets, Hashes
-- Bitmaps, HyperLogLogs, Streams
-- Geospatial indexes
-- Pub/Sub messaging
+* Automatic failover with Sentinel or Redis Cluster
+* Anti-affinity to spread replicas across nodes
+* Tolerations for spot / special workloads
 
-### Performance Features
-- In-memory data structure store
-- Millisecond latency for read/write operations
-- Pipelining and transaction support
-- Lua scripting for server-side logic
+---
 
-## Deployment Mode Comparison
+## **Backup & Restore**
 
-| Feature | Standalone | Replication | Redis Cluster |
-|---------|------------|-------------|---------------|
-| High Availability | ❌ No | ✅ Yes (Sentinel) | ✅ Yes (Built-in) |
-| Horizontal Scaling | ❌ No | ⚠️ Read-only | ✅ Yes (Sharding) |
-| Automatic Failover | ❌ No | ✅ Yes | ✅ Yes |
-| Data Sharding | ❌ No | ❌ No | ✅ Yes |
-| Memory Capacity | Single Node | Single Node | Multi-Node |
-| Complexity | Low | Medium | High |
-| Use Case | Dev/Test | Production HA | Large Datasets |
+### 🔹 Backup (Snapshot-Based)
 
-## Dependencies
+This module supports KubeBlocks backup scheduling:
 
-This module requires two critical inputs:
+* CSI volume snapshot backups
+* Automatic retention cleanup
+* CRON-based scheduling
+* Configurable retention lifecycle
 
-1. **KubeBlocks Operator** - Must be deployed with CRDs ready and release tracking
-2. **Kubernetes Cluster** - Target cluster with sufficient resources and storage classes
+Example:
 
-The operator dependency uses release_id tracking to ensure proper lifecycle sequencing and prevent race conditions during cluster provisioning.
+```hcl
+backup = {
+  enabled          = true
+  enable_schedule  = true
+  schedule_cron    = "0 2 * * *"
+  retention_period = "7d"
+}
+```
 
-## Operational Notes
+---
 
-### Redis Cluster Mode Considerations
-- Minimum 3 shards required for cluster formation
-- Data automatically distributed across shards using hash slots
-- Applications must use cluster-aware Redis clients
-- Resharding operations supported for adding/removing nodes
-- Multi-key operations limited to same hash slot
+### 🔹 Restore From Backup
 
-### Sentinel Mode Considerations
-- Sentinel quorum automatically configured for failover decisions
-- Sentinel monitors master and replica health continuously
-- Automatic promotion of replica to master during failures
-- Manual failover commands supported via Sentinel API
+KubeBlocks restore works via an annotation:
 
-### Performance Tuning
-- Adjust maxmemory and eviction policies via Redis configuration
-- Enable AOF for durability or RDB for performance
-- Configure connection pooling in applications
-- Monitor memory usage and key eviction metrics
+```
+metadata:
+  annotations:
+    kubeblocks.io/restore-from-backup: '{ "redis": { "name": "...", "namespace": "..." } }'
+```
+
+Module automatically:
+
+* Adds annotation when restore is enabled
+* Waits for cluster to reach running state
+* Extends timeout for large restores
+
+---
+
+## **Storage Operations**
+
+Supported storage features:
+
+* PVCs created per Redis replica / shard replica
+* Automatic PVC expansion when resizing storage
+* Storage class override (managed-csi, gp3, etc.)
+* Persistence via AOF/RDB hybrid storage
+
+---
+
+## **Version Compatibility**
+
+Validated Redis versions:
+
+* **7.4.x (latest stable)**
+* **7.2.x**
+* **7.0.x**
+
+Component definitions:
+
+| Mode                   | ComponentDef Format            |
+| ---------------------- | ------------------------------ |
+| Standalone/Replication | `redis-<major>-1.0.1`          |
+| Redis Cluster          | `redis-cluster-<major>-1.0.1`  |
+| Sentinel               | `redis-sentinel-<major>-1.0.1` |
+
+---
+
+## **Connection Details**
+
+### **Primary / Writer Connection**
+
+Always exists:
+
+```
+<cluster>-redis-redis.<namespace>.svc.cluster.local:6379
+```
+
+### **Reader Service (Replication Mode Only)**
+
+```
+<cluster>-redis-read.<namespace>.svc.cluster.local:6379
+```
+
+---
+
+## **Security Considerations**
+
+* Password included only in Terraform outputs as **sensitive**
+* ClusterIP services (no external exposure)
+* Namespace isolation
+* RBAC-compliant usage (no root privileges)
+* Tolerations included for production clusters
+
+---
+
+## **Resource Defaults**
+
+| Setting                | Default     |
+| ---------------------- | ----------- |
+| CPU Request            | 200m        |
+| CPU Limit              | 500m        |
+| Memory Request         | 256Mi       |
+| Memory Limit           | 512Mi       |
+| Storage                | 10Gi        |
+| Sentinel Replicas      | 3           |
+| Shards                 | 3           |
+| Redis Cluster Replicas | 2 per shard |
+
+---
+
+## **Mode Comparison**
+
+| Feature    | Standalone | Replication   | Redis Cluster         |
+| ---------- | ---------- | ------------- | --------------------- |
+| HA         | ❌          | ✅             | ✅                     |
+| Sharding   | ❌          | ❌             | ✅                     |
+| Scaling    | Vertical   | Read-only     | Horizontal            |
+| Failover   | No         | Sentinel      | Native                |
+| Complexity | Low        | Medium        | High                  |
+| Best For   | Dev/Test   | HA Production | Large-scale workloads |
+
+---
+
+## **Module Dependencies**
+
+This module requires:
+
+1. **KubeBlocks operator v1.0.1+**
+2. **CSI snapshot support** on cluster (for backups)
+3. Terraform provider:
+
+   * kubernetes
+   * time
+   * facets-utility-modules (any-k8s-resource)
+
+---
+
+## **Operational Notes**
+
+### For Redis Cluster Mode:
+
+* Requires at least 3 shards for good distribution
+* Needs clients that understand Redis Cluster protocol
+* Multi-key ops restricted to keys in same hash slot
+
+### For Replication Mode:
+
+* Sentinel quorum is automatically managed
+* Handles failover without downtime
+* Reader service becomes active only when replicas exist

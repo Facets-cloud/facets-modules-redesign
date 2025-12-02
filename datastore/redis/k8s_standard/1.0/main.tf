@@ -90,10 +90,15 @@ module "redis_cluster" {
     }
 
     spec = merge(
-      local.mode == "redis-cluster" ? {
-        clusterDef        = "redis"
+      {
         terminationPolicy = var.instance.spec.termination_policy
+      },
+      local.mode != "redis-cluster" ? {
+        clusterDef = "redis"
+        topology   = local.topology
+      } : {},
 
+      local.mode == "redis-cluster" ? {
         shardings = [
           {
             name   = "shard"
@@ -101,7 +106,7 @@ module "redis_cluster" {
 
             template = {
               name           = "redis"
-              componentDef   = local.component_def # e.g. redis-cluster-7
+              componentDef   = local.component_def
               serviceVersion = local.redis_version
               replicas       = local.replicas
 
@@ -135,7 +140,6 @@ module "redis_cluster" {
                 }
               ]
 
-              # schedulingPolicy for sharded pods
               schedulingPolicy = merge(
                 local.enable_pod_anti_affinity ? {
                   affinity = {
@@ -183,18 +187,103 @@ module "redis_cluster" {
             }
           }
         ]
-        } : {
-        clusterDef        = "redis"
-        topology          = local.topology
-        terminationPolicy = var.instance.spec.termination_policy
+      } : {},
+      local.mode != "redis-cluster" ? {
+        componentSpecs = concat(
+          [
+            merge(
+              {
+                name           = "redis"
+                componentDef   = local.component_def
+                serviceVersion = local.redis_version
+                replicas       = local.replicas
 
-        componentSpecs = [
-          merge(
+                resources = {
+                  limits = {
+                    cpu    = var.instance.spec.resources.cpu_limit
+                    memory = var.instance.spec.resources.memory_limit
+                  }
+                  requests = {
+                    cpu    = var.instance.spec.resources.cpu_request
+                    memory = var.instance.spec.resources.memory_request
+                  }
+                }
+
+                volumeClaimTemplates = [
+                  {
+                    name = "data"
+                    spec = merge(
+                      {
+                        accessModes = ["ReadWriteOnce"]
+                        resources = {
+                          requests = {
+                            storage = var.instance.spec.storage.size
+                          }
+                        }
+                      },
+                      var.instance.spec.storage.storage_class != "" ? {
+                        storageClassName = var.instance.spec.storage.storage_class
+                      } : {}
+                    )
+                  }
+                ]
+              },
+
+              {
+                schedulingPolicy = merge(
+                  local.enable_pod_anti_affinity ? {
+                    affinity = {
+                      podAntiAffinity = {
+                        preferredDuringSchedulingIgnoredDuringExecution = [
+                          {
+                            weight = 100
+                            podAffinityTerm = {
+                              labelSelector = {
+                                matchLabels = {
+                                  "app.kubernetes.io/instance"        = local.cluster_name
+                                  "app.kubernetes.io/managed-by"      = "kubeblocks"
+                                  "apps.kubeblocks.io/component-name" = "redis"
+                                }
+                              }
+                              topologyKey = "kubernetes.io/hostname"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  } : {},
+                  {
+                    tolerations = [
+                      {
+                        key      = "kubernetes.azure.com/scalesetpriority"
+                        operator = "Equal"
+                        value    = "spot"
+                        effect   = "NoSchedule"
+                      },
+                      {
+                        key      = "mongodb"
+                        operator = "Equal"
+                        value    = "true"
+                        effect   = "NoSchedule"
+                      },
+                      {
+                        key      = "CriticalAddonsOnly"
+                        operator = "Exists"
+                        effect   = "NoSchedule"
+                      }
+                    ]
+                  }
+                )
+              }
+            )
+          ],
+          # Add redis-sentinel component for replication mode
+          local.topology == "replication" ? [
             {
-              name           = "redis"
-              componentDef   = local.component_def
-              serviceVersion = local.redis_version
-              replicas       = local.replicas
+              name           = "redis-sentinel"
+              componentDef   = local.sentinel_component_def
+              serviceVersion = local.sentinel_version
+              replicas       = local.sentinel_replicas
 
               resources = {
                 limits = {
@@ -225,12 +314,8 @@ module "redis_cluster" {
                   )
                 }
               ]
-            },
 
-            # schedulingPolicy (nodeSelector, nodeName, affinity, tolerations)
-            {
               schedulingPolicy = merge(
-                # Conditional: Pod anti-affinity for HA
                 local.enable_pod_anti_affinity ? {
                   affinity = {
                     podAntiAffinity = {
@@ -242,7 +327,7 @@ module "redis_cluster" {
                               matchLabels = {
                                 "app.kubernetes.io/instance"        = local.cluster_name
                                 "app.kubernetes.io/managed-by"      = "kubeblocks"
-                                "apps.kubeblocks.io/component-name" = "redis"
+                                "apps.kubeblocks.io/component-name" = "redis-sentinel"
                               }
                             }
                             topologyKey = "kubernetes.io/hostname"
@@ -252,8 +337,6 @@ module "redis_cluster" {
                     }
                   }
                 } : {},
-
-                # Tolerations (always applied)
                 {
                   tolerations = [
                     {
@@ -263,14 +346,12 @@ module "redis_cluster" {
                       effect   = "NoSchedule"
                     },
                     {
-                      # allow running on the mongodb-tainted node
                       key      = "mongodb"
                       operator = "Equal"
                       value    = "true"
                       effect   = "NoSchedule"
                     },
                     {
-                      # allow scheduling on the CriticalAddonsOnly node
                       key      = "CriticalAddonsOnly"
                       operator = "Exists"
                       effect   = "NoSchedule"
@@ -279,11 +360,9 @@ module "redis_cluster" {
                 }
               )
             }
-          )
-        ]
-      },
-
-      # Conditional: Backup configuration (ClusterBackup API)
+          ] : []
+        )
+      } : {},
       local.backup_schedule_enabled ? {
         backup = {
           enabled         = true
@@ -308,7 +387,7 @@ resource "kubernetes_service" "redis_read" {
   count = local.create_read_service ? 1 : 0
 
   metadata {
-    name      = "${local.cluster_name}-redis-read"
+    name      = "${local.cluster_name}-redis-redis-read"
     namespace = local.namespace
 
     labels = {

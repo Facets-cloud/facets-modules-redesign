@@ -26,7 +26,8 @@ spec:
     namespace_override:
       type: string
       title: Namespace Override
-      description: (Optional) Specify a custom namespace for the cluster. If not set, the namespace from the environment will be used.
+      description: (Optional) Specify a custom namespace for the cluster. If not set,
+        the namespace from the environment will be used.
       default: ''
     termination_policy:
       type: string
@@ -53,7 +54,8 @@ spec:
     mode:
       type: string
       title: Cluster Mode
-      description: Deployment mode - standalone for single instance, replication for HA with Redis Sentinel, redis-cluster for sharded setup
+      description: Deployment mode - standalone for single instance, replication for
+        HA with Redis Sentinel, redis-cluster for sharded setup
       enum:
       - standalone
       - replication
@@ -118,7 +120,8 @@ spec:
         size:
           type: string
           title: Storage Size
-          description: Size of persistent volume (can be expanded later, cannot be reduced)
+          description: Size of persistent volume (can be expanded later, cannot be
+            reduced)
           default: 10Gi
         storage_class:
           type: string
@@ -164,7 +167,8 @@ spec:
         schedule_cron:
           type: string
           title: Backup Schedule (Cron)
-          description: Cron expression for backup schedule (e.g., "0 2 * * *" for daily at 2 AM)
+          description: Cron expression for backup schedule (e.g., "0 2 * * *" for
+            daily at 2 AM)
           default: 0 2 * * *
           x-ui-visible-if:
             field: spec.backup.enable_schedule
@@ -182,7 +186,8 @@ spec:
     restore:
       type: object
       title: Restore Configuration
-      description: Restore cluster from existing backup instead of creating fresh cluster
+      description: Restore cluster from existing backup instead of creating fresh
+        cluster
       properties:
         enabled:
           type: boolean

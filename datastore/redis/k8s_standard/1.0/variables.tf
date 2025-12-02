@@ -57,11 +57,6 @@ variable "instance" {
   })
 
   validation {
-    condition     = contains(["7.0.6", "7.2.4"], var.instance.spec.redis_version)
-    error_message = "Redis version must be one of: 7.0.6, 7.2.4"
-  }
-
-  validation {
     condition     = contains(["standalone", "replication", "redis-cluster"], var.instance.spec.mode)
     error_message = "Cluster mode must be one of: standalone, replication, redis-cluster"
   }
@@ -73,7 +68,7 @@ variable "instance" {
 
   validation {
     condition = (
-      var.instance.spec.mode == "standalone" ||
+      var.instance.spec.mode != "replication" ||
       (var.instance.spec.mode == "replication" &&
         lookup(var.instance.spec, "replicas", 2) >= 1 &&
       lookup(var.instance.spec, "replicas", 2) <= 5)
