@@ -23,12 +23,12 @@ spec:
       type: string
       title: KubeBlocks Version
       description: KubeBlocks version - CRDs will be fetched for this version
-      default: 0.9.5
+      default: 1.0.1
   required:
   - version
 outputs:
   default:
-    type: '@outputs/kubeblocks-crd'
+    type: '@facets/kubeblocks-crd'
     title: KubeBlocks CRDs
 iac:
   validated_files:
@@ -40,4 +40,4 @@ sample:
   version: '1.0'
   disabled: true
   spec:
-    version: 0.9.5
+    version: 1.0.1
