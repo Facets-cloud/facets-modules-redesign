@@ -196,7 +196,7 @@ spec:
   - mode
 outputs:
   default:
-    type: '@outputs/postgresql-cluster'
+    type: '@facets/postgres'
     title: PostgreSQL Cluster Credentials
 iac:
   validated_files:
