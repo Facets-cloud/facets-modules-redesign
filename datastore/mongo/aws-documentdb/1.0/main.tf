@@ -2,15 +2,21 @@
 
 # Random password generation for new clusters (when not restoring or importing)
 resource "random_password" "master" {
-  count            = local.is_import || var.instance.spec.restore_config.restore_from_snapshot ? 0 : 1
+  count            = var.instance.spec.restore_config.restore_from_snapshot ? 0 : 1
   length           = 16
   special          = true
   override_special = "!#$%&*+-=?^_`{|}~" # Exclude problematic characters: /, @, ", and space
+
+  lifecycle {
+    ignore_changes = [
+      length,
+      override_special,
+    ]
+  }
 }
 
 # DocumentDB Subnet Group (only for new clusters, not imported)
 resource "aws_docdb_subnet_group" "main" {
-  count      = local.is_import ? 0 : 1
   name       = "${var.instance_name}-${var.environment.unique_name}"
   subnet_ids = var.inputs.vpc_details.attributes.private_subnet_ids
 
@@ -21,13 +27,13 @@ resource "aws_docdb_subnet_group" "main" {
   lifecycle {
     ignore_changes = [
       name,
+      subnet_ids,
     ]
   }
 }
 
 # Security Group for DocumentDB (only for new clusters, not imported)
 resource "aws_security_group" "documentdb" {
-  count       = local.is_import ? 0 : 1
   name_prefix = "${var.instance_name}-${var.environment.unique_name}-"
   vpc_id      = var.inputs.vpc_details.attributes.vpc_id
 
@@ -54,6 +60,7 @@ resource "aws_security_group" "documentdb" {
     ignore_changes = [
       name_prefix,
       name,
+      vpc_id,
     ]
   }
 }
@@ -80,7 +87,7 @@ resource "aws_docdb_cluster" "main" {
   engine                    = "docdb"
   engine_version            = var.instance.spec.version_config.engine_version == "6.0.0" ? "5.0.0" : var.instance.spec.version_config.engine_version
   master_username           = var.instance.spec.restore_config.restore_from_snapshot ? var.instance.spec.restore_config.master_username : "docdbadmin"
-  master_password           = local.is_import ? null : (var.instance.spec.restore_config.restore_from_snapshot ? var.instance.spec.restore_config.master_password : random_password.master[0].result)
+  master_password           = local.master_password
   port                      = var.instance.spec.version_config.port
   backup_retention_period   = 7
   preferred_backup_window   = "07:00-09:00"
@@ -91,8 +98,8 @@ resource "aws_docdb_cluster" "main" {
   snapshot_identifier = var.instance.spec.restore_config.restore_from_snapshot ? var.instance.spec.restore_config.snapshot_identifier : null
 
   # Network configuration
-  db_subnet_group_name   = local.is_import ? var.instance.spec.imports.subnet_group_name : aws_docdb_subnet_group.main[0].name
-  vpc_security_group_ids = local.is_import ? [var.instance.spec.imports.security_group_id] : [aws_security_group.documentdb[0].id]
+  db_subnet_group_name   = local.is_import ? var.instance.spec.imports.subnet_group_name : aws_docdb_subnet_group.main.name
+  vpc_security_group_ids = local.is_import ? [var.instance.spec.imports.security_group_id] : [aws_security_group.documentdb.id]
 
   # Parameter group (only for new clusters)
   db_cluster_parameter_group_name = local.is_import ? null : aws_docdb_cluster_parameter_group.main[0].name
@@ -124,7 +131,6 @@ resource "aws_docdb_cluster" "main" {
       skip_final_snapshot,
       final_snapshot_identifier,
       storage_encrypted,
-      tags,
     ]
   }
 }
@@ -146,7 +152,6 @@ resource "aws_docdb_cluster_instance" "cluster_instances" {
       identifier,
       instance_class,
       cluster_identifier,
-      tags,
     ]
   }
 }
