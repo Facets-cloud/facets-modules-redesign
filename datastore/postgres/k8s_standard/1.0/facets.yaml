@@ -7,7 +7,7 @@ description: Creates and manages PostgreSQL database clusters using KubeBlocks o
   v1.0.1
 inputs:
   kubeblocks_operator:
-    type: '@outputs/kubeblocks-operator'
+    type: '@facets/kubeblocks-operator'
     optional: false
     displayName: KubeBlocks Operator
     description: KubeBlocks operator installation (CRDs must be ready)
