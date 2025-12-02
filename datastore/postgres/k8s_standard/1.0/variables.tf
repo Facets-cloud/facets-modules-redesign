@@ -1,15 +1,11 @@
 # PostgreSQL Cluster Module Variables
-# KubeBlocks v0.9.5 - API v1alpha1
+# KubeBlocks v1.0.1 - API v1
 
 variable "instance_name" {
   description = "Instance name from Facets"
   type        = string
 }
-variable "namespace_override" {
-  description = "Optional: Specify a custom namespace for the cluster. If not set, uses environment.namespace."
-  type        = string
-  default     = ""
-}
+
 variable "environment" {
   description = "Environment context from Facets"
   type = object({
@@ -22,7 +18,7 @@ variable "instance" {
   description = "PostgreSQL cluster instance configuration"
   type = object({
     spec = object({
-      cluster_name       = string
+      namespace_override = optional(string)
       termination_policy = string
       postgres_version   = string
       mode               = string
@@ -42,19 +38,18 @@ variable "instance" {
 
       high_availability = optional(object({
         enable_pod_anti_affinity = optional(bool)
-        anti_affinity_type       = optional(string)
       }))
 
       backup = optional(object({
-        enabled                   = optional(bool)
-        enable_schedule           = optional(bool)
-        schedule_cron             = optional(string)
-        retention_period          = optional(string)
-        backup_method             = optional(string)
+        enabled          = optional(bool)
+        enable_schedule  = optional(bool)
+        schedule_cron    = optional(string)
+        retention_period = optional(string)
+        backup_method    = optional(string)
       }))
       restore = optional(object({
-        enabled          = optional(bool)
-        backup_name      = optional(string)
+        enabled     = optional(bool)
+        backup_name = optional(string)
       }))
     })
   })

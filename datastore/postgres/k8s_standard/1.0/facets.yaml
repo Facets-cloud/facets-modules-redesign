@@ -1,10 +1,10 @@
-intent: postgresql
+intent: postgres
 flavor: k8s_standard
 version: '1.0'
 clouds:
 - kubernetes
 description: Creates and manages PostgreSQL database clusters using KubeBlocks operator
-  v0.9.5
+  v1.0.1
 inputs:
   kubeblocks_operator:
     type: '@outputs/kubeblocks-operator'
@@ -12,7 +12,7 @@ inputs:
     displayName: KubeBlocks Operator
     description: KubeBlocks operator installation (CRDs must be ready)
   kubernetes_cluster:
-    type: '@outputs/kubernetes'
+    type: '@facets/kubernetes-details'
     optional: false
     displayName: Kubernetes Cluster
     description: Target Kubernetes cluster
@@ -27,22 +27,21 @@ spec:
     namespace_override:
       type: string
       title: Namespace Override
-      description: (Optional) Specify a custom namespace for the cluster. If not set, the namespace from the environment will be used.
+      description: (Optional) Specify a custom namespace for the cluster. If not set,
+        the namespace from the environment will be used.
       default: ''
     termination_policy:
       type: string
       title: Termination Policy
       description: Controls cluster deletion behavior
       enum:
-      - Delete
       - DoNotTerminate
-      - Halt
+      - Delete
       - WipeOut
       default: Delete
       x-enum-descriptions:
         Delete: Delete pods and PVCs
         DoNotTerminate: Block cluster deletion
-        Halt: Delete pods but keep PVCs
         WipeOut: Delete everything including backups
     postgres_version:
       type: string
@@ -131,12 +130,6 @@ spec:
           title: Enable Pod Anti-Affinity
           description: Distribute replicas across different nodes for better availability
           default: true
-        anti_affinity_type:
-          type: string
-          title: Anti-Affinity Type
-          description: Preferred allows same-node scheduling if needed, Required enforces
-            strict separation
-          default: Preferred
     backup:
       type: object
       title: Backup Configuration
@@ -147,15 +140,6 @@ spec:
           title: Enable Backup
           description: Enable backup configuration for this cluster
           default: false
-        backup_method:
-          type: string
-          title: Backup Method
-          description: Method to use for backups
-          default: volume-snapshot
-          x-ui-visible-if:
-            field: spec.backup.enabled
-            values:
-            - true
         enable_schedule:
           type: boolean
           title: Enable Backup Schedule
@@ -187,7 +171,8 @@ spec:
     restore:
       type: object
       title: Restore Configuration
-      description: Restore cluster from existing backup instead of creating fresh cluster
+      description: Restore cluster from existing backup instead of creating fresh
+        cluster
       properties:
         enabled:
           type: boolean
@@ -207,7 +192,6 @@ spec:
             values:
             - true
   required:
-  - cluster_name
   - postgres_version
   - mode
 outputs:
@@ -219,8 +203,9 @@ iac:
   - main.tf
   - variables.tf
   - outputs.tf
+  - locals.tf
 sample:
-  kind: postgresql
+  kind: postgres
   flavor: k8s_standard
   version: '1.0'
   disabled: true
@@ -240,10 +225,8 @@ sample:
       storage_class: ''
     high_availability:
       enable_pod_anti_affinity: true
-      anti_affinity_type: Preferred
     backup:
       enabled: false
-      backup_method: volume-snapshot
       enable_schedule: false
       schedule_cron: 0 2 * * *
       retention_period: 7d

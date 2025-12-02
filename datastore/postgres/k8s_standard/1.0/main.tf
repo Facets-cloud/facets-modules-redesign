@@ -1,53 +1,6 @@
-# PostgreSQL Cluster Module - KubeBlocks v0.9.5
+# PostgreSQL Cluster Module - KubeBlocks v1.0.1
 # Creates and manages PostgreSQL database clusters using KubeBlocks operator
 # REQUIRES: KubeBlocks operator must be deployed first (CRDs must exist)
-
-# Local variables for cleaner code
-locals {
-  cluster_name = "myapp-postgres"  # Default cluster name
-  namespace = try(var.instance.spec.namespace_override, "") != "" ? var.instance.spec.namespace_override : var.environment.namespace
-  replicas     = var.instance.spec.mode == "standalone" ? 1 : lookup(var.instance.spec, "replicas", 2)
-
-  # HA settings
-  ha_enabled               = var.instance.spec.mode == "replication"
-  enable_pod_anti_affinity = local.ha_enabled && lookup(lookup(var.instance.spec, "high_availability", {}), "enable_pod_anti_affinity", true)
-  anti_affinity_type       = local.ha_enabled ? lookup(lookup(var.instance.spec, "high_availability", {}), "anti_affinity_type", "Preferred") : "Preferred"
-  create_read_service      = true # Always create read service for replication mode
-
-  # Backup settings - mapped to ClusterBackup API
-  backup_config = lookup(var.instance.spec, "backup", {})
-
-  # Check if selected backup method requires BackupRepo
-  # volume-snapshot uses AWS EBS snapshots directly (no BackupRepo needed)
-
-
-  # Ensure boolean types
-  backup_enabled     = try(lookup(local.backup_config, "enabled", false), false) == true
-  
-
-  # Backup schedule settings (for Cluster.spec.backup)
-  backup_schedule_enabled = local.backup_enabled && try(lookup(local.backup_config, "enable_schedule", false), false) == true
-  backup_cron_expression  = try(lookup(local.backup_config, "schedule_cron", "0 2 * * *"), "0 2 * * *")
-  backup_retention_period = try(lookup(local.backup_config, "retention_period", "7d"), "7d")
-
-  # Backup method - determines if BackupRepo is needed (For volume-snapshot, no repo needed)
-  backup_method           = try(lookup(local.backup_config, "backup_method", "volume-snapshot"), "volume-snapshot")
-
-
-  # Restore configuration - annotation-based restore from backup
-  restore_config = lookup(var.instance.spec, "restore", {})
-  restore_enabled = lookup(local.restore_config, "enabled", false) == true
-
-  # Restore source details
-  # Backup naming pattern from KubeBlocks:
-  # - Volume-snapshot backups: {cluster-name}-backup-{timestamp}
-  restore_backup_name = lookup(local.restore_config, "backup_name", "")
-
-  # Component definition
-  component_def_ref   = "postgresql"
-  cluster_version_ref = "postgresql-${var.instance.spec.postgres_version}"
-
-}
 
 # Kubernetes Namespace for PostgreSQL Cluster
 resource "kubernetes_namespace" "postgresql_cluster" {
@@ -100,116 +53,149 @@ module "postgresql_cluster" {
   ]
 
   data = {
-    apiVersion = "apps.kubeblocks.io/v1alpha1"
+    apiVersion = "apps.kubeblocks.io/v1"
     kind       = "Cluster"
 
     metadata = {
-    name      = local.cluster_name
-    namespace = local.namespace
+      name      = local.cluster_name
+      namespace = local.namespace
 
-    annotations = merge(
-      {
-        "kubeblocks.io/operator-release-id"    = var.inputs.kubeblocks_operator.output_interfaces.output.release_id
-        "kubeblocks.io/operator-dependency-id" = var.inputs.kubeblocks_operator.output_interfaces.output.dependency_id
-      },
-      local.restore_enabled && local.restore_backup_name != "" ? {
-        "kubeblocks.io/restore-from-backup" = jsonencode({
-          postgresql = merge(
-            {
-              name = local.restore_backup_name
+      annotations = merge(
+        {
+          "kubeblocks.io/operator-release-id"    = var.inputs.kubeblocks_operator.output_interfaces.output.release_id
+          "kubeblocks.io/operator-dependency-id" = var.inputs.kubeblocks_operator.output_interfaces.output.dependency_id
+        },
+        local.restore_enabled && local.restore_backup_name != "" ? {
+          "kubeblocks.io/restore-from-backup" = jsonencode({
+            postgresql = {
+              name      = local.restore_backup_name
               namespace = local.namespace
-            },
-            local.restore_pitr_enabled && local.restore_pitr_timestamp != "" ? {
-            restoreTime = local.restore_pitr_timestamp
-            } : {}
-          )
-        })
-      } : {}
-    )
+            }
+          })
+        } : {}
+      )
 
-    labels = merge(
-      {
-        "app.kubernetes.io/name"       = "postgresql"
-        "app.kubernetes.io/instance"   = var.instance_name
-        "app.kubernetes.io/managed-by" = "terraform"
-        "app.kubernetes.io/version"    = var.instance.spec.postgres_version
-      },
-      local.restore_enabled ? {
-        "dataprotection.kubeblocks.io/restore-source" = local.restore_backup_name
-      } : {},
-      var.environment.cloud_tags
-    )
-  }
+      labels = merge(
+        {
+          "app.kubernetes.io/name"       = "postgresql"
+          "app.kubernetes.io/instance"   = var.instance_name
+          "app.kubernetes.io/managed-by" = "terraform"
+          "app.kubernetes.io/version"    = var.instance.spec.postgres_version
+        },
+        local.restore_enabled ? {
+          "dataprotection.kubeblocks.io/restore-source" = local.restore_backup_name
+        } : {},
+        var.environment.cloud_tags
+      )
+    }
 
     spec = merge(
       {
-        clusterDefinitionRef = "postgresql"
-        clusterVersionRef    = local.cluster_version_ref
-        terminationPolicy    = var.instance.spec.termination_policy
+        clusterDef        = "postgresql"
+        topology          = local.topology
+        terminationPolicy = var.instance.spec.termination_policy
 
         componentSpecs = [
-          {
-            name            = "postgresql"
-            componentDefRef = local.component_def_ref
-            serviceVersion  = var.instance.spec.postgres_version
-            replicas        = local.replicas
+          merge(
+            {
+              name           = "postgresql"
+              componentDef   = local.component_def
+              serviceVersion = local.postgres_version
+              replicas       = local.replicas
 
-            resources = {
-              limits = {
-                cpu    = var.instance.spec.resources.cpu_limit
-                memory = var.instance.spec.resources.memory_limit
+              resources = {
+                limits = {
+                  cpu    = var.instance.spec.resources.cpu_limit
+                  memory = var.instance.spec.resources.memory_limit
+                }
+                requests = {
+                  cpu    = var.instance.spec.resources.cpu_request
+                  memory = var.instance.spec.resources.memory_request
+                }
               }
-              requests = {
-                cpu    = var.instance.spec.resources.cpu_request
-                memory = var.instance.spec.resources.memory_request
-              }
-            }
 
-            volumeClaimTemplates = [
-              {
-                name = "data"
-                spec = merge(
-                  {
-                    accessModes = ["ReadWriteOnce"]
-                    resources = {
-                      requests = {
-                        storage = var.instance.spec.storage.size
+              volumeClaimTemplates = [
+                {
+                  name = "data"
+                  spec = merge(
+                    {
+                      accessModes = ["ReadWriteOnce"]
+                      resources = {
+                        requests = {
+                          storage = var.instance.spec.storage.size
+                        }
                       }
-                    }
-                  },
-                  var.instance.spec.storage.storage_class != "" ? {
-                    storageClassName = var.instance.spec.storage.storage_class
-                  } : {}
-                )
-              }
-            ]
+                    },
+                    var.instance.spec.storage.storage_class != "" ? {
+                      storageClassName = var.instance.spec.storage.storage_class
+                    } : {}
+                  )
+                }
+              ]
+            },
 
-            tolerations = [
-              {
-                key      = "kubernetes.azure.com/scalesetpriority"
-                operator = "Equal"
-                value    = "spot"
-                effect   = "NoSchedule"
-              }
-            ]
-          }
+            # schedulingPolicy (nodeSelector, nodeName, affinity, tolerations)
+            {
+              schedulingPolicy = merge(
+                # Conditional: Pod anti-affinity for HA
+                local.enable_pod_anti_affinity ? {
+                  affinity = {
+                    podAntiAffinity = {
+                      preferredDuringSchedulingIgnoredDuringExecution = [
+                        {
+                          weight = 100
+                          podAffinityTerm = {
+                            labelSelector = {
+                              matchLabels = {
+                                "app.kubernetes.io/instance"        = local.cluster_name
+                                "app.kubernetes.io/managed-by"      = "kubeblocks"
+                                "apps.kubeblocks.io/component-name" = "postgresql"
+                              }
+                            }
+                            topologyKey = "kubernetes.io/hostname"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                } : {},
+
+                # Tolerations (always applied)
+                {
+                  tolerations = [
+                    {
+                      key      = "kubernetes.azure.com/scalesetpriority"
+                      operator = "Equal"
+                      value    = "spot"
+                      effect   = "NoSchedule"
+                    },
+                    {
+                      # allow running on the mongodb-tainted node
+                      key      = "mongodb"
+                      operator = "Equal"
+                      value    = "true"
+                      effect   = "NoSchedule"
+                    },
+                    {
+                      # allow scheduling on the CriticalAddonsOnly node
+                      key      = "CriticalAddonsOnly"
+                      operator = "Exists"
+                      effect   = "NoSchedule"
+                    }
+                  ]
+                }
+              )
+            }
+          )
         ]
       },
-      # Conditional: Pod anti-affinity for HA
-      local.enable_pod_anti_affinity ? {
-        affinity = {
-          podAntiAffinity = local.anti_affinity_type
-          topologyKeys    = ["kubernetes.io/hostname"]
-        }
-      } : {},
+
       # Conditional: Backup configuration (ClusterBackup API)
       local.backup_schedule_enabled ? {
         backup = {
           enabled         = true
-          repoName        = local.backup_repo_name
           retentionPeriod = local.backup_retention_period
           method          = local.backup_method
-          pitrEnabled     = local.pitr_enabled
           cronExpression  = local.backup_cron_expression
         }
       } : {}
@@ -282,8 +268,8 @@ resource "time_sleep" "wait_for_credentials" {
 
   create_duration = local.restore_enabled ? "180s" : "60s"
   triggers = {
-    cluster_name = local.cluster_name
-    namespace    = local.namespace
+    cluster_name    = local.cluster_name
+    namespace       = local.namespace
     restore_enabled = local.restore_enabled
   }
 }
@@ -312,13 +298,13 @@ data "kubernetes_service" "postgres_primary" {
 
 resource "time_sleep" "wait_for_restore" {
   count = local.restore_enabled ? 1 : 0
-  
+
   depends_on = [module.postgresql_cluster]
 
   # Restore can take significant time depending on backup size
   # Initial wait before checking cluster status
   create_duration = "120s"
-  
+
   triggers = {
     cluster_name    = local.cluster_name
     backup_name     = local.restore_backup_name
@@ -331,7 +317,7 @@ resource "time_sleep" "wait_for_restore" {
 data "kubernetes_resource" "cluster_status" {
   count = local.restore_enabled ? 1 : 0
 
-  api_version = "apps.kubeblocks.io/v1alpha1"
+  api_version = "apps.kubeblocks.io/v1"
   kind        = "Cluster"
 
   metadata {
