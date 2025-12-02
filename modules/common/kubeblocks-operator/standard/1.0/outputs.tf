@@ -22,14 +22,3 @@ locals {
     }
   }
 }
-
-# Expose outputs for external module consumption
-output "output_attributes" {
-  description = "Attribute outputs for KubeBlocks operator information"
-  value       = local.output_attributes
-}
-
-output "output_interfaces" {
-  description = "Interface outputs for dependency management and status tracking"
-  value       = local.output_interfaces
-}

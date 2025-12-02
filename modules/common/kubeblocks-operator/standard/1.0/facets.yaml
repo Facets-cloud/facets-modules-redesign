@@ -15,7 +15,7 @@ inputs:
     - kubernetes
     - helm
   kubeblocks_crd:
-    type: '@outputs/kubeblocks-crd'
+    type: '@facets/kubeblocks-crd'
     optional: false
     displayName: KubeBlocks CRDs
     description: KubeBlocks Custom Resource Definitions (must be installed first)
@@ -29,7 +29,7 @@ spec:
       type: string
       title: KubeBlocks Version
       description: KubeBlocks version to install
-      default: 0.9.5
+      default: 1.0.1
     feature_gates:
       type: object
       title: Feature Gates
@@ -99,7 +99,7 @@ spec:
   - version
 outputs:
   default:
-    type: '@outputs/kubeblocks-operator'
+    type: '@facets/kubeblocks-operator'
     title: KubeBlocks Operator
 iac:
   validated_files:
@@ -111,7 +111,7 @@ sample:
   version: '1.0'
   disabled: true
   spec:
-    version: 0.9.5
+    version: 1.0.1
     resources:
       cpu_limit: 1000m
       memory_limit: 1Gi
