@@ -98,6 +98,18 @@ spec:
             field: spec.restore_config.restore_from_backup
             values:
             - true
+        restore_master_username:
+          type: string
+          title: Restore Master Username
+          description: Master username for restored database (required for restore
+            operations)
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+          minLength: 1
+          maxLength: 16
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
         restore_master_password:
           type: string
           title: Restore Master Password

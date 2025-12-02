@@ -28,7 +28,6 @@ resource "aws_docdb_subnet_group" "main" {
     ignore_changes = [
       name,
       subnet_ids,
-      tags,
     ]
   }
 }
@@ -62,7 +61,6 @@ resource "aws_security_group" "documentdb" {
       name_prefix,
       name,
       vpc_id,
-      tags,
     ]
   }
 }
@@ -133,7 +131,6 @@ resource "aws_docdb_cluster" "main" {
       skip_final_snapshot,
       final_snapshot_identifier,
       storage_encrypted,
-      tags,
     ]
   }
 }
@@ -155,7 +152,6 @@ resource "aws_docdb_cluster_instance" "cluster_instances" {
       identifier,
       instance_class,
       cluster_identifier,
-      tags,
     ]
   }
 }

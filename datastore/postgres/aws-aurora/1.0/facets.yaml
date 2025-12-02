@@ -100,6 +100,17 @@ spec:
             field: spec.restore_config.restore_from_backup
             values:
             - true
+        master_username:
+          type: string
+          title: Master Username
+          description: Master username (required when restoring from snapshot)
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+          minLength: 1
+          maxLength: 63
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
         master_password:
           type: string
           title: Master Password

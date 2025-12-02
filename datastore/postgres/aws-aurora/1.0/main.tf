@@ -29,7 +29,7 @@ locals {
 
   # Handle password - don't create for restore or import
   master_password = local.restore_from_backup ? var.instance.spec.restore_config.master_password : random_password.master_password[0].result
-  master_username = "postgres"
+  master_username = local.restore_from_backup ? var.instance.spec.restore_config.master_username : "postgres"
 
   # Split reader instance identifiers if provided for import
   reader_instance_ids = try(var.instance.spec.imports.reader_instance_identifiers, null) != null && var.instance.spec.imports.reader_instance_identifiers != "" ? split(",", trimspace(var.instance.spec.imports.reader_instance_identifiers)) : []

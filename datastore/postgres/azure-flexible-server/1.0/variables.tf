@@ -18,6 +18,7 @@ variable "instance" {
         restore_from_backup   = optional(bool, false)
         source_server_id      = optional(string)
         restore_point_in_time = optional(string)
+        admin_username        = optional(string)
         admin_password        = optional(string)
       }), {})
       imports = optional(object({

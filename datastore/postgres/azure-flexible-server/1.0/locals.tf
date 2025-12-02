@@ -60,7 +60,7 @@ locals {
   high_availability_mode    = null
 
   # Generate admin password (skip during restore or import)
-  admin_username = "psqladmin"
+  admin_username = local.is_restore ? var.instance.spec.restore_config.admin_username : "psqladmin"
   admin_password = local.is_restore ? var.instance.spec.restore_config.admin_password : random_password.admin_password[0].result
 
   # Tags

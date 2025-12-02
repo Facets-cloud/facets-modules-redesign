@@ -16,7 +16,7 @@ locals {
     var.instance.spec.imports.database_name
   ) : var.instance.spec.version_config.database_name
 
-  user_name = "postgres"
+  user_name = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_username : "postgres"
 
   # Connection details
   master_endpoint = google_sql_database_instance.postgres_instance.private_ip_address

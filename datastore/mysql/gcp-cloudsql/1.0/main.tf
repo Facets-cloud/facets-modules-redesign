@@ -135,7 +135,7 @@ resource "google_sql_database" "initial_database" {
 
 # Root user configuration
 resource "google_sql_user" "mysql_root_user" {
-  name     = "root"
+  name     = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_username : "root"
   instance = google_sql_database_instance.mysql_instance.name
   password = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_password : (
     try(var.instance.spec.imports.root_user, "") != "" ? var.instance.spec.imports.master_password : random_password.mysql_password[0].result
