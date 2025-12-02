@@ -225,10 +225,8 @@ sample:
       storage_class: ''
     high_availability:
       enable_pod_anti_affinity: true
-      anti_affinity_type: Preferred
     backup:
       enabled: false
-      backup_method: volume-snapshot
       enable_schedule: false
       schedule_cron: 0 2 * * *
       retention_period: 7d
