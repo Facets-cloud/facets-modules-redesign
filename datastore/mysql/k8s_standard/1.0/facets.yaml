@@ -7,7 +7,7 @@ description: Creates and manages MySQL database clusters using KubeBlocks operat
   v1.0.1
 inputs:
   kubeblocks_operator:
-    type: '@outputs/kubeblocks-operator'
+    type: '@facets/kubeblocks-operator'
     optional: false
     displayName: KubeBlocks Operator
     description: KubeBlocks operator installation (CRDs must be ready)
@@ -196,7 +196,7 @@ spec:
   - mode
 outputs:
   default:
-    type: '@outputs/mysql-cluster'
+    type: '@facets/mysql'
     title: MySQL Cluster Credentials
 iac:
   validated_files:
