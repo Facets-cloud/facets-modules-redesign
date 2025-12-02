@@ -6,7 +6,7 @@ locals {
     node_count     = azurerm_kubernetes_cluster_node_pool.node_pool.node_count
 
     # Kubernetes scheduling configurations
-    taints        = azurerm_kubernetes_cluster_node_pool.node_pool.node_taints
+    taints        = local.taints
     node_selector = azurerm_kubernetes_cluster_node_pool.node_pool.node_labels
   }
   output_interfaces = {
