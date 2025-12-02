@@ -6,7 +6,7 @@ clouds:
 description: Creates and manages Redis clusters using KubeBlocks operator v1.0.1
 inputs:
   kubeblocks_operator:
-    type: '@outputs/kubeblocks-operator'
+    type: '@facets/kubeblocks-operator'
     optional: false
     displayName: KubeBlocks Operator
     description: KubeBlocks operator installation (CRDs must be ready)
