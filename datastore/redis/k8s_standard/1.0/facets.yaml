@@ -60,7 +60,7 @@ spec:
       - standalone
       - replication
       - redis-cluster
-      default: replication
+      default: redis-cluster
       x-enum-descriptions:
         standalone: Single Redis instance
         replication: Redis with Sentinel for high availability
@@ -211,7 +211,7 @@ spec:
   - mode
 outputs:
   default:
-    type: '@outputs/redis-cluster'
+    type: '@facets/redis'
     title: Redis Cluster Connection Details
 iac:
   validated_files:
@@ -228,7 +228,7 @@ sample:
     namespace_override: ''
     termination_policy: Delete
     redis_version: 7.4.2
-    mode: replication
+    mode: redis-cluster
     replicas: 2
     shards: 3
     resources:

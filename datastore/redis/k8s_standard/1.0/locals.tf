@@ -88,6 +88,8 @@ locals {
   writer_host = "${local.cluster_name}-redis-redis.${local.namespace}.svc.cluster.local"
   writer_port = 6379
 
+  redis_port = 6379
+
   # Reader endpoint (only for replication mode with Sentinel)
   reader_host = local.create_read_service ? "${local.cluster_name}-redis-redis-read.${local.namespace}.svc.cluster.local" : null
   reader_port = local.create_read_service ? 6379 : null
