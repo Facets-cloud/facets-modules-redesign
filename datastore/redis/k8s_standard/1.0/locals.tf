@@ -75,8 +75,10 @@ locals {
 
 
   # Credentials from data field
-  redis_username = try(data.kubernetes_secret.redis_credentials.data["username"], "default")
-  redis_password = try(data.kubernetes_secret.redis_credentials.data["password"], "")
+  # Credentials from discovered account secret - works for all modes
+  redis_username = local.mode == "redis-cluster" ? try(data.kubernetes_secret.redis_cluster_credentials[0].data["username"], "default") : try(data.kubernetes_secret.redis_credentials[0].data["username"], "default")
+
+  redis_password = local.mode == "redis-cluster" ? try(data.kubernetes_secret.redis_cluster_credentials[0].data["password"], "") : try(data.kubernetes_secret.redis_credentials[0].data["password"], "")
 
   # Validate password exists and is not empty
   password_is_valid = local.redis_password != "" && length(local.redis_password) > 0

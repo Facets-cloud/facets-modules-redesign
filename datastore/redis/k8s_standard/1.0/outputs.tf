@@ -25,16 +25,16 @@ locals {
       secrets           = ["password", "connection_string"]
     }
     cluster = {
-      port     = local.redis_port
+      port = local.redis_port
       # For redis-cluster: clients can connect to any shard's headless service
       # They will auto-discover all nodes via CLUSTER SLOTS command
       # Format: {cluster-name}-shard-{random}-headless
       # Since we can't predict the random suffix, we provide a generic pattern
       # Applications should query for services with label: app.kubernetes.io/instance={cluster-name}
-      endpoint = local.mode == "redis-cluster" ? "redis-cluster://${local.cluster_name}.${local.namespace}.svc.cluster.local:${local.redis_port}" : "${local.cluster_name}-redis-redis.${local.namespace}.svc.cluster.local:${local.redis_port}"
-      auth_token = local.redis_password
+      endpoint          = local.mode == "redis-cluster" ? "redis-cluster://${local.cluster_name}.${local.namespace}.svc.cluster.local:${local.redis_port}" : "${local.cluster_name}-redis-redis.${local.namespace}.svc.cluster.local:${local.redis_port}"
+      auth_token        = local.redis_password
       connection_string = local.mode == "redis-cluster" ? "redis://:${local.redis_password}@${local.cluster_name}-shard-headless.${local.namespace}.svc.cluster.local:${local.redis_port}/0" : "redis://:${local.redis_password}@${local.cluster_name}-redis-redis.${local.namespace}.svc.cluster.local:${local.redis_port}/${local.redis_database}"
-      secrets = ["auth_token", "connection_string"]
+      secrets           = ["auth_token", "connection_string"]
     }
   }
 }

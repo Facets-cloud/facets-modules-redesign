@@ -440,10 +440,39 @@ resource "time_sleep" "wait_for_credentials" {
 }
 
 # Data Source: Connection Credentials Secret
-# KubeBlocks auto-creates this secret with format: {cluster-name}-conn-credential
-data "kubernetes_secret" "redis_credentials" {
+# KubeBlocks creates account secrets with pattern:
+# - redis-cluster mode: {cluster-name}-shard-{random}-account-default (per shard)
+# - replication mode: {cluster-name}-redis-account-default
+# - standalone mode: {cluster-name}-redis-account-default
+
+# Discover secrets based on mode
+data "kubernetes_resources" "redis_secrets" {
+  api_version    = "v1"
+  kind           = "Secret"
+  namespace      = local.namespace
+  label_selector = "app.kubernetes.io/instance=${local.cluster_name},apps.kubeblocks.io/system-account=default"
+
+  depends_on = [time_sleep.wait_for_credentials]
+}
+
+# For redis-cluster mode: fetch using discovered shard secret name
+data "kubernetes_secret" "redis_cluster_credentials" {
+  count = local.mode == "redis-cluster" ? 1 : 0
+
   metadata {
-    name      = "${local.cluster_name}-conn-credential"
+    name      = try(data.kubernetes_resources.redis_secrets.objects[0].metadata.name, "${local.cluster_name}-shard-account-default")
+    namespace = local.namespace
+  }
+
+  depends_on = [data.kubernetes_resources.redis_secrets]
+}
+
+# For standalone/replication modes: use predictable secret name
+data "kubernetes_secret" "redis_credentials" {
+  count = local.mode != "redis-cluster" ? 1 : 0
+
+  metadata {
+    name      = "${local.cluster_name}-redis-account-default"
     namespace = local.namespace
   }
 
