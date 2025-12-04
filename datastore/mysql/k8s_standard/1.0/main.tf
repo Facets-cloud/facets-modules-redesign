@@ -268,14 +268,27 @@ resource "time_sleep" "wait_for_credentials" {
 }
 
 # Data Source: Connection Credentials Secret
-# KubeBlocks auto-creates this secret with format: {cluster-name}-conn-credential
+# KubeBlocks creates account secrets with pattern: {cluster-name}-{component}-account-{role}
+# For MySQL: {cluster-name}-mysql-account-root is the main application credential
+
+# Discover all account secrets
+data "kubernetes_resources" "mysql_secrets" {
+  api_version    = "v1"
+  kind           = "Secret"
+  namespace      = local.namespace
+  label_selector = "app.kubernetes.io/instance=${local.cluster_name},apps.kubeblocks.io/system-account=root"
+
+  depends_on = [time_sleep.wait_for_credentials]
+}
+
+# Fetch the root account secret
 data "kubernetes_secret" "mysql_credentials" {
   metadata {
-    name      = "${local.cluster_name}-conn-credential"
+    name      = try(data.kubernetes_resources.mysql_secrets.objects[0].metadata.name, "${local.cluster_name}-mysql-account-root")
     namespace = local.namespace
   }
 
-  depends_on = [time_sleep.wait_for_credentials]
+  depends_on = [data.kubernetes_resources.mysql_secrets]
 }
 
 # Data Source: Primary Service
