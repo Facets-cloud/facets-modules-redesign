@@ -1,0 +1,78 @@
+intent: prometheus-recording-rule
+version: '1.0'
+title: Prometheus Recording Rule
+description: Module to create Prometheus recording rules using Helm chart.
+flavor: default
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+metadata:
+  type: object
+  properties:
+    name:
+      title: Name
+      type: string
+      description: Name of the Prometheus recording rule resource.
+    namespace:
+      title: Namespace
+      type: string
+      description: Kubernetes namespace where the recording rule will be deployed.
+spec:
+  type: object
+  properties:
+    group_name:
+      tilte: Group Name
+      type: string
+      description: Name of the recording rule group.
+    interval:
+      tilte: Evaluation Interval
+      type: string
+      description: Evaluation interval for the recording rules.
+    recording_rules:
+      title: Recording Rules
+      type: object
+      description: Map of recording rules where each key is the rule name and the
+        value is an object containing 'expr' (required), 'labels' (optional), and
+        'disabled' (optional) properties.
+      patternProperties:
+        ^[a-zA-Z0-9_.-]*$:
+          type: object
+          title: Recording Rule
+          properties:
+            expr:
+              title: Expression
+              type: string
+              description: PromQL expression for the recording rule.
+            disabled:
+              title: Disabled
+              type: boolean
+              description: Whether the recording rule is disabled.
+              default: false
+inputs:
+  prometheus_details:
+    type: '@facets/prometheus'
+    displayName: Prometheus
+    optional: true
+    default:
+      resource_type: configuration
+      resource_name: prometheus
+  kubernetes_details:
+    type: '@facets/kubernetes-details'
+    displayName: Kubernetes Cluster
+    optional: false
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+    - kubernetes
+    - kubernetes-alpha
+    - helm
+sample:
+  flavor: default
+  version: '1.0'
+  kind: prometheus-recording-rule
+  description: Sample configuration for Prometheus Recording Rule module.
+  spec:
+    rules: {}
