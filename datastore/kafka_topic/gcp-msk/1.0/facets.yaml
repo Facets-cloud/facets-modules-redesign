@@ -1,4 +1,4 @@
-intent: kafka-topic
+intent: kafka_topic
 flavor: gcp-msk
 version: '1.0'
 clouds:
@@ -63,7 +63,7 @@ iac:
   - variables.tf
   - outputs.tf
 sample:
-  kind: kafka-topic
+  kind: kafka_topic
   flavor: gcp-msk
   version: '1.0'
   spec:

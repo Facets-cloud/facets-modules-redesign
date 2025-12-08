@@ -1,4 +1,4 @@
-intent: kafka-connector
+intent: kafka_connector
 flavor: gcp-msk
 version: '1.0'
 clouds:
@@ -71,7 +71,7 @@ iac:
   - variables.tf
   - outputs.tf
 sample:
-  kind: kafka-connector
+  kind: kafka_connector
   flavor: gcp-msk
   version: '1.0'
   spec:

@@ -13,7 +13,7 @@ This module creates and manages Kafka Connect connectors for GCP Managed Service
 ## Usage
 
 ```yaml
-kind: kafka-connector
+kind: kafka_connector
 flavor: gcp-msk
 version: '1.0'
 spec:

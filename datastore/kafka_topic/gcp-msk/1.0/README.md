@@ -12,7 +12,7 @@ This module creates and manages topics for GCP Managed Service for Apache Kafka 
 ## Usage
 
 ```yaml
-kind: kafka-topic
+kind: kafka_topic
 flavor: gcp-msk
 version: '1.0'
 spec:
@@ -88,7 +88,7 @@ configs:
 
 ```yaml
 kind: kafka
-flavor: gcp-kafka-topic
+flavor: gcp-kafka_topic
 version: '1.0'
 spec:
   topic_id: production-orders
