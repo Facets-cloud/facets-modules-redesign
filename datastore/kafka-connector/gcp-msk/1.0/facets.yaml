@@ -1,0 +1,90 @@
+intent: kafka-connector
+flavor: gcp-msk
+version: '1.0'
+clouds:
+- gcp
+description: Creates and manages Kafka Connect connectors for GCP Managed Service
+  for Apache Kafka with configurable tasks and restart policies
+spec:
+  title: GCP Managed Kafka Connector
+  description: Configure Kafka Connect connector with flexible configurations and
+    restart policies
+  type: object
+  properties:
+    connector_id:
+      type: string
+      title: Connector ID
+      description: The ID to use for the connector (e.g., 'pubsub-sink', 'bigquery-sink')
+      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+    configs:
+      type: object
+      title: Connector Configurations
+      description: Kafka connector configuration as key-value pairs (e.g., connector.class,
+        tasks.max, topics, key.converter, value.converter)
+      x-ui-yaml-editor: true
+    task_restart_policy:
+      type: object
+      title: Task Restart Policy
+      description: Policy for restarting failed connectors/tasks
+      properties:
+        minimum_backoff:
+          type: string
+          title: Minimum Backoff
+          description: Minimum wait time before retrying a failed task (e.g., '60s')
+          pattern: ^[0-9]+(\\.[0-9]+)?s$
+          default: 60s
+        maximum_backoff:
+          type: string
+          title: Maximum Backoff
+          description: Maximum wait time before retrying a failed task (e.g., '1800s')
+          pattern: ^[0-9]+(\\.[0-9]+)?s$
+          default: 1800s
+  required:
+  - connector_id
+  - configs
+inputs:
+  gcp_cloud_account:
+    type: '@facets/gcp_cloud_account'
+    optional: false
+    displayName: GCP Cloud Account
+    description: GCP cloud account configuration and credentials
+    providers:
+    - google
+    - google-beta
+  vpc_network:
+    type: '@facets/gcp-network-details'
+    optional: false
+    displayName: VPC Network
+    description: VPC network configuration for Kafka Connect cluster
+  kafka_cluster:
+    type: '@facets/gcp-msk'
+    optional: false
+    displayName: Kafka Connect Cluster
+    description: GCP Managed Kafka Connect cluster where the connector will be deployed
+outputs:
+  default:
+    type: '@facets/gcp-kafka-connector'
+    title: Kafka Connector Details
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+sample:
+  kind: kafka-connector
+  flavor: gcp-msk
+  version: '1.0'
+  spec:
+    connector_id: pubsub-sink-connector
+    configs:
+      connector.class: com.google.pubsub.kafka.sink.CloudPubSubSinkConnector
+      name: pubsub-sink-connector
+      tasks.max: '3'
+      topics: sample-topic
+      cps.topic: my-pubsub-topic
+      cps.project: my-gcp-project
+      value.converter: org.apache.kafka.connect.storage.StringConverter
+      key.converter: org.apache.kafka.connect.storage.StringConverter
+    task_restart_policy:
+      minimum_backoff: 60s
+      maximum_backoff: 1800s
