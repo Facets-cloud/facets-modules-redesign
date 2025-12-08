@@ -160,22 +160,14 @@ module "postgresql_cluster" {
                   }
                 } : {},
 
-                # Tolerations (always applied)
+                # Node selector (if provided)
+                length(local.node_selector) > 0 ? {
+                  nodeSelector = local.node_selector
+                } : {},
+
+                # Tolerations - dynamic from node pool taints or fallback to common defaults
                 {
-                  tolerations = [
-                    {
-                      key      = "kubernetes.azure.com/scalesetpriority"
-                      operator = "Equal"
-                      value    = "spot"
-                      effect   = "NoSchedule"
-                    },
-                    {
-                      # allow running on the mongodb-tainted node
-                      key      = "mongodb"
-                      operator = "Equal"
-                      value    = "true"
-                      effect   = "NoSchedule"
-                    },
+                  tolerations = length(local.tolerations) > 0 ? local.tolerations : [
                     {
                       # allow scheduling on the CriticalAddonsOnly node
                       key      = "CriticalAddonsOnly"
