@@ -9,7 +9,7 @@ locals {
 
   # HA settings
   ha_enabled               = var.instance.spec.mode == "replication"
-  enable_pod_anti_affinity = local.ha_enabled && lookup(lookup(var.instance.spec, "high_availability", {}), "enable_pod_anti_affinity", true)
+  enable_pod_anti_affinity = true # Always enable pod anti-affinity for HA deployments
   create_read_service      = true # Always create read service for replication mode
 
   topology = local.ha_enabled ? "semisync" : "standalone"
