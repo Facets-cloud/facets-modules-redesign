@@ -13,6 +13,10 @@ variable "instance" {
         memory_gb    = number
         disk_size_gb = number
       })
+
+      # Optional Kafka Connect cluster (boolean flag)
+      connect_cluster = optional(bool, false)
+
       imports = optional(object({
         cluster_id            = optional(string)
         network_attachment_id = optional(string)

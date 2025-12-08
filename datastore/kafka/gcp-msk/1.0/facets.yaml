@@ -50,6 +50,12 @@ spec:
           minimum: 100
           maximum: 10000
           default: 100
+    connect_cluster:
+      type: boolean
+      title: Enable Kafka Connect Cluster
+      description: Create a Kafka Connect cluster alongside the Kafka cluster for
+        running connectors (with default capacity of 12 vCPUs and 20 GB memory)
+      default: false
     imports:
       type: object
       title: Import Existing Resources
@@ -90,6 +96,7 @@ iac:
   - main.tf
   - variables.tf
   - locals.tf
+  - connect_cluster.tf
 sample:
   kind: kafka
   flavor: gcp-msk
@@ -101,3 +108,4 @@ sample:
       vcpu_count: 3
       memory_gb: 3
       disk_size_gb: 100
+    connect_cluster: false
