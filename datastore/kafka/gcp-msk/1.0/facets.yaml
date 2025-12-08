@@ -75,6 +75,7 @@ inputs:
     description: GCP cloud account configuration and credentials
     providers:
     - google
+    - google-beta
   vpc_network:
     type: '@facets/gcp-network-details'
     optional: false
