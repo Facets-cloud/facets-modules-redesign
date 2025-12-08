@@ -14,9 +14,6 @@ locals {
   project_id = var.inputs.gcp_cloud_account.attributes.project_id
   region     = var.inputs.gcp_cloud_account.attributes.region
 
-  # Availability zones from VPC network
-  availability_zones = var.inputs.vpc_network.attributes.availability_zones
-
   # Common labels
   common_labels = merge(
     var.environment.cloud_tags,

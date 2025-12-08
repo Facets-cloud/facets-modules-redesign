@@ -36,7 +36,7 @@ resource "google_managed_kafka_cluster" "main" {
   gcp_config {
     access_config {
       network_configs {
-        subnet = var.inputs.vpc_network.attributes.subnet_id
+        subnet = var.inputs.vpc_network.attributes.private_subnet_id
       }
     }
 

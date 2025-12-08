@@ -66,9 +66,8 @@ variable "inputs" {
     })
     vpc_network = object({
       attributes = object({
-        network_id         = string
-        subnet_id          = string
-        availability_zones = list(string)
+        vpc_id            = string
+        private_subnet_id = string
       })
     })
   })
