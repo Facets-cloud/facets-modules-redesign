@@ -130,21 +130,6 @@ spec:
           default: ''
       required:
       - size
-    high_availability:
-      type: object
-      title: High Availability Settings
-      description: HA configuration for replication mode
-      x-ui-visible-if:
-        field: spec.mode
-        values:
-        - replication
-        - redis-cluster
-      properties:
-        enable_pod_anti_affinity:
-          type: boolean
-          title: Enable Pod Anti-Affinity
-          description: Distribute replicas across different nodes for better availability
-          default: true
     backup:
       type: object
       title: Backup Configuration
@@ -239,8 +224,6 @@ sample:
     storage:
       size: 10Gi
       storage_class: ''
-    high_availability:
-      enable_pod_anti_affinity: true
     backup:
       enabled: false
       enable_schedule: false

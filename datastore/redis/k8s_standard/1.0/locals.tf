@@ -21,7 +21,7 @@ locals {
 
   # HA settings
   ha_enabled               = local.mode == "replication" || local.mode == "redis-cluster"
-  enable_pod_anti_affinity = local.ha_enabled && lookup(lookup(var.instance.spec, "high_availability", {}), "enable_pod_anti_affinity", true)
+  enable_pod_anti_affinity = local.ha_enabled ? true : false # Enable pod anti-affinity for HA modes
   create_read_service      = local.mode == "replication" # Only for replication mode with sentinel
 
   # Topology mapping based on mode
