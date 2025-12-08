@@ -44,22 +44,6 @@ resource "google_managed_kafka_cluster" "main" {
     kms_key = google_kms_crypto_key.kafka.id
   }
 
-  # Replication configuration for multi-zone deployment
-  replication_config {
-    region_configs {
-      region = local.region
-
-      # Create broker configs for each availability zone
-      dynamic "broker_config" {
-        for_each = toset(local.availability_zones)
-        content {
-          # Zone-specific configuration
-          # GCP will automatically distribute brokers across zones
-        }
-      }
-    }
-  }
-
   # Rebalance configuration for automatic scaling
   rebalance_config {
     mode = "AUTO_REBALANCE_ON_SCALE_UP"
