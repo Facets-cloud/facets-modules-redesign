@@ -30,7 +30,7 @@ spec:
       title: Topic Configurations
       description: Kafka topic configuration overrides as key-value pairs (e.g., cleanup.policy=compact,
         compression.type=producer, retention.ms=604800000)
-      x-ui-editor: true
+      x-ui-yaml-editor: true
   required:
   - partition_count
   - replication_factor
@@ -63,8 +63,8 @@ iac:
   - variables.tf
   - outputs.tf
 sample:
-  kind: kafka
-  flavor: gcp-kafka-topic
+  kind: kafka-topic
+  flavor: gcp-msk
   version: '1.0'
   spec:
     partition_count: 2
