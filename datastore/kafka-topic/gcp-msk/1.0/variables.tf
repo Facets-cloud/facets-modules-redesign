@@ -5,7 +5,6 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
-      topic_id           = string
       partition_count    = optional(number, 1)
       replication_factor = number
       configs            = optional(map(string), {})

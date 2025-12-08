@@ -16,7 +16,6 @@ kind: kafka-topic
 flavor: gcp-msk
 version: '1.0'
 spec:
-  topic_id: sample-topic
   partition_count: 3
   replication_factor: 3
   configs:
