@@ -22,3 +22,8 @@ locals {
     }
   }
 }
+# Output the interfaces for use by dependent modules
+output "output_interfaces" {
+  description = "Interface outputs for dependency management and status tracking"
+  value       = local.output_interfaces
+}
