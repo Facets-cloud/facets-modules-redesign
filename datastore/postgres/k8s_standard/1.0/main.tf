@@ -137,7 +137,7 @@ module "postgresql_cluster" {
             # schedulingPolicy (nodeSelector, nodeName, affinity, tolerations)
             {
               schedulingPolicy = merge(
-                # Conditional: Pod anti-affinity for HA
+                # Pod anti-affinity for HA
                 local.enable_pod_anti_affinity ? {
                   affinity = {
                     podAntiAffinity = {
