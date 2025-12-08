@@ -111,7 +111,7 @@ This module requires a GCP Managed Kafka cluster:
 ```yaml
 inputs:
   kafka_cluster:
-    type: '@facets/kafka'
+    type: '@facets/gcp-msk'
     description: GCP Managed Kafka cluster where the topic will be created
 ```
 
