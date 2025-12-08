@@ -83,7 +83,7 @@ inputs:
     description: VPC network configuration for Kafka cluster deployment
 outputs:
   default:
-    type: '@facets/kafka'
+    type: '@facets/gcp-msk'
     title: GCP Managed Kafka Cluster
 iac:
   validated_files:
