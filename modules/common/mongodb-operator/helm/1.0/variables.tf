@@ -52,8 +52,16 @@ variable "inputs" {
         node_pool_id   = string
         disk_size_gb   = number
         node_count     = number
-        taints         = optional(list(string), []) # ✅ List of strings, not map
-        node_selector  = optional(map(string), {})  # ✅ Map of strings
+
+        # List of taint objects: { key, value, effect }
+        taints = optional(list(object({
+          key    = string
+          value  = string
+          effect = string
+        })), [])
+
+        # Node labels used as nodeSelector
+        node_selector = optional(map(string), {})
       })
       interfaces = any
     }))
