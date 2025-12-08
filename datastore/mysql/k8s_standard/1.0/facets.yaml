@@ -19,6 +19,11 @@ inputs:
     providers:
     - kubernetes
     - helm
+  node_pool:
+    type: '@facets/kubernetes_nodepool'
+    optional: true
+    displayName: Node Pool
+    description: Node pool for PostgreSQL pods
 spec:
   title: MySQL Cluster Configuration
   description: MySQL database cluster managed by KubeBlocks
