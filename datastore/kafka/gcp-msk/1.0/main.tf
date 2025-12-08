@@ -23,6 +23,17 @@ resource "google_kms_crypto_key" "kafka" {
   }
 }
 
+resource "google_project_service_identity" "kafka-agent" {
+  provider = google-beta
+  service  = "managedkafka.googleapis.com"
+}
+
+resource "google_kms_crypto_key_iam_member" "kafka_encrypter_decrypter" {
+  crypto_key_id = google_kms_crypto_key.kafka.id
+  role          = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
+  member        = "serviceAccount:${google_project_service_identity.kafka-agent.email}"
+}
+
 # GCP Managed Kafka Cluster
 resource "google_managed_kafka_cluster" "main" {
   cluster_id = local.cluster_name
@@ -54,4 +65,6 @@ resource "google_managed_kafka_cluster" "main" {
   lifecycle {
     prevent_destroy = true
   }
+
+  depends_on = [google_kms_crypto_key_iam_member.kafka_encrypter_decrypter]
 }
