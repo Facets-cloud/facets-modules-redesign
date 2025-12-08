@@ -19,6 +19,11 @@ inputs:
     optional: false
     displayName: KubeBlocks CRDs
     description: KubeBlocks Custom Resource Definitions (must be installed first)
+  node_pool:
+    type: '@facets/kubernetes_nodepool'
+    optional: true
+    displayName: Node Pool
+    description: Node pool for KubeBlocks Operator pods
 spec:
   title: KubeBlocks Database Operator
   description: Installs and configures KubeBlocks operator for managing databases

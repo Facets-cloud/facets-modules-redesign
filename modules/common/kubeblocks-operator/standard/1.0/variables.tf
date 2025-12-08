@@ -69,5 +69,24 @@ variable "inputs" {
         }))
       }))
     })
+    node_pool = optional(object({
+      attributes = object({
+        node_pool_name = string
+        node_pool_id   = string
+        disk_size_gb   = number
+        node_count     = number
+
+        # List of taint objects: { key, value, effect }
+        taints = optional(list(object({
+          key    = string
+          value  = string
+          effect = string
+        })), [])
+
+        # Node labels used as nodeSelector
+        node_selector = optional(map(string), {})
+      })
+      interfaces = any
+    }))
   })
 }

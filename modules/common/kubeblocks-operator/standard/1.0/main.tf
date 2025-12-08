@@ -6,6 +6,22 @@ locals {
   crd_output     = lookup(local.crd_interfaces, "output", {})
   crd_release_id = lookup(local.crd_output, "release_id", "")
   crd_ready      = lookup(local.crd_output, "ready", "false")
+
+  # Get node pool details from input
+  node_pool_input  = lookup(var.inputs, "node_pool", {})
+  node_pool_attrs  = lookup(local.node_pool_input, "attributes", {})
+  node_selector    = lookup(local.node_pool_attrs, "node_selector", {})
+  node_pool_taints = lookup(local.node_pool_attrs, "taints", [])
+
+  # Convert taints from {key, value, effect} to tolerations format
+  tolerations = [
+    for taint in local.node_pool_taints : {
+      key      = taint.key
+      operator = "Equal"
+      value    = taint.value
+      effect   = taint.effect
+    }
+  ]
 }
 
 # Kubernetes Namespace for KubeBlocks
@@ -83,22 +99,9 @@ resource "helm_release" "kubeblocks" {
         upgradeAddons = false # Prevent automatic addon upgrades
 
         dataProtection = {
-          enabled = true # Enable data protection features by default
-          tolerations = [
-            {
-              key      = "kubernetes.azure.com/scalesetpriority"
-              operator = "Equal"
-              value    = "spot"
-              effect   = "NoSchedule"
-            },
-            {
-              # allow running on the mongodb-tainted node
-              key      = "mongodb"
-              operator = "Equal"
-              value    = "true"
-              effect   = "NoSchedule"
-            }
-          ]
+          enabled      = true # Enable data protection features by default
+          tolerations  = local.tolerations
+          nodeSelector = local.node_selector
         }
         featureGates = {
           inPlacePodVerticalScaling = {
@@ -119,21 +122,9 @@ resource "helm_release" "kubeblocks" {
           pullPolicy = "IfNotPresent"
         }
         # Add tolerations to allow scheduling on spot instances and other tainted nodes
-        tolerations = [
-          {
-            key      = "kubernetes.azure.com/scalesetpriority"
-            operator = "Equal"
-            value    = "spot"
-            effect   = "NoSchedule"
-          },
-          {
-            # allow running on the mongodb-tainted node
-            key      = "mongodb"
-            operator = "Equal"
-            value    = "true"
-            effect   = "NoSchedule"
-          }
-        ]
+        tolerations = local.tolerations
+        # Add node selector for node pool affinity
+        nodeSelector = local.node_selector
       },
     ))
   ]
