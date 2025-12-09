@@ -87,11 +87,10 @@ configs:
 ## Complete Example
 
 ```yaml
-kind: kafka
-flavor: gcp-kafka_topic
+kind: kafka_topic
+flavor: gcp-msk
 version: '1.0'
 spec:
-  topic_id: production-orders
   partition_count: 6
   replication_factor: 3
   configs:
