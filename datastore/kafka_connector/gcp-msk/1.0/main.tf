@@ -1,8 +1,13 @@
 # GCP Managed Kafka Connector
 # Creates and manages Kafka Connect connectors for data integration
 
+locals {
+  # Auto-generate connector_id from instance_name and environment
+  connector_id = "${var.instance_name}-${var.environment.unique_name}"
+}
+
 resource "google_managed_kafka_connector" "main" {
-  connector_id    = var.instance.spec.connector_id
+  connector_id    = local.connector_id
   connect_cluster = var.inputs.kafka_cluster.attributes.connect_cluster_id
   location        = var.inputs.kafka_cluster.attributes.connect_cluster_location
 

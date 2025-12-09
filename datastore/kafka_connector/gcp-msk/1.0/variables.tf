@@ -5,19 +5,13 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
-      connector_id = string
-      configs      = map(string)
+      configs = map(string)
       task_restart_policy = optional(object({
         minimum_backoff = string
         maximum_backoff = string
       }))
     })
   })
-
-  validation {
-    condition     = can(regex("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.instance.spec.connector_id))
-    error_message = "Connector ID must contain only lowercase letters, numbers, and hyphens"
-  }
 
   validation {
     condition = (
