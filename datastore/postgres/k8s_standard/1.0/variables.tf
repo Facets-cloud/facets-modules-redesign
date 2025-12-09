@@ -59,12 +59,12 @@ variable "inputs" {
   description = "Input dependencies from other modules"
   type = object({
     kubeblocks_operator = object({
-      output_attributes = optional(object({
+      attributes = optional(object({
         namespace     = optional(string)
         version       = optional(string)
         chart_version = optional(string)
       }))
-      output_interfaces = optional(object({
+      interfaces = optional(object({
         output = optional(object({
           release_id    = optional(string)
           dependency_id = optional(string)
@@ -73,7 +73,7 @@ variable "inputs" {
       }))
     })
     kubernetes_cluster = object({
-      output_attributes = optional(object({
+      attributes = optional(object({
         cluster_name = optional(string)
         region       = optional(string)
       }))
