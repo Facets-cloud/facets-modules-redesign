@@ -31,7 +31,8 @@ This module creates and manages GCP Managed Service for Apache Kafka clusters wi
 │  │  Kafka Connect Cluster (Optional)                    │   │
 │  │  (google_managed_kafka_connect_cluster)              │   │
 │  │                                                        │   │
-│  │  • Connect Workers (12 vCPUs, 20 GB memory)          │   │
+│  │  • Connect Workers (Configurable: 3-48 vCPUs)        │   │
+│  │  • Memory (Configurable: 3-48 GB)                    │   │
 │  │  • DNS Domain for Kafka Cluster Visibility           │   │
 │  │  • Supports Source/Sink Connectors                   │   │
 │  └──────────────────────────────────────────────────────┘   │
@@ -62,7 +63,7 @@ spec:
     disk_size_gb: 500
 ```
 
-### Kafka Cluster with Connect Support
+### Kafka Cluster with Connect Support (Default Capacity)
 
 ```yaml
 kind: kafka
@@ -75,10 +76,30 @@ spec:
     vcpu_count: 6
     memory_gb: 12
     disk_size_gb: 500
-  connect_cluster: true  # Enables Kafka Connect
+  connect_cluster:
+    enabled: true  # Enables Kafka Connect with defaults (12 vCPUs, 20 GB)
 ```
 
-### Production Configuration
+### Kafka Cluster with Custom Connect Capacity
+
+```yaml
+kind: kafka
+flavor: gcp-msk
+version: '1.0'
+spec:
+  version_config:
+    kafka_version: '3.7'
+  sizing:
+    vcpu_count: 6
+    memory_gb: 12
+    disk_size_gb: 500
+  connect_cluster:
+    enabled: true
+    vcpu_count: 24  # Custom: 24 vCPUs for Connect workers
+    memory_gb: 48   # Custom: 48 GB memory
+```
+
+### Production Configuration with Connect
 
 ```yaml
 kind: kafka
@@ -91,7 +112,10 @@ spec:
     vcpu_count: 24
     memory_gb: 32
     disk_size_gb: 5000
-  connect_cluster: true
+  connect_cluster:
+    enabled: true
+    vcpu_count: 24
+    memory_gb: 32
 ```
 
 ## Configuration Parameters
@@ -109,7 +133,9 @@ spec:
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `connect_cluster` | boolean | false | Enable Kafka Connect cluster (12 vCPUs, 20 GB) |
+| `connect_cluster.enabled` | boolean | false | Enable Kafka Connect cluster |
+| `connect_cluster.vcpu_count` | number | 12 | vCPUs for Connect cluster (3-48) |
+| `connect_cluster.memory_gb` | number | 20 | Memory for Connect cluster in GB (3-48) |
 
 ## Kafka Versions
 
@@ -178,16 +204,26 @@ sizing:
 
 ## Kafka Connect Cluster
 
-Enable Kafka Connect to run data integration connectors:
+Enable Kafka Connect to run data integration connectors with configurable capacity:
 
 ```yaml
-connect_cluster: true
+# Minimal configuration (uses defaults)
+connect_cluster:
+  enabled: true
+
+# Custom capacity configuration
+connect_cluster:
+  enabled: true
+  vcpu_count: 24  # 3-48 vCPUs (default: 12)
+  memory_gb: 48   # 3-48 GB (default: 20)
 ```
 
 ### What Gets Created:
 
 - **Connect Cluster ID**: `{kafka-cluster-name}-connect`
-- **Capacity**: 12 vCPUs, 20 GB memory (default)
+- **Capacity**: Configurable vCPUs (3-48) and memory (3-48 GB)
+  - Default: 12 vCPUs, 20 GB memory
+  - Can be customized based on connector workload
 - **Network**: Same VPC as Kafka cluster
 - **DNS Configuration**: Kafka cluster DNS made visible to Connect workers
 
@@ -326,24 +362,6 @@ rebalance_config {
 2. **Cloud Logging**: Review Kafka logs
 3. **Cloud Monitoring**: Set up alerts for capacity
 4. **Throughput Metrics**: Monitor read/write rates
-
-## Cost Optimization
-
-### Tips to Reduce Costs:
-
-1. **Right-size**: Start with minimum resources, scale as needed
-2. **Disk Size**: Don't over-provision disk space
-3. **Disable Connect**: Only enable if you need connectors
-4. **Version**: Use latest version for best performance/cost ratio
-
-### Typical Monthly Costs (us-central1):
-
-- **Small** (3 vCPU, 3 GB, 100 GB): ~$150-200/month
-- **Medium** (12 vCPU, 24 GB, 2 TB): ~$800-1000/month
-- **Large** (24 vCPU, 32 GB, 5 TB): ~$1600-2000/month
-- **Connect Add-on**: ~$400-500/month (12 vCPU, 20 GB)
-
-*Costs are estimates and vary by region and usage*
 
 ## Migration & Upgrades
 

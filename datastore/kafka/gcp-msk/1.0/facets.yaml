@@ -51,11 +51,37 @@ spec:
           maximum: 10000
           default: 100
     connect_cluster:
-      type: boolean
-      title: Enable Kafka Connect Cluster
-      description: Create a Kafka Connect cluster alongside the Kafka cluster for
-        running connectors (with default capacity of 12 vCPUs and 20 GB memory)
-      default: false
+      type: object
+      title: Kafka Connect Cluster Configuration
+      description: Configure Kafka Connect cluster for running data integration connectors
+      properties:
+        enabled:
+          type: boolean
+          title: Enable Kafka Connect Cluster
+          description: Create a Kafka Connect cluster alongside the Kafka cluster
+          default: false
+        vcpu_count:
+          type: number
+          title: vCPU Count
+          description: Number of virtual CPUs for Connect cluster - Default is 12
+          minimum: 3
+          maximum: 48
+          default: 12
+          x-ui-visible-if:
+            field: spec.connect_cluster.enabled
+            values:
+            - true
+        memory_gb:
+          type: number
+          title: Memory (GB)
+          description: Memory in gigabytes for Connect cluster - Default is 20
+          minimum: 3
+          maximum: 48
+          default: 20
+          x-ui-visible-if:
+            field: spec.connect_cluster.enabled
+            values:
+            - true
     imports:
       type: object
       title: Import Existing Resources
@@ -108,4 +134,7 @@ sample:
       vcpu_count: 3
       memory_gb: 3
       disk_size_gb: 100
-    connect_cluster: false
+    connect_cluster:
+      enabled: false
+      vcpu_count: 12
+      memory_gb: 20

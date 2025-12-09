@@ -2,12 +2,12 @@
 # Conditionally created when connect_cluster is true
 
 locals {
-  connect_enabled = try(var.instance.spec.connect_cluster, false)
+  connect_enabled = try(var.instance.spec.connect_cluster.enabled, false)
 
-  # Default configuration for Connect cluster
+  # Connect cluster configuration from user inputs
   connect_cluster_id   = "${local.cluster_name}-connect"
-  connect_vcpu_count   = 12          # Default: 12 vCPUs
-  connect_memory_bytes = 21474836480 # Default: 20 GB (20 * 1024^3)
+  connect_vcpu_count   = try(var.instance.spec.connect_cluster.vcpu_count, 12)
+  connect_memory_bytes = try(var.instance.spec.connect_cluster.memory_gb, 20) * 1024 * 1024 * 1024
 
   #######################################################################
   # DNS domain name for Kafka cluster visibility
