@@ -18,6 +18,11 @@ inputs:
     providers:
     - kubernetes
     - helm
+  node_pool:
+    type: '@facets/kubernetes_nodepool'
+    optional: true
+    displayName: Node Pool
+    description: Node pool for Redis pods
 spec:
   title: Redis Cluster Configuration
   description: Redis in-memory database cluster managed by KubeBlocks

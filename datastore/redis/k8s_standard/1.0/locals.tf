@@ -22,7 +22,23 @@ locals {
   # HA settings
   ha_enabled               = local.mode == "replication" || local.mode == "redis-cluster"
   enable_pod_anti_affinity = local.ha_enabled ? true : false # Enable pod anti-affinity for HA modes
-  create_read_service      = local.mode == "replication" # Only for replication mode with sentinel
+  create_read_service      = local.mode == "replication"     # Only for replication mode with sentinel
+
+  # Get node pool details from input
+  node_pool_input  = lookup(var.inputs, "node_pool", {})
+  node_pool_attrs  = lookup(local.node_pool_input, "attributes", {})
+  node_selector    = lookup(local.node_pool_attrs, "node_selector", {})
+  node_pool_taints = lookup(local.node_pool_attrs, "taints", [])
+
+  # Convert taints from {key, value, effect} to tolerations format
+  tolerations = [
+    for taint in local.node_pool_taints : {
+      key      = taint.key
+      operator = "Equal"
+      value    = taint.value
+      effect   = taint.effect
+    }
+  ]
 
   # Topology mapping based on mode
   # NOTE: redis-cluster mode uses `shardings` and does NOT set `spec.topology`

@@ -162,21 +162,14 @@ module "redis_cluster" {
                     }
                   }
                 } : {},
+                # Node selector (if provided)
+                length(local.node_selector) > 0 ? {
+                  nodeSelector = local.node_selector
+                } : {},
                 {
-                  tolerations = [
+                  tolerations = length(local.tolerations) > 0 ? local.tolerations : [
                     {
-                      key      = "kubernetes.azure.com/scalesetpriority"
-                      operator = "Equal"
-                      value    = "spot"
-                      effect   = "NoSchedule"
-                    },
-                    {
-                      key      = "mongodb"
-                      operator = "Equal"
-                      value    = "true"
-                      effect   = "NoSchedule"
-                    },
-                    {
+                      # allow scheduling on the CriticalAddonsOnly node
                       key      = "CriticalAddonsOnly"
                       operator = "Exists"
                       effect   = "NoSchedule"
@@ -252,21 +245,14 @@ module "redis_cluster" {
                       }
                     }
                   } : {},
+                  # Node selector (if provided)
+                  length(local.node_selector) > 0 ? {
+                    nodeSelector = local.node_selector
+                  } : {},
                   {
-                    tolerations = [
+                    tolerations = length(local.tolerations) > 0 ? local.tolerations : [
                       {
-                        key      = "kubernetes.azure.com/scalesetpriority"
-                        operator = "Equal"
-                        value    = "spot"
-                        effect   = "NoSchedule"
-                      },
-                      {
-                        key      = "mongodb"
-                        operator = "Equal"
-                        value    = "true"
-                        effect   = "NoSchedule"
-                      },
-                      {
+                        # allow scheduling on the CriticalAddonsOnly node
                         key      = "CriticalAddonsOnly"
                         operator = "Exists"
                         effect   = "NoSchedule"
@@ -337,21 +323,14 @@ module "redis_cluster" {
                     }
                   }
                 } : {},
+                # Node selector (if provided)
+                length(local.node_selector) > 0 ? {
+                  nodeSelector = local.node_selector
+                } : {},
                 {
-                  tolerations = [
+                  tolerations = length(local.tolerations) > 0 ? local.tolerations : [
                     {
-                      key      = "kubernetes.azure.com/scalesetpriority"
-                      operator = "Equal"
-                      value    = "spot"
-                      effect   = "NoSchedule"
-                    },
-                    {
-                      key      = "mongodb"
-                      operator = "Equal"
-                      value    = "true"
-                      effect   = "NoSchedule"
-                    },
-                    {
+                      # allow scheduling on the CriticalAddonsOnly node
                       key      = "CriticalAddonsOnly"
                       operator = "Exists"
                       effect   = "NoSchedule"
