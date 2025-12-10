@@ -50,6 +50,9 @@ locals {
         }
       }
 
+      # Configure operator to watch all namespaces (use "*" for all namespaces)
+      watchNamespace = "*"
+
       # Node pool configuration for operator pods
       nodeSelector = local.node_selector
       tolerations  = local.tolerations
