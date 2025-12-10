@@ -21,8 +21,8 @@ variable "instance" {
   })
 
   validation {
-    condition     = contains(["7.0.15", "6.0.13", "5.0.24"], var.instance.spec.mongodb_version)
-    error_message = "MongoDB version must be one of: 7.0.15, 6.0.13, 5.0.24"
+    condition     = contains(["8.0.15", "7.0.15", "6.0.19", "5.0.30"], var.instance.spec.mongodb_version)
+    error_message = "MongoDB version must be one of: 8.0.15, 7.0.15, 6.0.19, 5.0.30"
   }
 
   validation {

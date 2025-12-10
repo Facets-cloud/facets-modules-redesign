@@ -13,11 +13,12 @@ spec:
       type: string
       title: MongoDB Version
       description: MongoDB version to deploy
-      default: 7.0.15
+      default: 8.0.15
       enum:
+      - 8.0.15
       - 7.0.15
-      - 6.0.13
-      - 5.0.24
+      - 6.0.19
+      - 5.0.30
     replica_count:
       type: number
       title: Replica Count
@@ -98,7 +99,7 @@ sample:
   version: '1.0'
   disabled: false
   spec:
-    mongodb_version: 7.0.15
+    mongodb_version: 8.0.15
     replica_count: 3
     resources:
       cpu: '1'

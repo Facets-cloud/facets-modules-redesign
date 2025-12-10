@@ -86,9 +86,10 @@ This module requires the following inputs:
 ## MongoDB Configuration
 
 ### Supported Versions
-- MongoDB 7.0.15 (default)
-- MongoDB 6.0.13
-- MongoDB 5.0.24
+- MongoDB 8.0.15 (General Availability)
+- MongoDB 7.0.15 (LTS - Recommended for production, default)
+- MongoDB 6.0.19 (Previous LTS)
+- MongoDB 5.0.30 (Legacy support)
 
 ### Storage Configuration
 - **Data Volume**: Configurable via `storage_size` (default: 10Gi)
@@ -123,8 +124,10 @@ The admin user is created with the following roles:
 
 - Terraform: v1.5.7+
 - Kubernetes: 1.21+
-- MongoDB Community Operator: 0.7+
-- MongoDB: 5.0.24, 6.0.13, 7.0.15
+- MongoDB Community Operator: 0.7+ (recommended: 1.4.0+)
+- MongoDB: 5.0.30, 6.0.19, 7.0.15, 8.0.15
+
+**Note**: MongoDB 7.0.15 (LTS) is recommended for production workloads due to long-term support and stability. MongoDB 8.x versions provide the latest features but should be tested thoroughly before production use.
 
 ## Troubleshooting
 
