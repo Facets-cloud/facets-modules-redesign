@@ -6,8 +6,17 @@ resource "random_password" "mongodb_password" {
   special = false
 }
 
-# Password secret manifest (defined after random_password to avoid circular dependency)
+# Service account manifest for MongoDB operator
 locals {
+  service_account_manifest = {
+    apiVersion = "v1"
+    kind       = "ServiceAccount"
+    metadata = {
+      name      = "mongodb-kubernetes-appdb"
+      namespace = local.namespace
+    }
+  }
+
   password_secret_manifest = {
     apiVersion = "v1"
     kind       = "Secret"
@@ -22,6 +31,16 @@ locals {
   }
 }
 
+# Create service account
+module "mongodb_service_account" {
+  source          = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
+  name            = "mongodb-kubernetes-appdb"
+  release_name    = "${var.instance_name}-sa"
+  namespace       = local.namespace
+  data            = local.service_account_manifest
+  advanced_config = {}
+}
+
 # Create password secret
 module "mongodb_password_secret" {
   source          = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
@@ -30,6 +49,8 @@ module "mongodb_password_secret" {
   namespace       = local.namespace
   data            = local.password_secret_manifest
   advanced_config = {}
+
+  depends_on = [module.mongodb_service_account]
 }
 
 # Deploy MongoDB using any-k8s-resource
@@ -41,5 +62,5 @@ module "mongodb" {
   data            = local.mongodb_manifest
   advanced_config = {}
 
-  depends_on = [module.mongodb_password_secret]
+  depends_on = [module.mongodb_password_secret, module.mongodb_service_account]
 }

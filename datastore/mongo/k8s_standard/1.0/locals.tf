@@ -12,25 +12,26 @@ locals {
   cpu             = lookup(local.resources, "cpu", "1")
   memory          = lookup(local.resources, "memory", "2Gi")
   storage_size    = lookup(local.spec, "storage_size", "10Gi")
+  storage_class   = lookup(local.spec, "storage_class", "")
 
   # Get node pool details from input
   node_pool_input  = lookup(var.inputs, "node_pool", {})
-  node_pool_attrs  = lookup(local.node_pool_input, "output_attributes", {})
+  node_pool_attrs  = lookup(local.node_pool_input, "attributes", {})
   node_selector    = lookup(local.node_pool_attrs, "node_selector", {})
-  node_pool_taints = lookup(local.node_pool_attrs, "taints", {})
+  node_pool_taints = lookup(local.node_pool_attrs, "taints", [])
 
   # Get MongoDB operator Helm release name for dependency
   mongodb_operator_input = lookup(var.inputs, "mongodb_operator", {})
-  operator_attributes    = lookup(local.mongodb_operator_input, "output_attributes", {})
+  operator_attributes    = lookup(local.mongodb_operator_input, "attributes", {})
   operator_release       = lookup(local.operator_attributes, "release_name", "unknown")
 
-  # Convert taints from {key: "key", value: "value", effect: "effect"} to tolerations format
+  # Convert taints from {key, value, effect} to tolerations format
   tolerations = [
-    for taint_name, taint_config in local.node_pool_taints : {
-      key      = taint_config.key
+    for taint in local.node_pool_taints : {
+      key      = taint.key
       operator = "Equal"
-      value    = taint_config.value
-      effect   = taint_config.effect
+      value    = taint.value
+      effect   = taint.effect
     }
   ]
 
@@ -93,7 +94,8 @@ locals {
             {
               metadata = { name = "data-volume" }
               spec = {
-                accessModes = ["ReadWriteOnce"]
+                storageClassName = local.storage_class != "" ? local.storage_class : null
+                accessModes      = ["ReadWriteOnce"]
                 resources = {
                   requests = { storage = local.storage_size }
                 }
@@ -102,7 +104,8 @@ locals {
             {
               metadata = { name = "logs-volume" }
               spec = {
-                accessModes = ["ReadWriteOnce"]
+                storageClassName = local.storage_class != "" ? local.storage_class : null
+                accessModes      = ["ReadWriteOnce"]
                 resources = {
                   requests = { storage = "2Gi" }
                 }
@@ -111,25 +114,19 @@ locals {
           ]
           template = {
             spec = {
-              nodeSelector = local.node_selector
-              tolerations  = local.tolerations
-              containers = [
-                {
-                  name = "mongod"
-                  resources = {
-                    requests = {
-                      cpu    = local.cpu
-                      memory = local.memory
-                    }
-                    limits = {
-                      cpu    = local.cpu
-                      memory = local.memory
-                    }
-                  }
-                }
-              ]
+              nodeSelector = length(local.node_selector) > 0 ? local.node_selector : null
+              tolerations  = length(local.tolerations) > 0 ? local.tolerations : null
             }
           }
+        }
+      }
+      additionalMongodConfig = {
+        storage = {
+          dbPath = "/data"
+        }
+        systemLog = {
+          destination = "file"
+          path        = "/var/log/mongodb/mongod.log"
         }
       }
     }

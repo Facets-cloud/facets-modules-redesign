@@ -47,6 +47,12 @@ spec:
       description: Persistent volume size per replica
       default: 10Gi
       pattern: ^[0-9]+[GM]i$
+    storage_class:
+      type: string
+      title: Storage Class
+      description: Kubernetes storage class for persistent volumes (leave empty for
+        cluster default)
+      default: ''
   required:
   - mongodb_version
   - replica_count
@@ -71,18 +77,24 @@ inputs:
     description: MongoDB Kubernetes Operator Helm release
 outputs:
   default:
-    type: '@facets/mongors'
+    type: '@facets/mongo_k8s'
     title: MongoDB Replica Set
 iac:
   validated_files:
   - main.tf
   - variables.tf
   - locals.tf
+  - outputs.tf
 sample:
   kind: mongo
-  flavor: mongodb-operator
+  flavor: k8s_standard
   version: '1.0'
   disabled: false
   spec:
     mongodb_version: 7.0.15
     replica_count: 3
+    resources:
+      cpu: '1'
+      memory: 2Gi
+    storage_size: 10Gi
+    storage_class: ''
