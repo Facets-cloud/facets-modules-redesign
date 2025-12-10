@@ -20,15 +20,15 @@ locals {
   node_pool_input  = lookup(var.inputs, "node_pool", {})
   node_pool_attrs  = lookup(local.node_pool_input, "attributes", {})
   node_selector    = lookup(local.node_pool_attrs, "node_selector", {})
-  node_pool_taints = lookup(local.node_pool_attrs, "taints", {})
+  node_pool_taints = lookup(local.node_pool_attrs, "taints", [])
 
-  # Convert taints from {key: "key", value: "value", effect: "effect"} to tolerations format
+  # Convert taints from {key, value, effect} to tolerations format
   tolerations = [
-    for taint_name, taint_config in local.node_pool_taints : {
-      key      = taint_config.key
+    for taint in local.node_pool_taints : {
+      key      = taint.key
       operator = "Equal"
-      value    = taint_config.value
-      effect   = taint_config.effect
+      value    = taint.value
+      effect   = taint.effect
     }
   ]
 
