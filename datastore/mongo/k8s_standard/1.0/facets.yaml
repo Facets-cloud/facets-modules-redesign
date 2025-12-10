@@ -53,6 +53,13 @@ spec:
       description: Kubernetes storage class for persistent volumes (leave empty for
         cluster default)
       default: ''
+    max_connections:
+      type: number
+      title: Max Connections
+      description: Maximum number of simultaneous client connections
+      default: 65536
+      minimum: 100
+      maximum: 1000000
   required:
   - mongodb_version
   - replica_count
@@ -98,3 +105,4 @@ sample:
       memory: 2Gi
     storage_size: 10Gi
     storage_class: ''
+    max_connections: 65536

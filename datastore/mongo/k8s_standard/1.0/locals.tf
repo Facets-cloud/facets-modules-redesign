@@ -13,6 +13,7 @@ locals {
   memory          = lookup(local.resources, "memory", "2Gi")
   storage_size    = lookup(local.spec, "storage_size", "10Gi")
   storage_class   = lookup(local.spec, "storage_class", "")
+  max_connections = lookup(local.spec, "max_connections", 65536)
 
   # Get node pool details from input
   node_pool_input  = lookup(var.inputs, "node_pool", {})
@@ -120,13 +121,13 @@ locals {
           }
         }
       }
+      # Additional MongoDB configuration (without log file path - operator manages logging)
       additionalMongodConfig = {
+        net = {
+          maxIncomingConnections = local.max_connections
+        }
         storage = {
           dbPath = "/data"
-        }
-        systemLog = {
-          destination = "file"
-          path        = "/var/log/mongodb/mongod.log"
         }
       }
     }
