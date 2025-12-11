@@ -13,13 +13,12 @@ variable "instance" {
         memory_gb    = number
         disk_size_gb = number
       })
-
       # Optional Kafka Connect cluster configuration
       connect_cluster = optional(object({
-        enabled    = optional(bool, false)
-        vcpu_count = optional(number, 12)
-        memory_gb  = optional(number, 20)
-      }))
+        enabled    = optional(bool)
+        vcpu_count = optional(number)
+        memory_gb  = optional(number)
+      }), {})
 
       imports = optional(object({
         cluster_id            = optional(string)
