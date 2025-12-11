@@ -8,6 +8,5 @@ locals {
     node_pool_id   = azurerm_kubernetes_cluster_node_pool.node_pool.id
   }
   output_interfaces = {
-    placeholder = "{}"
   }
 }
