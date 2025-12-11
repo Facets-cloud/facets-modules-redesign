@@ -1,7 +1,0 @@
-out:
-  interfaces: {}
-  attributes:
-    registry_secrets_list:
-      type: string
-    registry_secret_objects:
-      type: string

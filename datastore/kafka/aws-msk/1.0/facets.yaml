@@ -111,9 +111,6 @@ outputs:
   default:
     type: '@facets/kafka'
     title: MSK Kafka Cluster
-  interfaces:
-    type: '@facets/kafka-interface'
-    title: Kafka Interface
 iac:
   validated_files:
   - main.tf

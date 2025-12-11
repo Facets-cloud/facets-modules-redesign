@@ -1,0 +1,23 @@
+name: '@facets/pubsub'
+properties:
+    attributes:
+        project_id:
+            type: string
+        publisher_role:
+            type: string
+        subscriber_role:
+            type: string
+    interfaces:
+        default:
+            project_id:
+                type: string
+            subscription_id:
+                type: string
+            subscription_name:
+                type: string
+            topic_id:
+                type: string
+            topic_name:
+                type: string
+providers: []
+

@@ -1,0 +1,91 @@
+name: '@facets/gcp-network-details'
+properties:
+    properties:
+        attributes:
+            properties:
+                database_subnet_cidrs:
+                    description: List of database subnet CIDR blocks
+                    items:
+                        type: string
+                    type: array
+                database_subnet_ids:
+                    description: List of database subnet IDs
+                    items:
+                        type: string
+                    type: array
+                firewall_rule_ids:
+                    description: List of firewall rule IDs
+                    items:
+                        type: string
+                    type: array
+                nat_gateway_ids:
+                    description: List of Cloud NAT gateway IDs
+                    items:
+                        type: string
+                    type: array
+                private_services_connection_id:
+                    description: The ID of the service networking connection
+                    type: string
+                private_services_connection_status:
+                    description: Whether private services connection is enabled
+                    type: boolean
+                private_services_peering_connection:
+                    description: The network ID of the private services peering connection
+                    type: string
+                private_services_range_address:
+                    description: The actual IP address allocated for the private services range
+                    type: string
+                private_services_range_id:
+                    description: The ID of the global address resource for private services
+                    type: string
+                private_services_range_name:
+                    description: The name of the global address reserved for private services
+                    type: string
+                private_subnet_cidrs:
+                    description: List of private subnet CIDR blocks
+                    items:
+                        type: string
+                    type: array
+                private_subnet_ids:
+                    description: List of private subnet IDs
+                    items:
+                        type: string
+                    type: array
+                project_id:
+                    description: The GCP project ID
+                    type: string
+                public_subnet_cidrs:
+                    description: List of public subnet CIDR blocks
+                    items:
+                        type: string
+                    type: array
+                public_subnet_ids:
+                    description: List of public subnet IDs
+                    items:
+                        type: string
+                    type: array
+                region:
+                    description: The GCP region
+                    type: string
+                router_ids:
+                    description: List of Cloud Router IDs
+                    items:
+                        type: string
+                    type: array
+                vpc_id:
+                    description: The ID of the VPC
+                    type: string
+                vpc_name:
+                    description: The name of the VPC
+                    type: string
+                vpc_self_link:
+                    description: The URI of the VPC
+                    type: string
+                zones:
+                    description: List of zones used
+                    items:
+                        type: string
+                    type: array
+            type: object
+    type: object
+

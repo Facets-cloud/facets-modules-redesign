@@ -1,0 +1,20 @@
+{
+  "disabled": true,
+  "flavor": "gcp",
+  "kind": "pubsub",
+  "metadata": {
+    "name": "my-topic"
+  },
+  "spec": {
+    "create_subscription": true,
+    "message_retention_duration": "604800s",
+    "subscription_ack_deadline": 10
+  },
+  "version": "1.0",
+  "inputs": {
+    "cloud_account": {
+      "resource_name": "cloud",
+      "resource_type": "cloud_account"
+    }
+  }
+}
