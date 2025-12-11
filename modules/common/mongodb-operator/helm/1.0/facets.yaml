@@ -1,86 +1,96 @@
-intent: mongodb-operator
-flavor: helm
-version: '1.0'
 clouds:
-- kubernetes
-description: MongoDB Kubernetes Operator deployed via Helm chart for managing MongoDB
-  clusters on Kubernetes
-spec:
-  title: MongoDB Kubernetes Operator
-  description: Installs and manages the MongoDB Operator using Helm for MongoDB deployment
-  type: object
-  properties:
-    namespace:
-      type: string
-      title: Namespace
-      description: Kubernetes namespace for MongoDB Operator installation
-      default: mongodb-system
-      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-      maxLength: 63
-    resources:
-      type: object
-      title: Resource Allocation
-      description: CPU and memory resources for MongoDB Operator pods
-      properties:
-        cpu_request:
-          type: string
-          title: CPU Request
-          description: Minimum CPU allocation
-          default: 200m
-        cpu_limit:
-          type: string
-          title: CPU Limit
-          description: Maximum CPU allocation
-          default: '1'
-        memory_request:
-          type: string
-          title: Memory Request
-          description: Minimum memory allocation
-          default: 256Mi
-        memory_limit:
-          type: string
-          title: Memory Limit
-          description: Maximum memory allocation
-          default: 1Gi
-    helm_values:
-      type: object
-      title: Helm Values
-      description: Additional Helm values to override defaults
-  required:
-  - resources
-inputs:
-  kubernetes_cluster:
-    type: '@facets/kubernetes-details'
-    optional: false
-    displayName: Kubernetes Cluster
-    description: Target Kubernetes cluster for MongoDB Operator deployment
-    providers:
     - kubernetes
-    - helm
-  node_pool:
-    type: '@facets/kubernetes_nodepool'
-    optional: true
-    displayName: Node Pool
-    description: Node pool for MongoDB Operator pods
-outputs:
-  default:
-    type: '@facets/mongodb-operator'
-    title: MongoDB Kubernetes Operator
+description: MongoDB Kubernetes Operator deployed via Helm chart for managing MongoDB clusters on Kubernetes
+flavor: helm
 iac:
-  validated_files:
-  - main.tf
-  - variables.tf
-  - locals.tf
-  - outputs.tf
+    validated_files:
+        - main.tf
+        - variables.tf
+        - locals.tf
+        - outputs.tf
+inputs:
+    kubernetes_cluster:
+        description: Target Kubernetes cluster for MongoDB Operator deployment
+        displayName: Kubernetes Cluster
+        optional: false
+        providers:
+            - kubernetes
+            - helm
+        type: '@facets/kubernetes-details'
+    node_pool:
+        description: Node pool for MongoDB Operator pods
+        displayName: Node Pool
+        optional: true
+        type: '@facets/kubernetes_nodepool'
+intent: mongodb-operator
+outputs:
+    default:
+        mock:
+            attributes:
+                chart_name: mock-string-value
+                chart_version: mock-string-value
+                namespace: mock-string-value
+                operator_name: mock-string-value
+                release_name: mock-string-value
+                repository: mock-string-value
+                revision: mock-string-value
+                status: mock-string-value
+            interfaces: {}
+        title: MongoDB Kubernetes Operator
+        type: '@facets/mongodb-operator'
 sample:
-  kind: mongodb-operator
-  flavor: helm
-  version: '1.0'
-  disabled: false
-  spec:
-    namespace: mongodb-system
-    resources:
-      cpu_request: 200m
-      cpu_limit: '1'
-      memory_request: 256Mi
-      memory_limit: 1Gi
+    disabled: false
+    flavor: helm
+    kind: mongodb-operator
+    spec:
+        namespace: mongodb-system
+        resources:
+            cpu_limit: "1"
+            cpu_request: 200m
+            memory_limit: 1Gi
+            memory_request: 256Mi
+    version: "1.0"
+spec:
+    description: Installs and manages the MongoDB Operator using Helm for MongoDB deployment
+    properties:
+        helm_values:
+            description: Additional Helm values to override defaults
+            title: Helm Values
+            type: object
+        namespace:
+            default: mongodb-system
+            description: Kubernetes namespace for MongoDB Operator installation
+            maxLength: 63
+            pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+            title: Namespace
+            type: string
+        resources:
+            description: CPU and memory resources for MongoDB Operator pods
+            properties:
+                cpu_limit:
+                    default: "1"
+                    description: Maximum CPU allocation
+                    title: CPU Limit
+                    type: string
+                cpu_request:
+                    default: 200m
+                    description: Minimum CPU allocation
+                    title: CPU Request
+                    type: string
+                memory_limit:
+                    default: 1Gi
+                    description: Maximum memory allocation
+                    title: Memory Limit
+                    type: string
+                memory_request:
+                    default: 256Mi
+                    description: Minimum memory allocation
+                    title: Memory Request
+                    type: string
+            title: Resource Allocation
+            type: object
+    required:
+        - resources
+    title: MongoDB Kubernetes Operator
+    type: object
+version: "1.0"

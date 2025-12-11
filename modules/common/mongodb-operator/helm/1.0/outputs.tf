@@ -7,7 +7,7 @@ locals {
     repository    = local.repository
     chart_name    = local.chart_name
     status        = helm_release.mongodb_operator.status
-    revision      = helm_release.mongodb_operator.metadata[0].revision
+    revision      = helm_release.mongodb_operator.metadata.revision
   }
   output_interfaces = {}
 }
