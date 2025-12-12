@@ -22,7 +22,7 @@ locals {
 resource "kubernetes_manifest" "kubeblocks_crds" {
   for_each = { for idx, doc in local.crd_documents : idx => doc }
 
-  manifest = yamldecode(each.value)
+  manifest = sensitive(yamldecode(each.value))
 
   field_manager {
     name            = "terraform"
