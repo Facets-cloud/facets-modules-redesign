@@ -3,15 +3,10 @@ properties:
     attributes:
         crds_count:
             type: string
-        crds_installed:
+        release_id:
             type: string
         version:
             type: string
-    interfaces:
-        output:
-            ready:
-                type: string
-            release_id:
-                type: string
+    interfaces: {}
 providers: []
 
