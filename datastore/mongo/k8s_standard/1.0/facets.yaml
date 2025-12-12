@@ -185,6 +185,33 @@ spec:
             field: spec.restore.enabled
             values:
             - true
+    external_access:
+      type: object
+      title: External Access Configuration
+      description: Expose MongoDB cluster externally via LoadBalancer services (key
+        names must be short - max 15 chars recommended)
+      patternProperties:
+        ^[a-zA-Z0-9_-]{1,15}$:
+          type: object
+          title: External Access Entry
+          properties:
+            annotations:
+              type: object
+              title: Service Annotations
+              description: Kubernetes service annotations (e.g., for cloud provider
+                load balancer configuration)
+              x-ui-yaml-editor: true
+              default: {}
+            role:
+              type: string
+              title: Component Role
+              description: MongoDB component role to expose
+              enum:
+              - primary
+              - secondary
+              default: primary
+          required:
+          - role
   required:
   - mongodb_version
   - mode
@@ -225,3 +252,4 @@ sample:
     restore:
       enabled: false
       backup_name: ''
+    external_access: {}

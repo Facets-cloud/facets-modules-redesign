@@ -295,3 +295,81 @@ data "kubernetes_resource" "cluster_status" {
 # - Check cluster status with: kubectl get cluster -n <namespace>
 #   Status will show "Updating" during expansion
 # - Verify PVC expansion: kubectl get pvc -n <namespace>
+
+# External Access via OpsRequest
+# Creates LoadBalancer services for external connectivity to MongoDB cluster
+module "external_access_ops" {
+  for_each = local.external_access_config
+
+  source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
+
+  name         = "${local.cluster_name}-expose-${each.key}"
+  namespace    = local.namespace
+  release_name = "mongo-expose-${each.key}-${substr(var.inputs.kubeblocks_operator.attributes.release_id, 0, 8)}"
+
+  depends_on = [
+    module.mongodb_cluster
+  ]
+
+  data = {
+    apiVersion = "operations.kubeblocks.io/v1alpha1"
+    kind       = "OpsRequest"
+
+    metadata = {
+      name      = "${local.cluster_name}-expose-${each.key}"
+      namespace = local.namespace
+
+      labels = merge(
+        {
+          "app.kubernetes.io/name"       = "mongodb"
+          "app.kubernetes.io/instance"   = var.instance_name
+          "app.kubernetes.io/managed-by" = "terraform"
+        },
+        var.environment.cloud_tags
+      )
+    }
+
+    spec = {
+      clusterName = local.cluster_name
+
+      expose = [
+        {
+          componentName = "mongodb"
+          services = [
+            {
+              name         = each.key
+              roleSelector = each.value.role
+              serviceType  = "LoadBalancer"
+              annotations  = each.value.annotations
+            }
+          ]
+          switch = "Enable"
+        }
+      ]
+
+      preConditionDeadlineSeconds = 0
+      type                        = "Expose"
+    }
+  }
+
+  advanced_config = {
+    wait            = true
+    timeout         = 600 # 10 minutes for LoadBalancer provisioning
+    cleanup_on_fail = true
+    max_history     = 3
+  }
+}
+
+# Data source to fetch external service details after OpsRequest completes
+data "kubernetes_service" "external_access" {
+  for_each = local.has_external_access ? local.external_access_config : {}
+
+  metadata {
+    name      = "${local.cluster_name}-mongodb-${each.key}"
+    namespace = local.namespace
+  }
+
+  depends_on = [
+    module.external_access_ops
+  ]
+}

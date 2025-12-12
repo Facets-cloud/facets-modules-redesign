@@ -96,4 +96,8 @@ locals {
     "mongodb://${local.admin_username}:${local.mongodb_password}@${join(",", local.replica_hosts)}/${local.admin_database}?replicaSet=${local.replica_set_name}" :
     "mongodb://${local.admin_username}:${local.mongodb_password}@${local.primary_host}:${local.primary_port}/${local.admin_database}"
   ) : null
+
+  # External Access configuration
+  external_access_config = lookup(var.instance.spec, "external_access", {})
+  has_external_access    = length(local.external_access_config) > 0
 }

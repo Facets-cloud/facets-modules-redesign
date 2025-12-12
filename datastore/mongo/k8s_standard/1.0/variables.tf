@@ -51,6 +51,11 @@ variable "instance" {
         enabled     = optional(bool)
         backup_name = optional(string)
       }))
+
+      external_access = optional(map(object({
+        annotations = optional(map(string), {})
+        role        = string
+      })), {})
     })
   })
 }

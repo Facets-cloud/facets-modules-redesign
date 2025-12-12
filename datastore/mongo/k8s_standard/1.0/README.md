@@ -30,6 +30,7 @@ KubeBlocks is a cloud-native data infrastructure platform that simplifies databa
 - ✅ Node selector and toleration support
 - ✅ Termination policies (DoNotTerminate/Delete/WipeOut)
 - ✅ Custom namespace support
+- ✅ External access via LoadBalancer services
 
 ## Prerequisites
 
@@ -117,6 +118,85 @@ spec:
     enabled: true
     backup_name: "mongo-cluster-backup-20250125120000"
 ```
+
+### External Access via LoadBalancer
+
+Expose MongoDB cluster externally using cloud provider load balancers:
+
+```yaml
+kind: mongo
+flavor: k8s_kubeblocks
+version: '1.0'
+spec:
+  mongodb_version: 8.0.8
+  mode: replication
+  replicas: 3
+
+  # External Access Configuration
+  external_access:
+    internal:  # Key name (max 15 chars)
+      role: primary
+      annotations:
+        # GCP Internal Load Balancer
+        cloud.google.com/load-balancer-type: "Internal"
+        networking.gke.io/load-balancer-type: "Internal"
+
+    public:
+      role: secondary
+      annotations:
+        # AWS Network Load Balancer
+        service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+        service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+```
+
+**Important Notes**:
+- **Key names must be 15 characters or less** (KubeBlocks service name limit: 25 chars)
+- Each entry creates a separate LoadBalancer service
+- `role` can be `primary` or `secondary` to target specific MongoDB nodes
+- Use `annotations` for cloud-specific load balancer configuration
+- External endpoints are exposed in outputs as `external_endpoints` (JSON)
+
+**Cloud Provider Examples**:
+
+<details>
+<summary>AWS Network Load Balancer</summary>
+
+```yaml
+external_access:
+  public:
+    role: primary
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+      service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+      service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+```
+</details>
+
+<details>
+<summary>GCP Internal Load Balancer</summary>
+
+```yaml
+external_access:
+  internal:
+    role: primary
+    annotations:
+      cloud.google.com/load-balancer-type: "Internal"
+      networking.gke.io/load-balancer-type: "Internal"
+```
+</details>
+
+<details>
+<summary>Azure Standard Load Balancer</summary>
+
+```yaml
+external_access:
+  public:
+    role: primary
+    annotations:
+      service.beta.kubernetes.io/azure-load-balancer-internal: "false"
+      service.beta.kubernetes.io/azure-pip-name: "mongo-public-ip"
+```
+</details>
 
 ## Configuration Reference
 
@@ -282,6 +362,7 @@ curl http://localhost:9216/metrics
 | `replica_count` | string | Number of replicas |
 | `replica_hosts` | string | Comma-separated replica hosts |
 | `max_connections` | string | Maximum connections (65536) |
+| `external_endpoints` | JSON string | External LoadBalancer endpoints (if configured) |
 
 ### Connection Examples
 
@@ -293,6 +374,30 @@ mongodb://root:<password>@mongo-0.mongo-headless:27017,mongo-1.mongo-headless:27
 **Standalone Mode (1 replica)**:
 ```
 mongodb://root:<password>@<cluster-name>-mongodb:27017/admin
+```
+
+**External Access (via LoadBalancer)**:
+
+When external access is configured, the `external_endpoints` output provides LoadBalancer details in JSON format:
+
+```json
+{
+  "internal": {
+    "host": "10.128.0.50",
+    "port": "27017",
+    "role": "primary"
+  },
+  "public": {
+    "host": "a1b2c3d4.us-east-1.elb.amazonaws.com",
+    "port": "27017",
+    "role": "secondary"
+  }
+}
+```
+
+Connection string using external endpoint:
+```
+mongodb://root:<password>@10.128.0.50:27017/admin
 ```
 
 ## Troubleshooting
