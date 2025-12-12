@@ -18,7 +18,7 @@ variable "instance" {
   description = "MongoDB cluster instance configuration"
   type = object({
     spec = object({
-      namespace_override = optional(string)
+      namespace_override = optional(string, "")
       termination_policy = string
       mongodb_version    = string
       mode               = string
@@ -33,7 +33,7 @@ variable "instance" {
 
       storage = object({
         size          = string
-        storage_class = string
+        storage_class = optional(string, "")
       })
 
       high_availability = optional(object({
@@ -63,13 +63,7 @@ variable "inputs" {
         namespace     = optional(string)
         version       = optional(string)
         chart_version = optional(string)
-      }))
-      interfaces = optional(object({
-        output = optional(object({
-          release_id    = optional(string)
-          dependency_id = optional(string)
-          ready         = optional(string)
-        }))
+        release_id    = optional(string)
       }))
     })
     kubernetes_cluster = object({
