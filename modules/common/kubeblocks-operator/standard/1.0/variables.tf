@@ -64,7 +64,6 @@ variable "inputs" {
       interfaces = optional(object({
         output = optional(object({
           release_id    = optional(string)
-          dependency_id = optional(string)
           ready         = optional(string)
         }))
       }))
