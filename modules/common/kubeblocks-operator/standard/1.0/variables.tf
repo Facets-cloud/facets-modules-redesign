@@ -57,11 +57,11 @@ variable "inputs" {
     }),
     kubeblocks_crd = object({
       attributes = optional(object({
-        version        = optional(string)
-        crds_count     = optional(string)
-        release_id     = optional(string)
+        version    = optional(string)
+        crds_count = optional(string)
+        release_id = optional(string)
       }))
-      interfaces = {}
+      interfaces = optional(object({}))
     })
     node_pool = optional(object({
       attributes = object({
