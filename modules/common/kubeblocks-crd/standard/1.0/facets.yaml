@@ -3,6 +3,9 @@ flavor: standard
 version: '1.0'
 clouds:
 - kubernetes
+- aws
+- gcp
+- azure
 description: Installs KubeBlocks Custom Resource Definitions (CRDs) on Kubernetes
   cluster
 inputs:
