@@ -2,10 +2,8 @@
 # This module depends on that module's release_id to ensure proper ordering
 locals {
   crd_input      = var.inputs.kubeblocks_crd
-  crd_interfaces = lookup(local.crd_input, "interfaces", {})
-  crd_output     = lookup(local.crd_interfaces, "output", {})
-  crd_release_id = lookup(local.crd_output, "release_id", "")
-  crd_ready      = lookup(local.crd_output, "ready", "false")
+  crd_attributes = lookup(local.crd_input, "attributes", {})
+  crd_release_id = lookup(local.crd_attributes, "release_id", "")
 
   # Get node pool details from input
   node_pool_input  = lookup(var.inputs, "node_pool", {})
