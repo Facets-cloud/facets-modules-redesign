@@ -32,14 +32,6 @@ spec:
           minLength: 1
           maxLength: 64
           default: myapp
-        master_username:
-          type: string
-          title: Master Username
-          description: Master username for database access
-          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
-          minLength: 1
-          maxLength: 16
-          default: admin
     sizing:
       type: object
       title: Sizing & Performance
@@ -91,6 +83,7 @@ spec:
     restore_config:
       type: object
       title: Restore Operations
+      x-ui-overrides-only: true
       properties:
         restore_from_backup:
           type: boolean
@@ -131,6 +124,7 @@ spec:
     imports:
       type: object
       title: Import Existing Resources
+      x-ui-overrides-only: true
       properties:
         db_instance_identifier:
           type: string
@@ -144,6 +138,11 @@ spec:
           type: string
           title: Security Group ID
           description: ID of existing security group to import
+        master_password:
+          type: string
+          title: Master Password
+          description: Master password for the imported resource (8+ characters)
+          minLength: 8
   required:
   - version_config
 imports:
@@ -156,6 +155,9 @@ imports:
 - name: security_group_id
   resource_address: aws_security_group.mysql
   required: false
+- name: master_password
+  resource_address: random_password.master_password[0]
+  required: true
 inputs:
   aws_cloud_account:
     type: '@facets/aws_cloud_account'
@@ -187,7 +189,6 @@ sample:
     version_config:
       version: '8.4'
       database_name: myapp
-      master_username: admin
     sizing:
       instance_class: db.t3.small
       allocated_storage: 100

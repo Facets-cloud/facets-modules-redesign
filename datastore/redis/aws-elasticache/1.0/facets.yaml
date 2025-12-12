@@ -61,6 +61,7 @@ spec:
     restore_config:
       type: object
       title: Restore Operations
+      x-ui-overrides-only: true
       properties:
         restore_from_snapshot:
           type: boolean
@@ -75,9 +76,15 @@ spec:
             field: spec.restore_config.restore_from_snapshot
             values:
             - true
+        auth_token:
+          type: string
+          title: Auth Token
+          description: Auth token for accessing the Redis cluster
+          minLength: 64
     imports:
       type: object
       title: Import Existing Resources
+      x-ui-overrides-only: true
       properties:
         cluster_id:
           type: string
@@ -92,6 +99,11 @@ spec:
           type: string
           title: Security Group ID
           description: Security group ID for importing existing security group
+        auth_token:
+          type: string
+          title: Auth Token
+          description: Auth token for accessing the imported Redis cluster
+          minLength: 64
   required:
   - version_config
 inputs:
@@ -121,6 +133,9 @@ imports:
 - name: security_group_id
   resource_address: aws_security_group.redis
   required: false
+- name: auth_token
+  resource_address: random_password.redis_auth_token[0]
+  required: true
 iac:
   validated_files:
   - main.tf
