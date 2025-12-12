@@ -67,6 +67,10 @@ spec:
           minimum: 3
           maximum: 48
           default: 12
+          x-ui-visible-if:
+            field: spec.connect_cluster.enabled
+            values:
+            - true
         memory_gb:
           type: number
           title: Memory (GB)
@@ -74,6 +78,10 @@ spec:
           minimum: 3
           maximum: 48
           default: 20
+          x-ui-visible-if:
+            field: spec.connect_cluster.enabled
+            values:
+            - true
     imports:
       type: object
       title: Import Existing Resources
