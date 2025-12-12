@@ -3,6 +3,9 @@ flavor: standard
 version: '1.0'
 clouds:
 - kubernetes
+- aws
+- gcp
+- azure
 description: Installs and configures KubeBlocks operator for managing databases on
   Kubernetes
 inputs:
