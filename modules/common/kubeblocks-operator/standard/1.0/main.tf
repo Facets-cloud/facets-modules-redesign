@@ -20,50 +20,20 @@ locals {
       effect   = taint.effect
     }
   ]
-}
 
-# Kubernetes Namespace for KubeBlocks
-resource "kubernetes_namespace" "kubeblocks" {
-  metadata {
-    name = "kb-system" # Default namespace name
-
-    labels = merge(
-      {
-        "app.kubernetes.io/name"       = "kubeblocks"
-        "app.kubernetes.io/instance"   = var.instance_name
-        "app.kubernetes.io/version"    = var.instance.spec.version
-        "app.kubernetes.io/managed-by" = "terraform"
-      },
-      var.environment.cloud_tags
-    )
-    annotations = {
-      "kubeblocks.io/crd-dependency" = local.crd_release_id
-    }
-  }
-
-  lifecycle {
-    ignore_changes = [
-      metadata[0].labels
-    ]
-  }
-
-  # Wait for namespace deletion to complete
-  # This ensures Terraform waits for all resources to be cleaned up
-  timeouts {
-    delete = "10m"
-  }
+  namespace = "kb-system"
 }
 
 # KubeBlocks Helm Release
-# CRDs are automatically installed via kubernetes_manifest resources above
+# CRDs are installed by the separate kubeblocks-crd module
 resource "helm_release" "kubeblocks" {
   name       = "kubeblocks"
   repository = "https://apecloud.github.io/helm-charts"
   chart      = "kubeblocks"
   version    = var.instance.spec.version
-  namespace  = kubernetes_namespace.kubeblocks.metadata[0].name
+  namespace  = local.namespace
 
-  create_namespace = false
+  create_namespace = true  # Helm will create the namespace if it doesn't exist
   wait             = false # Disable wait to prevent destroy hang issues
   wait_for_jobs    = false # Disable wait_for_jobs to prevent timeout issues
   timeout          = 600
@@ -123,14 +93,13 @@ resource "helm_release" "kubeblocks" {
         tolerations = local.tolerations
         # Add node selector for node pool affinity
         nodeSelector = local.node_selector
+
+        # Add crd release id for dependency
+        crd_release_id = local.crd_release_id
       },
     ))
   ]
 
-  # Ensure namespace and CRDs exist before installing the operator
-  depends_on = [
-    kubernetes_namespace.kubeblocks
-  ]
 }
 resource "time_sleep" "wait_for_kubeblocks" {
   create_duration = "120s" # Wait 2 minutes
@@ -187,9 +156,9 @@ resource "helm_release" "database_addons" {
   repository = each.value.repo
   chart      = each.value.chart_name
   version    = each.value.version
-  namespace  = kubernetes_namespace.kubeblocks.metadata[0].name
+  namespace  = "kb-system"
 
-  create_namespace = false
+  create_namespace = false # Namespace already created by kubeblocks release
   wait             = true
   wait_for_jobs    = true
   timeout          = 600 # 10 minutes
