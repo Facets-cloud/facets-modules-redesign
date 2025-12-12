@@ -66,13 +66,3 @@ resource "random_uuid" "release_id" {
     kubernetes_manifest.kubeblocks_crds
   ]
 }
-
-# Generate dependency_id for Terraform-level dependency tracking
-resource "random_uuid" "dependency_id" {
-  keepers = {
-    release_id = random_uuid.release_id.result
-  }
-  depends_on = [
-    random_uuid.release_id
-  ]
-}
