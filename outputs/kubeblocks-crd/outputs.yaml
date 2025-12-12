@@ -1,0 +1,12 @@
+name: '@facets/kubeblocks-crd'
+properties:
+    attributes:
+        crds_count:
+            type: string
+        release_id:
+            type: string
+        version:
+            type: string
+    interfaces: {}
+providers: []
+
