@@ -12,7 +12,6 @@ locals {
   cpu             = lookup(local.resources, "cpu", "1")
   memory          = lookup(local.resources, "memory", "2Gi")
   storage_size    = lookup(local.spec, "storage_size", "10Gi")
-  storage_class   = lookup(local.spec, "storage_class", "")
   max_connections = lookup(local.spec, "max_connections", 65536)
 
   # Get node pool details from input
@@ -95,8 +94,7 @@ locals {
             {
               metadata = { name = "data-volume" }
               spec = {
-                storageClassName = local.storage_class != "" ? local.storage_class : null
-                accessModes      = ["ReadWriteOnce"]
+                accessModes = ["ReadWriteOnce"]
                 resources = {
                   requests = { storage = local.storage_size }
                 }
@@ -105,8 +103,7 @@ locals {
             {
               metadata = { name = "logs-volume" }
               spec = {
-                storageClassName = local.storage_class != "" ? local.storage_class : null
-                accessModes      = ["ReadWriteOnce"]
+                accessModes = ["ReadWriteOnce"]
                 resources = {
                   requests = { storage = "2Gi" }
                 }

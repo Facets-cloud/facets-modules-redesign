@@ -15,7 +15,6 @@ variable "instance" {
         memory = optional(string, "2Gi")
       }), {})
       storage_size    = optional(string, "10Gi")
-      storage_class   = optional(string, "")
       max_connections = optional(number, 65536)
     })
   })

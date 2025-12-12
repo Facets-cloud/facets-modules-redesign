@@ -48,12 +48,6 @@ spec:
       description: Persistent volume size per replica
       default: 10Gi
       pattern: ^[0-9]+[GM]i$
-    storage_class:
-      type: string
-      title: Storage Class
-      description: Kubernetes storage class for persistent volumes (leave empty for
-        cluster default)
-      default: ''
     max_connections:
       type: number
       title: Max Connections
@@ -105,5 +99,4 @@ sample:
       cpu: '1'
       memory: 2Gi
     storage_size: 10Gi
-    storage_class: ''
     max_connections: 65536
