@@ -114,6 +114,34 @@ locals {
             spec = {
               nodeSelector = length(local.node_selector) > 0 ? local.node_selector : null
               tolerations  = length(local.tolerations) > 0 ? local.tolerations : null
+              containers = [
+                {
+                  name = "mongod"
+                  resources = {
+                    requests = {
+                      cpu    = local.cpu
+                      memory = local.memory
+                    }
+                    limits = {
+                      cpu    = local.cpu
+                      memory = local.memory
+                    }
+                  }
+                },
+                {
+                  name = "mongodb-agent"
+                  resources = {
+                    requests = {
+                      cpu    = "500m"
+                      memory = "400Mi"
+                    }
+                    limits = {
+                      cpu    = "1"
+                      memory = "800Mi"
+                    }
+                  }
+                }
+              ]
             }
           }
         }
