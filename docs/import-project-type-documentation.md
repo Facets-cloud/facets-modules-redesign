@@ -95,7 +95,7 @@ modules:
 
   # Networking
   - intent: network
-    flavor: aws_vpc
+    flavor: aws_network
 
   # Kubernetes Cluster
   - intent: kubernetes_cluster
