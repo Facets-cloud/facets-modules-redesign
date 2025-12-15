@@ -17,24 +17,43 @@ locals {
   }
 
   output_attributes = merge(
-    {
-      database_name    = local.admin_database
-      max_connections  = "65536"
-      namespace        = local.namespace
-      password         = sensitive(local.mongodb_password)
-      replica_count    = tostring(local.replicas)
-      replica_hosts    = join(",", local.replica_hosts)
-      replica_set_name = local.replica_set_name
-      service_name     = "${local.cluster_name}-mongodb"
-      username         = local.admin_username
-      secrets          = ["password"]
-    },
-    # Add external endpoints if configured
-    local.has_external_access ? {
-      external_endpoints = jsonencode(local.external_endpoints)
-    } : {}
-  )
+  {},  # Empty base map
+  local.has_external_access ? {
+    external_endpoints = jsonencode(local.external_endpoints)
+  } : {}
+)
 
   output_interfaces = {
-  }
+      writer = {
+        host              = local.primary_host
+        port              = tostring(local.primary_port)
+        username          = local.admin_username
+        password          = sensitive(local.mongodb_password)
+        connection_string = sensitive(local.connection_string)
+        name              = local.cluster_name
+        secrets           = ["password", "connection_string"]
+      }
+      reader = {
+        host = local.ha_enabled ? "${local.cluster_name}-mongodb-ro.${local.namespace}.svc.cluster.local" : local.primary_host
+        port = tostring(local.primary_port)
+        username = local.admin_username
+        password = sensitive(local.mongodb_password)
+        connection_string = sensitive(
+          local.password_is_valid ? (
+            local.ha_enabled ?
+            "mongodb://${local.admin_username}:${local.mongodb_password}@${join(",", local.replica_hosts)}/${local.admin_database}?replicaSet=${local.replica_set_name}&readPreference=secondaryPreferred" :
+            "mongodb://${local.admin_username}:${local.mongodb_password}@${local.primary_host}:${local.primary_port}/${local.admin_database}"
+          ) : null
+        )
+        name    = local.cluster_name
+        secrets = ["password", "connection_string"]
+      }
+      cluster = {
+        endpoint          = "${local.primary_host}:${local.primary_port}"
+        username          = local.admin_username
+        password          = sensitive(local.mongodb_password)
+        connection_string = sensitive(local.connection_string)
+        secrets           = ["password", "connection_string"]
+      }
+    }
 }

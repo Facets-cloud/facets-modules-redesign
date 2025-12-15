@@ -217,8 +217,11 @@ spec:
   - mode
 outputs:
   default:
-    type: '@facets/mongo_k8s'
+    type: '@facets/mongo'
     title: MongoDB Cluster Credentials
+  attributes:
+    type: '@facets/mongo_k8s'
+    title: Additional Output Attributes
 iac:
   validated_files:
   - main.tf
