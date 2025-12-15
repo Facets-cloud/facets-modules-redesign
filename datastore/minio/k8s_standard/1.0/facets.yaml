@@ -1,0 +1,170 @@
+intent: minio
+flavor: k8s_standard
+version: '1.0'
+clouds:
+- kubernetes
+- aws
+- azure
+- gcp
+description: Creates and manages MinIO object storage clusters using KubeBlocks operator v1.0.1
+inputs:
+  kubeblocks_operator:
+    type: '@facets/kubeblocks-operator'
+    optional: false
+    displayName: KubeBlocks Operator
+    description: KubeBlocks operator installation (CRDs must be ready)
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Target Kubernetes cluster
+    providers:
+    - kubernetes
+    - helm
+  node_pool:
+    type: '@facets/kubernetes_nodepool'
+    optional: true
+    displayName: Node Pool
+    description: Node pool for MinIO pods
+spec:
+  title: MinIO Object Storage Configuration
+  description: S3-compatible object storage cluster managed by KubeBlocks
+  type: object
+  properties:
+    namespace_override:
+      type: string
+      title: Namespace Override
+      description: (Optional) Specify a custom namespace for the cluster. If not set, the namespace from the environment will be used.
+      default: ''
+    termination_policy:
+      type: string
+      title: Termination Policy
+      description: Controls cluster deletion behavior
+      enum:
+      - DoNotTerminate
+      - Delete
+      - WipeOut
+      default: Delete
+      x-enum-descriptions:
+        Delete: Delete pods and PVCs
+        DoNotTerminate: Block cluster deletion
+        WipeOut: Delete everything including backups
+    minio_version:
+      type: string
+      title: MinIO Version
+      description: MinIO server version to deploy
+      enum:
+      - RELEASE.2024-10-02T17-50-41Z
+      - RELEASE.2024-08-03T04-33-23Z
+      - RELEASE.2024-06-13T22-53-53Z
+      default: RELEASE.2024-10-02T17-50-41Z
+    mode:
+      type: string
+      title: Deployment Mode
+      description: Deployment mode - standalone for single server, distributed for high availability with erasure coding
+      enum:
+      - standalone
+      - distributed
+      default: distributed
+    replicas:
+      type: integer
+      title: Number of Servers
+      description: Number of MinIO server instances (distributed mode requires minimum 4, recommended even numbers like 4, 6, 8)
+      default: 4
+      minimum: 1
+      maximum: 32
+      x-ui-visible-if:
+        field: spec.mode
+        values:
+        - distributed
+    volumes_per_server:
+      type: integer
+      title: Volumes Per Server
+      description: Number of storage volumes per MinIO server instance
+      default: 4
+      minimum: 1
+      maximum: 16
+    resources:
+      type: object
+      title: Resource Allocation
+      description: CPU and memory resources for MinIO pods
+      properties:
+        cpu_request:
+          type: string
+          title: CPU Request
+          description: Minimum CPU allocation
+          default: 500m
+        cpu_limit:
+          type: string
+          title: CPU Limit
+          description: Maximum CPU allocation
+          default: 1000m
+        memory_request:
+          type: string
+          title: Memory Request
+          description: Minimum memory allocation
+          default: 1Gi
+        memory_limit:
+          type: string
+          title: Memory Limit
+          description: Maximum memory allocation
+          default: 2Gi
+    storage:
+      type: object
+      title: Storage Configuration
+      description: Persistent storage settings for MinIO data
+      properties:
+        size:
+          type: string
+          title: Storage Size Per Volume
+          description: Size of each persistent volume (can be expanded later, cannot be reduced)
+          default: 50Gi
+        storage_class:
+          type: string
+          title: Storage Class
+          description: Kubernetes storage class name (leave empty for default)
+          default: ''
+      required:
+      - size
+    buckets:
+      type: string
+      title: Initial Buckets
+      description: Comma-separated list of buckets to create on initialization (e.g., "bucket1,bucket2,bucket3")
+      default: ''
+  required:
+  - minio_version
+  - mode
+
+outputs:
+  default:
+    type: '@facets/minio'
+    title: MinIO Object Storage Credentials
+
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+  - locals.tf
+
+sample:
+  kind: minio
+  flavor: k8s_standard
+  version: '1.0'
+  disabled: true
+  spec:
+    namespace_override: ''
+    termination_policy: Delete
+    minio_version: RELEASE.2024-10-02T17-50-41Z
+    mode: distributed
+    replicas: 4
+    volumes_per_server: 4
+    resources:
+      cpu_request: 500m
+      cpu_limit: 1000m
+      memory_request: 1Gi
+      memory_limit: 2Gi
+    storage:
+      size: 50Gi
+      storage_class: ''
+    buckets: ''
