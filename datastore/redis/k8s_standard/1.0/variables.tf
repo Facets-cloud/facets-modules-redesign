@@ -95,13 +95,7 @@ variable "inputs" {
         namespace     = optional(string)
         version       = optional(string)
         chart_version = optional(string)
-      }))
-      interfaces = optional(object({
-        output = optional(object({
-          release_id    = optional(string)
-          dependency_id = optional(string)
-          ready         = optional(string)
-        }))
+        release_id    = optional(string)
       }))
     })
     kubernetes_cluster = object({
@@ -128,9 +122,4 @@ variable "inputs" {
       interfaces = any
     }))
   })
-
-  validation {
-    condition     = var.inputs.kubeblocks_operator.interfaces != null
-    error_message = "KubeBlocks operator interfaces must be provided"
-  }
 }

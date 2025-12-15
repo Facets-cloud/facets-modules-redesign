@@ -9,8 +9,7 @@ resource "kubernetes_namespace" "redis_cluster" {
     name = local.namespace
 
     annotations = {
-      "kubeblocks.io/operator-release-id"    = var.inputs.kubeblocks_operator.interfaces.output.release_id
-      "kubeblocks.io/operator-dependency-id" = var.inputs.kubeblocks_operator.interfaces.output.dependency_id
+      "kubeblocks.io/operator-release-id"    = var.inputs.kubeblocks_operator.attributes.release_id
     }
 
     labels = merge(
@@ -46,7 +45,7 @@ module "redis_cluster" {
 
   name         = local.cluster_name
   namespace    = local.namespace
-  release_name = "redis-${local.cluster_name}-${substr(var.inputs.kubeblocks_operator.interfaces.output.release_id, 0, 8)}"
+  release_name = "redis-${local.cluster_name}-${substr(var.inputs.kubeblocks_operator.attributes.release_id, 0, 8)}"
 
   depends_on = [
     kubernetes_namespace.redis_cluster
@@ -62,8 +61,7 @@ module "redis_cluster" {
 
       annotations = merge(
         {
-          "kubeblocks.io/operator-release-id"    = var.inputs.kubeblocks_operator.interfaces.output.release_id
-          "kubeblocks.io/operator-dependency-id" = var.inputs.kubeblocks_operator.interfaces.output.dependency_id
+          "kubeblocks.io/operator-release-id"    = var.inputs.kubeblocks_operator.attributes.release_id
         },
         local.restore_enabled && local.restore_backup_name != "" ? {
           "kubeblocks.io/restore-from-backup" = jsonencode({
