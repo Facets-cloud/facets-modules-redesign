@@ -1,27 +1,18 @@
 name: '@facets/kubeblocks-operator'
 properties:
-    attributes:
-        chart_version:
-            type: string
-        crd_dependency:
-            type: string
-        namespace:
-            type: string
-        release_name:
-            type: string
-        release_status:
-            type: string
-        version:
-            type: string
-    interfaces:
-        output:
-            dependency_id:
-                type: string
-            ready:
-                type: string
-            release_id:
-                type: string
-            release_status:
-                type: string
+  attributes:
+    type: object
+    properties:
+      chart_version:
+        type: string
+      namespace:
+        type: string
+      release_name:
+        type: string
+      version:
+        type: string
+      release_id:
+        type: string
+  interfaces:
+    type: object
 providers: []
-

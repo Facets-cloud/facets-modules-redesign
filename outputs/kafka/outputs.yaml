@@ -1,21 +1,25 @@
 name: '@facets/kafka'
 properties:
-    attributes: {}
-    interfaces:
-        cluster:
-            connection_string:
-                type: string
-            endpoint:
-                type: string
-            endpoints:
-                type: string
-            password:
-                type: string
-            secrets:
-                items:
-                    type: string
-                type: array
-            username:
-                type: string
+  attributes:
+    type: object
+  interfaces:
+    type: object
+    properties:
+      cluster:
+        type: object
+        properties:
+          connection_string:
+            type: string
+          endpoint:
+            type: string
+          endpoints:
+            type: string
+          password:
+            type: string
+          secrets:
+            type: array
+            items:
+              type: string
+          username:
+            type: string
 providers: []
-
