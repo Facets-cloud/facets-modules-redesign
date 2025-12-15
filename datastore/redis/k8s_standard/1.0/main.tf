@@ -3,7 +3,7 @@
 # REQUIRES: KubeBlocks operator must be deployed first (CRDs must exist)
 
 # Kubernetes Namespace for Redis Cluster
-resource "kubernetes_namespace" "redis_cluster" {
+resource "kubernetes_namespace_v1" "redis_cluster" {
   count = local.namespace == var.environment.namespace ? 0 : 1
   metadata {
     name = local.namespace
