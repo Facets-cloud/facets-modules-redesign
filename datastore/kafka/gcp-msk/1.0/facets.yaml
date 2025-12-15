@@ -1,0 +1,137 @@
+intent: kafka
+flavor: gcp-msk
+version: '1.0'
+clouds:
+- gcp
+description: GCP Managed Service for Apache Kafka cluster with secure defaults and
+  automatic scaling
+spec:
+  title: GCP Managed Kafka Cluster
+  description: GCP Managed Service for Apache Kafka cluster with secure defaults and
+    automatic scaling
+  type: object
+  properties:
+    version_config:
+      type: object
+      title: Version Configuration
+      properties:
+        kafka_version:
+          type: string
+          title: Kafka Version
+          description: Version of the Kafka engine
+          enum:
+          - '3.4'
+          - '3.5'
+          - '3.6'
+          - '3.7'
+          default: '3.5'
+    sizing:
+      type: object
+      title: Sizing & Performance
+      properties:
+        vcpu_count:
+          type: number
+          title: vCPU Count
+          description: Number of virtual CPUs (minimum 3 required)
+          minimum: 3
+          maximum: 48
+          default: 3
+        memory_gb:
+          type: number
+          title: Memory (GB)
+          description: Memory in gigabytes for the cluster
+          minimum: 3
+          maximum: 48
+          default: 3
+        disk_size_gb:
+          type: number
+          title: Disk Size (GB)
+          description: Persistent disk size per broker in GB
+          minimum: 100
+          maximum: 10000
+          default: 100
+    connect_cluster:
+      type: object
+      title: Kafka Connect Cluster Configuration
+      description: Configure Kafka Connect cluster for running data integration connectors
+      properties:
+        enabled:
+          type: boolean
+          title: Enable Kafka Connect Cluster
+          description: Create a Kafka Connect cluster alongside the Kafka cluster
+          default: false
+        vcpu_count:
+          type: number
+          title: vCPU Count
+          description: Number of virtual CPUs for Connect cluster - Default is 12
+          minimum: 3
+          maximum: 48
+          default: 12
+          x-ui-visible-if:
+            field: spec.connect_cluster.enabled
+            values:
+            - true
+        memory_gb:
+          type: number
+          title: Memory (GB)
+          description: Memory in gigabytes for Connect cluster - Default is 20
+          minimum: 3
+          maximum: 48
+          default: 20
+          x-ui-visible-if:
+            field: spec.connect_cluster.enabled
+            values:
+            - true
+    imports:
+      type: object
+      title: Import Existing Resources
+      x-ui-overrides-only: true
+      properties:
+        cluster_id:
+          type: string
+          title: Kafka Cluster ID
+          description: 'ID of existing GCP Managed Kafka cluster to import (format:
+            projects/{project}/locations/{location}/clusters/{cluster})'
+  required:
+  - version_config
+  - sizing
+imports:
+- name: cluster_id
+  resource_address: google_managed_kafka_cluster.main
+  required: false
+inputs:
+  gcp_cloud_account:
+    type: '@facets/gcp_cloud_account'
+    optional: false
+    displayName: GCP Cloud Account
+    description: GCP cloud account configuration and credentials
+    providers:
+    - google
+    - google-beta
+  vpc_network:
+    type: '@facets/gcp-network-details'
+    optional: false
+    displayName: VPC Network
+    description: VPC network configuration for Kafka cluster deployment
+outputs:
+  default:
+    type: '@facets/gcp-msk'
+    title: GCP Managed Kafka Cluster
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+  - connect_cluster.tf
+sample:
+  kind: kafka
+  flavor: gcp-msk
+  version: '1.0'
+  spec:
+    version_config:
+      kafka_version: '3.5'
+    sizing:
+      vcpu_count: 3
+      memory_gb: 3
+      disk_size_gb: 100
+    connect_cluster: {}
