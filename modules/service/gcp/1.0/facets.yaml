@@ -20,6 +20,7 @@ inputs:
   kubernetes_node_pool_details:
     type: '@facets/gke_node_pool_details'
     displayName: Node Pool
+    optional: false
   artifactories:
     type: '@facets/artifactories'
     displayName: Container Registries

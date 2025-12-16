@@ -31,7 +31,7 @@ inputs:
   kubernetes_node_pool_details:
     type: '@facets/kubernetes_nodepool'
     displayName: Node Pool
-    optional: true
+    optional: false
   artifactories:
     optional: true
     type: '@facets/artifactories'
