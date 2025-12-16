@@ -125,16 +125,9 @@ module "mysql_cluster" {
                   nodeSelector = local.node_selector
                 } : {},
 
-                # Tolerations - dynamic from node pool taints or fallback to common defaults
+                # Tolerations - dynamic from node pool taints
                 {
-                  tolerations = length(local.tolerations) > 0 ? local.tolerations : [
-                    {
-                      # allow scheduling on the CriticalAddonsOnly node
-                      key      = "CriticalAddonsOnly"
-                      operator = "Exists"
-                      effect   = "NoSchedule"
-                    }
-                  ]
+                  tolerations = local.tolerations
                 }
               )
             }
