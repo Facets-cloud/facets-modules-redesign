@@ -1,0 +1,217 @@
+intent: redis
+flavor: k8s_standard
+version: '1.0'
+clouds:
+- kubernetes
+description: Creates and manages Redis clusters using KubeBlocks operator v1.0.1
+inputs:
+  kubeblocks_operator:
+    type: '@facets/kubeblocks-operator'
+    optional: false
+    displayName: KubeBlocks Operator
+    description: KubeBlocks operator installation (CRDs must be ready)
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Target Kubernetes cluster
+    providers:
+    - kubernetes
+    - helm
+  node_pool:
+    type: '@facets/kubernetes_nodepool'
+    optional: false
+    displayName: Node Pool
+    description: Node pool for Redis pods
+spec:
+  title: Redis Cluster Configuration
+  description: Redis in-memory database cluster managed by KubeBlocks
+  type: object
+  properties:
+    namespace_override:
+      type: string
+      title: Namespace Override
+      description: (Optional) Specify a custom namespace for the cluster. If not set,
+        the namespace from the environment will be used.
+      default: ''
+    termination_policy:
+      type: string
+      title: Termination Policy
+      description: Controls cluster deletion behavior
+      enum:
+      - DoNotTerminate
+      - Delete
+      - WipeOut
+      default: Delete
+      x-enum-descriptions:
+        Delete: Delete pods and PVCs
+        DoNotTerminate: Block cluster deletion
+        WipeOut: Delete everything including backups
+    redis_version:
+      type: string
+      title: Redis Version
+      description: Redis version to deploy
+      enum:
+      - 7.0.6
+      - 7.2.4
+      - 7.4.2
+      default: 7.4.2
+    mode:
+      type: string
+      title: Cluster Mode
+      description: Deployment mode - standalone for single instance, replication for
+        HA with Redis Sentinel, redis-cluster for sharded setup
+      enum:
+      - standalone
+      - replication
+      - redis-cluster
+      default: redis-cluster
+      x-enum-descriptions:
+        standalone: Single Redis instance
+        replication: Redis with Sentinel for high availability
+        redis-cluster: Sharded Redis Cluster for horizontal scaling
+    replicas:
+      type: integer
+      title: Number of Replicas
+      description: Number of Redis replicas per shard (only for replication mode)
+      default: 2
+      minimum: 1
+      maximum: 5
+      x-ui-visible-if:
+        field: spec.mode
+        values:
+        - replication
+    shards:
+      type: integer
+      title: Number of Shards
+      description: Number of Redis shards (only for redis-cluster mode)
+      default: 3
+      minimum: 3
+      maximum: 10
+      x-ui-visible-if:
+        field: spec.mode
+        values:
+        - redis-cluster
+    resources:
+      type: object
+      title: Resource Allocation
+      description: CPU and memory resources for Redis pods
+      properties:
+        cpu_request:
+          type: string
+          title: CPU Request
+          description: Minimum CPU allocation
+          default: 200m
+        cpu_limit:
+          type: string
+          title: CPU Limit
+          description: Maximum CPU allocation
+          default: 500m
+        memory_request:
+          type: string
+          title: Memory Request
+          description: Minimum memory allocation
+          default: 256Mi
+        memory_limit:
+          type: string
+          title: Memory Limit
+          description: Maximum memory allocation
+          default: 512Mi
+    storage:
+      type: object
+      title: Storage Configuration
+      description: Persistent storage settings for Redis data
+      properties:
+        size:
+          type: string
+          title: Storage Size
+          description: Size of persistent volume (can be expanded later, cannot be
+            reduced)
+          default: 10Gi
+      required:
+      - size
+    backup:
+      type: object
+      title: Backup Configuration
+      description: Optional backup schedule configuration
+      x-ui-overrides-only: true
+      properties:
+        enabled:
+          type: boolean
+          title: Enable Backup
+          description: Enable backup configuration for this cluster
+          default: false
+        schedule_cron:
+          type: string
+          title: Backup Schedule (Cron)
+          description: Cron expression for backup schedule (e.g., "0 2 * * *" for
+            daily at 2 AM)
+          default: 0 2 * * *
+        retention_period:
+          type: string
+          title: Backup Retention Period
+          description: How long to retain backups (e.g., "7d", "30d", "1y")
+          default: 7d
+    restore:
+      type: object
+      title: Restore Configuration
+      description: Restore cluster from existing backup instead of creating fresh
+        cluster
+      x-ui-overrides-only: true
+      properties:
+        enabled:
+          type: boolean
+          title: Enable Restore
+          description: Restore from backup instead of creating fresh cluster
+          default: false
+        backup_name:
+          type: string
+          title: Backup Name
+          description: Name of the backup to restore from (e.g., 'redis-cluster-backup-20250125')
+          x-ui-visible-if:
+            field: spec.restore.enabled
+            values:
+            - true
+          x-ui-required-if:
+            field: spec.restore.enabled
+            values:
+            - true
+  required:
+  - redis_version
+  - mode
+outputs:
+  default:
+    type: '@facets/redis'
+    title: Redis Cluster Connection Details
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+  - locals.tf
+sample:
+  kind: redis
+  flavor: k8s_standard
+  version: '1.0'
+  disabled: true
+  spec:
+    namespace_override: ''
+    termination_policy: Delete
+    redis_version: 7.4.2
+    mode: redis-cluster
+    replicas: 2
+    shards: 3
+    resources:
+      cpu_request: 200m
+      cpu_limit: 500m
+      memory_request: 256Mi
+      memory_limit: 512Mi
+    storage:
+      size: 10Gi
+    backup:
+      enabled: false
+      schedule_cron: 0 2 * * *
+      retention_period: 7d
+    restore:
+      enabled: false
+      backup_name: ''
