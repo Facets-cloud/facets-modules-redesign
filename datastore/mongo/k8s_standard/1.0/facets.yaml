@@ -21,7 +21,7 @@ inputs:
     - helm
   node_pool:
     type: '@facets/kubernetes_nodepool'
-    optional: true
+    optional: false
     displayName: Node Pool
     description: Node pool for MongoDB pods
 spec:
@@ -116,57 +116,36 @@ spec:
           description: Size of persistent volume (can be expanded later via volume
             expansion, cannot be reduced)
           default: 20Gi
-        storage_class:
-          type: string
-          title: Storage Class
-          description: Kubernetes storage class name (leave empty for default, must
-            support volume expansion)
-          default: ''
       required:
       - size
     backup:
       type: object
       title: Backup Configuration
       description: Optional backup repository and schedule configuration
+      x-ui-overrides-only: true
       properties:
         enabled:
           type: boolean
           title: Enable Backup
           description: Enable backup configuration for this cluster
           default: false
-        enable_schedule:
-          type: boolean
-          title: Enable Backup Schedule
-          description: Enable automatic scheduled backups
-          default: false
-          x-ui-visible-if:
-            field: spec.backup.enabled
-            values:
-            - true
         schedule_cron:
           type: string
           title: Backup Schedule (Cron)
           description: Cron expression for backup schedule (e.g., "0 2 * * *" for
             daily at 2 AM)
           default: 0 2 * * *
-          x-ui-visible-if:
-            field: spec.backup.enable_schedule
-            values:
-            - true
         retention_period:
           type: string
           title: Backup Retention Period
           description: How long to retain backups (e.g., "7d", "30d", "1y")
           default: 7d
-          x-ui-visible-if:
-            field: spec.backup.enable_schedule
-            values:
-            - true
     restore:
       type: object
       title: Restore Configuration
       description: Restore cluster from existing backup instead of creating fresh
         cluster
+      x-ui-overrides-only: true
       properties:
         enabled:
           type: boolean
@@ -246,10 +225,8 @@ sample:
       memory_limit: 2Gi
     storage:
       size: 20Gi
-      storage_class: ''
     backup:
       enabled: false
-      enable_schedule: false
       schedule_cron: 0 2 * * *
       retention_period: 7d
     restore:

@@ -42,7 +42,6 @@ variable "instance" {
 
       backup = optional(object({
         enabled          = optional(bool)
-        enable_schedule  = optional(bool)
         schedule_cron    = optional(string)
         retention_period = optional(string)
       }))

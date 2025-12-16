@@ -40,7 +40,7 @@ locals {
   backup_enabled = try(lookup(local.backup_config, "enabled", false), false) == true
 
   # Backup schedule settings (for Cluster.spec.backup)
-  backup_schedule_enabled = local.backup_enabled && try(lookup(local.backup_config, "enable_schedule", false), false) == true
+  backup_schedule_enabled = true
   backup_cron_expression  = try(lookup(local.backup_config, "schedule_cron", "0 2 * * *"), "0 2 * * *")
   backup_retention_period = try(lookup(local.backup_config, "retention_period", "7d"), "7d")
 
