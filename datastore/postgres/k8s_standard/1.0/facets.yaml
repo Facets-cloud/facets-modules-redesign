@@ -120,6 +120,7 @@ spec:
       type: object
       title: Backup Configuration
       description: Optional backup repository and schedule configuration
+      x-ui-overrides-only: true
       properties:
         enabled:
           type: boolean
@@ -142,6 +143,7 @@ spec:
       title: Restore Configuration
       description: Restore cluster from existing backup instead of creating fresh
         cluster
+      x-ui-overrides-only: true
       properties:
         enabled:
           type: boolean
