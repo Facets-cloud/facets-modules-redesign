@@ -128,11 +128,6 @@ spec:
           description: Size of persistent volume (can be expanded later, cannot be
             reduced)
           default: 10Gi
-        storage_class:
-          type: string
-          title: Storage Class
-          description: Kubernetes storage class name (leave empty for default)
-          default: ''
       required:
       - size
     backup:

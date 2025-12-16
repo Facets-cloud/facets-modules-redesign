@@ -34,7 +34,7 @@ variable "instance" {
 
       storage = object({
         size          = string
-        storage_class = string
+        storage_class = optional(string, "")
       })
 
       high_availability = optional(object({
