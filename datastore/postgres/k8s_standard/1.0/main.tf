@@ -2,40 +2,6 @@
 # Creates and manages PostgreSQL database clusters using KubeBlocks operator
 # REQUIRES: KubeBlocks operator must be deployed first (CRDs must exist)
 
-# Kubernetes Namespace for PostgreSQL Cluster
-resource "kubernetes_namespace_v1" "postgresql_cluster" {
-  count = local.namespace == var.environment.namespace ? 0 : 1
-  metadata {
-    name = local.namespace
-
-    annotations = {
-      "kubeblocks.io/operator-release-id"    = var.inputs.kubeblocks_operator.attributes.release_id
-    }
-
-    labels = merge(
-      {
-        "app.kubernetes.io/name"       = "postgresql-cluster"
-        "app.kubernetes.io/instance"   = var.instance_name
-        "app.kubernetes.io/managed-by" = "terraform"
-      },
-      var.environment.cloud_tags
-    )
-  }
-
-  # Wait for resources to be deleted before namespace deletion completes
-  timeouts {
-    delete = "5m"
-  }
-
-  # If namespace already exists, don't fail - just import it
-  lifecycle {
-    ignore_changes = [
-      metadata[0].labels,
-      metadata[0].annotations
-    ]
-  }
-}
-
 
 # PostgreSQL Cluster with Embedded Backup Configuration
 # Using any-k8s-resource module to avoid plan-time CRD validation
@@ -47,9 +13,6 @@ module "postgresql_cluster" {
   namespace    = local.namespace
   release_name = "pgcluster-${local.cluster_name}-${substr(var.inputs.kubeblocks_operator.attributes.release_id, 0, 8)}"
 
-  depends_on = [
-    kubernetes_namespace.postgresql_cluster
-  ]
 
   data = {
     apiVersion = "apps.kubeblocks.io/v1"
@@ -183,7 +146,7 @@ module "postgresql_cluster" {
       # Conditional: Backup configuration (ClusterBackup API)
       local.backup_schedule_enabled ? {
         backup = {
-          enabled         = true
+          enabled         = local.backup_enabled
           retentionPeriod = local.backup_retention_period
           method          = local.backup_method
           cronExpression  = local.backup_cron_expression
@@ -245,7 +208,6 @@ resource "kubernetes_service" "postgres_read" {
   }
 
   depends_on = [
-    kubernetes_namespace.postgresql_cluster,
     module.postgresql_cluster
   ]
 }
