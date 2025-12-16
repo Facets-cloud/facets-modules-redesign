@@ -1,19 +1,23 @@
 name: '@facets/redis'
 properties:
-    attributes: {}
-    interfaces:
-        cluster:
-            auth_token:
-                type: string
-            connection_string:
-                type: string
-            endpoint:
-                type: string
-            port:
-                type: string
-            secrets:
-                items:
-                    type: string
-                type: array
+  attributes:
+    type: object
+  interfaces:
+    type: object
+    properties:
+      cluster:
+        type: object
+        properties:
+          auth_token:
+            type: string
+          connection_string:
+            type: string
+          endpoint:
+            type: string
+          port:
+            type: string
+          secrets:
+            type: array
+            items:
+              type: string
 providers: []
-

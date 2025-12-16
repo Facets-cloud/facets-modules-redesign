@@ -2,6 +2,7 @@ locals {
   name                                   = module.name.name
   spec                                   = lookup(var.instance, "spec", {})
   cluster                                = lookup(local.spec, "cluster", {})
+  cluster_location                       = var.inputs.cloud_account.attributes.aws_region
   cluster_endpoint_public_access         = lookup(local.cluster, "cluster_endpoint_public_access", true)
   cluster_endpoint_private_access        = true
   cluster_endpoint_public_access_cidrs   = length(lookup(local.cluster, "cluster_endpoint_public_access_cidrs", [])) > 0 ? lookup(local.cluster, "cluster_endpoint_public_access_cidrs", ["0.0.0.0/0"]) : ["0.0.0.0/0"]
