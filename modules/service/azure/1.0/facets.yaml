@@ -29,7 +29,7 @@ inputs:
     - kubernetes-alpha
     - helm
   kubernetes_node_pool_details:
-    type: '@facets/kubernetes_nodepool'
+    type: '@facets/azure_aks_nodepool'
     displayName: Node Pool
     optional: false
   artifactories:
