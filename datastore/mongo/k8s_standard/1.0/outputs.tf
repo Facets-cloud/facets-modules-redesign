@@ -17,13 +17,39 @@ locals {
   }
 
   output_attributes = merge(
-  {},  # Empty base map
-  local.has_external_access ? {
-    external_endpoints = jsonencode(local.external_endpoints)
-  } : {}
-)
+    {}, # Empty base map
+    local.has_external_access ? {
+      external_endpoints = jsonencode(local.external_endpoints)
+    } : {}
+  )
 
-  output_interfaces = {
+  output_interfaces = merge(
+    {
+      for name, config in local.external_access_config :
+      name => {
+        host = try(
+          length(data.kubernetes_service.external_access[name].status[0].load_balancer[0].ingress) > 0 ?
+          coalesce(
+            data.kubernetes_service.external_access[name].status[0].load_balancer[0].ingress[0].hostname,
+            data.kubernetes_service.external_access[name].status[0].load_balancer[0].ingress[0].ip
+          ) : "",
+          ""
+        )
+        port     = "27017"
+        username = local.admin_username
+        password = sensitive(local.mongodb_password)
+        connection_string = "mongodb://${local.admin_username}:${local.mongodb_password}@${try(
+          length(data.kubernetes_service.external_access[name].status[0].load_balancer[0].ingress) > 0 ?
+          coalesce(
+            data.kubernetes_service.external_access[name].status[0].load_balancer[0].ingress[0].hostname,
+            data.kubernetes_service.external_access[name].status[0].load_balancer[0].ingress[0].ip
+          ) : "",
+          ""
+        )}:27017/${local.admin_database}"
+        secrets = ["password", "connection_string"]
+      }
+    },
+    {
       writer = {
         host              = local.primary_host
         port              = tostring(local.primary_port)
@@ -34,8 +60,8 @@ locals {
         secrets           = ["password", "connection_string"]
       }
       reader = {
-        host = local.ha_enabled ? "${local.cluster_name}-mongodb-ro.${local.namespace}.svc.cluster.local" : local.primary_host
-        port = tostring(local.primary_port)
+        host     = local.ha_enabled ? "${local.cluster_name}-mongodb-ro.${local.namespace}.svc.cluster.local" : local.primary_host
+        port     = tostring(local.primary_port)
         username = local.admin_username
         password = sensitive(local.mongodb_password)
         connection_string = sensitive(
@@ -55,5 +81,5 @@ locals {
         connection_string = sensitive(local.connection_string)
         secrets           = ["password", "connection_string"]
       }
-    }
+  })
 }
