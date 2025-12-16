@@ -2,40 +2,6 @@
 # Creates and manages Redis clusters using KubeBlocks operator
 # REQUIRES: KubeBlocks operator must be deployed first (CRDs must exist)
 
-# Kubernetes Namespace for Redis Cluster
-resource "kubernetes_namespace_v1" "redis_cluster" {
-  count = local.namespace == var.environment.namespace ? 0 : 1
-  metadata {
-    name = local.namespace
-
-    annotations = {
-      "kubeblocks.io/operator-release-id"    = var.inputs.kubeblocks_operator.attributes.release_id
-    }
-
-    labels = merge(
-      {
-        "app.kubernetes.io/name"       = "redis-cluster"
-        "app.kubernetes.io/instance"   = var.instance_name
-        "app.kubernetes.io/managed-by" = "terraform"
-      },
-      var.environment.cloud_tags
-    )
-  }
-
-  # Wait for resources to be deleted before namespace deletion completes
-  timeouts {
-    delete = "5m"
-  }
-
-  # If namespace already exists, don't fail - just import it
-  lifecycle {
-    ignore_changes = [
-      metadata[0].labels,
-      metadata[0].annotations
-    ]
-  }
-}
-
 
 # Redis Cluster with Embedded Backup Configuration
 # Using any-k8s-resource module to avoid plan-time CRD validation
@@ -47,10 +13,6 @@ module "redis_cluster" {
   namespace    = local.namespace
   release_name = "redis-${local.cluster_name}-${substr(var.inputs.kubeblocks_operator.attributes.release_id, 0, 8)}"
 
-  depends_on = [
-    kubernetes_namespace.redis_cluster
-  ]
-
   data = {
     apiVersion = "apps.kubeblocks.io/v1"
     kind       = "Cluster"
@@ -61,7 +23,7 @@ module "redis_cluster" {
 
       annotations = merge(
         {
-          "kubeblocks.io/operator-release-id"    = var.inputs.kubeblocks_operator.attributes.release_id
+          "kubeblocks.io/operator-release-id" = var.inputs.kubeblocks_operator.attributes.release_id
         },
         local.restore_enabled && local.restore_backup_name != "" ? {
           "kubeblocks.io/restore-from-backup" = jsonencode({
@@ -342,7 +304,7 @@ module "redis_cluster" {
       } : {},
       local.backup_schedule_enabled ? {
         backup = {
-          enabled         = true
+          enabled         = local.backup_enabled
           retentionPeriod = local.backup_retention_period
           method          = local.backup_method
           cronExpression  = local.backup_cron_expression
@@ -397,7 +359,6 @@ resource "kubernetes_service" "redis_read" {
   }
 
   depends_on = [
-    kubernetes_namespace.redis_cluster,
     module.redis_cluster
   ]
 }
