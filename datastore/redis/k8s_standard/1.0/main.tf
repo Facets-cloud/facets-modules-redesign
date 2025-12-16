@@ -126,15 +126,9 @@ module "redis_cluster" {
                 length(local.node_selector) > 0 ? {
                   nodeSelector = local.node_selector
                 } : {},
+                # Tolerations - dynamic from node pool taints
                 {
-                  tolerations = length(local.tolerations) > 0 ? local.tolerations : [
-                    {
-                      # allow scheduling on the CriticalAddonsOnly node
-                      key      = "CriticalAddonsOnly"
-                      operator = "Exists"
-                      effect   = "NoSchedule"
-                    }
-                  ]
+                  tolerations = local.tolerations
                 }
               )
             }
