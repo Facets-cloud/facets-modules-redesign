@@ -279,25 +279,6 @@ data "kubernetes_resource" "cluster_status" {
   ]
 }
 
-# Volume Expansion
-# KubeBlocks v1.0.1 automatically handles volume expansion when you update
-# the storage size in the Cluster spec above. No separate OpsRequest needed.
-# When storage size increases, KubeBlocks will automatically:
-# 1. Detect the change in volumeClaimTemplates
-# 2. Create an OpsRequest internally
-# 3. Expand the PVCs gracefully
-#
-# To expand storage: simply update var.instance.spec.storage.size and apply
-#
-# Requirements:
-# - Storage class must have ALLOWVOLUMEEXPANSION=true
-# - Some cloud providers (e.g., Azure) may have VM-specific disk constraints
-# - Check cluster status with: kubectl get cluster -n <namespace>
-#   Status will show "Updating" during expansion
-# - Verify PVC expansion: kubectl get pvc -n <namespace>
-
-# External Access via OpsRequest
-# Creates LoadBalancer services for external connectivity to MongoDB cluster
 module "external_access_ops" {
   for_each = local.external_access_config
 
@@ -360,6 +341,21 @@ module "external_access_ops" {
   }
 }
 
+resource "time_sleep" "wait_for_external_access" {
+  count = local.has_external_access ? 1 : 0
+
+  depends_on = [
+    module.external_access_ops
+  ]
+
+  # Initial wait before checking external service status
+  create_duration = "60s"
+
+  triggers = {
+    cluster_name = local.cluster_name
+  }
+}
+
 # Data source to fetch external service details after OpsRequest completes
 data "kubernetes_service" "external_access" {
   for_each = local.has_external_access ? local.external_access_config : {}
@@ -370,6 +366,27 @@ data "kubernetes_service" "external_access" {
   }
 
   depends_on = [
-    module.external_access_ops
+    module.external_access_ops,
+    time_sleep.wait_for_external_access
   ]
 }
+
+# Volume Expansion
+# KubeBlocks v1.0.1 automatically handles volume expansion when you update
+# the storage size in the Cluster spec above. No separate OpsRequest needed.
+# When storage size increases, KubeBlocks will automatically:
+# 1. Detect the change in volumeClaimTemplates
+# 2. Create an OpsRequest internally
+# 3. Expand the PVCs gracefully
+#
+# To expand storage: simply update var.instance.spec.storage.size and apply
+#
+# Requirements:
+# - Storage class must have ALLOWVOLUMEEXPANSION=true
+# - Some cloud providers (e.g., Azure) may have VM-specific disk constraints
+# - Check cluster status with: kubectl get cluster -n <namespace>
+#   Status will show "Updating" during expansion
+# - Verify PVC expansion: kubectl get pvc -n <namespace>
+
+# External Access via OpsRequest
+# Creates LoadBalancer services for external connectivity to MongoDB cluster
