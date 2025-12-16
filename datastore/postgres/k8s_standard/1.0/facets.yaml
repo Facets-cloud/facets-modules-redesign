@@ -114,11 +114,6 @@ spec:
           description: Size of persistent volume (can be expanded later, cannot be
             reduced)
           default: 20Gi
-        storage_class:
-          type: string
-          title: Storage Class
-          description: Kubernetes storage class name (leave empty for default)
-          default: ''
       required:
       - size
     backup:
@@ -213,7 +208,6 @@ sample:
       memory_limit: 1Gi
     storage:
       size: 20Gi
-      storage_class: ''
     backup:
       enabled: false
       enable_schedule: false
