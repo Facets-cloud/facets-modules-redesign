@@ -124,9 +124,9 @@ module "mysql_cluster" {
                         }
                       }
                     },
-                    var.instance.spec.storage.storage_class != "" ? {
+                    {
                       storageClassName = var.instance.spec.storage.storage_class
-                    } : {}
+                    }
                   )
                 }
               ]
