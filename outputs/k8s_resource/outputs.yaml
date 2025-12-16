@@ -1,10 +1,12 @@
 name: '@facets/k8s_resource'
 properties:
-    attributes:
-        resource_name:
-            type: string
-        resource_namespace:
-            type: string
-    interfaces: {}
+  attributes:
+    type: object
+    properties:
+      resource_name:
+        type: string
+      resource_namespace:
+        type: string
+  interfaces:
+    type: object
 providers: []
-

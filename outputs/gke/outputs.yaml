@@ -1,71 +1,80 @@
 name: '@facets/gke'
 properties:
-    attributes:
-        auto_upgrade:
+  attributes:
+    type: object
+    properties:
+      auto_upgrade:
+        type: string
+      cloud_provider:
+        type: string
+      cluster_ca_certificate:
+        type: string
+      cluster_endpoint:
+        type: string
+      cluster_id:
+        type: string
+      cluster_ipv4_cidr:
+        type: string
+      cluster_location:
+        type: string
+      cluster_name:
+        type: string
+      cluster_version:
+        type: string
+      kubernetes_provider_exec:
+        type: object
+        properties:
+          api_version:
             type: string
-        cloud_provider:
+          args:
+            type: array
+            items:
+              type: string
+          command:
             type: string
-        cluster_ca_certificate:
+      maintenance_policy_enabled:
+        type: string
+      master_authorized_networks_config:
+        type: string
+      network:
+        type: string
+      pods_range_name:
+        type: string
+      project_id:
+        type: string
+      region:
+        type: string
+      release_channel:
+        type: string
+      secrets:
+        type: string
+      services_range_name:
+        type: string
+      subnetwork:
+        type: string
+      workload_identity_config_workload_pool:
+        type: string
+  interfaces:
+    type: object
+    properties:
+      kubernetes:
+        type: object
+        properties:
+          cluster_ca_certificate:
             type: string
-        cluster_endpoint:
+          host:
             type: string
-        cluster_id:
-            type: string
-        cluster_ipv4_cidr:
-            type: string
-        cluster_location:
-            type: string
-        cluster_name:
-            type: string
-        cluster_version:
-            type: string
-        kubernetes_provider_exec:
-            api_version:
+          exec:
+            type: object
+            properties:
+              api_version:
                 type: string
-            args:
-                items:
-                    type: string
+              args:
                 type: array
-            command:
+                items:
+                  type: string
+              command:
                 type: string
-        maintenance_policy_enabled:
+          secrets:
             type: string
-        master_authorized_networks_config:
-            type: string
-        network:
-            type: string
-        pods_range_name:
-            type: string
-        project_id:
-            type: string
-        region:
-            type: string
-        release_channel:
-            type: string
-        secrets:
-            type: string
-        services_range_name:
-            type: string
-        subnetwork:
-            type: string
-        workload_identity_config_workload_pool:
-            type: string
-    interfaces:
-        kubernetes:
-            cluster_ca_certificate:
-                type: string
-            exec:
-                api_version:
-                    type: string
-                args:
-                    items:
-                        type: string
-                    type: array
-                command:
-                    type: string
-            host:
-                type: string
-            secrets:
-                type: string
 providers: []
-
