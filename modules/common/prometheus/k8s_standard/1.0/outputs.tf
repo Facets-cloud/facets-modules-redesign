@@ -8,5 +8,6 @@ locals {
     prometheus_service   = "${module.name.name}-prometheus"
     alertmanager_service = "${module.name.name}-alertmanager"
     grafana_service      = "${module.name.name}-grafana"
+    release_name         = module.name.name
   }
 }

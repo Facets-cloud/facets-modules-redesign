@@ -139,6 +139,10 @@ locals {
         enableRemoteWriteReceiver               = true
         ruleSelectorNilUsesHelmValues           = false
         serviceMonitorSelectorNilUsesHelmValues = false
+        podMonitorSelectorNilUsesHelmValues     = false
+        serviceMonitorSelector                  = {}
+        podMonitorSelector                      = {} # Explicitly set empty selectors to discover all monitors (override Helm defaults)
+        ruleSelector                            = {}
         retention                               = local.prometheus_retention
         resources = {
           requests = {

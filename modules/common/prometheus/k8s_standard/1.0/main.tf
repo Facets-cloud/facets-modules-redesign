@@ -75,7 +75,21 @@ resource "helm_release" "prometheus-operator" {
       },
       # Add service account config for IRSA if enabled
       # Add user-provided values from spec.values
-      local.valuesSpec
+      local.valuesSpec,
+      # Force these critical settings LAST (cannot be overridden by valuesSpec)
+      # This ensures Prometheus discovers all ServiceMonitors/PodMonitors/PrometheusRules
+      {
+        prometheus = {
+          prometheusSpec = {
+            serviceMonitorSelectorNilUsesHelmValues = false
+            podMonitorSelectorNilUsesHelmValues     = false
+            ruleSelectorNilUsesHelmValues           = false
+            serviceMonitorSelector                  = {}
+            podMonitorSelector                      = {}
+            ruleSelector                            = {}
+          }
+        }
+      }
     ))
   ]
 }
