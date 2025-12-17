@@ -327,6 +327,89 @@ data "kubernetes_service" "external_access" {
   ]
 }
 
+# PodMonitor for Prometheus Metrics Scraping
+# 
+# Architecture:
+# - KubeBlocks MongoDB includes a built-in exporter sidecar on port 9216
+# - The exporter runs as a container named "exporter" in each MongoDB pod
+# - However, the KubeBlocks service (mongo-kb-test-mongodb) only exposes port 27017 (MongoDB)
+# 
+# Why PodMonitor (not ServiceMonitor):
+# - The service doesn't expose the exporter port 9216, only MongoDB port 27017
+# - PodMonitor allows Prometheus to scrape pods directly, bypassing the service
+# - Provides per-pod metrics granularity for better observability
+# - More efficient (no extra network hop through service)
+# 
+# If using ServiceMonitor instead:
+# - Would need to create a separate service exposing port 9216
+# - Or modify KubeBlocks service configuration (not recommended)
+# - PodMonitor is the cleaner solution for sidecar exporters
+module "mongodb_pod_monitor" {
+  source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
+
+  name         = "${local.cluster_name}-metrics"
+  namespace    = local.namespace
+  release_name = "mongo-metrics-${local.cluster_name}-${substr(var.inputs.kubeblocks_operator.attributes.release_id, 0, 8)}"
+
+  data = {
+    apiVersion = "monitoring.coreos.com/v1"
+    kind       = "PodMonitor"
+
+    metadata = {
+      name      = "${local.cluster_name}-metrics"
+      namespace = local.namespace
+
+      labels = merge(
+        {
+          "app.kubernetes.io/name"       = "mongodb"
+          "app.kubernetes.io/instance"   = local.cluster_name
+          "app.kubernetes.io/managed-by" = "terraform"
+          "app.kubernetes.io/component"  = "metrics"
+        },
+        var.environment.cloud_tags
+      )
+    }
+
+    spec = {
+      # Select MongoDB pods directly (not services)
+      # KubeBlocks doesn't expose the exporter port in the Service
+      selector = {
+        matchLabels = {
+          "app.kubernetes.io/instance"        = local.cluster_name
+          "app.kubernetes.io/managed-by"      = "kubeblocks"
+          "apps.kubeblocks.io/component-name" = "mongodb"
+        }
+      }
+
+      # Scrape configuration - target pod port directly
+      podMetricsEndpoints = [
+        {
+          port     = "exporter" # KubeBlocks exporter port name
+          interval = "30s"
+          path     = "/metrics"
+          scheme   = "http"
+        }
+      ]
+
+      # Limit to specific namespace
+      namespaceSelector = {
+        matchNames = [local.namespace]
+      }
+    }
+  }
+
+  advanced_config = {
+    wait            = false # ServiceMonitor doesn't need wait
+    timeout         = 300   # 5 minutes
+    cleanup_on_fail = true
+    max_history     = 3
+  }
+
+  depends_on = [
+    module.mongodb_cluster
+  ]
+}
+
 # Volume Expansion
 # KubeBlocks v1.0.1 automatically handles volume expansion when you update
 # the storage size in the Cluster spec above. No separate OpsRequest needed.
