@@ -4,8 +4,21 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
-      prometheus_namespace = string
-      labels               = optional(map(string), {})
+      # Feature flags
+      enable_metrics   = optional(bool, true)
+      enable_alerts    = optional(bool, true)
+      enable_dashboard = optional(bool, true)
+
+      # Metrics configuration
+      metrics_interval = optional(string, "30s")
+
+      # Dashboard configuration
+      dashboard_folder = optional(string, "MongoDB")
+
+      # Custom labels
+      labels = optional(map(string), {})
+
+      # Alert configurations
       alerts = optional(object({
         mongodb_down = optional(object({
           enabled      = optional(bool, true)
@@ -52,8 +65,8 @@ variable "instance" {
   })
 
   validation {
-    condition     = can(regex("^[0-9]+[smhd]$", var.instance.spec.alerts.mongodb_down.for_duration))
-    error_message = "for_duration must be a valid duration (e.g., 1m, 5m, 1h)."
+    condition     = can(regex("^[0-9]+[smh]$", var.instance.spec.metrics_interval))
+    error_message = "metrics_interval must be a valid duration (e.g., 30s, 1m, 5m)."
   }
 }
 
@@ -66,6 +79,7 @@ variable "environment" {
   type = object({
     name        = string
     unique_name = string
+    namespace   = string
     cloud_tags  = optional(map(string), {})
   })
 }
@@ -80,14 +94,24 @@ variable "inputs" {
     })
     mongo = object({
       attributes = object({
-        service_name = string
-        port         = string
+        host     = string
+        port     = number
+        username = string
+        password = string
       })
       interfaces = object({
-        primary = object({
-          host = string
-          port = string
+        writer = object({
+          host     = string
+          port     = string
+          username = string
+          password = string
         })
+      })
+    })
+    prometheus = object({
+      attributes = object({
+        namespace          = string
+        prometheus_release = string
       })
     })
   })

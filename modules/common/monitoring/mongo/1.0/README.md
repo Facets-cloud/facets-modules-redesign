@@ -1,32 +1,90 @@
 # MongoDB Monitoring Module
 
-Creates Prometheus alert rules for monitoring MongoDB clusters running on KubeBlocks.
+Complete monitoring stack for MongoDB instances with metrics collection, alerting, and visualization.
 
 ## Overview
 
-This module generates `PrometheusRule` custom resources with alert rules specifically designed for MongoDB instances deployed via KubeBlocks. It uses the metrics exposed by the KubeBlocks MongoDB exporter.
+This module deploys a comprehensive monitoring solution for MongoDB clusters. It includes a Percona MongoDB Exporter that connects directly to MongoDB and exposes detailed metrics, PrometheusRule resources for intelligent alerting, ServiceMonitor for Prometheus integration, and Grafana dashboards for visualization.
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│         monitoring/mongo/1.0 Module                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  1. MongoDB Exporter Deployment                             │
+│     └── Connects to MongoDB via connection string          │
+│     └── Exposes metrics on port 9216                        │
+│                                                             │
+│  2. ServiceMonitor                                          │
+│     └── Scrapes metrics from exporter service              │
+│     └── Works with universal Prometheus discovery          │
+│                                                             │
+│  3. PrometheusRule                                          │
+│     └── 7 configurable alert rules                         │
+│     └── Uses real MongoDB metrics for alerting             │
+│                                                             │
+│  4. Grafana Dashboard                                       │
+│     └── Pre-built dashboard with key MongoDB metrics       │
+│     └── Auto-discovered by Grafana sidecar                 │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Environment as Dimension
+
+This module is environment-aware and uses:
+- `var.environment.unique_name` for unique resource naming across environments
+- `var.environment.namespace` as fallback for MongoDB namespace detection
+- `var.environment.cloud_tags` for applying environment-specific tags to all resources
+
+Each environment (dev, staging, prod) gets its own isolated exporter deployment and monitoring resources.
+
+## Resources Created
+
+- **Kubernetes Secret**: Stores MongoDB connection URI securely
+- **Kubernetes Deployment**: Runs Percona MongoDB Exporter (v0.40)
+- **Kubernetes Service**: ClusterIP service exposing exporter metrics
+- **ServiceMonitor**: Configures Prometheus to scrape exporter metrics
+- **PrometheusRule**: Defines alert rules for MongoDB health and performance
+- **Grafana Dashboard ConfigMap**: Deploys visualization dashboard
 
 ## Features
 
-- **7 Configurable Alert Rules**:
-  - `mongodb_down` - Detects when MongoDB instance is unavailable
-  - `mongodb_high_connections` - Monitors connection usage percentage
-  - `mongodb_high_memory` - Tracks resident memory usage
-  - `mongodb_replication_lag` - Monitors replication lag between PRIMARY and SECONDARY
-  - `mongodb_replica_unhealthy` - Detects unhealthy replica set members
-  - `mongodb_high_queued_operations` - Monitors global lock queue (readers + writers)
-  - `mongodb_slow_queries` - Tracks elevated operation rates
+### MongoDB Exporter
+- Deploys Percona MongoDB Exporter 0.40
+- Connects directly to MongoDB using credentials from mongo input
+- Exposes comprehensive metrics including:
+  - Connection statistics
+  - Memory usage (resident/virtual)
+  - Operations per second
+  - Replication status and lag
+  - Global lock queue depth
+  - Replica set health
 
-- **Per-Alert Configuration**:
-  - Enable/disable individual alerts
-  - Adjustable severity levels (critical, warning, info)
-  - Configurable thresholds
-  - Customizable alert duration
+### 7 Configurable Alert Rules
 
-- **KubeBlocks Integration**:
-  - Uses KubeBlocks MongoDB exporter metrics (`mongodb_ss_*`, `mongodb_rs_*`)
-  - Labels match KubeBlocks conventions (`app_kubernetes_io_instance`)
-  - Compatible with KubeBlocks v1.0.1+
+Each alert can be enabled/disabled and configured with custom thresholds:
+
+| Alert | Default Threshold | Severity | Description |
+|-------|-------------------|----------|-------------|
+| `mongodb_down` | N/A | Critical | MongoDB instance unavailable |
+| `mongodb_high_connections` | 80% | Warning | Connection usage exceeds limit |
+| `mongodb_high_memory` | 3GB | Warning | Resident memory usage too high |
+| `mongodb_replication_lag` | 10s | Warning | Replica lag exceeds threshold |
+| `mongodb_replica_unhealthy` | N/A | Critical | Replica set member unhealthy |
+| `mongodb_high_queued_operations` | 100 ops | Warning | Global lock queue backed up |
+| `mongodb_slow_queries` | 100 ms | Info | Elevated operation rate detected |
+
+### Grafana Dashboard
+
+Pre-configured dashboard showing:
+- MongoDB status (up/down)
+- Current vs available connections
+- Memory usage trends
+- Operations per second by type
+- Global lock queue depth
 
 ## Usage
 
@@ -35,8 +93,18 @@ kind: monitoring
 flavor: mongo
 version: "1.0"
 spec:
-  prometheus_namespace: "monitoring"
+  # Feature toggles
+  enable_metrics: true
+  enable_alerts: true
+  enable_dashboard: true
   
+  # Metrics configuration
+  metrics_interval: "30s"
+  
+  # Dashboard organization
+  dashboard_folder: "MongoDB"
+  
+  # Alert customization
   alerts:
     mongodb_down:
       enabled: true
@@ -46,7 +114,7 @@ spec:
     mongodb_high_connections:
       enabled: true
       severity: "warning"
-      threshold: 80  # percentage
+      threshold: 80
       for_duration: "5m"
     
     mongodb_high_memory:
@@ -54,148 +122,195 @@ spec:
       severity: "warning"
       threshold_gb: 3
       for_duration: "5m"
-    
-    mongodb_replication_lag:
-      enabled: true
-      severity: "warning"
-      threshold_seconds: 10
-      for_duration: "2m"
-    
-    mongodb_replica_unhealthy:
-      enabled: true
-      severity: "critical"
-      for_duration: "1m"
-    
-    mongodb_high_queued_operations:
-      enabled: true
-      severity: "warning"
-      threshold: 100
-      for_duration: "5m"
-    
-    mongodb_slow_queries:
-      enabled: true
-      severity: "info"
-      threshold_ms: 100
-      for_duration: "5m"
 ```
 
 ## Inputs
 
-### Required Inputs
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `kubernetes_cluster` | `@facets/kubernetes-details` | Yes | Kubernetes cluster for deployment |
+| `mongo` | `@facets/mongo` | Yes | MongoDB instance to monitor (provides connection credentials) |
+| `prometheus` | `@facets/prometheus` | Yes | Prometheus instance (provides namespace and Grafana integration) |
 
-| Name | Type | Description |
-|------|------|-------------|
-| `kubernetes_cluster` | `@facets/kubernetes-details` | Kubernetes cluster for deploying alert rules |
-| `mongo` | `@outputs/mongo` | MongoDB instance to monitor (must expose KubeBlocks metrics) |
+## Configuration Parameters
 
-### Spec Parameters
+### Feature Flags
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `prometheus_namespace` | string | `"monitoring"` | Namespace where Prometheus is installed |
-| `labels` | object | `{}` | Additional labels for PrometheusRule resources |
-| `alerts.*` | object | See below | Individual alert configurations |
+| `enable_metrics` | boolean | `true` | Deploy exporter and ServiceMonitor |
+| `enable_alerts` | boolean | `true` | Deploy PrometheusRule with alerts |
+| `enable_dashboard` | boolean | `true` | Deploy Grafana dashboard |
 
-### Alert Configuration Parameters
+### Metrics Configuration
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `metrics_interval` | string | `"30s"` | How often Prometheus scrapes metrics |
+
+### Dashboard Configuration
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `dashboard_folder` | string | `"MongoDB"` | Grafana folder for dashboard organization |
+
+### Alert Configuration
 
 Each alert supports these parameters:
-
 - `enabled` (boolean) - Enable/disable the alert
 - `severity` (string) - Alert severity: `critical`, `warning`, or `info`
-- `for_duration` (string) - Duration before alert fires (e.g., `1m`, `5m`, `1h`)
+- `for_duration` (string) - Duration before alert fires (e.g., `1m`, `5m`)
 - `threshold*` (number) - Alert-specific threshold value
 
 ## Outputs
 
-| Name | Type | Description |
-|------|------|-------------|
-| `prometheus_rule_name` | string | Name of the created PrometheusRule resource |
-| `namespace` | string | Namespace where PrometheusRule is deployed |
-| `rule_group_name` | string | Name of the alert rule group |
-| `enabled_alert_count` | number | Number of enabled alerts |
-| `mongodb_service` | string | MongoDB service being monitored |
+| Name | Description |
+|------|-------------|
+| `exporter_enabled` | Whether metrics collection is enabled |
+| `exporter_deployment` | Name of the MongoDB Exporter deployment |
+| `exporter_service` | Name of the exporter service |
+| `service_monitor_name` | Name of the ServiceMonitor resource |
+| `prometheus_rule_name` | Name of the PrometheusRule resource |
+| `alerts_enabled` | Whether alerts are enabled |
+| `enabled_alert_count` | Number of enabled alerts |
+| `dashboard_enabled` | Whether dashboard is enabled |
+| `mongodb_namespace` | Namespace where MongoDB is running |
 
-## KubeBlocks Metrics Reference
+## Metrics Reference
 
-This module uses the following KubeBlocks MongoDB exporter metrics:
+The Percona MongoDB Exporter exposes these key metrics:
 
-| Metric | Usage | Alert |
-|--------|-------|-------|
-| `up` | MongoDB availability | mongodb_down |
-| `mongodb_ss_connections{conn_type="current\|available"}` | Connection usage | mongodb_high_connections |
-| `mongodb_ss_mem{type="resident"}` | Memory usage | mongodb_high_memory |
-| `mongodb_rs_members_optimeDate{member_state="PRIMARY\|SECONDARY"}` | Replication lag | mongodb_replication_lag |
-| `mongodb_rs_members_health` | Replica health status | mongodb_replica_unhealthy |
-| `mongodb_ss_globalLock_currentQueue_{readers\|writers}` | Queued operations | mongodb_high_queued_operations |
-| `mongodb_ss_opcounters_total` | Operation rate | mongodb_slow_queries |
+| Metric | Description | Used By |
+|--------|-------------|---------|
+| `mongodb_up` | MongoDB availability (1=up, 0=down) | mongodb_down alert |
+| `mongodb_ss_connections` | Current and available connections | mongodb_high_connections alert |
+| `mongodb_ss_mem` | Memory usage (resident/virtual) | mongodb_high_memory alert |
+| `mongodb_mongod_replset_optime_date` | Replication optime | mongodb_replication_lag alert |
+| `mongodb_mongod_replset_member_health` | Replica member health | mongodb_replica_unhealthy alert |
+| `mongodb_ss_globalLock_currentQueue` | Global lock queue depth | mongodb_high_queued_operations alert |
+| `mongodb_ss_opcounters` | Operation counters | mongodb_slow_queries alert |
 
 ## Prerequisites
 
-1. **Prometheus Operator** must be installed in the cluster
-2. **KubeBlocks** v1.0.1 or higher with MongoDB addon enabled
-3. **MongoDB exporter** must be enabled on the MongoDB cluster
-4. **ServiceMonitor** should be configured to scrape MongoDB metrics
+1. **Kubernetes cluster** with sufficient resources
+2. **Prometheus Operator** installed in the cluster
+3. **MongoDB instance** with accessible connection credentials
+4. **Grafana** deployed (typically with Prometheus via kube-prometheus-stack)
 
 ## Verification
 
-After deploying this module, verify the PrometheusRule was created:
+### Check Exporter Deployment
+
+```bash
+kubectl get deployment -n <namespace> | grep exporter
+kubectl logs -n <namespace> deployment/<instance-name>-exporter
+```
+
+### Verify ServiceMonitor
+
+```bash
+kubectl get servicemonitor -n <namespace>
+kubectl describe servicemonitor <instance-name>-exporter -n <namespace>
+```
+
+### Check Prometheus Targets
+
+```bash
+kubectl port-forward -n monitoring svc/prometheus-operated 9090:9090
+# Open browser to http://localhost:9090/targets
+# Look for serviceMonitor/<namespace>/<instance-name>-exporter
+```
+
+### Verify PrometheusRule
 
 ```bash
 kubectl get prometheusrule -n monitoring
-kubectl describe prometheusrule <rule-name> -n monitoring
+kubectl describe prometheusrule <instance-name>-alerts -n monitoring
 ```
 
-Check if Prometheus is loading the rules:
+### Access Grafana Dashboard
 
 ```bash
-# Port-forward to Prometheus
-kubectl port-forward -n monitoring svc/prometheus-operated 9090:9090
-
-# Open browser to http://localhost:9090/rules
-# Or check via API
-curl http://localhost:9090/api/v1/rules | jq '.data.groups[] | select(.name | contains("mongodb"))'
+kubectl port-forward -n monitoring svc/prometheus-grafana 3000:80
+# Open browser to http://localhost:3000
+# Navigate to Dashboards → MongoDB folder
 ```
 
 ## Troubleshooting
 
-### Alerts not firing
+### Exporter Pod Not Running
 
-1. **Check if metrics are being scraped**:
-   ```bash
-   kubectl port-forward -n monitoring svc/prometheus-operated 9090:9090
-   # Query: mongodb_ss_connections
-   ```
+```bash
+# Check pod status
+kubectl get pods -n <namespace> | grep exporter
 
-2. **Verify ServiceMonitor exists**:
-   ```bash
-   kubectl get servicemonitor -A | grep mongo
-   ```
+# Check pod logs
+kubectl logs -n <namespace> <exporter-pod-name>
 
-3. **Check PrometheusRule status**:
-   ```bash
-   kubectl get prometheusrule -n monitoring -o yaml
-   ```
+# Common issues:
+# - MongoDB connection failed: Verify credentials in mongo input
+# - Image pull errors: Check network connectivity
+# - OOMKilled: Increase memory limits
+```
 
-### Metrics not available
+### No Metrics in Prometheus
 
-1. **Ensure MongoDB exporter is enabled** in the MongoDB cluster spec:
-   ```yaml
-   monitoring:
-     enabled: true
-     exporter: mongodb
-   ```
+```bash
+# Verify ServiceMonitor exists
+kubectl get servicemonitor -n <namespace>
 
-2. **Check if exporter pod is running**:
-   ```bash
-   kubectl get pods -n <namespace> | grep exporter
-   kubectl logs -n <namespace> <exporter-pod>
-   ```
+# Check if Prometheus discovered the target
+kubectl port-forward -n monitoring svc/prometheus-operated 9090:9090
+# Go to http://localhost:9090/targets
+
+# If target not found:
+# - Check Prometheus logs for discovery errors
+# - Verify ServiceMonitor labels match Prometheus selectors
+# - Ensure namespace is not excluded by Prometheus
+```
+
+### Alerts Not Firing
+
+```bash
+# Check if PrometheusRule was created
+kubectl get prometheusrule -n monitoring
+
+# Verify Prometheus loaded the rules
+# Go to http://localhost:9090/rules
+# Look for your alert rules
+
+# Test alert expression manually
+# Go to http://localhost:9090/graph
+# Run the alert's PromQL query
+```
+
+### Dashboard Not Appearing in Grafana
+
+```bash
+# Check if ConfigMap was created
+kubectl get configmap -n monitoring | grep dashboard
+
+# Verify ConfigMap has correct labels
+kubectl get configmap <dashboard-name> -n monitoring -o yaml | grep labels -A 5
+# Should have: grafana_dashboard: "1"
+
+# Check Grafana sidecar logs
+kubectl logs -n monitoring deployment/prometheus-grafana -c grafana-sc-dashboard
+```
+
+## Security Considerations
+
+- MongoDB connection credentials are stored in Kubernetes Secrets
+- Exporter runs with minimal permissions (no cluster-wide access)
+- Metrics are scraped over HTTP within the cluster (not exposed externally)
+- All resources are tagged with environment labels for isolation
+- Sensitive metrics (if any) can be filtered at Prometheus level
 
 ## References
 
-- [KubeBlocks MongoDB Alert Rules](https://github.com/apecloud/kubeblocks-addons/blob/main/examples/mongodb/alert-rules.yaml)
-- [KubeBlocks MongoDB Addon](https://github.com/apecloud/kubeblocks-addons/tree/main/addons/mongodb)
-- [Prometheus Operator API](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#prometheusrule)
+- [Percona MongoDB Exporter](https://github.com/percona/mongodb_exporter)
+- [Prometheus Operator API](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md)
+- [MongoDB Monitoring Best Practices](https://docs.mongodb.com/manual/administration/monitoring/)
 
 ## License
 

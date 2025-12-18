@@ -1,46 +1,76 @@
 intent: monitoring
 flavor: mongo
 version: '1.0'
-description: Creates Prometheus alert rules for MongoDB monitoring with configurable
-  thresholds
+description: Complete MongoDB monitoring stack - MongoDB Exporter for metrics, ServiceMonitor
+  for Prometheus, PrometheusRules for alerting, and Grafana dashboards
 clouds:
 - kubernetes
+- aws
+- azure
+- gcp
 inputs:
   kubernetes_cluster:
     type: '@facets/kubernetes-details'
     optional: false
     displayName: Kubernetes Cluster
-    description: Kubernetes cluster for deploying Prometheus alert rules
-    providers:
-    - kubernetes
+    description: Kubernetes cluster for deploying monitoring resources
   mongo:
     type: '@facets/mongo'
     optional: false
     displayName: MongoDB Instance
-    description: MongoDB instance to monitor
+    description: MongoDB instance to monitor (connection credentials will be used
+      by exporter)
+  prometheus:
+    type: '@facets/prometheus'
+    optional: false
+    displayName: Prometheus Instance
+    description: Prometheus instance for metrics collection and alerting (also provides
+      Grafana namespace)
 outputs:
   default:
     type: '@facets/monitoring-rules'
-    title: MongoDB Monitoring Rules
+    title: MongoDB Monitoring Stack
 spec:
   title: MongoDB Monitoring Configuration
-  description: Configure Prometheus alert rules for MongoDB monitoring
+  description: Configure MongoDB Exporter, ServiceMonitor, PrometheusRules, and Grafana
+    dashboards
   type: object
   properties:
-    prometheus_namespace:
+    enable_metrics:
+      type: boolean
+      title: Enable Metrics Collection
+      description: Deploy MongoDB Exporter and ServiceMonitor to scrape metrics
+      default: true
+    enable_alerts:
+      type: boolean
+      title: Enable Alert Rules
+      description: Deploy PrometheusRule with MongoDB alerts
+      default: true
+    enable_dashboard:
+      type: boolean
+      title: Enable Grafana Dashboard
+      description: Deploy MongoDB Grafana dashboard
+      default: true
+    metrics_interval:
       type: string
-      title: Prometheus Namespace
-      description: Kubernetes namespace where Prometheus is installed
-      default: default
+      title: Metrics Scrape Interval
+      description: How often Prometheus scrapes MongoDB exporter metrics
+      default: 30s
+      pattern: ^[0-9]+[smh]$
+    dashboard_folder:
+      type: string
+      title: Dashboard Folder
+      description: Grafana folder for organizing MongoDB dashboards
+      default: MongoDB
     labels:
       type: object
       title: Custom Labels
-      description: Additional labels to apply to PrometheusRule resources
+      description: Additional labels to apply to monitoring resources
       x-ui-yaml-editor: true
     alerts:
       type: object
       title: Alert Configuration
-      description: Configure individual alert rules
+      description: Configure individual alert rules with thresholds and severities
       properties:
         mongodb_down:
           type: object
@@ -62,7 +92,7 @@ spec:
             for_duration:
               type: string
               title: For Duration
-              description: Duration before alert fires (e.g., 1m, 5m)
+              description: Duration before alert fires
               default: 1m
               pattern: ^[0-9]+[smhd]$
           x-ui-toggle: true
@@ -145,7 +175,7 @@ spec:
             threshold_seconds:
               type: integer
               title: Threshold (seconds)
-              description: Maximum acceptable replication lag in seconds
+              description: Maximum acceptable replication lag
               minimum: 1
               default: 10
             for_duration:
@@ -235,10 +265,12 @@ spec:
               default: 5m
               pattern: ^[0-9]+[smhd]$
           x-ui-toggle: true
-  required:
-  - prometheus_namespace
   x-ui-order:
-  - prometheus_namespace
+  - enable_metrics
+  - metrics_interval
+  - enable_alerts
+  - enable_dashboard
+  - dashboard_folder
   - labels
   - alerts
 iac:
@@ -252,4 +284,8 @@ sample:
   version: '1.0'
   disabled: false
   spec:
-    prometheus_namespace: default
+    enable_metrics: true
+    metrics_interval: 30s
+    enable_alerts: true
+    enable_dashboard: true
+    dashboard_folder: MongoDB
