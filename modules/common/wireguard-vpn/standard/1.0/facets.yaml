@@ -1,0 +1,79 @@
+intent: wireguard-vpn
+flavor: standard
+version: "1.0"
+description: Deploys a WireGuard VPN server custom resource on Kubernetes. Requires wireguard operator to be installed.
+clouds:
+  - aws
+  - azure
+  - gcp
+  - kubernetes
+intentDetails:
+  type: networking
+  description: WireGuard VPN server custom resource for secure network access
+  displayName: WireGuard VPN Server
+inputs:
+  kubernetes_details:
+    type: "@facets/kubernetes-details"
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Kubernetes cluster where the VPN will be deployed
+    providers:
+      - kubernetes
+  node_pool:
+    type: "@facets/kubernetes_nodepool"
+    optional: false
+    displayName: Node Pool
+    description: Node pool for VPN pods
+  wireguard_operator:
+    type: "@facets/wireguard-details"
+    optional: false
+    displayName: WireGuard Operator
+    description: WireGuard operator that manages VPN resources
+outputs:
+  default:
+    type: "@facets/wireguard-vpn-details"
+    title: WireGuard VPN Server Details
+spec:
+  title: WireGuard VPN Server Configuration
+  description: Configure the WireGuard VPN server deployment
+  type: object
+  properties:
+    namespace:
+      type: string
+      title: Namespace
+      description: Kubernetes namespace for VPN server. Leave empty for default (Environment namespace will be used)
+      default: ""
+    enable_ip_forward:
+      type: boolean
+      title: Enable IP Forwarding
+      description: Enable IP forwarding on pod initialization
+      default: true
+    mtu:
+      type: string
+      title: MTU
+      description: Maximum Transmission Unit size. Use 1380 for GCP, 1500 for others
+      default: "1500"
+    service_annotations:
+      type: object
+      title: Service Annotations
+      description: Annotations for the VPN service (advanced)
+      x-ui-yaml-editor: true
+      x-ui-toggle: true
+  required:
+    - namespace
+    - enable_ip_forward
+  x-ui-order:
+    - namespace
+    - enable_ip_forward
+    - mtu
+    - service_annotations
+sample:
+  kind: wireguard-vpn
+  flavor: standard
+  version: "1.0"
+  disabled: false
+  spec:
+    namespace: ""
+    enable_ip_forward: true
+    mtu: "1500"
+    service_annotations: {}
