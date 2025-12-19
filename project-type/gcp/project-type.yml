@@ -18,7 +18,7 @@ modules:
     - intent: kubernetes_node_pool
       flavor: gcp_node_fleet
     - intent: network
-      flavor: gcp-vpc
+      flavor: gcp_network
     - intent: service
       flavor: gcp
 
