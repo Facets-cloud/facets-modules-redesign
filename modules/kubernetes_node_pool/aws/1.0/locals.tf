@@ -36,7 +36,7 @@ locals {
   # Parse proxy bypass domains
   proxy_bypass_list = try(local.networking.proxy_configuration.bypass_domains, "") != "" ? split(",", local.networking.proxy_configuration.bypass_domains) : split(",", "localhost,127.0.0.1,169.254.169.254,.internal,.eks.amazonaws.com")
   # Automatically detect IAM role from EKS cluster - updated path for new structure
-  node_iam_role_arn = local.kubernetes_details.node_iam_role_name
+  node_iam_role_arn = local.kubernetes_details.attributes.node_iam_role_arn
   # Always use private subnets by default
   subnet_type = "private"
   # Map subnet type to actual subnet IDs from network output
@@ -52,7 +52,7 @@ locals {
     }
   ]
   # Always use the node security group ID from EKS cluster output
-  node_security_group_id = local.kubernetes_details.node_security_group_id
+  node_security_group_id = local.kubernetes_details.attributes.node_security_group_id
   # Combine user tags with environment tags - updated cluster name path
   combined_tags = merge(
     local.tags,
