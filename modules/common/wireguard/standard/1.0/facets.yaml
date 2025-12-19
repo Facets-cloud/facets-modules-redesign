@@ -1,0 +1,136 @@
+intent: wireguard
+flavor: standard
+version: '1.0'
+description: Deploys a WireGuard VPN server on Kubernetes using the bryopsida/wireguard
+  Helm chart.
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+intentDetails:
+  type: networking
+  description: WireGuard VPN server deployment for secure network access
+  displayName: WireGuard VPN
+inputs:
+  kubernetes_details:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Kubernetes cluster where the operator will be deployed
+    providers:
+    - kubernetes
+    - helm
+  node_pool:
+    type: '@facets/kubernetes_nodepool'
+    optional: false
+    displayName: Node Pool
+    description: Node pool for Wireguard operator pods
+outputs:
+  default:
+    type: '@facets/wireguard-details'
+    title: Wireguard Operator Release
+spec:
+  title: Wireguard Operator Configuration
+  description: Configure the Wireguard operator deployment
+  type: object
+  properties:
+    namespace:
+      type: string
+      title: Namespace
+      description: Kubernetes namespace for WireGuard, Leave empty for default (Environment
+        namespace will be used)
+      default: ''
+    create_namespace:
+      type: boolean
+      title: Create Namespace
+      description: Create the namespace if it does not exist
+      default: true
+    resources:
+      type: object
+      title: Pod Resources
+      description: CPU and memory settings for WireGuard pods
+      properties:
+        requests:
+          type: object
+          title: Resource Requests
+          properties:
+            cpu:
+              type: string
+              title: CPU Request
+              description: CPU request for WireGuard pods
+              default: 100m
+            memory:
+              type: string
+              title: Memory Request
+              description: Memory request for WireGuard pods
+              default: 256Mi
+        limits:
+          type: object
+          title: Resource Limits
+          properties:
+            cpu:
+              type: string
+              title: CPU Limit
+              description: CPU limit for WireGuard pods
+              default: 100m
+            memory:
+              type: string
+              title: Memory Limit
+              description: Memory limit for WireGuard pods
+              default: 256Mi
+    helm_config:
+      type: object
+      title: Helm Configuration
+      x-ui-toggle: true
+      properties:
+        version:
+          type: string
+          title: Chart Version
+          description: WireGuard Helm chart version
+          default: 0.31.0
+        wait:
+          type: boolean
+          title: Wait for Resources
+          default: true
+        atomic:
+          type: boolean
+          title: Atomic Install
+          default: true
+        timeout:
+          type: integer
+          title: Timeout (seconds)
+          default: 600
+    values:
+      type: object
+      title: Additional Helm Values
+      description: Additional Helm values to merge (advanced)
+      x-ui-yaml-editor: true
+      x-ui-toggle: true
+  x-ui-order:
+  - namespace
+  - create_namespace
+  - resources
+  - helm_config
+  - values
+sample:
+  kind: wireguard
+  flavor: standard
+  version: '1.0'
+  disabled: false
+  spec:
+    namespace: ''
+    create_namespace: false
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 100m
+        memory: 256Mi
+    helm_config:
+      version: 0.31.0
+      wait: true
+      atomic: true
+      timeout: 600
+    values: {}
