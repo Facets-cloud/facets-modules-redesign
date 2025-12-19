@@ -88,7 +88,7 @@ outputs:
             command: attributes.kubernetes_provider_exec.command
             args: attributes.kubernetes_provider_exec.args
       helm:
-        source: hashicorp/helm
+        source: hashicorp/helm3
         version: 3.0.2
         attributes:
           kubernetes:

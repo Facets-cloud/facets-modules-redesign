@@ -305,8 +305,8 @@ outputs:
           client_key: client_key
           cluster_ca_certificate: cluster_ca_certificate
       helm:
-        source: hashicorp/helm
-        version: 2.8.0
+        source: hashicorp/helm3
+        version: 3.0.2
         attributes:
           kubernetes:
             host: cluster_endpoint
