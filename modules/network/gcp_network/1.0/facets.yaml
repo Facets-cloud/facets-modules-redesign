@@ -2,7 +2,7 @@ clouds:
 - gcp
 description: Creates a GKE-optimized GCP VPC with auto-calculated subnets. Fixed allocation
   - Private (8K IPs), Public (256 IPs), Database (256 IPs), plus GKE secondary ranges
-flavor: gcp-vpc
+flavor: gcp_network
 iac:
   validated_files:
   - main.tf
@@ -21,7 +21,7 @@ outputs:
   default:
     type: '@facets/gcp-network-details'
 sample:
-  flavor: gcp-vpc
+  flavor: gcp_network
   kind: network
   spec:
     auto_select_zones: true
