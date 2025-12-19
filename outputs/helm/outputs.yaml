@@ -1,8 +1,10 @@
 name: '@facets/helm'
 properties:
-    attributes:
-        release_name:
-            type: string
-    interfaces: {}
+  attributes:
+    type: object
+    properties:
+      release_name:
+        type: string
+  interfaces:
+    type: object
 providers: []
-
