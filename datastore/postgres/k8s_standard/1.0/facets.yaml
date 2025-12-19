@@ -1,8 +1,11 @@
 intent: postgres
-flavor: k8s_standard
+flavor: kubeblocks
 version: '1.0'
 clouds:
 - kubernetes
+- aws
+- azure
+- gcp
 description: Creates and manages PostgreSQL database clusters using KubeBlocks operator
   v1.0.1
 inputs:
@@ -177,7 +180,7 @@ iac:
   - locals.tf
 sample:
   kind: postgres
-  flavor: k8s_standard
+  flavor: kubeblocks
   version: '1.0'
   disabled: true
   spec:
