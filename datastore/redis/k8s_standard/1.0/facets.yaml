@@ -1,8 +1,11 @@
 intent: redis
-flavor: k8s_standard
+flavor: kubeblocks
 version: '1.0'
 clouds:
 - kubernetes
+- aws
+- azure
+- gcp
 description: Creates and manages Redis clusters using KubeBlocks operator v1.0.1
 inputs:
   kubeblocks_operator:
@@ -191,7 +194,7 @@ iac:
   - locals.tf
 sample:
   kind: redis
-  flavor: k8s_standard
+  flavor: kubeblocks
   version: '1.0'
   disabled: true
   spec:
