@@ -17,3 +17,6 @@ variable "environment" {
   type    = any
   default = {}
 }
+
+# cc_metadata is injected by Facets at runtime
+# Not allowed to be declared in variables.tf for new modules

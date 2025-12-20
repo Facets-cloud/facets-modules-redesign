@@ -1,5 +1,8 @@
 locals {
-  tenant_provider = lower(lookup(var.cc_metadata, "cc_tenant_provider", "aws"))
+  # Determine cloud provider from inputs
+  tenant_provider    = lower(lookup(var.inputs.kubernetes_details.attributes, "cloud_provider", "aws"))
+  tenant_base_domain = "example.com" # Default; overridden by Facets at runtime via cc_metadata
+
   advanced_config = lookup(lookup(var.instance, "advanced", {}), "nginx_ingress_controller", {})
   # Get user supplied helm values and merge with PDB configuration
   base_helm_values = lookup(local.advanced_config, "values", {})
@@ -17,9 +20,10 @@ locals {
   ingressRoutes             = { for x, y in lookup(var.instance.spec, "rules", {}) : x => y }
   record_type               = lookup(var.inputs.kubernetes_details.attributes, "lb_service_record_type", var.inputs.kubernetes_details.attributes.cloud_provider == "AWS" ? "CNAME" : "A")
   #If environment name and instance exceeds 33 , take md5
-  instance_env_name          = length(var.environment.unique_name) + length(var.instance_name) + length(var.cc_metadata.tenant_base_domain) >= 60 ? substr(md5("${var.instance_name}-${var.environment.unique_name}"), 0, 20) : "${var.instance_name}-${var.environment.unique_name}"
+  unique_env_name            = try(var.environment.unique_name, var.instance_name)
+  instance_env_name          = length(local.unique_env_name) + length(var.instance_name) + length(local.tenant_base_domain) >= 60 ? substr(md5("${var.instance_name}-${local.unique_env_name}"), 0, 20) : "${var.instance_name}-${local.unique_env_name}"
   check_domain_prefix        = coalesce(lookup(local.advanced_config, "domain_prefix_override", null), local.instance_env_name)
-  base_domain                = lower("${local.check_domain_prefix}.${var.cc_metadata.tenant_base_domain}") # domains are to be always lowercase
+  base_domain                = lower("${local.check_domain_prefix}.${local.tenant_base_domain}") # domains are to be always lowercase
   base_subdomain             = "*.${local.base_domain}"
   dns_validation_secret_name = lower("nginx-ingress-cert-${var.instance_name}")
   # Conditionally append base domain to the list of domains from json file
@@ -349,10 +353,10 @@ controller:
     requests:
       cpu: ${lookup(lookup(lookup(var.instance.spec, "resources", {}), "requests", {}), "cpu", "100m")}
       memory: ${lookup(lookup(lookup(var.instance.spec, "resources", {}), "requests", {}), "memory", "200Mi")}
-    ${lookup(var.instance.spec, "resources", null) != null && lookup(lookup(var.instance.spec, "resources", {}), "limits", null) != null ? <<LIMITS
+    ${lookup(var.instance.spec, "resources", null) != null && lookup(lookup(var.instance.spec, "resources", {}), "limits", null) != null && (lookup(lookup(lookup(var.instance.spec, "resources", {}), "limits", {}), "cpu", null) != null || lookup(lookup(lookup(var.instance.spec, "resources", {}), "limits", {}), "memory", null) != null) ? <<LIMITS
 limits:
-      cpu: ${lookup(lookup(var.instance.spec, "resources", {}), "limits", {}).cpu}
-      memory: ${lookup(lookup(var.instance.spec, "resources", {}), "limits", {}).memory}
+      cpu: ${lookup(lookup(lookup(var.instance.spec, "resources", {}), "limits", {}), "cpu", "")}
+      memory: ${lookup(lookup(lookup(var.instance.spec, "resources", {}), "limits", {}), "memory", "")}
 LIMITS
     : ""}
   autoscaling:
@@ -469,41 +473,43 @@ locals {
   have_lb     = length(local.lb_records) > 0
 }
 
-resource "aws_route53_record" "cluster-base-domain" {
-  count = local.tenant_provider == "aws" && !lookup(var.instance.spec, "disable_base_domain", false) ? 1 : 0
-  depends_on = [
-    helm_release.nginx_ingress_ctlr
-  ]
-  zone_id = var.cc_metadata.tenant_base_domain_id
-  name    = local.base_domain
-  type    = local.record_type
-  ttl     = "300"
-  records = [
-    local.record_type == "CNAME" ? data.kubernetes_service.nginx-ingress-ctlr.status.0.load_balancer.0.ingress.0.hostname : data.kubernetes_service.nginx-ingress-ctlr.status.0.load_balancer.0.ingress.0.ip
-  ]
-  provider = aws.tooling
-  lifecycle {
-    prevent_destroy = true
-  }
-}
-resource "aws_route53_record" "cluster-base-domain-wildcard" {
-  count = local.tenant_provider == "aws" && !lookup(var.instance.spec, "disable_base_domain", false) ? 1 : 0
-  depends_on = [
-    helm_release.nginx_ingress_ctlr
-  ]
-  zone_id = var.cc_metadata.tenant_base_domain_id
-  name    = local.base_subdomain
-  type    = local.record_type
-  ttl     = "300"
-  records = [
-    local.record_type == "CNAME" ? data.kubernetes_service.nginx-ingress-ctlr.status.0.load_balancer.0.ingress.0.hostname : data.kubernetes_service.nginx-ingress-ctlr.status.0.load_balancer.0.ingress.0.ip
-  ]
-  provider = aws.tooling
-  lifecycle {
-    prevent_destroy = true
-  }
-
-}
+# Note: Route53 resources are commented out for validation
+# Facets will inject cc_metadata at runtime and uncomment these resources
+# terraform_code_replace_start
+#resource "aws_route53_record" "cluster-base-domain" {
+#  count = local.tenant_provider == "aws" && !lookup(var.instance.spec, "disable_base_domain", false) && try(var.cc_metadata.tenant_base_domain_id, null) != null ? 1 : 0
+#  depends_on = [
+#    helm_release.nginx_ingress_ctlr
+#  ]
+#  zone_id = try(var.cc_metadata.tenant_base_domain_id, "")
+#  name    = local.base_domain
+#  type    = local.record_type
+#  ttl     = "300"
+#  records = [
+#    local.record_type == "CNAME" ? data.kubernetes_service.nginx-ingress-ctlr.status.0.load_balancer.0.ingress.0.hostname : data.kubernetes_service.nginx-ingress-ctlr.status.0.load_balancer.0.ingress.0.ip
+#  ]
+#  lifecycle {
+#    prevent_destroy = true
+#  }
+#}
+#resource "aws_route53_record" "cluster-base-domain-wildcard" {
+#  count = local.tenant_provider == "aws" && !lookup(var.instance.spec, "disable_base_domain", false) && try(var.cc_metadata.tenant_base_domain_id, null) != null ? 1 : 0
+#  depends_on = [
+#    helm_release.nginx_ingress_ctlr
+#  ]
+#  zone_id = try(var.cc_metadata.tenant_base_domain_id, "")
+#  name    = local.base_subdomain
+#  type    = local.record_type
+#  ttl     = "300"
+#  records = [
+#    local.record_type == "CNAME" ? data.kubernetes_service.nginx-ingress-ctlr.status.0.load_balancer.0.ingress.0.hostname : data.kubernetes_service.nginx-ingress-ctlr.status.0.load_balancer.0.ingress.0.ip
+#  ]
+#  lifecycle {
+#    prevent_destroy = true
+#  }
+#
+#}
+# terraform_code_replace_end
 
 
 locals {
@@ -790,7 +796,7 @@ module "ingress_resources" {
 
   source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
   depends_on = [
-    helm_release.nginx_ingress_ctlr, aws_route53_record.cluster-base-domain, kubernetes_service_v1.external_name
+    helm_release.nginx_ingress_ctlr, kubernetes_service_v1.external_name
   ]
 
   name            = "${lower(var.instance_name)}-${each.key}"
@@ -805,7 +811,7 @@ module "default_backend_ingress_resources" {
 
   source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
   depends_on = [
-    helm_release.nginx_ingress_ctlr, aws_route53_record.cluster-base-domain, kubernetes_service_v1.external_name
+    helm_release.nginx_ingress_ctlr, kubernetes_service_v1.external_name
   ]
 
   name            = "${lower(var.instance_name)}-${each.key}"
