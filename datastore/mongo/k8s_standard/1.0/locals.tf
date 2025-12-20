@@ -82,7 +82,7 @@ locals {
   primary_port = 27017
 
   # Replica set name (KubeBlocks convention)
-  replica_set_name = local.cluster_name
+  replica_set_name = "${local.cluster_name}-mongodb"
 
   # Generate replica hosts for connection string
   replica_hosts = [
