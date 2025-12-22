@@ -4,7 +4,7 @@
 
 ## Overview
 
-This module deploys a WireGuard VPN server as a Kubernetes custom resource. It requires the WireGuard operator to be installed in the cluster and creates a `Wireguard` CRD instance to provision the VPN infrastructure.
+This module deploys a WireGuard VPN server as a Kubernetes custom resource. It requires the WireGuard Resource to be installed in the cluster and creates a `Wireguard` CRD instance to provision the VPN infrastructure.
 
 The module provides a declarative way to configure and deploy WireGuard VPN servers with cloud-specific optimizations for AWS, Azure, and GCP.
 
@@ -21,7 +21,7 @@ The module is environment-aware and adapts its behavior based on the target clou
 
 ## Resources Created
 
-- **Wireguard Custom Resource**: A Kubernetes CRD managed by the WireGuard operator that provisions:
+- **Wireguard Custom Resource**: A Kubernetes CRD managed by the WireGuard Resource that provisions:
   - VPN server pods with IP forwarding enabled
   - Service with cloud-specific load balancer configuration
   - Network policies for secure VPN access
@@ -29,7 +29,7 @@ The module is environment-aware and adapts its behavior based on the target clou
 
 ## Dependencies
 
-- **WireGuard Operator**: Must be installed via the `wireguard` module before deploying this resource
+- **WireGuard**: Must be installed via the `wireguard` module before deploying this resource
 - **Kubernetes Cluster**: Target cluster with CRD support
 - **Node Pool**: Dedicated or shared node pool for VPN workloads
 
@@ -39,7 +39,7 @@ The module is environment-aware and adapts its behavior based on the target clou
 
 - `kubernetes_details`: Target Kubernetes cluster connection details
 - `node_pool`: Node pool configuration for pod placement
-- `wireguard_operator`: Reference to the installed WireGuard operator
+- `wireguard`: Reference to the installed WireGuard Resource
 
 ### Key Parameters
 
@@ -73,7 +73,7 @@ The module is environment-aware and adapts its behavior based on the target clou
 ## Decoupled Architecture
 
 This module is part of a two-tier architecture:
-1. **WireGuard Operator** (`wireguard` module): Installs the operator and CRDs
-2. **WireGuard VPN Server** (this module): Deploys VPN instances using the operator
+1. **WireGuard** (`wireguard` module): Installs the Resource
+2. **WireGuard VPN Server** (this module): Deploys VPN instances using the Wireguard Resource
 
-This separation allows multiple VPN servers to be managed by a single operator instance.
+This separation allows multiple VPN servers to be managed by a single resource instance.

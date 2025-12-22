@@ -68,7 +68,7 @@ variable "inputs" {
       })
       interfaces = any
     }))
-    wireguard_operator = object({
+    wireguard = object({
       attributes = optional(object({
         release_name = optional(string)
         namespace    = optional(string)

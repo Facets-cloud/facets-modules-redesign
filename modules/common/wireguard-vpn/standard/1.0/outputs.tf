@@ -1,9 +1,10 @@
 locals {
   output_attributes = {
-    name        = var.instance_name
-    namespace   = local.namespace
-    api_version = "vpn.wireguard-operator.io/v1alpha1"
-    kind        = "Wireguard"
+    release_name = helm_release.wireguard_vpn.name
+    namespace    = helm_release.wireguard_vpn.namespace
+    chart        = helm_release.wireguard_vpn.chart
+    version      = helm_release.wireguard_vpn.version
+    status       = helm_release.wireguard_vpn.status
   }
   output_interfaces = {
   }
