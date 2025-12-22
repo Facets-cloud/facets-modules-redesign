@@ -1,17 +1,17 @@
 locals {
-  spec             = lookup(var.instance, "spec", {})
-  namespace        = lookup(local.spec, "namespace", var.environment.namespace)
-  create_namespace = lookup(local.spec, "create_namespace", true)
-  helm_config      = lookup(local.spec, "helm_config", {})
-  resources        = lookup(local.spec, "resources", {})
-  user_values      = lookup(local.spec, "values", {})
+  spec               = lookup(var.instance, "spec", {})
+  namespace          = lookup(local.spec, "namespace", "") != "" ? lookup(local.spec, "namespace", "") : var.environment.namespace
+  create_namespace   = lookup(local.spec, "create_namespace", true)
+  helm_config        = lookup(local.spec, "helm_config", {})
+  operator_resources = lookup(local.spec, "operator_resources", {})
+  user_values        = lookup(local.spec, "values", {})
 
-  # Resource requests and limits
-  requests       = lookup(local.resources, "requests", {})
-  limits         = lookup(local.resources, "limits", {})
+  # Operator resource requests and limits
+  requests       = lookup(local.operator_resources, "requests", {})
+  limits         = lookup(local.operator_resources, "limits", {})
   cpu_request    = lookup(local.requests, "cpu", "100m")
-  memory_request = lookup(local.requests, "memory", "256Mi")
-  cpu_limit      = lookup(local.limits, "cpu", "100m")
+  memory_request = lookup(local.requests, "memory", "128Mi")
+  cpu_limit      = lookup(local.limits, "cpu", "200m")
   memory_limit   = lookup(local.limits, "memory", "256Mi")
 
   # Get node pool details from input
@@ -31,12 +31,12 @@ locals {
   ]
 }
 
-resource "helm_release" "wireguard_release" {
+resource "helm_release" "wireguard_operator" {
   name             = var.instance_name
-  repository       = "https://bryopsida.github.io/wireguard-chart"
-  chart            = "wireguard"
-  version          = lookup(local.helm_config, "version", "0.31.0")
-  namespace        = local.namespace != "" ? local.namespace : var.environment.namespace
+  repository       = "https://nccloud.github.io/charts"
+  chart            = "wireguard-operator"
+  version          = lookup(local.helm_config, "chart_version", "0.2.0")
+  namespace        = local.namespace
   create_namespace = local.create_namespace
   wait             = lookup(local.helm_config, "wait", true)
   atomic           = lookup(local.helm_config, "atomic", true)
@@ -44,6 +44,14 @@ resource "helm_release" "wireguard_release" {
 
   values = [
     yamlencode({
+      # ---------------------------
+      # Naming (prevents 63-char errors)
+      # ---------------------------
+      fullnameOverride = "wireguard-operator"
+
+      # ---------------------------
+      # Resources for controller pod
+      # ---------------------------
       resources = {
         requests = {
           cpu    = local.cpu_request
@@ -54,12 +62,15 @@ resource "helm_release" "wireguard_release" {
           memory = local.memory_limit
         }
       }
+
+      # ---------------------------
+      # Scheduling
+      # ---------------------------
       nodeSelector = local.node_selector
       tolerations  = local.tolerations
     }),
-    # -----------------------------------
-    # User-provided raw Helm overrides
-    # -----------------------------------
+
+    # Advanced user overrides (optional)
     yamlencode(local.user_values)
   ]
 }

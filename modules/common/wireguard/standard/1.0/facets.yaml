@@ -1,8 +1,8 @@
 intent: wireguard
 flavor: standard
 version: '1.0'
-description: Deploys a WireGuard VPN server on Kubernetes using the bryopsida/wireguard
-  Helm chart.
+description: Deploys the nccloud/wireguard-operator on Kubernetes. This operator provides
+  CRDs for managing Wireguard VPN servers and peers.
 clouds:
 - aws
 - azure
@@ -10,8 +10,9 @@ clouds:
 - kubernetes
 intentDetails:
   type: networking
-  description: WireGuard VPN server deployment for secure network access
-  displayName: WireGuard VPN
+  description: WireGuard operator that manages VPN infrastructure using Kubernetes
+    CRDs
+  displayName: WireGuard Operator
 inputs:
   kubernetes_details:
     type: '@facets/kubernetes-details'
@@ -25,11 +26,11 @@ inputs:
     type: '@facets/kubernetes_nodepool'
     optional: false
     displayName: Node Pool
-    description: Node pool for Wireguard operator pods
+    description: Node pool for Wireguard operator controller pods
 outputs:
   default:
     type: '@facets/wireguard-details'
-    title: Wireguard Operator Release
+    title: Wireguard Operator Details
 spec:
   title: Wireguard Operator Configuration
   description: Configure the Wireguard operator deployment
@@ -38,18 +39,18 @@ spec:
     namespace:
       type: string
       title: Namespace
-      description: Kubernetes namespace for WireGuard, Leave empty for default (Environment
-        namespace will be used)
+      description: Kubernetes namespace for the operator. Leave empty for default
+        (Environment namespace will be used)
       default: ''
     create_namespace:
       type: boolean
       title: Create Namespace
       description: Create the namespace if it does not exist
       default: true
-    resources:
+    operator_resources:
       type: object
-      title: Pod Resources
-      description: CPU and memory settings for WireGuard pods
+      title: Operator Controller Resources
+      description: CPU and memory settings for operator controller pods
       properties:
         requests:
           type: object
@@ -58,13 +59,13 @@ spec:
             cpu:
               type: string
               title: CPU Request
-              description: CPU request for WireGuard pods
+              description: CPU request for operator pods
               default: 100m
             memory:
               type: string
               title: Memory Request
-              description: Memory request for WireGuard pods
-              default: 256Mi
+              description: Memory request for operator pods
+              default: 128Mi
         limits:
           type: object
           title: Resource Limits
@@ -72,34 +73,37 @@ spec:
             cpu:
               type: string
               title: CPU Limit
-              description: CPU limit for WireGuard pods
-              default: 100m
+              description: CPU limit for operator pods
+              default: 200m
             memory:
               type: string
               title: Memory Limit
-              description: Memory limit for WireGuard pods
+              description: Memory limit for operator pods
               default: 256Mi
     helm_config:
       type: object
       title: Helm Configuration
       x-ui-toggle: true
       properties:
-        version:
+        chart_version:
           type: string
           title: Chart Version
-          description: WireGuard Helm chart version
-          default: 0.31.0
+          description: nccloud/wireguard-operator Helm chart version
+          default: 0.2.0
         wait:
           type: boolean
           title: Wait for Resources
+          description: Wait for all resources to be ready
           default: true
         atomic:
           type: boolean
           title: Atomic Install
+          description: Rollback on failure
           default: true
         timeout:
           type: integer
           title: Timeout (seconds)
+          description: Installation timeout
           default: 600
     values:
       type: object
@@ -110,7 +114,7 @@ spec:
   x-ui-order:
   - namespace
   - create_namespace
-  - resources
+  - operator_resources
   - helm_config
   - values
 sample:
@@ -120,16 +124,16 @@ sample:
   disabled: false
   spec:
     namespace: ''
-    create_namespace: false
-    resources:
+    create_namespace: true
+    operator_resources:
       requests:
         cpu: 100m
-        memory: 256Mi
+        memory: 128Mi
       limits:
-        cpu: 100m
+        cpu: 200m
         memory: 256Mi
     helm_config:
-      version: 0.31.0
+      chart_version: 0.2.0
       wait: true
       atomic: true
       timeout: 600
