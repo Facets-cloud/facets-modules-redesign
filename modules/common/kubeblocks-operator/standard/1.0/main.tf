@@ -102,8 +102,19 @@ resource "helm_release" "kubeblocks" {
 
 }
 resource "time_sleep" "wait_for_kubeblocks" {
-  create_duration = "120s" # Wait 2 minutes
+  create_duration = "120s"
   depends_on      = [helm_release.kubeblocks]
+}
+
+# Time sleep resource to ensure proper cleanup during destroy
+# This gives custom resources time to be deleted before operator is removed
+resource "time_sleep" "wait_for_cleanup" {
+  # Sleep BEFORE destroying the operator to allow custom resources to clean up
+  destroy_duration = "120s"
+
+  depends_on = [
+    helm_release.database_addons
+  ]
 }
 
 # Database Addons Installation
@@ -169,6 +180,18 @@ resource "helm_release" "database_addons" {
 
   atomic          = true # Rollback on failure
   cleanup_on_fail = true # Remove failed resources to allow retries
+
+  # CRITICAL: Disable resource retention policy to allow clean deletion
+  # This removes 'helm.sh/resource-policy: keep' annotation from ComponentDefinitions, ConfigMaps, etc.
+  # Without this, resources are kept after Helm uninstall, blocking CRD deletion
+  # Reference: https://kubeblocks.io/docs/preview/user_docs/references/install-addons
+  values = [
+    yamlencode({
+      extra = {
+        keepResource = false
+      }
+    })
+  ]
 
   # Ensure operator is fully deployed before installing addons
   depends_on = [

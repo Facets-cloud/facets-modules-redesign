@@ -13,16 +13,24 @@ data "http" "kubeblocks_crds" {
 # Split the multi-document YAML into individual CRDs
 locals {
   crds_yaml = data.http.kubeblocks_crds.response_body
-  # Split by document separator and filter out empty documents
-  crd_documents = [for doc in split("\n---\n", local.crds_yaml) : trimspace(doc) if trimspace(doc) != ""]
-  crds_count    = length(local.crd_documents)
+
+  crd_documents = [for doc in split("\n---\n", local.crds_yaml) : yamldecode(doc) if trimspace(doc) != ""]
+
+  # Key by CRD metadata.name (stable & unique)
+  crds = {
+    for crd in local.crd_documents :
+    crd.metadata.name => crd
+  }
+
+  crds_count = length(local.crds)
 }
 
 # Apply each CRD using kubernetes_manifest
 resource "kubernetes_manifest" "kubeblocks_crds" {
-  for_each = { for idx, doc in local.crd_documents : idx => doc }
+  for_each = local.crds
 
-  manifest = sensitive(yamldecode(each.value))
+  # Mark manifest as sensitive to hide CRD content from plan output
+  manifest = sensitive(each.value)
 
   field_manager {
     name            = "terraform"
@@ -42,17 +50,31 @@ resource "kubernetes_manifest" "kubeblocks_crds" {
     "metadata.finalizers",
     "metadata.generation",
     "metadata.resourceVersion",
+    "metadata.uid",
     "status"
   ]
 
   lifecycle {
-    prevent_destroy = false # Explicitly allow destruction (this is default)
+    prevent_destroy = false
+    ignore_changes = [
+      manifest,
+      object
+    ]
   }
 
   timeouts {
     create = "10m"
     delete = "10m"
   }
+}
+
+# Time sleep resource to ensure proper cleanup during destroy
+# This gives extra time for any remaining custom resources to be deleted before CRDs are removed
+resource "time_sleep" "wait_for_cleanup" {
+  destroy_duration = "120s"
+
+
+  # Provides a 120s buffer at the start of CRD module destruction
 }
 
 # Generate a unique release_id for dependency tracking
