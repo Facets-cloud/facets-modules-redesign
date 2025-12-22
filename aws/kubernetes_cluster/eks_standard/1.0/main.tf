@@ -43,12 +43,7 @@ locals {
       # Use the private subnets from the network input
       subnet_ids = var.inputs.network_details.attributes.private_subnet_ids
 
-      tags = merge(
-        local.cluster_tags,
-        {
-          "facets:node_group" = ng_name
-        }
-      )
+      tags = local.cluster_tags
     }
   }
 
