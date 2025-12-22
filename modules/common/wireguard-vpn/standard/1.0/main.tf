@@ -4,6 +4,7 @@ locals {
   enable_ip_forward   = lookup(local.spec, "enable_ip_forward", true)
   mtu                 = lookup(local.spec, "mtu", "1500")
   service_annotations = lookup(local.spec, "service_annotations", {})
+  service_type        = "LoadBalancer"
 
   # Get node pool details from input
   node_pool_input  = lookup(var.inputs, "node_pool", {})
@@ -11,10 +12,11 @@ locals {
   node_selector    = lookup(local.node_pool_attrs, "node_selector", {})
   node_pool_taints = lookup(local.node_pool_attrs, "taints", [])
 
-  # Get wireguard base chart details for reference
-  wireguard_input   = lookup(var.inputs, "wireguard", {})
-  wireguard_attrs   = lookup(local.wireguard_input, "attributes", {})
-  wireguard_version = lookup(local.wireguard_attrs, "version", "0.31.0")
+  # Get wireguard operator details
+  wireguard_operator_input = lookup(var.inputs, "wireguard_operator", {})
+  wireguard_operator_attrs = lookup(local.wireguard_operator_input, "attributes", {})
+  operator_namespace       = lookup(local.wireguard_operator_attrs, "namespace", "")
+  wireguard_release        = lookup(local.wireguard_operator_attrs, "release_id", "")
 
   # Convert taints from {key, value, effect} to tolerations format
   tolerations = [
@@ -38,51 +40,35 @@ locals {
   final_service_annotations = merge(local.cloud_service_annotations, local.service_annotations)
 }
 
-resource "helm_release" "wireguard_vpn" {
-  name             = var.instance_name
-  repository       = "https://bryopsida.github.io/wireguard-chart"
-  chart            = "wireguard"
-  version          = local.wireguard_version
-  namespace        = local.namespace
-  create_namespace = false
-  wait             = true
-  atomic           = true
-  timeout          = 600
+# Deploy Wireguard CRD using any-k8s-resource utility module
+module "wireguard_vpn" {
+  source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
 
-  values = [
-    yamlencode({
-      # Apply node selector and tolerations from node pool
-      nodeSelector = local.node_selector
-      tolerations  = local.tolerations
+  name      = var.instance_name
+  namespace = local.namespace
+  advanced_config = {
+    annotations = {
+      # Create dependency on wireguard operator
+      "kubernetes.io/wireguard-operator-release" = local.wireguard_release
+    }
+  }
 
-      # Service configuration with annotations
-      service = {
-        type        = "LoadBalancer"
-        annotations = local.final_service_annotations
+  data = {
+    apiVersion = "vpn.wireguard-operator.io/v1alpha1"
+    kind       = "Wireguard"
+    metadata = {
+      labels = var.environment.cloud_tags
+      annotations = {
+        "kubernetes.io/wireguard-operator-release" = local.wireguard_release
       }
-
-      # Wireguard specific configuration
-      config = {
-        mtu = local.mtu
-      }
-
-      # Init container for IP forwarding
-      initContainers = local.enable_ip_forward ? [
-        {
-          name    = "enable-ip-forward"
-          image   = "busybox:latest"
-          command = ["/bin/sh", "-c"]
-          args = [
-            "sysctl -w net.ipv4.ip_forward=1 && sysctl -w net.ipv4.conf.all.forwarding=1"
-          ]
-          securityContext = {
-            privileged = true
-          }
-        }
-      ] : []
-
-      # Add environment tags as labels
-      podLabels = var.environment.cloud_tags
-    })
-  ]
+    }
+    spec = {
+      enableIpForwardOnPodInit = local.enable_ip_forward
+      serviceType              = local.service_type
+      mtu                      = local.mtu
+      serviceAnnotations       = local.final_service_annotations
+      deploymentNodeSelector   = local.node_selector
+      deploymentTolerations    = local.tolerations
+    }
+  }
 }
