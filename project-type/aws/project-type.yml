@@ -16,7 +16,7 @@ modules:
     - intent: kubernetes_node_pool
       flavor: aws
     - intent: network
-      flavor: aws_vpc
+      flavor: aws_network
     - intent: service
       flavor: aws
 
