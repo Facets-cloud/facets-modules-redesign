@@ -20,10 +20,10 @@ locals {
   node_pool_taints = lookup(local.node_pool_attrs, "taints", [])
 
   # Helm chart configuration
-  version    = "0.2.0" # Fixed chart version as per module design
-  wait       = true
-  atomic     = true
-  timeout    = 600
+  version = "0.2.0" # Fixed chart version as per module design
+  wait    = true
+  atomic  = true
+  timeout = 600
 
   # Convert taints from {key, value, effect} to tolerations format
   tolerations = [

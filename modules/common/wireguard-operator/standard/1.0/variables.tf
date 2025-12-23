@@ -4,7 +4,7 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
-      namespace        = optional(string, "")
+      namespace = optional(string, "")
       operator_resources = optional(object({
         requests = optional(object({
           cpu    = optional(string, "100m")
