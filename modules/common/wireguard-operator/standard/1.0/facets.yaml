@@ -1,4 +1,4 @@
-intent: wireguard_operator
+intent: wireguard-operator
 flavor: standard
 version: '1.0'
 description: Deploys the nccloud/wireguard-operator on Kubernetes. This operator provides
@@ -86,7 +86,7 @@ spec:
   - operator_resources
   - values
 sample:
-  kind: wireguard
+  kind: wireguard-operator
   flavor: standard
   version: '1.0'
   disabled: false
