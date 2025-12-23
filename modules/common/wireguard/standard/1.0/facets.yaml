@@ -1,4 +1,4 @@
-intent: wireguard
+intent: wireguard_operator
 flavor: standard
 version: '1.0'
 description: Deploys the nccloud/wireguard-operator on Kubernetes. This operator provides
@@ -42,11 +42,6 @@ spec:
       description: Kubernetes namespace for the operator. Leave empty for default
         (Environment namespace will be used)
       default: ''
-    create_namespace:
-      type: boolean
-      title: Create Namespace
-      description: Create the namespace if it does not exist
-      default: true
     operator_resources:
       type: object
       title: Operator Controller Resources
@@ -80,31 +75,6 @@ spec:
               title: Memory Limit
               description: Memory limit for operator pods
               default: 256Mi
-    helm_config:
-      type: object
-      title: Helm Configuration
-      x-ui-toggle: true
-      properties:
-        chart_version:
-          type: string
-          title: Chart Version
-          description: nccloud/wireguard-operator Helm chart version
-          default: 0.2.0
-        wait:
-          type: boolean
-          title: Wait for Resources
-          description: Wait for all resources to be ready
-          default: true
-        atomic:
-          type: boolean
-          title: Atomic Install
-          description: Rollback on failure
-          default: true
-        timeout:
-          type: integer
-          title: Timeout (seconds)
-          description: Installation timeout
-          default: 600
     values:
       type: object
       title: Additional Helm Values
@@ -113,9 +83,7 @@ spec:
       x-ui-toggle: true
   x-ui-order:
   - namespace
-  - create_namespace
   - operator_resources
-  - helm_config
   - values
 sample:
   kind: wireguard
@@ -124,7 +92,6 @@ sample:
   disabled: false
   spec:
     namespace: ''
-    create_namespace: true
     operator_resources:
       requests:
         cpu: 100m
@@ -132,9 +99,4 @@ sample:
       limits:
         cpu: 200m
         memory: 256Mi
-    helm_config:
-      chart_version: 0.2.0
-      wait: true
-      atomic: true
-      timeout: 600
     values: {}

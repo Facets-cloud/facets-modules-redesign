@@ -1,8 +1,7 @@
 locals {
   spec               = lookup(var.instance, "spec", {})
   namespace          = lookup(local.spec, "namespace", "") != "" ? lookup(local.spec, "namespace", "") : var.environment.namespace
-  create_namespace   = lookup(local.spec, "create_namespace", true)
-  helm_config        = lookup(local.spec, "helm_config", {})
+  create_namespace   = local.namespace != "" ? true : false
   operator_resources = lookup(local.spec, "operator_resources", {})
   user_values        = lookup(local.spec, "values", {})
 
@@ -20,6 +19,12 @@ locals {
   node_selector    = lookup(local.node_pool_attrs, "node_selector", {})
   node_pool_taints = lookup(local.node_pool_attrs, "taints", [])
 
+  # Helm chart configuration
+  version    = "0.2.0" # Fixed chart version as per module design
+  wait       = true
+  atomic     = true
+  timeout    = 600
+
   # Convert taints from {key, value, effect} to tolerations format
   tolerations = [
     for taint in local.node_pool_taints : {
@@ -35,12 +40,12 @@ resource "helm_release" "wireguard_operator" {
   name             = var.instance_name
   repository       = "https://nccloud.github.io/charts"
   chart            = "wireguard-operator"
-  version          = lookup(local.helm_config, "chart_version", "0.2.0")
+  version          = local.version
   namespace        = local.namespace
   create_namespace = local.create_namespace
-  wait             = lookup(local.helm_config, "wait", true)
-  atomic           = lookup(local.helm_config, "atomic", true)
-  timeout          = lookup(local.helm_config, "timeout", 600)
+  wait             = local.wait
+  atomic           = local.atomic
+  timeout          = local.timeout
 
   values = [
     yamlencode({

@@ -5,7 +5,6 @@ variable "instance" {
     version = string
     spec = object({
       namespace        = optional(string, "")
-      create_namespace = optional(bool, true)
       operator_resources = optional(object({
         requests = optional(object({
           cpu    = optional(string, "100m")
@@ -15,12 +14,6 @@ variable "instance" {
           cpu    = optional(string, "200m")
           memory = optional(string, "256Mi")
         }), {})
-      }), {})
-      helm_config = optional(object({
-        chart_version = optional(string, "0.2.0")
-        wait          = optional(bool, true)
-        atomic        = optional(bool, true)
-        timeout       = optional(number, 600)
       }), {})
       values = optional(map(any), {})
     })
@@ -32,11 +25,6 @@ variable "instance" {
       can(regex("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.instance.spec.namespace))
     )
     error_message = "Namespace must be empty or a valid Kubernetes namespace name (lowercase alphanumeric characters or '-', must start and end with an alphanumeric character)."
-  }
-
-  validation {
-    condition     = var.instance.spec.helm_config.timeout >= 0
-    error_message = "Helm timeout must be a non-negative number."
   }
 
   validation {
