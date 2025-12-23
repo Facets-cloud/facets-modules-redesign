@@ -1,8 +1,7 @@
 intent: wireguard-vpn
 flavor: standard
 version: '1.0'
-description: Deploys a WireGuard VPN server instance on Kubernetes using the bryopsida/wireguard
-  Helm chart.
+description: Deploys a WireGuard VPN server instance on Kubernetes using the nccloud/wireguard-operator.
 clouds:
 - aws
 - azure
@@ -51,24 +50,11 @@ spec:
       title: Enable IP Forwarding
       description: Enable IP forwarding on pod initialization
       default: true
-    mtu:
-      type: string
-      title: MTU
-      description: Maximum Transmission Unit size. Use 1380 for GCP, 1500 for others
-      default: '1500'
-    service_annotations:
-      type: object
-      title: Service Annotations
-      description: Annotations for the VPN service (advanced)
-      x-ui-yaml-editor: true
-      x-ui-toggle: true
   required:
   - enable_ip_forward
   x-ui-order:
   - namespace
   - enable_ip_forward
-  - mtu
-  - service_annotations
 sample:
   kind: wireguard-vpn
   flavor: standard
@@ -77,5 +63,3 @@ sample:
   spec:
     namespace: ''
     enable_ip_forward: true
-    mtu: '1500'
-    service_annotations: {}

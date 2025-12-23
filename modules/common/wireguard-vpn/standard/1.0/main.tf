@@ -2,9 +2,17 @@ locals {
   spec                = lookup(var.instance, "spec", {})
   namespace           = lookup(local.spec, "namespace", "") != "" ? lookup(local.spec, "namespace", "") : var.environment.namespace
   enable_ip_forward   = lookup(local.spec, "enable_ip_forward", true)
-  mtu                 = lookup(local.spec, "mtu", "1500")
   service_annotations = lookup(local.spec, "service_annotations", {})
-  service_type        = "LoadBalancer"
+  service_type        = "LoadBalancer" # Fixed service type for Wireguard VPN
+
+  # Get kubernetes details to determine cloud provider
+  kubernetes_details_input = lookup(var.inputs, "kubernetes_details", {})
+  kubernetes_details_attrs = lookup(local.kubernetes_details_input, "attributes", {})
+  cloud_provider           = lookup(local.kubernetes_details_attrs, "cloud_provider", "")
+
+  # Automatically determine MTU based on cloud provider
+  # GCP requires 1380, others use 1500
+  mtu = local.cloud_provider == "GCP" ? "1380" : "1500"
 
   # Get node pool details from input
   node_pool_input  = lookup(var.inputs, "node_pool", {})
@@ -35,9 +43,6 @@ locals {
     "service.beta.kubernetes.io/aws-load-balancer-scheme"          = "internet-facing"
     "service.beta.kubernetes.io/azure-load-balancer-internal"      = "false"
   }
-
-  # Merge user-provided annotations with cloud-specific annotations
-  final_service_annotations = merge(local.cloud_service_annotations, local.service_annotations)
 }
 
 # Deploy Wireguard CRD using any-k8s-resource utility module
@@ -66,7 +71,7 @@ module "wireguard_vpn" {
       enableIpForwardOnPodInit = local.enable_ip_forward
       serviceType              = local.service_type
       mtu                      = local.mtu
-      serviceAnnotations       = local.final_service_annotations
+      serviceAnnotations       = local.cloud_service_annotations
       deploymentNodeSelector   = local.node_selector
       deploymentTolerations    = local.tolerations
     }

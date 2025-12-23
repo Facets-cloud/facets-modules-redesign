@@ -6,19 +6,12 @@ variable "instance" {
     spec = object({
       namespace           = optional(string, "")
       enable_ip_forward   = optional(bool, true)
-      mtu                 = optional(string, "1500")
-      service_annotations = optional(map(string), {})
     })
   })
 
   validation {
     condition     = var.instance.spec.namespace == "" || can(regex("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.instance.spec.namespace))
     error_message = "Namespace must be empty or a valid Kubernetes namespace name (lowercase alphanumeric characters or '-', must start and end with an alphanumeric character)."
-  }
-
-  validation {
-    condition     = can(regex("^[0-9]+$", var.instance.spec.mtu))
-    error_message = "MTU must be a numeric string value."
   }
 }
 
@@ -43,6 +36,7 @@ variable "inputs" {
       attributes = optional(object({
         cluster_name   = optional(string)
         region         = optional(string)
+        cloud_provider = optional(string)
         legacy_outputs = optional(any)
       }))
       interfaces = optional(object({
