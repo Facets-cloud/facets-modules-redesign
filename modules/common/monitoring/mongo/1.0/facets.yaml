@@ -1,0 +1,280 @@
+intent: monitoring
+flavor: mongo
+version: '1.0'
+description: Complete MongoDB monitoring stack - MongoDB Exporter for metrics, ServiceMonitor
+  for Prometheus, PrometheusRules for alerting
+clouds:
+- kubernetes
+- aws
+- azure
+- gcp
+inputs:
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Kubernetes cluster for deploying monitoring resources
+    providers:
+    - kubernetes
+    - kubernetes-alpha
+    - helm
+  mongo:
+    type: '@facets/mongo'
+    optional: false
+    displayName: MongoDB Instance
+    description: MongoDB instance to monitor (connection credentials will be used
+      by exporter)
+  prometheus:
+    type: '@facets/prometheus'
+    optional: false
+    displayName: Prometheus Instance
+    description: Prometheus instance for metrics collection and alerting (also provides
+      Grafana namespace)
+outputs:
+  default:
+    type: '@facets/monitoring-rules'
+    title: MongoDB Monitoring Stack
+spec:
+  title: MongoDB Monitoring Configuration
+  description: Configure MongoDB Exporter, ServiceMonitor, PrometheusRules
+  type: object
+  properties:
+    enable_metrics:
+      type: boolean
+      title: Enable Metrics Collection
+      description: Deploy MongoDB Exporter and ServiceMonitor to scrape metrics
+      default: true
+    enable_alerts:
+      type: boolean
+      title: Enable Alert Rules
+      description: Deploy PrometheusRule with MongoDB alerts
+      default: true
+    metrics_interval:
+      type: string
+      title: Metrics Scrape Interval
+      description: How often Prometheus scrapes MongoDB exporter metrics
+      default: 30s
+      pattern: ^[0-9]+[smh]$
+    labels:
+      type: object
+      title: Custom Labels
+      description: Additional labels to apply to monitoring resources
+      x-ui-yaml-editor: true
+    alerts:
+      type: object
+      title: Alert Configuration
+      description: Configure individual alert rules with thresholds and severities
+      properties:
+        mongodb_down:
+          type: object
+          title: MongoDB Down Alert
+          description: Triggered when MongoDB instance is unavailable
+          properties:
+            enabled:
+              type: boolean
+              title: Enabled
+              default: true
+            severity:
+              type: string
+              title: Severity
+              enum:
+              - critical
+              - warning
+              - info
+              default: critical
+            for_duration:
+              type: string
+              title: For Duration
+              description: Duration before alert fires
+              default: 1m
+              pattern: ^[0-9]+[smhd]$
+          x-ui-toggle: true
+        mongodb_high_connections:
+          type: object
+          title: High Connections Alert
+          description: Triggered when connection usage exceeds threshold
+          properties:
+            enabled:
+              type: boolean
+              title: Enabled
+              default: true
+            severity:
+              type: string
+              title: Severity
+              enum:
+              - critical
+              - warning
+              - info
+              default: warning
+            threshold:
+              type: integer
+              title: Threshold (%)
+              description: Connection usage percentage threshold
+              minimum: 1
+              maximum: 100
+              default: 80
+            for_duration:
+              type: string
+              title: For Duration
+              default: 5m
+              pattern: ^[0-9]+[smhd]$
+          x-ui-toggle: true
+        mongodb_high_memory:
+          type: object
+          title: High Memory Usage Alert
+          description: Triggered when memory usage exceeds threshold
+          properties:
+            enabled:
+              type: boolean
+              title: Enabled
+              default: true
+            severity:
+              type: string
+              title: Severity
+              enum:
+              - critical
+              - warning
+              - info
+              default: warning
+            threshold_gb:
+              type: number
+              title: Threshold (GB)
+              description: Memory usage threshold in GB
+              minimum: 0.1
+              default: 3
+            for_duration:
+              type: string
+              title: For Duration
+              default: 5m
+              pattern: ^[0-9]+[smhd]$
+          x-ui-toggle: true
+        mongodb_replication_lag:
+          type: object
+          title: Replication Lag Alert
+          description: Triggered when replication lag exceeds threshold
+          properties:
+            enabled:
+              type: boolean
+              title: Enabled
+              default: true
+            severity:
+              type: string
+              title: Severity
+              enum:
+              - critical
+              - warning
+              - info
+              default: warning
+            threshold_seconds:
+              type: integer
+              title: Threshold (seconds)
+              description: Maximum acceptable replication lag
+              minimum: 1
+              default: 10
+            for_duration:
+              type: string
+              title: For Duration
+              default: 2m
+              pattern: ^[0-9]+[smhd]$
+          x-ui-toggle: true
+        mongodb_replica_unhealthy:
+          type: object
+          title: Replica Set Unhealthy Alert
+          description: Triggered when replica set members are unhealthy
+          properties:
+            enabled:
+              type: boolean
+              title: Enabled
+              default: true
+            severity:
+              type: string
+              title: Severity
+              enum:
+              - critical
+              - warning
+              - info
+              default: critical
+            for_duration:
+              type: string
+              title: For Duration
+              default: 1m
+              pattern: ^[0-9]+[smhd]$
+          x-ui-toggle: true
+        mongodb_high_queued_operations:
+          type: object
+          title: High Queued Operations Alert
+          description: Triggered when operation queue exceeds threshold
+          properties:
+            enabled:
+              type: boolean
+              title: Enabled
+              default: true
+            severity:
+              type: string
+              title: Severity
+              enum:
+              - critical
+              - warning
+              - info
+              default: warning
+            threshold:
+              type: integer
+              title: Threshold (operations)
+              description: Maximum queued operations
+              minimum: 1
+              default: 100
+            for_duration:
+              type: string
+              title: For Duration
+              default: 5m
+              pattern: ^[0-9]+[smhd]$
+          x-ui-toggle: true
+        mongodb_slow_queries:
+          type: object
+          title: Slow Queries Alert
+          description: Triggered when queries exceed execution time threshold
+          properties:
+            enabled:
+              type: boolean
+              title: Enabled
+              default: true
+            severity:
+              type: string
+              title: Severity
+              enum:
+              - critical
+              - warning
+              - info
+              default: info
+            threshold_ms:
+              type: integer
+              title: Threshold (milliseconds)
+              description: Query execution time threshold
+              minimum: 1
+              default: 100
+            for_duration:
+              type: string
+              title: For Duration
+              default: 5m
+              pattern: ^[0-9]+[smhd]$
+          x-ui-toggle: true
+  x-ui-order:
+  - enable_metrics
+  - metrics_interval
+  - enable_alerts
+  - labels
+  - alerts
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+sample:
+  kind: monitoring
+  flavor: mongo
+  version: '1.0'
+  disabled: false
+  spec:
+    enable_metrics: true
+    metrics_interval: 30s
+    enable_alerts: true
