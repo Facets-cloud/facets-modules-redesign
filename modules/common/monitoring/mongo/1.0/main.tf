@@ -27,7 +27,7 @@ resource "helm_release" "mongodb_exporter" {
 
       image = {
         repository = "percona/mongodb_exporter"
-        tag        = "0.47"
+        tag        = "0.40.0"
       }
 
       serviceAccount = {

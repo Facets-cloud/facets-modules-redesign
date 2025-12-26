@@ -25,8 +25,20 @@ locals {
   # Extract namespace from MongoDB host (format: service.namespace.svc.cluster.local)
   mongo_namespace = try(split(".", local.mongo_host)[1], var.environment.namespace)
 
-  # MongoDB URI for exporter
-  mongodb_uri = var.inputs.mongo.interfaces.writer.connection_string
+  # NEW:
+  # Extract MongoDB cluster name
+  # mongo_cluster_name = var.inputs.mongo.interfaces.writer.name
+
+  # Replica set name follows KubeBlocks convention: {cluster-name}-mongodb
+  # mongo_replica_set = "${local.mongo_cluster_name}-mongodb"
+
+  # MongoDB URI for exporter - using primary service to avoid DNS mismatch
+  # The exporter can still collect replica set metrics when connected via the service
+  mongodb_uri = "mongodb://${local.mongo_username}:${local.mongo_password}@${local.mongo_host}:${local.mongo_port}/admin"
+
+  # # MongoDB URI for exporter
+  # mongodb_uri = var.inputs.mongo.interfaces.writer.connection_string
+
   # Feature flags
   enable_metrics   = lookup(var.instance.spec, "enable_metrics", true)
   enable_alerts    = lookup(var.instance.spec, "enable_alerts", true)

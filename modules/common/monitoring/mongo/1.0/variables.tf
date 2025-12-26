@@ -93,6 +93,7 @@ variable "inputs" {
         writer = object({
           host              = string
           port              = string
+          name              = string
           username          = string
           password          = string
           connection_string = string

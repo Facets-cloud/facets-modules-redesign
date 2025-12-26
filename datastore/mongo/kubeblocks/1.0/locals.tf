@@ -78,7 +78,7 @@ locals {
   password_is_valid = local.mongodb_password != "" && length(local.mongodb_password) > 0
 
   # Primary endpoint (always exists)
-  primary_host = "${local.cluster_name}-mongodb.${local.namespace}.svc.cluster.local"
+  primary_host = "${local.cluster_name}-mongodb-mongodb.${local.namespace}.svc.cluster.local"
   primary_port = 27017
 
   # Replica set name (KubeBlocks convention)
