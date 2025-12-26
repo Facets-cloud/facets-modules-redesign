@@ -2,6 +2,9 @@
 locals {
   name = var.instance_name
 
+  # Job name for Prometheus metrics (matches ServiceMonitor job label)
+  exporter_job_name = "${var.instance_name}-exporter-prometheus-mongodb-exporter"
+
   # Get Prometheus namespace from input
   prometheus_namespace = var.inputs.prometheus.attributes.namespace
 
@@ -83,8 +86,8 @@ locals {
       }
       mongodb_slow_queries = {
         enabled      = true
-        severity     = "info"
-        threshold_ms = 100
+        severity     = "warning"
+        threshold    = 10 # Alert if > 10 slow queries/sec detected
         for_duration = "5m"
       }
     },
@@ -98,25 +101,25 @@ locals {
       alert = replace(title(rule_name), "_", "")
       expr = (
         rule_name == "mongodb_down" ?
-        "mongodb_up{job=\"${local.name}-exporter\"} == 0" :
+        "mongodb_up{job=\"${local.exporter_job_name}\"} == 0" :
 
         rule_name == "mongodb_high_connections" ?
-        "(mongodb_ss_connections{job=\"${local.name}-exporter\",conn_type=\"current\"} / mongodb_ss_connections{job=\"${local.name}-exporter\",conn_type=\"available\"}) * 100 > ${lookup(rule_config, "threshold", 80)}" :
+        "(mongodb_ss_connections{job=\"${local.exporter_job_name}\",conn_type=\"current\"} / mongodb_ss_connections{job=\"${local.exporter_job_name}\",conn_type=\"available\"}) * 100 > ${lookup(rule_config, "threshold", 80)}" :
 
         rule_name == "mongodb_high_memory" ?
-        "mongodb_ss_mem{job=\"${local.name}-exporter\",type=\"resident\"} / 1024 / 1024 / 1024 > ${lookup(rule_config, "threshold_gb", 3)}" :
+        "mongodb_ss_mem_resident{job=\"${local.exporter_job_name}\"} / 1024 / 1024 / 1024 > ${lookup(rule_config, "threshold_gb", 3)}" :
 
         rule_name == "mongodb_replication_lag" ?
-        "(max(mongodb_mongod_replset_optime_date{job=\"${local.name}-exporter\",state=\"PRIMARY\"}) - on() group_right mongodb_mongod_replset_optime_date{job=\"${local.name}-exporter\",state=\"SECONDARY\"}) > ${lookup(rule_config, "threshold_seconds", 10)}" :
+        "(max(mongodb_members_optimeDate{job=\"${local.exporter_job_name}\",member_state=\"PRIMARY\"}) - on() group_right mongodb_members_optimeDate{job=\"${local.exporter_job_name}\",member_state=\"SECONDARY\"}) / 1000 > ${lookup(rule_config, "threshold_seconds", 10)}" :
 
         rule_name == "mongodb_replica_unhealthy" ?
-        "mongodb_mongod_replset_member_health{job=\"${local.name}-exporter\"} == 0" :
+        "mongodb_members_health{job=\"${local.exporter_job_name}\"} == 0" :
 
         rule_name == "mongodb_high_queued_operations" ?
-        "(mongodb_ss_globalLock_currentQueue{job=\"${local.name}-exporter\",type=\"reader\"} + mongodb_ss_globalLock_currentQueue{job=\"${local.name}-exporter\",type=\"writer\"}) > ${lookup(rule_config, "threshold", 100)}" :
+        "(mongodb_ss_globalLock_currentQueue{job=\"${local.exporter_job_name}\",count_type=\"readers\"} + mongodb_ss_globalLock_currentQueue{job=\"${local.exporter_job_name}\",count_type=\"writers\"}) > ${lookup(rule_config, "threshold", 100)}" :
 
         rule_name == "mongodb_slow_queries" ?
-        "rate(mongodb_ss_opcounters{job=\"${local.name}-exporter\"}[5m]) > ${lookup(rule_config, "threshold_ms", 100)}" :
+        "rate(mongodb_profile_slow_query_count{job=\"${local.exporter_job_name}\"}[5m]) > ${lookup(rule_config, "threshold", 10)}" :
 
         "unknown_alert"
       )
@@ -150,7 +153,7 @@ locals {
           "MongoDB has {{ $value }} queued operations" :
 
           rule_name == "mongodb_slow_queries" ?
-          "MongoDB has elevated operation rate: {{ $value }} ops/s" :
+          "MongoDB has {{ $value }} slow queries/sec detected" :
 
           "Unknown alert"
         )
@@ -174,7 +177,7 @@ locals {
           "MongoDB has more than ${lookup(rule_config, "threshold", 100)} queued operations for ${lookup(rule_config, "for_duration", "5m")}. Database may be overloaded." :
 
           rule_name == "mongodb_slow_queries" ?
-          "MongoDB operation rate is elevated at {{ $value }} ops/s for ${lookup(rule_config, "for_duration", "5m")}. Review query performance with db.currentOp()." :
+          "MongoDB has detected {{ $value }} slow queries/sec for ${lookup(rule_config, "for_duration", "5m")}. Slow queries exceed the configured slowms threshold. Review with db.system.profile or enable profiling with db.setProfilingLevel(1, {slowms: 100})." :
 
           "Unknown alert description"
         )

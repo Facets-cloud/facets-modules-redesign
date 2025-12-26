@@ -93,7 +93,12 @@ module "prometheus_rule" {
     metadata = {
       name      = "${local.name}-alerts"
       namespace = local.prometheus_namespace
-      labels    = local.common_labels
+      labels = merge(
+        local.common_labels,
+        {
+          release = var.inputs.prometheus.attributes.prometheus_release
+        }
+      )
     }
 
     spec = {
