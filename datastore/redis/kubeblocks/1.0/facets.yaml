@@ -1,10 +1,12 @@
-intent: mongo
-flavor: k8s_standard
+intent: redis
+flavor: kubeblocks
 version: '1.0'
 clouds:
 - kubernetes
-description: Creates and manages MongoDB database clusters using KubeBlocks operator
-  v1.0.1
+- aws
+- azure
+- gcp
+description: Creates and manages Redis clusters using KubeBlocks operator v1.0.1
 inputs:
   kubeblocks_operator:
     type: '@facets/kubeblocks-operator'
@@ -23,10 +25,10 @@ inputs:
     type: '@facets/kubernetes_nodepool'
     optional: false
     displayName: Node Pool
-    description: Node pool for MongoDB pods
+    description: Node pool for Redis pods
 spec:
-  title: MongoDB Cluster Configuration
-  description: MongoDB database cluster managed by KubeBlocks
+  title: Redis Cluster Configuration
+  description: Redis in-memory database cluster managed by KubeBlocks
   type: object
   properties:
     namespace_override:
@@ -48,80 +50,93 @@ spec:
         Delete: Delete pods and PVCs
         DoNotTerminate: Block cluster deletion
         WipeOut: Delete everything including backups
-    mongodb_version:
+    redis_version:
       type: string
-      title: MongoDB Version
-      description: MongoDB version to deploy (Percona Server for MongoDB via KubeBlocks)
+      title: Redis Version
+      description: Redis version to deploy
       enum:
-      - 4.4.29
-      - 5.0.29
-      - 6.0.21
-      - 7.0.18
-      - 8.0.8
-      default: 8.0.8
+      - 7.0.6
+      - 7.2.4
+      - 7.4.2
+      default: 7.4.2
     mode:
       type: string
       title: Cluster Mode
       description: Deployment mode - standalone for single instance, replication for
-        replica set with automatic failover
+        HA with Redis Sentinel, redis-cluster for sharded setup
       enum:
       - standalone
       - replication
-      default: replication
+      - redis-cluster
+      default: redis-cluster
+      x-enum-descriptions:
+        standalone: Single Redis instance
+        replication: Redis with Sentinel for high availability
+        redis-cluster: Sharded Redis Cluster for horizontal scaling
     replicas:
       type: integer
       title: Number of Replicas
-      description: Number of MongoDB instances (minimum 3 recommended for production
-        HA)
-      default: 3
+      description: Number of Redis replicas per shard (only for replication mode)
+      default: 2
       minimum: 1
-      maximum: 7
+      maximum: 5
       x-ui-visible-if:
         field: spec.mode
         values:
         - replication
+    shards:
+      type: integer
+      title: Number of Shards
+      description: Number of Redis shards (only for redis-cluster mode)
+      default: 3
+      minimum: 3
+      maximum: 10
+      x-ui-visible-if:
+        field: spec.mode
+        values:
+        - redis-cluster
     resources:
       type: object
       title: Resource Allocation
-      description: CPU and memory resources for MongoDB pods
+      description: CPU and memory resources for Redis pods
       properties:
         cpu_request:
           type: string
           title: CPU Request
           description: Minimum CPU allocation
-          default: 500m
+          default: 200m
         cpu_limit:
           type: string
           title: CPU Limit
           description: Maximum CPU allocation
-          default: 1000m
+          default: 500m
         memory_request:
           type: string
           title: Memory Request
           description: Minimum memory allocation
-          default: 1Gi
+          default: 256Mi
         memory_limit:
           type: string
           title: Memory Limit
           description: Maximum memory allocation
-          default: 2Gi
+          default: 512Mi
     storage:
       type: object
       title: Storage Configuration
-      description: Persistent storage settings for MongoDB data
+      description: Persistent storage settings for Redis data
       properties:
         size:
           type: string
           title: Storage Size
-          description: Size of persistent volume (can be expanded later via volume
-            expansion, cannot be reduced)
-          default: 20Gi
+          description: Size of persistent volume (can be expanded later, cannot be
+            reduced)
+          default: 10Gi
       required:
       - size
     backup:
       type: object
       title: Backup Configuration
-      description: Optional backup repository and schedule configuration
+      description: Optional backup schedule configuration
       x-ui-overrides-only: true
       properties:
         enabled:
@@ -155,7 +170,7 @@ spec:
         backup_name:
           type: string
           title: Backup Name
-          description: Name of the backup to restore from (e.g., 'mongo-cluster-backup-20250125')
+          description: Name of the backup to restore from (e.g., 'redis-cluster-backup-20250125')
           x-ui-visible-if:
             field: spec.restore.enabled
             values:
@@ -164,43 +179,13 @@ spec:
             field: spec.restore.enabled
             values:
             - true
-    external_access:
-      type: object
-      title: External Access Configuration
-      description: Expose MongoDB cluster externally via LoadBalancer services (key
-        names must be short - max 15 chars recommended)
-      patternProperties:
-        ^[a-zA-Z0-9_-]{1,15}$:
-          type: object
-          title: External Access Entry
-          properties:
-            annotations:
-              type: object
-              title: Service Annotations
-              description: Kubernetes service annotations (e.g., for cloud provider
-                load balancer configuration)
-              x-ui-yaml-editor: true
-              default: {}
-            role:
-              type: string
-              title: Component Role
-              description: MongoDB component role to expose
-              enum:
-              - primary
-              - secondary
-              default: primary
-          required:
-          - role
   required:
-  - mongodb_version
+  - redis_version
   - mode
 outputs:
   default:
-    type: '@facets/mongo'
-    title: MongoDB Cluster Credentials
-  attributes:
-    type: '@facets/mongo_k8s'
-    title: Additional Output Attributes
+    type: '@facets/redis'
+    title: Redis Cluster Connection Details
 iac:
   validated_files:
   - main.tf
@@ -208,23 +193,24 @@ iac:
   - outputs.tf
   - locals.tf
 sample:
-  kind: mongo
-  flavor: k8s_standard
+  kind: redis
+  flavor: kubeblocks
   version: '1.0'
   disabled: true
   spec:
     namespace_override: ''
     termination_policy: Delete
-    mongodb_version: 8.0.8
-    mode: replication
-    replicas: 3
+    redis_version: 7.4.2
+    mode: redis-cluster
+    replicas: 2
+    shards: 3
     resources:
-      cpu_request: 500m
-      cpu_limit: 1000m
-      memory_request: 1Gi
-      memory_limit: 2Gi
+      cpu_request: 200m
+      cpu_limit: 500m
+      memory_request: 256Mi
+      memory_limit: 512Mi
     storage:
-      size: 20Gi
+      size: 10Gi
     backup:
       enabled: false
       schedule_cron: 0 2 * * *
@@ -232,4 +218,3 @@ sample:
     restore:
       enabled: false
       backup_name: ''
-    external_access: {}

@@ -1,9 +1,13 @@
-intent: redis
-flavor: k8s_standard
+intent: postgres
+flavor: kubeblocks
 version: '1.0'
 clouds:
 - kubernetes
-description: Creates and manages Redis clusters using KubeBlocks operator v1.0.1
+- aws
+- azure
+- gcp
+description: Creates and manages PostgreSQL database clusters using KubeBlocks operator
+  v1.0.1
 inputs:
   kubeblocks_operator:
     type: '@facets/kubeblocks-operator'
@@ -22,10 +26,10 @@ inputs:
     type: '@facets/kubernetes_nodepool'
     optional: false
     displayName: Node Pool
-    description: Node pool for Redis pods
+    description: Node pool for PostgreSQL pods
 spec:
-  title: Redis Cluster Configuration
-  description: Redis in-memory database cluster managed by KubeBlocks
+  title: PostgreSQL Cluster Configuration
+  description: PostgreSQL database cluster managed by KubeBlocks
   type: object
   properties:
     namespace_override:
@@ -47,33 +51,29 @@ spec:
         Delete: Delete pods and PVCs
         DoNotTerminate: Block cluster deletion
         WipeOut: Delete everything including backups
-    redis_version:
+    postgres_version:
       type: string
-      title: Redis Version
-      description: Redis version to deploy
+      title: PostgreSQL Version
+      description: PostgreSQL major version to deploy
       enum:
-      - 7.0.6
-      - 7.2.4
-      - 7.4.2
-      default: 7.4.2
+      - 12.15.0
+      - 14.8.0
+      - 15.7.0
+      - 16.4.0
+      default: 16.4.0
     mode:
       type: string
       title: Cluster Mode
       description: Deployment mode - standalone for single instance, replication for
-        HA with Redis Sentinel, redis-cluster for sharded setup
+        high availability
       enum:
       - standalone
       - replication
-      - redis-cluster
-      default: redis-cluster
-      x-enum-descriptions:
-        standalone: Single Redis instance
-        replication: Redis with Sentinel for high availability
-        redis-cluster: Sharded Redis Cluster for horizontal scaling
+      default: replication
     replicas:
       type: integer
       title: Number of Replicas
-      description: Number of Redis replicas per shard (only for replication mode)
+      description: Number of PostgreSQL instances (only for replication mode)
       default: 2
       minimum: 1
       maximum: 5
@@ -81,59 +81,48 @@ spec:
         field: spec.mode
         values:
         - replication
-    shards:
-      type: integer
-      title: Number of Shards
-      description: Number of Redis shards (only for redis-cluster mode)
-      default: 3
-      minimum: 3
-      maximum: 10
-      x-ui-visible-if:
-        field: spec.mode
-        values:
-        - redis-cluster
     resources:
       type: object
       title: Resource Allocation
-      description: CPU and memory resources for Redis pods
+      description: CPU and memory resources for PostgreSQL pods
       properties:
         cpu_request:
           type: string
           title: CPU Request
           description: Minimum CPU allocation
-          default: 200m
+          default: 500m
         cpu_limit:
           type: string
           title: CPU Limit
           description: Maximum CPU allocation
-          default: 500m
+          default: 1000m
         memory_request:
           type: string
           title: Memory Request
           description: Minimum memory allocation
-          default: 256Mi
+          default: 512Mi
         memory_limit:
           type: string
           title: Memory Limit
           description: Maximum memory allocation
-          default: 512Mi
+          default: 1Gi
     storage:
       type: object
       title: Storage Configuration
-      description: Persistent storage settings for Redis data
+      description: Persistent storage settings for PostgreSQL data
       properties:
         size:
           type: string
           title: Storage Size
           description: Size of persistent volume (can be expanded later, cannot be
             reduced)
-          default: 10Gi
+          default: 20Gi
       required:
       - size
     backup:
       type: object
       title: Backup Configuration
-      description: Optional backup schedule configuration
+      description: Optional backup repository and schedule configuration
       x-ui-overrides-only: true
       properties:
         enabled:
@@ -167,7 +156,7 @@ spec:
         backup_name:
           type: string
           title: Backup Name
-          description: Name of the backup to restore from (e.g., 'redis-cluster-backup-20250125')
+          description: Name of the backup to restore from (e.g., 'pg-cluster-backup-20250125')
           x-ui-visible-if:
             field: spec.restore.enabled
             values:
@@ -177,12 +166,12 @@ spec:
             values:
             - true
   required:
-  - redis_version
+  - postgres_version
   - mode
 outputs:
   default:
-    type: '@facets/redis'
-    title: Redis Cluster Connection Details
+    type: '@facets/postgres'
+    title: PostgreSQL Cluster Credentials
 iac:
   validated_files:
   - main.tf
@@ -190,24 +179,23 @@ iac:
   - outputs.tf
   - locals.tf
 sample:
-  kind: redis
-  flavor: k8s_standard
+  kind: postgres
+  flavor: kubeblocks
   version: '1.0'
   disabled: true
   spec:
     namespace_override: ''
     termination_policy: Delete
-    redis_version: 7.4.2
-    mode: redis-cluster
+    postgres_version: 16.4.0
+    mode: replication
     replicas: 2
-    shards: 3
     resources:
-      cpu_request: 200m
-      cpu_limit: 500m
-      memory_request: 256Mi
-      memory_limit: 512Mi
+      cpu_request: 500m
+      cpu_limit: 1000m
+      memory_request: 512Mi
+      memory_limit: 1Gi
     storage:
-      size: 10Gi
+      size: 20Gi
     backup:
       enabled: false
       schedule_cron: 0 2 * * *
