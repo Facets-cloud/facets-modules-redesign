@@ -5,15 +5,11 @@ variable "instance" {
     version = string
     spec = object({
       # Feature flags
-      enable_metrics   = optional(bool, true)
-      enable_alerts    = optional(bool, true)
-      enable_dashboard = optional(bool, true)
+      enable_metrics = optional(bool, true)
+      enable_alerts  = optional(bool, true)
 
       # Metrics configuration
       metrics_interval = optional(string, "30s")
-
-      # Dashboard configuration
-      dashboard_folder = optional(string, "MongoDB")
 
       # Custom labels
       labels = optional(map(string), {})
@@ -93,18 +89,13 @@ variable "inputs" {
       })
     })
     mongo = object({
-      attributes = object({
-        host     = string
-        port     = number
-        username = string
-        password = string
-      })
       interfaces = object({
         writer = object({
-          host     = string
-          port     = string
-          username = string
-          password = string
+          host              = string
+          port              = string
+          username          = string
+          password          = string
+          connection_string = string
         })
       })
     })

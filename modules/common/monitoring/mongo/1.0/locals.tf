@@ -25,13 +25,11 @@ locals {
   # Extract namespace from MongoDB host (format: service.namespace.svc.cluster.local)
   mongo_namespace = try(split(".", local.mongo_host)[1], var.environment.namespace)
 
-  # Build MongoDB URI for exporter
-  mongodb_uri = "mongodb://${local.mongo_username}:${local.mongo_password}@${local.mongo_host}:${local.mongo_port}"
-
+  # MongoDB URI for exporter
+  mongodb_uri = var.inputs.mongo.interfaces.writer.connection_string
   # Feature flags
   enable_metrics   = lookup(var.instance.spec, "enable_metrics", true)
   enable_alerts    = lookup(var.instance.spec, "enable_alerts", true)
-  enable_dashboard = lookup(var.instance.spec, "enable_dashboard", true)
   metrics_interval = lookup(var.instance.spec, "metrics_interval", "30s")
 
   # Alert configurations with defaults

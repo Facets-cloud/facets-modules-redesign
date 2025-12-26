@@ -2,7 +2,7 @@ intent: monitoring
 flavor: mongo
 version: '1.0'
 description: Complete MongoDB monitoring stack - MongoDB Exporter for metrics, ServiceMonitor
-  for Prometheus, PrometheusRules for alerting, and Grafana dashboards
+  for Prometheus, PrometheusRules for alerting
 clouds:
 - kubernetes
 - aws
@@ -14,6 +14,10 @@ inputs:
     optional: false
     displayName: Kubernetes Cluster
     description: Kubernetes cluster for deploying monitoring resources
+    providers:
+    - kubernetes
+    - kubernetes-alpha
+    - helm
   mongo:
     type: '@facets/mongo'
     optional: false
@@ -32,8 +36,7 @@ outputs:
     title: MongoDB Monitoring Stack
 spec:
   title: MongoDB Monitoring Configuration
-  description: Configure MongoDB Exporter, ServiceMonitor, PrometheusRules, and Grafana
-    dashboards
+  description: Configure MongoDB Exporter, ServiceMonitor, PrometheusRules
   type: object
   properties:
     enable_metrics:
@@ -46,22 +49,12 @@ spec:
       title: Enable Alert Rules
       description: Deploy PrometheusRule with MongoDB alerts
       default: true
-    enable_dashboard:
-      type: boolean
-      title: Enable Grafana Dashboard
-      description: Deploy MongoDB Grafana dashboard
-      default: true
     metrics_interval:
       type: string
       title: Metrics Scrape Interval
       description: How often Prometheus scrapes MongoDB exporter metrics
       default: 30s
       pattern: ^[0-9]+[smh]$
-    dashboard_folder:
-      type: string
-      title: Dashboard Folder
-      description: Grafana folder for organizing MongoDB dashboards
-      default: MongoDB
     labels:
       type: object
       title: Custom Labels
@@ -269,8 +262,6 @@ spec:
   - enable_metrics
   - metrics_interval
   - enable_alerts
-  - enable_dashboard
-  - dashboard_folder
   - labels
   - alerts
 iac:
@@ -287,5 +278,3 @@ sample:
     enable_metrics: true
     metrics_interval: 30s
     enable_alerts: true
-    enable_dashboard: true
-    dashboard_folder: MongoDB

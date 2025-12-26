@@ -4,7 +4,7 @@ Complete monitoring stack for MongoDB instances with metrics collection, alertin
 
 ## Overview
 
-This module deploys a comprehensive monitoring solution for MongoDB clusters. It includes a Percona MongoDB Exporter that connects directly to MongoDB and exposes detailed metrics, PrometheusRule resources for intelligent alerting, ServiceMonitor for Prometheus integration, and Grafana dashboards for visualization.
+This module deploys a comprehensive monitoring solution for MongoDB clusters. It includes a Percona MongoDB Exporter that connects directly to MongoDB and exposes detailed metrics, PrometheusRule resources for intelligent alerting, ServiceMonitor for Prometheus integration.
 
 ## Architecture
 
@@ -14,20 +14,17 @@ This module deploys a comprehensive monitoring solution for MongoDB clusters. It
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  1. MongoDB Exporter Deployment                             │
-│     └── Connects to MongoDB via connection string          │
+│     └── Connects to MongoDB via connection string           │
 │     └── Exposes metrics on port 9216                        │
 │                                                             │
 │  2. ServiceMonitor                                          │
-│     └── Scrapes metrics from exporter service              │
-│     └── Works with universal Prometheus discovery          │
+│     └── Scrapes metrics from exporter service               │
+│     └── Works with universal Prometheus discovery           │
 │                                                             │
 │  3. PrometheusRule                                          │
-│     └── 7 configurable alert rules                         │
-│     └── Uses real MongoDB metrics for alerting             │
+│     └── 7 configurable alert rules                          │
+│     └── Uses real MongoDB metrics for alerting              │
 │                                                             │
-│  4. Grafana Dashboard                                       │
-│     └── Pre-built dashboard with key MongoDB metrics       │
-│     └── Auto-discovered by Grafana sidecar                 │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -48,7 +45,6 @@ Each environment (dev, staging, prod) gets its own isolated exporter deployment 
 - **Kubernetes Service**: ClusterIP service exposing exporter metrics
 - **ServiceMonitor**: Configures Prometheus to scrape exporter metrics
 - **PrometheusRule**: Defines alert rules for MongoDB health and performance
-- **Grafana Dashboard ConfigMap**: Deploys visualization dashboard
 
 ## Features
 
@@ -77,14 +73,6 @@ Each alert can be enabled/disabled and configured with custom thresholds:
 | `mongodb_high_queued_operations` | 100 ops | Warning | Global lock queue backed up |
 | `mongodb_slow_queries` | 100 ms | Info | Elevated operation rate detected |
 
-### Grafana Dashboard
-
-Pre-configured dashboard showing:
-- MongoDB status (up/down)
-- Current vs available connections
-- Memory usage trends
-- Operations per second by type
-- Global lock queue depth
 
 ## Usage
 
@@ -96,13 +84,10 @@ spec:
   # Feature toggles
   enable_metrics: true
   enable_alerts: true
-  enable_dashboard: true
   
   # Metrics configuration
   metrics_interval: "30s"
   
-  # Dashboard organization
-  dashboard_folder: "MongoDB"
   
   # Alert customization
   alerts:
@@ -140,19 +125,12 @@ spec:
 |-----------|------|---------|-------------|
 | `enable_metrics` | boolean | `true` | Deploy exporter and ServiceMonitor |
 | `enable_alerts` | boolean | `true` | Deploy PrometheusRule with alerts |
-| `enable_dashboard` | boolean | `true` | Deploy Grafana dashboard |
 
 ### Metrics Configuration
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `metrics_interval` | string | `"30s"` | How often Prometheus scrapes metrics |
-
-### Dashboard Configuration
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `dashboard_folder` | string | `"MongoDB"` | Grafana folder for dashboard organization |
 
 ### Alert Configuration
 
@@ -173,7 +151,6 @@ Each alert supports these parameters:
 | `prometheus_rule_name` | Name of the PrometheusRule resource |
 | `alerts_enabled` | Whether alerts are enabled |
 | `enabled_alert_count` | Number of enabled alerts |
-| `dashboard_enabled` | Whether dashboard is enabled |
 | `mongodb_namespace` | Namespace where MongoDB is running |
 
 ## Metrics Reference
@@ -228,13 +205,6 @@ kubectl get prometheusrule -n monitoring
 kubectl describe prometheusrule <instance-name>-alerts -n monitoring
 ```
 
-### Access Grafana Dashboard
-
-```bash
-kubectl port-forward -n monitoring svc/prometheus-grafana 3000:80
-# Open browser to http://localhost:3000
-# Navigate to Dashboards → MongoDB folder
-```
 
 ## Troubleshooting
 
@@ -284,19 +254,6 @@ kubectl get prometheusrule -n monitoring
 # Run the alert's PromQL query
 ```
 
-### Dashboard Not Appearing in Grafana
-
-```bash
-# Check if ConfigMap was created
-kubectl get configmap -n monitoring | grep dashboard
-
-# Verify ConfigMap has correct labels
-kubectl get configmap <dashboard-name> -n monitoring -o yaml | grep labels -A 5
-# Should have: grafana_dashboard: "1"
-
-# Check Grafana sidecar logs
-kubectl logs -n monitoring deployment/prometheus-grafana -c grafana-sc-dashboard
-```
 
 ## Security Considerations
 

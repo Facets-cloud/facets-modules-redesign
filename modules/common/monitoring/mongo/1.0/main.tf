@@ -1,5 +1,5 @@
 # MongoDB Monitoring Module - Complete Monitoring Stack
-# Deploys: MongoDB Exporter, ServiceMonitor, PrometheusRules, and Grafana Dashboard
+# Deploys: MongoDB Exporter, ServiceMonitor, PrometheusRules
 
 
 # ========================================
@@ -19,6 +19,11 @@ resource "helm_release" "mongodb_exporter" {
       mongodb = {
         uri = local.mongodb_uri
       }
+
+      extraArgs = [
+        "--collect-all",
+        "--mongodb.direct-connect=false"
+      ]
 
       image = {
         repository = "percona/mongodb_exporter"
@@ -41,14 +46,14 @@ resource "helm_release" "mongodb_exporter" {
       }
 
       service = {
-        labels = {
+        annotations = {
           "app.kubernetes.io/name"      = "mongodb-monitoring"
           "app.kubernetes.io/instance"  = var.instance_name
           "app.kubernetes.io/component" = "exporter"
         }
       }
 
-      podLabels = {
+      podAnnotations = {
         "app.kubernetes.io/name"      = "mongodb-monitoring"
         "app.kubernetes.io/instance"  = var.instance_name
         "app.kubernetes.io/component" = "exporter"
@@ -109,31 +114,3 @@ module "prometheus_rule" {
     max_history     = 3
   }
 }
-
-# ========================================
-# Grafana Dashboard
-# ========================================
-
-# module "grafana_dashboard" {
-#   count  = local.enable_dashboard ? 1 : 0
-#   source = "../../../grafana_dashboards/k8s/1.0"
-
-#   instance_name = "${var.instance_name}-dashboard"
-#   environment   = var.environment
-
-#   instance = {
-#     kind    = "grafana_dashboards"
-#     flavor  = "k8s"
-#     version = "1.0"
-#     spec = {
-#       dashboards = {
-#         mongodb = {
-#           name   = "MongoDB Metrics - ${var.instance_name}"
-#           folder = lookup(var.instance.spec, "dashboard_folder", "MongoDB")
-#           json   = file("${path.module}/dashboard.json")
-#         }
-#       }
-#     }
-#   }
-#   inputs = {}
-# }
