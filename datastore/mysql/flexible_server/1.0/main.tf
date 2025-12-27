@@ -21,12 +21,12 @@ resource "azurerm_mysql_flexible_server" "main" {
 
   # Server configuration (only for new servers, not for restore)
   # During restore, credentials are inherited from source server
-  administrator_login    = local.restore_enabled ? null : local.administrator_login
-  administrator_password = local.restore_enabled ? null : local.administrator_password
+  administrator_login    = local.administrator_login
+  administrator_password = local.administrator_password
 
   # Version and SKU (only for new servers)
-  version  = local.restore_enabled ? null : local.mysql_version
-  sku_name = local.restore_enabled ? null : local.sku_name
+  version  = local.mysql_version
+  sku_name = local.sku_name
 
   # Storage configuration (only for new servers)
   dynamic "storage" {
