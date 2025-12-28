@@ -15,10 +15,46 @@ locals {
     }
   )
 
-  # Build managed node groups configuration
-  eks_managed_node_groups = {
+  # Default system node pool - always created for system workloads (CoreDNS, Karpenter, etc.)
+  # User can configure these values via spec.default_node_pool
+  default_system_node_group = {
+    system = {
+      name = "sys" # Short name to avoid IAM role name length limits
+
+      instance_types = lookup(lookup(var.instance.spec, "default_node_pool", {}), "instance_types", ["t3.medium"])
+      capacity_type  = lookup(lookup(var.instance.spec, "default_node_pool", {}), "capacity_type", "ON_DEMAND")
+
+      min_size     = lookup(lookup(var.instance.spec, "default_node_pool", {}), "min_size", 1)
+      max_size     = lookup(lookup(var.instance.spec, "default_node_pool", {}), "max_size", 3)
+      desired_size = lookup(lookup(var.instance.spec, "default_node_pool", {}), "desired_size", 2)
+
+      disk_size = lookup(lookup(var.instance.spec, "default_node_pool", {}), "disk_size", 50)
+
+      labels = {
+        "workload-type" = "system"
+        "node-role"     = "system"
+      }
+
+      taints = []
+
+      # Use the private subnets from the network input
+      subnet_ids = var.inputs.network_details.attributes.private_subnet_ids
+
+      tags = merge(
+        local.cluster_tags,
+        {
+          "Name" = "${local.cluster_name}-system-node"
+        }
+      )
+    }
+  }
+
+  # Build managed node groups configuration and merge with default system pool
+  user_node_groups = {
     for ng_name, ng_config in lookup(var.instance.spec, "managed_node_groups", {}) : ng_name => {
-      name = "${local.cluster_name}-${ng_name}"
+      # Truncate node group name to avoid IAM role name length limits
+      # Keep first 10 chars of node group name
+      name = substr(ng_name, 0, 10)
 
       instance_types = lookup(ng_config, "instance_types", ["t3.medium"])
       capacity_type  = lookup(ng_config, "capacity_type", "ON_DEMAND")
@@ -47,8 +83,14 @@ locals {
     }
   }
 
-  # Build cluster addons configuration
-  cluster_addons_config = {
+  # Merge default system node group with user-defined node groups
+  eks_managed_node_groups = merge(
+    local.default_system_node_group,
+    local.user_node_groups
+  )
+
+  # Build cluster addons configuration - default addons
+  default_addons = {
     vpc-cni = lookup(var.instance.spec.cluster_addons.vpc_cni, "enabled", true) ? {
       addon_version            = lookup(var.instance.spec.cluster_addons.vpc_cni, "version", "latest") == "latest" ? null : lookup(var.instance.spec.cluster_addons.vpc_cni, "version", null)
       resolve_conflicts        = "OVERWRITE"
@@ -67,6 +109,23 @@ locals {
       service_account_role_arn = null
     } : null
   }
+
+  # Build additional/custom addons configuration
+  additional_addons = {
+    for addon_name, addon_config in lookup(var.instance.spec.cluster_addons, "additional_addons", {}) :
+    addon_name => lookup(addon_config, "enabled", true) ? {
+      addon_version            = lookup(addon_config, "version", "latest") == "latest" ? null : lookup(addon_config, "version", null)
+      resolve_conflicts        = "OVERWRITE"
+      configuration_values     = lookup(addon_config, "configuration_values", null)
+      service_account_role_arn = lookup(addon_config, "service_account_role_arn", null)
+    } : null
+  }
+
+  # Merge default and additional addons
+  cluster_addons_config = merge(
+    local.default_addons,
+    local.additional_addons
+  )
 
   # Filter out disabled addons
   enabled_cluster_addons = {
@@ -98,8 +157,7 @@ resource "aws_kms_alias" "eks" {
 
 # EKS Cluster using the official terraform-aws-eks module
 module "eks" {
-  source  = "./aws-terraform-eks"
-  version = "~> 20.0"
+  source = "./aws-terraform-eks"
 
   cluster_name    = local.cluster_name
   cluster_version = var.instance.spec.cluster_version
