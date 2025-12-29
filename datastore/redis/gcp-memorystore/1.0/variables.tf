@@ -1,3 +1,6 @@
+# Module configuration variables
+# All variables are automatically populated by the Facets platform
+
 variable "instance" {
   description = "Managed Redis instance using Google Cloud Memorystore with high availability and security"
   type = object({
@@ -15,6 +18,9 @@ variable "instance" {
       restore_config = object({
         restore_from_backup = bool
         source_instance_id  = optional(string)
+      })
+      security = object({
+        enable_tls = bool
       })
       imports = optional(object({
         instance_id = optional(string)
@@ -51,7 +57,7 @@ variable "inputs" {
         credentials = string
       })
     })
-    network = optional(object({
+    network = object({
       attributes = object({
         vpc_name                            = string
         vpc_self_link                       = string
@@ -66,6 +72,6 @@ variable "inputs" {
         private_services_range_id           = string
         private_services_range_name         = string
       })
-    }))
+    })
   })
 }
