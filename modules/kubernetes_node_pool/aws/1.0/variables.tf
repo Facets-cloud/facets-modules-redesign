@@ -15,8 +15,8 @@ variable "instance_name" {
 }
 
 variable "environment" {
-  description = "Environment name from Facets"
-  type        = string
+  description = "Environment object from Facets containing name and other attributes"
+  type        = any
 }
 
 variable "inputs" {

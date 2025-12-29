@@ -1,19 +1,20 @@
 name: '@facets/service'
 properties:
-    attributes:
-        namespace:
-            type: string
-        resource_name:
-            type: string
-        resource_type:
-            type: string
-        selector_labels:
-            type: string
-        service_account_arn:
-            type: string
-        service_name:
-            type: string
-    interfaces:
+  attributes:
+    type: object
+    properties:
+      namespace:
         type: string
+      resource_name:
+        type: string
+      resource_type:
+        type: string
+      selector_labels:
+        type: string
+      service_account_arn:
+        type: string
+      service_name:
+        type: string
+  interfaces:
+    type: object
 providers: []
-

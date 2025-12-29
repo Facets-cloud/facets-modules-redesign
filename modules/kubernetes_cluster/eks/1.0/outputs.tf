@@ -3,6 +3,7 @@ locals {
     cluster_endpoint       = module.eks.cluster_endpoint
     cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
     cluster_name           = module.eks.cluster_name
+    cluster_location       = local.cluster_location
     cluster_version        = module.eks.cluster_version
     cluster_arn            = module.eks.cluster_arn
     cluster_id             = module.eks.cluster_id

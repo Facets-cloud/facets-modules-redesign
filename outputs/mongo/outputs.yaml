@@ -1,53 +1,61 @@
 name: '@facets/mongo'
 properties:
-    attributes: {}
-    interfaces:
-        cluster:
-            connection_string:
-                type: string
-            endpoint:
-                type: string
-            password:
-                type: string
-            secrets:
-                items:
-                    type: string
-                type: array
-            username:
-                type: string
-        reader:
-            connection_string:
-                type: string
-            host:
-                type: string
-            name:
-                type: string
-            password:
-                type: string
-            port:
-                type: string
-            secrets:
-                items:
-                    type: string
-                type: array
-            username:
-                type: string
-        writer:
-            connection_string:
-                type: string
-            host:
-                type: string
-            name:
-                type: string
-            password:
-                type: string
-            port:
-                type: string
-            secrets:
-                items:
-                    type: string
-                type: array
-            username:
-                type: string
+  attributes:
+    type: object
+  interfaces:
+    type: object
+    properties:
+      cluster:
+        type: object
+        properties:
+          connection_string:
+            type: string
+          endpoint:
+            type: string
+          password:
+            type: string
+          secrets:
+            type: array
+            items:
+              type: string
+          username:
+            type: string
+      reader:
+        type: object
+        properties:
+          connection_string:
+            type: string
+          host:
+            type: string
+          name:
+            type: string
+          password:
+            type: string
+          port:
+            type: string
+          secrets:
+            type: array
+            items:
+              type: string
+          username:
+            type: string
+      writer:
+        type: object
+        properties:
+          connection_string:
+            type: string
+          host:
+            type: string
+          name:
+            type: string
+          password:
+            type: string
+          port:
+            type: string
+          secrets:
+            type: array
+            items:
+              type: string
+          username:
+            type: string
 providers: []
-

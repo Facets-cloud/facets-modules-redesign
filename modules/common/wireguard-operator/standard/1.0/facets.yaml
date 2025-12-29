@@ -1,0 +1,102 @@
+intent: wireguard-operator
+flavor: standard
+version: '1.0'
+description: Deploys the nccloud/wireguard-operator on Kubernetes. This operator provides
+  CRDs for managing Wireguard VPN servers and peers.
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+intentDetails:
+  type: networking
+  description: WireGuard operator that manages VPN infrastructure using Kubernetes
+    CRDs
+  displayName: WireGuard Operator
+inputs:
+  kubernetes_details:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Kubernetes cluster where the operator will be deployed
+    providers:
+    - kubernetes
+    - helm
+  node_pool:
+    type: '@facets/kubernetes_nodepool'
+    optional: false
+    displayName: Node Pool
+    description: Node pool for Wireguard operator controller pods
+outputs:
+  default:
+    type: '@facets/wireguard-details'
+    title: Wireguard Operator Details
+spec:
+  title: Wireguard Operator Configuration
+  description: Configure the Wireguard operator deployment
+  type: object
+  properties:
+    namespace:
+      type: string
+      title: Namespace
+      description: Kubernetes namespace for the operator. Leave empty for default
+        (Environment namespace will be used)
+      default: ''
+    operator_resources:
+      type: object
+      title: Operator Controller Resources
+      description: CPU and memory settings for operator controller pods
+      properties:
+        requests:
+          type: object
+          title: Resource Requests
+          properties:
+            cpu:
+              type: string
+              title: CPU Request
+              description: CPU request for operator pods
+              default: 100m
+            memory:
+              type: string
+              title: Memory Request
+              description: Memory request for operator pods
+              default: 128Mi
+        limits:
+          type: object
+          title: Resource Limits
+          properties:
+            cpu:
+              type: string
+              title: CPU Limit
+              description: CPU limit for operator pods
+              default: 200m
+            memory:
+              type: string
+              title: Memory Limit
+              description: Memory limit for operator pods
+              default: 256Mi
+    values:
+      type: object
+      title: Additional Helm Values
+      description: Additional Helm values to merge (advanced)
+      x-ui-yaml-editor: true
+      x-ui-toggle: true
+  x-ui-order:
+  - namespace
+  - operator_resources
+  - values
+sample:
+  kind: wireguard-operator
+  flavor: standard
+  version: '1.0'
+  disabled: false
+  spec:
+    namespace: ''
+    operator_resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+    values: {}

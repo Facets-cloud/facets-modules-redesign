@@ -1,0 +1,133 @@
+intent: kubeblocks-operator
+flavor: standard
+version: '1.0'
+clouds:
+- kubernetes
+- aws
+- gcp
+- azure
+description: Installs and configures KubeBlocks operator for managing databases on
+  Kubernetes
+inputs:
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Target Kubernetes cluster for KubeBlocks installation
+    providers:
+    - kubernetes
+    - helm
+  kubeblocks_crd:
+    type: '@facets/kubeblocks-crd'
+    optional: false
+    displayName: KubeBlocks CRDs
+    description: KubeBlocks Custom Resource Definitions (must be installed first)
+  node_pool:
+    type: '@facets/kubernetes_nodepool'
+    optional: true
+    displayName: Node Pool
+    description: Node pool for KubeBlocks Operator pods
+spec:
+  title: KubeBlocks Database Operator
+  description: Installs and configures KubeBlocks operator for managing databases
+    on Kubernetes
+  type: object
+  properties:
+    version:
+      type: string
+      title: KubeBlocks Version
+      description: KubeBlocks version to install
+      default: 1.0.1
+    feature_gates:
+      type: object
+      title: Feature Gates
+      description: Enable experimental features
+      properties:
+        in_place_pod_vertical_scaling:
+          type: boolean
+          title: In-Place Pod Vertical Scaling
+          description: Enable in-place pod vertical scaling feature
+          default: false
+    resources:
+      type: object
+      title: Resource Allocation
+      properties:
+        cpu_limit:
+          type: string
+          title: CPU Limit
+          description: CPU limit for KubeBlocks controller
+          default: 1000m
+        memory_limit:
+          type: string
+          title: Memory Limit
+          description: Memory limit for KubeBlocks controller
+          default: 1Gi
+        cpu_request:
+          type: string
+          title: CPU Request
+          description: CPU request for KubeBlocks controller
+          default: 500m
+        memory_request:
+          type: string
+          title: Memory Request
+          description: Memory request for KubeBlocks controller
+          default: 512Mi
+    database_addons:
+      type: object
+      title: Database Addons
+      description: Install database addons (ClusterDefinitions and ComponentDefinitions)
+        as Terraform-managed Helm releases
+      properties:
+        postgresql:
+          type: boolean
+          title: PostgreSQL
+          description: Install PostgreSQL addon
+          default: false
+        mysql:
+          type: boolean
+          title: MySQL
+          description: Install MySQL addon
+          default: false
+        mongodb:
+          type: boolean
+          title: MongoDB
+          description: Install MongoDB addon
+          default: false
+        redis:
+          type: boolean
+          title: Redis
+          description: Install Redis addon
+          default: false
+        kafka:
+          type: boolean
+          title: Kafka
+          description: Install Kafka addon
+          default: false
+  required:
+  - version
+outputs:
+  default:
+    type: '@facets/kubeblocks-operator'
+    title: KubeBlocks Operator
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+sample:
+  kind: kubeblocks-operator
+  flavor: standard
+  version: '1.0'
+  disabled: true
+  spec:
+    version: 1.0.1
+    resources:
+      cpu_limit: 1000m
+      memory_limit: 1Gi
+      cpu_request: 500m
+      memory_request: 512Mi
+    database_addons:
+      postgresql: false
+      mysql: false
+      mongodb: false
+      redis: false
+      kafka: false
