@@ -88,15 +88,17 @@ resource "kubernetes_manifest" "node_pool" {
                 operator = "In"
                 values   = lookup(each.value, "capacity_types", ["on-demand", "spot"])
               },
+              # Use node.kubernetes.io/instance-type instead of restricted karpenter.k8s.aws labels
+              # Generate list of instance types from families and sizes
               {
-                key      = "karpenter.k8s.aws/instance-family"
+                key      = "node.kubernetes.io/instance-type"
                 operator = "In"
-                values   = lookup(each.value, "instance_families", ["t3", "t3a"])
-              },
-              {
-                key      = "karpenter.k8s.aws/instance-size"
-                operator = "In"
-                values   = lookup(each.value, "instance_sizes", ["medium", "large", "xlarge"])
+                values = flatten([
+                  for family in lookup(each.value, "instance_families", ["t3", "t3a"]) : [
+                    for size in lookup(each.value, "instance_sizes", ["medium", "large", "xlarge"]) :
+                    "${family}.${size}"
+                  ]
+                ])
               }
             ],
             []
