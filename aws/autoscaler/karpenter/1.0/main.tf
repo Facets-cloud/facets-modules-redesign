@@ -337,3 +337,15 @@ resource "aws_cloudwatch_event_target" "karpenter_interruption" {
   target_id = "KarpenterInterruptionQueue"
   arn       = aws_sqs_queue.karpenter_interruption[0].arn
 }
+
+# Add Karpenter node role to aws-auth ConfigMap using EKS access entry
+# This allows Karpenter-provisioned nodes to join the cluster
+resource "aws_eks_access_entry" "karpenter_node" {
+  cluster_name  = local.cluster_name
+  principal_arn = aws_iam_role.karpenter_node.arn
+  type          = "EC2_LINUX"
+
+  depends_on = [
+    aws_iam_role.karpenter_node
+  ]
+}
