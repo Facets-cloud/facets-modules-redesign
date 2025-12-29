@@ -39,9 +39,6 @@ locals {
   # The exporter can still collect replica set metrics when connected via the service
   mongodb_uri = "mongodb://${local.mongo_username}:${local.mongo_password}@${local.mongo_host}:${local.mongo_port}/admin"
 
-  # # MongoDB URI for exporter
-  # mongodb_uri = var.inputs.mongo.interfaces.writer.connection_string
-
   # Feature flags
   enable_metrics   = true
   enable_alerts    = true

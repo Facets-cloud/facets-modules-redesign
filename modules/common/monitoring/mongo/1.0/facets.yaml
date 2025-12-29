@@ -255,3 +255,39 @@ sample:
   flavor: mongo
   version: '1.0'
   disabled: false
+  spec:
+    labels: {}
+    alerts:
+      mongodb_down:
+        enabled: true
+        severity: critical
+        for_duration: 1m
+      mongodb_high_connections:
+        enabled: true
+        severity: warning
+        threshold: 80
+        for_duration: 5m
+      mongodb_high_memory:
+        enabled: true
+        severity: warning
+        threshold_gb: 3
+        for_duration: 5m
+      mongodb_replication_lag:
+        enabled: true
+        severity: warning
+        threshold_seconds: 10
+        for_duration: 2m
+      mongodb_replica_unhealthy:
+        enabled: true
+        severity: critical
+        for_duration: 1m
+      mongodb_high_queued_operations:
+        enabled: true
+        severity: warning
+        threshold: 100
+        for_duration: 5m
+      mongodb_slow_queries:
+        enabled: true
+        severity: info
+        threshold_ms: 100
+        for_duration: 5m
