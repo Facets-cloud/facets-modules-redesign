@@ -43,9 +43,9 @@ locals {
   # mongodb_uri = var.inputs.mongo.interfaces.writer.connection_string
 
   # Feature flags
-  enable_metrics   = lookup(var.instance.spec, "enable_metrics", true)
-  enable_alerts    = lookup(var.instance.spec, "enable_alerts", true)
-  metrics_interval = lookup(var.instance.spec, "metrics_interval", "30s")
+  enable_metrics   = true
+  enable_alerts    = true
+  metrics_interval = "30s"
 
   # Alert configurations with defaults
   alerts = merge(

@@ -39,22 +39,6 @@ spec:
   description: Configure MongoDB Exporter, ServiceMonitor, PrometheusRules
   type: object
   properties:
-    enable_metrics:
-      type: boolean
-      title: Enable Metrics Collection
-      description: Deploy MongoDB Exporter and ServiceMonitor to scrape metrics
-      default: true
-    enable_alerts:
-      type: boolean
-      title: Enable Alert Rules
-      description: Deploy PrometheusRule with MongoDB alerts
-      default: true
-    metrics_interval:
-      type: string
-      title: Metrics Scrape Interval
-      description: How often Prometheus scrapes MongoDB exporter metrics
-      default: 30s
-      pattern: ^[0-9]+[smh]$
     labels:
       type: object
       title: Custom Labels
@@ -259,9 +243,6 @@ spec:
               pattern: ^[0-9]+[smhd]$
           x-ui-toggle: true
   x-ui-order:
-  - enable_metrics
-  - metrics_interval
-  - enable_alerts
   - labels
   - alerts
 iac:
@@ -274,7 +255,3 @@ sample:
   flavor: mongo
   version: '1.0'
   disabled: false
-  spec:
-    enable_metrics: true
-    metrics_interval: 30s
-    enable_alerts: true

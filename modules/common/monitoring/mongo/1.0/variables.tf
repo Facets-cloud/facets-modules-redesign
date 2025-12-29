@@ -4,16 +4,8 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
-      # Feature flags
-      enable_metrics = optional(bool, true)
-      enable_alerts  = optional(bool, true)
-
-      # Metrics configuration
-      metrics_interval = optional(string, "30s")
-
       # Custom labels
       labels = optional(map(string), {})
-
       # Alert configurations
       alerts = optional(object({
         mongodb_down = optional(object({
@@ -59,11 +51,6 @@ variable "instance" {
       }), {})
     })
   })
-
-  validation {
-    condition     = can(regex("^[0-9]+[smh]$", var.instance.spec.metrics_interval))
-    error_message = "metrics_interval must be a valid duration (e.g., 30s, 1m, 5m)."
-  }
 }
 
 variable "instance_name" {
