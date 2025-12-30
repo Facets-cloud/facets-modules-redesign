@@ -42,7 +42,8 @@ spec:
     resources:
       type: object
       title: Resource Allocation
-      description: CPU and memory resource requests and limits for the MongoDB exporter pod
+      description: CPU and memory resource requests and limits for the MongoDB exporter
+        pod
       properties:
         requests:
           type: object
@@ -53,13 +54,13 @@ spec:
               type: string
               title: CPU Request
               description: Minimum CPU allocation (e.g., 100m, 0.5)
-              default: "100m"
+              default: 100m
               pattern: ^[0-9]+m?$|^[0-9]+\.[0-9]+$
             memory:
               type: string
               title: Memory Request
               description: Minimum memory allocation (e.g., 128Mi, 1Gi)
-              default: "128Mi"
+              default: 128Mi
               pattern: ^[0-9]+(Mi|Gi|M|G)$
         limits:
           type: object
@@ -70,18 +71,19 @@ spec:
               type: string
               title: CPU Limit
               description: Maximum CPU usage (e.g., 200m, 1)
-              default: "200m"
+              default: 200m
               pattern: ^[0-9]+m?$|^[0-9]+\.[0-9]+$
             memory:
               type: string
               title: Memory Limit
               description: Maximum memory usage (e.g., 256Mi, 2Gi)
-              default: "256Mi"
+              default: 256Mi
               pattern: ^[0-9]+(Mi|Gi|M|G)$
     additional_helm_values:
       type: object
       title: Additional Helm Values
-      description: Additional Helm chart values to pass to the MongoDB exporter. These values will be deep-merged with the default configuration.
+      description: Additional Helm chart values to pass to the MongoDB exporter. These
+        values will be deep-merged with the default configuration.
       x-ui-yaml-editor: true
   x-ui-order:
   - resources
@@ -99,9 +101,9 @@ sample:
   spec:
     resources:
       requests:
-        cpu: "100m"
-        memory: "128Mi"
+        cpu: 100m
+        memory: 128Mi
       limits:
-        cpu: "200m"
-        memory: "256Mi"
+        cpu: 200m
+        memory: 256Mi
     additional_helm_values: {}
