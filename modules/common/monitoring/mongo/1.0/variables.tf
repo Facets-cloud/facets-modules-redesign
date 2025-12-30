@@ -4,51 +4,20 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
-      # Custom labels
-      labels = optional(map(string), {})
-      # Alert configurations
-      alerts = optional(object({
-        mongodb_down = optional(object({
-          enabled      = optional(bool, true)
-          severity     = optional(string, "critical")
-          for_duration = optional(string, "1m")
+      # Resource allocation for MongoDB exporter
+      resources = optional(object({
+        requests = optional(object({
+          cpu    = optional(string, "100m")
+          memory = optional(string, "128Mi")
         }), {})
-        mongodb_high_connections = optional(object({
-          enabled      = optional(bool, true)
-          severity     = optional(string, "warning")
-          threshold    = optional(number, 80)
-          for_duration = optional(string, "5m")
-        }), {})
-        mongodb_high_memory = optional(object({
-          enabled      = optional(bool, true)
-          severity     = optional(string, "warning")
-          threshold_gb = optional(number, 3)
-          for_duration = optional(string, "5m")
-        }), {})
-        mongodb_replication_lag = optional(object({
-          enabled           = optional(bool, true)
-          severity          = optional(string, "warning")
-          threshold_seconds = optional(number, 10)
-          for_duration      = optional(string, "2m")
-        }), {})
-        mongodb_replica_unhealthy = optional(object({
-          enabled      = optional(bool, true)
-          severity     = optional(string, "critical")
-          for_duration = optional(string, "1m")
-        }), {})
-        mongodb_high_queued_operations = optional(object({
-          enabled      = optional(bool, true)
-          severity     = optional(string, "warning")
-          threshold    = optional(number, 100)
-          for_duration = optional(string, "5m")
-        }), {})
-        mongodb_slow_queries = optional(object({
-          enabled      = optional(bool, true)
-          severity     = optional(string, "info")
-          threshold_ms = optional(number, 100)
-          for_duration = optional(string, "5m")
+        limits = optional(object({
+          cpu    = optional(string, "200m")
+          memory = optional(string, "256Mi")
         }), {})
       }), {})
+
+      # Additional helm values for advanced customization
+      additional_helm_values = optional(map(any), {})
     })
   })
 }
