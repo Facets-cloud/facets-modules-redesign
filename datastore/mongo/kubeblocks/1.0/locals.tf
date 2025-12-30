@@ -78,7 +78,7 @@ locals {
   password_is_valid = local.mongodb_password != "" && length(local.mongodb_password) > 0
 
   # Primary endpoint (always exists)
-  primary_host = "${local.cluster_name}-mongodb.${local.namespace}.svc.cluster.local"
+  primary_host = "${local.cluster_name}-mongodb-mongodb.${local.namespace}.svc"
   primary_port = 27017
 
   # Replica set name (KubeBlocks convention)
@@ -87,7 +87,7 @@ locals {
   # Generate replica hosts for connection string
   replica_hosts = [
     for i in range(local.replicas) :
-    "${local.cluster_name}-mongodb-${i}.${local.cluster_name}-mongodb-headless.${local.namespace}.svc.cluster.local:27017"
+    "${local.cluster_name}-mongodb-${i}.${local.cluster_name}-mongodb-headless.${local.namespace}.svc:27017"
   ]
 
   # Connection string (with replica set for HA)
