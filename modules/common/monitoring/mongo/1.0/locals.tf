@@ -44,6 +44,21 @@ locals {
   enable_alerts    = true
   metrics_interval = "30s"
 
+  # Resource configuration with defaults
+  resources = merge(
+    {
+      requests = {
+        cpu    = "100m"
+        memory = "128Mi"
+      }
+      limits = {
+        cpu    = "200m"
+        memory = "256Mi"
+      }
+    },
+    lookup(var.instance.spec, "resources", {})
+  )
+
   # Alert configurations - all enabled by default
   alerts = {
     mongodb_down = {

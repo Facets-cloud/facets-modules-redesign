@@ -73,16 +73,7 @@ resource "helm_release" "mongodb_exporter" {
           }
 
           # Resource allocation for exporter pod
-          resources = {
-            requests = {
-              cpu    = "100m"  # Minimum CPU allocation
-              memory = "128Mi" # Minimum memory allocation
-            }
-            limits = {
-              cpu    = "200m"  # Maximum CPU usage
-              memory = "256Mi" # Maximum memory usage
-            }
-          }
+          resources = local.resources
         },
         # Merge additional helm values provided by user
         lookup(var.instance.spec, "additional_helm_values", {})
