@@ -44,8 +44,14 @@ spec:
       title: Custom Labels
       description: Additional labels to apply to monitoring resources
       x-ui-yaml-editor: true
+    additional_helm_values:
+      type: object
+      title: Additional Helm Values
+      description: Additional Helm chart values to pass to the MongoDB exporter. These values will be deep-merged with the default configuration.
+      x-ui-yaml-editor: true
   x-ui-order:
   - labels
+  - additional_helm_values
 iac:
   validated_files:
   - main.tf
@@ -58,3 +64,4 @@ sample:
   disabled: false
   spec:
     labels: {}
+    additional_helm_values: {}

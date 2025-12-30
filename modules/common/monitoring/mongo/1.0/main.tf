@@ -20,68 +20,74 @@ resource "helm_release" "mongodb_exporter" {
   version    = "3.15.0" # Helm chart version (supports custom image tags)
 
   values = [
-    yamlencode({
-      mongodb = {
-        uri = local.mongodb_uri
-      }
-
-      # Exporter configuration for v0.47.2
-      extraArgs = [
-        "--collect-all",                  # Enable all collectors
-        "--mongodb.direct-connect=false", # Required for replica sets (default is true in v0.47.2)
-        "--log.level=info"                # Enable info logging for troubleshooting
-      ]
-
-      # ServiceMonitor configuration for Prometheus Operator
-      serviceMonitor = {
-        enabled  = true
-        interval = local.metrics_interval
-
-        additionalLabels = {
-          # Required: Prometheus Operator uses serviceMonitorSelector.matchLabels.release
-          # to discover ServiceMonitor resources
-          release = var.inputs.prometheus.attributes.prometheus_release
-        }
-
-        # Metric relabeling: Add Facets resource labels to all metrics
-        metricRelabelings = [
-          {
-            targetLabel = "facets_resource_type"
-            replacement = "mongo"
-          },
-          {
-            targetLabel = "facets_resource_name"
-            replacement = var.instance_name
+    yamlencode(
+      merge(
+        {
+          mongodb = {
+            uri = local.mongodb_uri
           }
-        ]
-      }
 
-      service = {
-        annotations = {
-          "app.kubernetes.io/name"      = "mongodb-monitoring"
-          "app.kubernetes.io/instance"  = var.instance_name
-          "app.kubernetes.io/component" = "exporter"
-        }
-      }
+          # Exporter configuration for v0.47.2
+          extraArgs = [
+            "--collect-all",                  # Enable all collectors
+            "--mongodb.direct-connect=false", # Required for replica sets (default is true in v0.47.2)
+            "--log.level=info"                # Enable info logging for troubleshooting
+          ]
 
-      podAnnotations = {
-        "app.kubernetes.io/name"      = "mongodb-monitoring"
-        "app.kubernetes.io/instance"  = var.instance_name
-        "app.kubernetes.io/component" = "exporter"
-      }
+          # ServiceMonitor configuration for Prometheus Operator
+          serviceMonitor = {
+            enabled  = true
+            interval = local.metrics_interval
 
-      # Resource allocation for exporter pod
-      resources = {
-        requests = {
-          cpu    = "100m"  # Minimum CPU allocation
-          memory = "128Mi" # Minimum memory allocation
-        }
-        limits = {
-          cpu    = "200m"  # Maximum CPU usage
-          memory = "256Mi" # Maximum memory usage
-        }
-      }
-    })
+            additionalLabels = {
+              # Required: Prometheus Operator uses serviceMonitorSelector.matchLabels.release
+              # to discover ServiceMonitor resources
+              release = var.inputs.prometheus.attributes.prometheus_release
+            }
+
+            # Metric relabeling: Add Facets resource labels to all metrics
+            metricRelabelings = [
+              {
+                targetLabel = "facets_resource_type"
+                replacement = "mongo"
+              },
+              {
+                targetLabel = "facets_resource_name"
+                replacement = var.instance_name
+              }
+            ]
+          }
+
+          service = {
+            annotations = {
+              "app.kubernetes.io/name"      = "mongodb-monitoring"
+              "app.kubernetes.io/instance"  = var.instance_name
+              "app.kubernetes.io/component" = "exporter"
+            }
+          }
+
+          podAnnotations = {
+            "app.kubernetes.io/name"      = "mongodb-monitoring"
+            "app.kubernetes.io/instance"  = var.instance_name
+            "app.kubernetes.io/component" = "exporter"
+          }
+
+          # Resource allocation for exporter pod
+          resources = {
+            requests = {
+              cpu    = "100m"  # Minimum CPU allocation
+              memory = "128Mi" # Minimum memory allocation
+            }
+            limits = {
+              cpu    = "200m"  # Maximum CPU usage
+              memory = "256Mi" # Maximum memory usage
+            }
+          }
+        },
+        # Merge additional helm values provided by user
+        lookup(var.instance.spec, "additional_helm_values", {})
+      )
+    )
   ]
 }
 
