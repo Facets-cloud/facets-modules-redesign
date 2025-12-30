@@ -2195,7 +2195,7 @@
       "timepicker": {},
       "timezone": "",
       "title": "${var.instance_name} Mongodb Dashboard",
-      "uid": "fb83c1b6-953f-482c-99d9-aeec370ac29a",
+      "uid": "mongodb-${var.instance_name}",
       "version": 9,
       "weekStart": "",
       "gnetId": 20867
