@@ -153,7 +153,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "mongodb_up{app_kubernetes_io_instance=\"$cluster\"}",
+          "expr": "mongodb_up{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
           "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
@@ -220,7 +220,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "mongodb_members_uptime{app_kubernetes_io_instance=\"$cluster\", member_state=\"PRIMARY\"}",
+          "expr": "mongodb_members_uptime{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", member_state=\"PRIMARY\"}",
           "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
@@ -286,7 +286,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "mongodb_ss_connections{app_kubernetes_io_instance=\"$cluster\", conn_type=\"current\"}",
+          "expr": "mongodb_ss_connections{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", conn_type=\"current\"}",
           "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
@@ -352,7 +352,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "mongodb_ss_connections{app_kubernetes_io_instance=\"$cluster\", conn_type=\"totalCreated\"}",
+          "expr": "mongodb_ss_connections{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", conn_type=\"totalCreated\"}",
           "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
@@ -418,7 +418,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "mongodb_ss_connections{app_kubernetes_io_instance=\"$cluster\", conn_type=\"available\"}",
+          "expr": "mongodb_ss_connections{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", conn_type=\"available\"}",
           "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
@@ -484,7 +484,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "mongodb_ss_connections{app_kubernetes_io_instance=\"$cluster\", conn_type=\"available\"}",
+          "expr": "mongodb_ss_connections{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", conn_type=\"available\"}",
           "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
@@ -602,7 +602,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "rate(mongodb_ss_opcounters{app_kubernetes_io_instance=\"$cluster\", legacy_op_type=\"insert\"}[$__rate_interval])",
+          "expr": "rate(mongodb_ss_opcounters{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", legacy_op_type=\"insert\"}[$__rate_interval])",
           "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
@@ -694,7 +694,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "rate(mongodb_ss_opcounters{app_kubernetes_io_instance=\"$cluster\", legacy_op_type=\"update\"}[$__rate_interval])",
+          "expr": "rate(mongodb_ss_opcounters{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", legacy_op_type=\"update\"}[$__rate_interval])",
           "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
@@ -786,7 +786,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "rate(mongodb_ss_opcounters{app_kubernetes_io_instance=\"$cluster\", legacy_op_type=\"command\"}[$__rate_interval])",
+          "expr": "rate(mongodb_ss_opcounters{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", legacy_op_type=\"command\"}[$__rate_interval])",
           "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
@@ -878,7 +878,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "rate(mongodb_ss_opcounters{app_kubernetes_io_instance=\"$cluster\", legacy_op_type=\"query\"}[$__rate_interval])",
+          "expr": "rate(mongodb_ss_opcounters{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", legacy_op_type=\"query\"}[$__rate_interval])",
           "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
@@ -970,7 +970,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "rate(mongodb_ss_opcounters{app_kubernetes_io_instance=\"$cluster\", legacy_op_type=\"delete\"}[$__rate_interval])",
+          "expr": "rate(mongodb_ss_opcounters{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", legacy_op_type=\"delete\"}[$__rate_interval])",
           "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
@@ -1062,7 +1062,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "rate(mongodb_ss_opcounters{app_kubernetes_io_instance=\"$cluster\", legacy_op_type=\"getmore\"}[$__rate_interval])",
+          "expr": "rate(mongodb_ss_opcounters{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", legacy_op_type=\"getmore\"}[$__rate_interval])",
           "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
@@ -1135,7 +1135,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "mongodb_dbstats_collections{app_kubernetes_io_instance=\"$cluster\", instance=\"$instance\"}",
+          "expr": "mongodb_dbstats_collections{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
           "legendFormat": "{{database}}",
           "range": true,
           "refId": "A"
@@ -1208,7 +1208,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "mongodb_dbstats_indexes{app_kubernetes_io_instance=\"$cluster\", instance=\"$instance\"}",
+          "expr": "mongodb_dbstats_indexes{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
           "legendFormat": "{{database}}",
           "range": true,
           "refId": "A"
@@ -1281,7 +1281,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "mongodb_dbstats_views{app_kubernetes_io_instance=\"$cluster\", instance=\"$instance\"}",
+          "expr": "mongodb_dbstats_views{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
           "legendFormat": "{{database}}",
           "range": true,
           "refId": "A"
@@ -1376,7 +1376,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "mongodb_dbstats_storageSize{app_kubernetes_io_instance=\"$cluster\", instance=\"$instance\"}",
+          "expr": "mongodb_dbstats_storageSize{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
           "legendFormat": "{{database}} ",
           "range": true,
           "refId": "A"
@@ -1471,7 +1471,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "mongodb_dbstats_indexSize{app_kubernetes_io_instance=\"$cluster\", instance=\"$instance\"}",
+          "expr": "mongodb_dbstats_indexSize{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
           "legendFormat": "{{database}}",
           "range": true,
           "refId": "A"
@@ -1548,7 +1548,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "mongodb_rs_members_id{app_kubernetes_io_instance=\"$cluster\", member_state=\"PRIMARY\", instance=\"$instance\"}",
+          "expr": "mongodb_rs_members_id{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", member_state=\"PRIMARY\"}",
           "legendFormat": "{{member_state}} - {{instance}}",
           "range": true,
           "refId": "A"
@@ -1644,7 +1644,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "mongodb_rs_members_pingMs{app_kubernetes_io_instance=\"$cluster\", instance=\"$instance\"}",
+          "expr": "mongodb_rs_members_pingMs{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
           "legendFormat": "{{member_state}} - {{instance}}",
           "range": true,
           "refId": "A"
@@ -1752,7 +1752,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "mongodb_oplog_stats_storageStats_size{app_kubernetes_io_instance=\"$cluster\", instance=\"$instance\"}",
+          "expr": "mongodb_oplog_stats_storageStats_size{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
           "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
@@ -1813,7 +1813,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "mongodb_rs_members_id{app_kubernetes_io_instance=\"$cluster\", member_state=\"SECONDARY\", instance=\"$instance\"}",
+          "expr": "mongodb_rs_members_id{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", member_state=\"SECONDARY\"}",
           "legendFormat": "{{member_state}} - {{instance}}",
           "range": true,
           "refId": "A"
@@ -1970,7 +1970,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "mongodb_electionCandidateMetrics_lastElectionDate{app_kubernetes_io_instance=\"$cluster\"}",
+          "expr": "mongodb_electionCandidateMetrics_lastElectionDate{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
           "refId": "A"
         }
       ],
@@ -2075,7 +2075,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "mongodb_ss_metrics_cursor_timedOut{app_kubernetes_io_instance=\"$cluster\"}",
+          "expr": "mongodb_ss_metrics_cursor_timedOut{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
           "legendFormat": "{{instance}} - {{rs_nm}}",
           "range": true,
           "refId": "A"
@@ -2169,7 +2169,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "mongodb_ss_metrics_cursor_totalOpened{app_kubernetes_io_instance=\"$cluster\"}",
+          "expr": "mongodb_ss_metrics_cursor_totalOpened{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
           "legendFormat": "{{instance}} - {{rs_nm}}",
           "range": true,
           "refId": "A"
@@ -2184,54 +2184,7 @@
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": [
-      {
-        "current": {},
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
-        },
-        "definition": "label_values(mongodb_up,app_kubernetes_io_instance)",
-        "hide": 0,
-        "includeAll": false,
-        "label": "cluster",
-        "multi": false,
-        "name": "cluster",
-        "options": [],
-        "query": {
-          "query": "label_values(mongodb_up,app_kubernetes_io_instance)",
-          "refId": "PrometheusVariableQueryEditor-VariableQuery"
-        },
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "type": "query"
-      },
-      {
-        "current": {},
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
-        },
-        "definition": "label_values(mongodb_up{app_kubernetes_io_instance=\"$cluster\"},instance)",
-        "hide": 0,
-        "includeAll": false,
-        "label": "Instance",
-        "multi": false,
-        "name": "instance",
-        "options": [],
-        "query": {
-          "query": "label_values(mongodb_up{app_kubernetes_io_instance=\"$cluster\"},instance)",
-          "refId": "PrometheusVariableQueryEditor-VariableQuery"
-        },
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "type": "query"
-      }
-    ]
+    "list": []
   },
   "time": {
     "from": "now-1h",
