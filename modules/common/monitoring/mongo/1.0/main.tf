@@ -42,6 +42,18 @@ resource "helm_release" "mongodb_exporter" {
           # to discover ServiceMonitor resources
           release = var.inputs.prometheus.attributes.prometheus_release
         }
+
+        # Metric relabeling: Add Facets resource labels to all metrics
+        metricRelabelings = [
+          {
+            targetLabel = "facets_resource_type"
+            replacement = "mongo"
+          },
+          {
+            targetLabel = "facets_resource_name"
+            replacement = var.instance_name
+          }
+        ]
       }
 
       service = {

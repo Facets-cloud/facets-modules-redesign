@@ -44,52 +44,42 @@ locals {
   enable_alerts    = true
   metrics_interval = "30s"
 
-  # Alert configurations with defaults
-  alerts = merge(
-    {
-      mongodb_down = {
-        enabled      = true
-        severity     = "critical"
-        for_duration = "1m"
-      }
-      mongodb_high_connections = {
-        enabled      = true
-        severity     = "warning"
-        threshold    = 80
-        for_duration = "5m"
-      }
-      mongodb_high_memory = {
-        enabled      = true
-        severity     = "warning"
-        threshold_gb = 3
-        for_duration = "5m"
-      }
-      mongodb_replication_lag = {
-        enabled           = true
-        severity          = "warning"
-        threshold_seconds = 10
-        for_duration      = "2m"
-      }
-      mongodb_replica_unhealthy = {
-        enabled      = true
-        severity     = "critical"
-        for_duration = "1m"
-      }
-      mongodb_high_queued_operations = {
-        enabled      = true
-        severity     = "warning"
-        threshold    = 100
-        for_duration = "5m"
-      }
-      mongodb_slow_queries = {
-        enabled      = true
-        severity     = "warning"
-        threshold    = 10 # Alert if > 10 slow queries/sec detected
-        for_duration = "5m"
-      }
-    },
-    lookup(var.instance.spec, "alerts", {})
-  )
+  # Alert configurations - all enabled by default
+  alerts = {
+    mongodb_down = {
+      severity     = "critical"
+      for_duration = "1m"
+    }
+    mongodb_high_connections = {
+      severity     = "warning"
+      threshold    = 80
+      for_duration = "5m"
+    }
+    mongodb_high_memory = {
+      severity     = "warning"
+      threshold_gb = 3
+      for_duration = "5m"
+    }
+    mongodb_replication_lag = {
+      severity          = "warning"
+      threshold_seconds = 10
+      for_duration      = "2m"
+    }
+    mongodb_replica_unhealthy = {
+      severity     = "critical"
+      for_duration = "1m"
+    }
+    mongodb_high_queued_operations = {
+      severity     = "warning"
+      threshold    = 100
+      for_duration = "5m"
+    }
+    mongodb_slow_queries = {
+      severity     = "warning"
+      threshold    = 10 # Alert if > 10 slow queries/sec detected
+      for_duration = "5m"
+    }
+  }
 
   # Build alert rules dynamically
   alert_rules = [
@@ -98,25 +88,25 @@ locals {
       alert = replace(title(rule_name), "_", "")
       expr = (
         rule_name == "mongodb_down" ?
-        "mongodb_up{job=\"${local.exporter_job_name}\"} == 0" :
+        "mongodb_up{facets_resource_type=\"mongo\",facets_resource_name=\"${var.instance_name}\"} == 0" :
 
         rule_name == "mongodb_high_connections" ?
-        "(mongodb_ss_connections{job=\"${local.exporter_job_name}\",conn_type=\"current\"} / mongodb_ss_connections{job=\"${local.exporter_job_name}\",conn_type=\"available\"}) * 100 > ${lookup(rule_config, "threshold", 80)}" :
+        "(mongodb_ss_connections{facets_resource_type=\"mongo\",facets_resource_name=\"${var.instance_name}\",conn_type=\"current\"} / mongodb_ss_connections{facets_resource_type=\"mongo\",facets_resource_name=\"${var.instance_name}\",conn_type=\"available\"}) * 100 > ${lookup(rule_config, "threshold", 80)}" :
 
         rule_name == "mongodb_high_memory" ?
-        "mongodb_ss_mem_resident{job=\"${local.exporter_job_name}\"} / 1024 / 1024 / 1024 > ${lookup(rule_config, "threshold_gb", 3)}" :
+        "mongodb_ss_mem_resident{facets_resource_type=\"mongo\",facets_resource_name=\"${var.instance_name}\"} / 1024 / 1024 / 1024 > ${lookup(rule_config, "threshold_gb", 3)}" :
 
         rule_name == "mongodb_replication_lag" ?
-        "(max(mongodb_members_optimeDate{job=\"${local.exporter_job_name}\",member_state=\"PRIMARY\"}) - on() group_right mongodb_members_optimeDate{job=\"${local.exporter_job_name}\",member_state=\"SECONDARY\"}) / 1000 > ${lookup(rule_config, "threshold_seconds", 10)}" :
+        "(max(mongodb_members_optimeDate{facets_resource_type=\"mongo\",facets_resource_name=\"${var.instance_name}\",member_state=\"PRIMARY\"}) - on() group_right mongodb_members_optimeDate{facets_resource_type=\"mongo\",facets_resource_name=\"${var.instance_name}\",member_state=\"SECONDARY\"}) / 1000 > ${lookup(rule_config, "threshold_seconds", 10)}" :
 
         rule_name == "mongodb_replica_unhealthy" ?
-        "mongodb_members_health{job=\"${local.exporter_job_name}\"} == 0" :
+        "mongodb_members_health{facets_resource_type=\"mongo\",facets_resource_name=\"${var.instance_name}\"} == 0" :
 
         rule_name == "mongodb_high_queued_operations" ?
-        "(mongodb_ss_globalLock_currentQueue{job=\"${local.exporter_job_name}\",count_type=\"readers\"} + mongodb_ss_globalLock_currentQueue{job=\"${local.exporter_job_name}\",count_type=\"writers\"}) > ${lookup(rule_config, "threshold", 100)}" :
+        "(mongodb_ss_globalLock_currentQueue{facets_resource_type=\"mongo\",facets_resource_name=\"${var.instance_name}\",count_type=\"readers\"} + mongodb_ss_globalLock_currentQueue{facets_resource_type=\"mongo\",facets_resource_name=\"${var.instance_name}\",count_type=\"writers\"}) > ${lookup(rule_config, "threshold", 100)}" :
 
         rule_name == "mongodb_slow_queries" ?
-        "rate(mongodb_profile_slow_query_count{job=\"${local.exporter_job_name}\"}[5m]) > ${lookup(rule_config, "threshold", 10)}" :
+        "rate(mongodb_profile_slow_query_count{facets_resource_type=\"mongo\",facets_resource_name=\"${var.instance_name}\"}[5m]) > ${lookup(rule_config, "threshold", 10)}" :
 
         "unknown_alert"
       )
@@ -181,6 +171,5 @@ locals {
         runbook_url = "https://github.com/percona/mongodb_exporter"
       }
     }
-    if lookup(rule_config, "enabled", true)
   ]
 }
