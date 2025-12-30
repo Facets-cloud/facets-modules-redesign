@@ -94,7 +94,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "",
       "fieldConfig": {
@@ -150,7 +150,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "mongodb_up{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
@@ -165,7 +165,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "Mongodb Service Uptime in hours",
       "fieldConfig": {
@@ -217,7 +217,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "mongodb_members_uptime{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", member_state=\"PRIMARY\"}",
@@ -232,7 +232,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "The number of incoming connections from clients to the database server. This number includes the current shell session. Consider the value of connections.available to add more context to this datum.",
       "fieldConfig": {
@@ -283,7 +283,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "mongodb_ss_connections{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", conn_type=\"current\"}",
@@ -298,7 +298,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "Count of all incoming connections created to the server. This number includes connections that have since closed.",
       "fieldConfig": {
@@ -349,7 +349,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "mongodb_ss_connections{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", conn_type=\"totalCreated\"}",
@@ -364,7 +364,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "The number of unused incoming connections available. Consider this value in combination with the value of connections.current to understand the connection load on the database, and the UNIX ulimit Settings document for more information about system thresholds on available connections.",
       "fieldConfig": {
@@ -415,7 +415,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "mongodb_ss_connections{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", conn_type=\"available\"}",
@@ -430,7 +430,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "The number of active client connections to the server. Active client connections refers to client connections that currently have operations in progress.",
       "fieldConfig": {
@@ -481,7 +481,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "mongodb_ss_connections{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", conn_type=\"available\"}",
@@ -496,7 +496,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "",
       "gridPos": {
@@ -522,7 +522,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "The total number of insert operations received since the mongod instance last started.",
       "fieldConfig": {
@@ -599,7 +599,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "rate(mongodb_ss_opcounters{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", legacy_op_type=\"insert\"}[$__rate_interval])",
@@ -614,7 +614,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "The total number of update operations received since the mongod instance last started.",
       "fieldConfig": {
@@ -691,7 +691,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "rate(mongodb_ss_opcounters{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", legacy_op_type=\"update\"}[$__rate_interval])",
@@ -706,7 +706,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "The total number of commands issued to the database since the mongod instance last started.\n\nopcounters.command counts all commands except the write commands: insert, update, and delete.",
       "fieldConfig": {
@@ -783,7 +783,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "rate(mongodb_ss_opcounters{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", legacy_op_type=\"command\"}[$__rate_interval])",
@@ -798,7 +798,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "The total number of queries received since the mongod instance last started.",
       "fieldConfig": {
@@ -875,7 +875,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "rate(mongodb_ss_opcounters{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", legacy_op_type=\"query\"}[$__rate_interval])",
@@ -890,7 +890,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "The total number of delete operations since the mongod instance last started.",
       "fieldConfig": {
@@ -967,7 +967,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "rate(mongodb_ss_opcounters{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", legacy_op_type=\"delete\"}[$__rate_interval])",
@@ -982,7 +982,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "The total number of getMore operations since the mongod instance last started. This counter can be high even if the query count is low. Secondary nodes send getMore operations as part of the replication process.",
       "fieldConfig": {
@@ -1059,7 +1059,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "rate(mongodb_ss_opcounters{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", legacy_op_type=\"getmore\"}[$__rate_interval])",
@@ -1074,7 +1074,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "Number of collections in the database.",
       "fieldConfig": {
@@ -1132,7 +1132,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "mongodb_dbstats_collections{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
@@ -1147,7 +1147,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "Total number of indexes across all collections in the database.",
       "fieldConfig": {
@@ -1205,7 +1205,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "mongodb_dbstats_indexes{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
@@ -1220,7 +1220,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "Number of views in the database.",
       "fieldConfig": {
@@ -1278,7 +1278,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "mongodb_dbstats_views{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
@@ -1293,7 +1293,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "Sum of the space allocated to all collections in the database for document storage, including free space.",
       "fieldConfig": {
@@ -1373,7 +1373,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "mongodb_dbstats_storageSize{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
@@ -1388,7 +1388,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "Sum of the space allocated to all indexes in the database, including free index space.",
       "fieldConfig": {
@@ -1468,7 +1468,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "mongodb_dbstats_indexSize{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
@@ -1496,7 +1496,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1545,7 +1545,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "mongodb_rs_members_id{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", member_state=\"PRIMARY\"}",
@@ -1559,7 +1559,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "This metric can show a correlation with the replication lag value.",
       "fieldConfig": {
@@ -1641,7 +1641,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "mongodb_rs_members_pingMs{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
@@ -1656,7 +1656,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "The oplog (operations log) is a special capped collection that keeps a rolling record of all operations that modify the data stored in your databases.",
       "fieldConfig": {
@@ -1749,7 +1749,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "mongodb_oplog_stats_storageStats_size{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
@@ -1764,7 +1764,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -1810,7 +1810,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "mongodb_rs_members_id{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\", member_state=\"SECONDARY\"}",
@@ -1824,7 +1824,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "MongoDB replication lag occurs when the secondary node cannot replicate data fast enough to keep up with the rate that data is being written to the primary node. It could be caused by something as simple as network latency, packet loss within your network, or a routing issue.",
       "fieldConfig": {
@@ -1905,7 +1905,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "rate(mongodb_mongod_replset_oplog_head_timestamp[5m])",
@@ -1920,7 +1920,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "This shows the time since the last election.",
       "fieldConfig": {
@@ -1968,7 +1968,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "mongodb_electionCandidateMetrics_lastElectionDate{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
           "refId": "A"
@@ -1993,7 +1993,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "Cursor is a pointer, and using this pointer we can access the document. cursor.timeOut property was updated incrementally, and connections that died without closing the cursor. The consequence is that it will remain open on the server and consume memory unless it is reaped by the default MongoDB setting.",
       "fieldConfig": {
@@ -2072,7 +2072,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "mongodb_ss_metrics_cursor_timedOut{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
@@ -2087,7 +2087,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "description": "Number of cursors currently opened by MongoDB for clients",
       "fieldConfig": {
@@ -2166,7 +2166,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "mongodb_ss_metrics_cursor_totalOpened{facets_resource_type=\"mongo\",facets_resource_name=\"RESOURCE_NAME_PLACEHOLDER\"}",
