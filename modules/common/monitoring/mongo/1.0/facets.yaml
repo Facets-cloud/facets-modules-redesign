@@ -39,11 +39,6 @@ spec:
   description: Configure MongoDB Exporter, ServiceMonitor, PrometheusRules
   type: object
   properties:
-    labels:
-      type: object
-      title: Custom Labels
-      description: Additional labels to apply to monitoring resources
-      x-ui-yaml-editor: true
     resources:
       type: object
       title: Resource Allocation
@@ -89,7 +84,6 @@ spec:
       description: Additional Helm chart values to pass to the MongoDB exporter. These values will be deep-merged with the default configuration.
       x-ui-yaml-editor: true
   x-ui-order:
-  - labels
   - resources
   - additional_helm_values
 iac:
@@ -103,7 +97,6 @@ sample:
   version: '1.0'
   disabled: false
   spec:
-    labels: {}
     resources:
       requests:
         cpu: "100m"

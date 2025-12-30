@@ -8,16 +8,13 @@ locals {
   # Get Prometheus namespace from input
   prometheus_namespace = var.inputs.prometheus.attributes.namespace
 
-  # Merge default labels with custom labels
-  common_labels = merge(
-    {
-      "app.kubernetes.io/name"       = "mongodb-monitoring"
-      "app.kubernetes.io/instance"   = var.instance_name
-      "app.kubernetes.io/managed-by" = "facets"
-      "facets.cloud/environment"     = var.environment.name
-    },
-    lookup(var.instance.spec, "labels", {})
-  )
+  # Common labels for monitoring resources
+  common_labels = {
+    "app.kubernetes.io/name"       = "mongodb-monitoring"
+    "app.kubernetes.io/instance"   = var.instance_name
+    "app.kubernetes.io/managed-by" = "facets"
+    "facets.cloud/environment"     = var.environment.name
+  }
 
   # MongoDB connection details from input
   mongo_host     = var.inputs.mongo.interfaces.writer.host
