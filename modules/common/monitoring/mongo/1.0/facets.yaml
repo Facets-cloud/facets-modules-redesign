@@ -1,0 +1,109 @@
+intent: monitoring
+flavor: mongo
+version: '1.0'
+description: Complete MongoDB monitoring stack - MongoDB Exporter for metrics, ServiceMonitor
+  for Prometheus, PrometheusRules for alerting
+clouds:
+- kubernetes
+- aws
+- azure
+- gcp
+inputs:
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Kubernetes cluster for deploying monitoring resources
+    providers:
+    - kubernetes
+    - kubernetes-alpha
+    - helm
+  mongo:
+    type: '@facets/mongo'
+    optional: false
+    displayName: MongoDB Instance
+    description: MongoDB instance to monitor (connection credentials will be used
+      by exporter)
+  prometheus:
+    type: '@facets/prometheus'
+    optional: false
+    displayName: Prometheus Instance
+    description: Prometheus instance for metrics collection and alerting (also provides
+      Grafana namespace)
+outputs:
+  default:
+    type: '@facets/monitoring-rules'
+    title: MongoDB Monitoring Stack
+spec:
+  title: MongoDB Monitoring Configuration
+  description: Configure MongoDB Exporter, ServiceMonitor, PrometheusRules
+  type: object
+  properties:
+    resources:
+      type: object
+      title: Resource Allocation
+      description: CPU and memory resource requests and limits for the MongoDB exporter
+        pod
+      properties:
+        requests:
+          type: object
+          title: Resource Requests
+          description: Minimum guaranteed resources
+          properties:
+            cpu:
+              type: string
+              title: CPU Request
+              description: Minimum CPU allocation (e.g., 100m, 0.5)
+              default: 100m
+              pattern: ^[0-9]+m?$|^[0-9]+\.[0-9]+$
+            memory:
+              type: string
+              title: Memory Request
+              description: Minimum memory allocation (e.g., 128Mi, 1Gi)
+              default: 128Mi
+              pattern: ^[0-9]+(Mi|Gi|M|G)$
+        limits:
+          type: object
+          title: Resource Limits
+          description: Maximum resource usage
+          properties:
+            cpu:
+              type: string
+              title: CPU Limit
+              description: Maximum CPU usage (e.g., 200m, 1)
+              default: 200m
+              pattern: ^[0-9]+m?$|^[0-9]+\.[0-9]+$
+            memory:
+              type: string
+              title: Memory Limit
+              description: Maximum memory usage (e.g., 256Mi, 2Gi)
+              default: 256Mi
+              pattern: ^[0-9]+(Mi|Gi|M|G)$
+    additional_helm_values:
+      type: object
+      title: Additional Helm Values
+      description: Additional Helm chart values to pass to the MongoDB exporter. These
+        values will be deep-merged with the default configuration.
+      x-ui-yaml-editor: true
+  x-ui-order:
+  - resources
+  - additional_helm_values
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+sample:
+  kind: monitoring
+  flavor: mongo
+  version: '1.0'
+  disabled: false
+  spec:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+    additional_helm_values: {}
