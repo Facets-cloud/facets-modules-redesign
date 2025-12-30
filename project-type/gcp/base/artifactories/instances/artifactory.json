@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "flavor": "standard",
-  "kind": "artifactory",
+  "kind": "artifactories",
   "disabled": true,
   "spec": {
     "include_all": false
