@@ -61,8 +61,8 @@
       "resource_type": "cloud_account"
     },
     "artifactories": {
-      "resource_name": "artifactory",
-      "resource_type": "artifactory"
+      "resource_name": "artifactories",
+      "resource_type": "artifactories"
     },
     "vpa_details": {
       "resource_name": "vpa",
