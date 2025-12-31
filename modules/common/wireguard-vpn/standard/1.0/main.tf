@@ -3,7 +3,8 @@ locals {
   namespace           = lookup(local.spec, "namespace", "") != "" ? lookup(local.spec, "namespace", "") : var.environment.namespace
   enable_ip_forward   = lookup(local.spec, "enable_ip_forward", true)
   service_annotations = lookup(local.spec, "service_annotations", {})
-  service_type        = "LoadBalancer" # Fixed service type for Wireguard VPN
+  service_type        = "LoadBalancer"                     # Fixed service type for Wireguard VPN
+  dns_search_domain   = "svc.cluster.local, cluster.local" # Standard Kubernetes DNS search domains
 
   # Get kubernetes details to determine cloud provider
   kubernetes_details_input = lookup(var.inputs, "kubernetes_details", {})
@@ -36,12 +37,17 @@ locals {
     }
   ]
 
-  # Cloud-specific service annotations
-  cloud_service_annotations = {
+  # Cloud-specific service annotations - only apply annotations for the current cloud
+  cloud_service_annotations = local.cloud_provider == "AWS" ? {
     "service.beta.kubernetes.io/aws-load-balancer-type"            = "external"
     "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type" = "ip"
     "service.beta.kubernetes.io/aws-load-balancer-scheme"          = "internet-facing"
-    "service.beta.kubernetes.io/azure-load-balancer-internal"      = "false"
+    } : local.cloud_provider == "AZURE" ? {
+    "service.beta.kubernetes.io/azure-load-balancer-internal" = "false"
+    } : local.cloud_provider == "GCP" ? {
+    # GCP doesn't need special LoadBalancer annotations for basic setup
+    } : {
+    # Default: no cloud-specific annotations
   }
 }
 
@@ -71,6 +77,7 @@ module "wireguard_vpn" {
       enableIpForwardOnPodInit = local.enable_ip_forward
       serviceType              = local.service_type
       mtu                      = local.mtu
+      dnsSearchDomain          = local.dns_search_domain
       serviceAnnotations       = local.cloud_service_annotations
       deploymentNodeSelector   = local.node_selector
       deploymentTolerations    = local.tolerations

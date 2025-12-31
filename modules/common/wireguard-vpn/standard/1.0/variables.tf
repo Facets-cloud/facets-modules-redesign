@@ -4,8 +4,8 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
-      namespace           = optional(string, "")
-      enable_ip_forward   = optional(bool, true)
+      namespace         = optional(string, "")
+      enable_ip_forward = optional(bool, true)
     })
   })
 
