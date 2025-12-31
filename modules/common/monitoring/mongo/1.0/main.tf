@@ -72,9 +72,16 @@ resource "helm_release" "mongodb_exporter" {
             "app.kubernetes.io/component" = "exporter"
           }
 
-          # Resource allocation for exporter pod
           resources = local.resources
         },
+        length(local.tolerations) > 0 ? {
+          tolerations = local.tolerations
+        } : {},
+
+        length(local.node_selector) > 0 ? {
+          nodeSelector = local.node_selector
+        } : {},
+
         # Merge additional helm values provided by user
         lookup(var.instance.spec, "additional_helm_values", {})
       )
