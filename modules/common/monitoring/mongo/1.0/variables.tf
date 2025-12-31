@@ -62,5 +62,22 @@ variable "inputs" {
         prometheus_release = string
       })
     })
+    node_pool = optional(object({
+      attributes = object({
+        node_pool_name = string
+        node_pool_id   = string
+
+        # List of taint objects: { key, value, effect }
+        taints = optional(list(object({
+          key    = string
+          value  = string
+          effect = string
+        })), [])
+
+        # Node labels used as nodeSelector
+        node_selector = optional(map(string), {})
+      })
+      interfaces = any
+    }))
   })
 }
