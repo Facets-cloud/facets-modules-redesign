@@ -30,6 +30,11 @@ inputs:
     displayName: Prometheus Instance
     description: Prometheus instance for metrics collection and alerting (also provides
       Grafana namespace)
+  node_pool:
+    type: '@facets/kubernetes_nodepool'
+    optional: true
+    displayName: Node Pool
+    description: Node pool for MongoDB exporter pods
 outputs:
   default:
     type: '@facets/monitoring-rules'
