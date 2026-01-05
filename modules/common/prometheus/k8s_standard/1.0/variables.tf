@@ -15,5 +15,33 @@ variable "environment" {
 
 variable "inputs" {
   description = "A map of inputs requested by the module developer."
+  type = object({
+    kubernetes_details = object({
+      attributes = object({
+        cluster_endpoint = string
+        cluster_name     = optional(string)
+        cluster_id       = optional(string)
+      })
+      interfaces = optional(object({
+        kubernetes = optional(object({
+          host                   = string
+          cluster_ca_certificate = string
+        }))
+      }))
+    })
+    kubernetes_node_pool_details = optional(object({
+      node_selector = optional(map(string))
+      taints = optional(map(object({
+        key    = string
+        value  = string
+        effect = string
+      })))
+    }))
+  })
+}
+
+variable "cc_metadata" {
+  description = "Facets control plane metadata"
   type        = any
+  default     = {}
 }

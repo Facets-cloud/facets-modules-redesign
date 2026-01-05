@@ -18,16 +18,55 @@ properties:
       cluster_endpoint:
         description: Kubernetes API server endpoint
         type: string
+      oidc_issuer_url:
+        description: OIDC issuer URL for the cluster
+        type: string
+      cluster_fqdn:
+        description: Fully qualified domain name of the cluster
+        type: string
+      cluster_private_fqdn:
+        description: Private FQDN of the cluster
+        type: string
+      node_resource_group:
+        description: Resource group containing the cluster nodes
+        type: string
+      resource_group_name:
+        description: Resource group name where the cluster is deployed
+        type: string
+      network_details:
+        description: Network configuration details
+        type: object
+      cluster_ca_certificate:
+        description: Base64 decoded cluster CA certificate
+        type: string
+      client_certificate:
+        description: Base64 decoded client certificate
+        type: string
+      client_key:
+        description: Base64 decoded client key
+        type: string
+      automatic_channel_upgrade:
+        description: Automatic upgrade channel setting
+        type: string
+      secrets:
+        description: List of secret attribute names
+        type: string
   interfaces:
     type: object
     properties:
-        kubernetes:
-            type: object
-            properties:
-                cluster_ca_certificate:
-                    type: string
-                host:
-                    type: string
+      kubernetes:
+        type: object
+        properties:
+          host:
+            type: string
+          cluster_ca_certificate:
+            type: string
+          client_certificate:
+            type: string
+          client_key:
+            type: string
+          secrets:
+            type: string
 providers:
   - name: kubernetes
     source: hashicorp/kubernetes
@@ -38,3 +77,4 @@ providers:
   - name: helm
     source: hashicorp/helm
     version: 2.17.0
+

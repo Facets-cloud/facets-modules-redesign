@@ -31,21 +31,33 @@ variable "inputs" {
         cluster_endpoint       = string
         cluster_ca_certificate = string
         cluster_name           = string
-        cluster_version        = string
-        cluster_arn            = string
-        cluster_id             = string
-        oidc_issuer_url        = string
-        oidc_provider          = string
-        oidc_provider_arn      = string
-        node_iam_role_arn      = string
-        node_iam_role_name     = string
-        node_security_group_id = string
-        kubernetes_provider_exec = object({
+        cluster_version        = optional(string)
+        cluster_arn            = optional(string)
+        cluster_id             = optional(string)
+        oidc_issuer_url        = optional(string)
+        oidc_provider          = optional(string)
+        oidc_provider_arn      = optional(string)
+        node_iam_role_arn      = optional(string)
+        node_iam_role_name     = optional(string)
+        node_security_group_id = optional(string)
+        kubernetes_provider_exec = optional(object({
           api_version = string
           command     = string
           args        = list(string)
-        })
+        }))
       })
     })
   })
+}
+
+variable "cc_metadata" {
+  description = "Facets control plane metadata"
+  type        = any
+  default     = {}
+}
+
+variable "cluster" {
+  description = "Cluster configuration"
+  type        = any
+  default     = {}
 }

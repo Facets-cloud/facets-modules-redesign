@@ -1,59 +1,64 @@
-intent: config_map
-flavor: k8s_standard
-version: '1.0'
-description: config_map - k8s
 clouds:
-- aws
-- azure
-- gcp
-- kubernetes
-inputs:
-  kubernetes_details:
-    optional: false
-    type: '@facets/kubernetes-details'
-    displayName: Kubernetes Cluster
-    default:
-      resource_type: kubernetes_cluster
-      resource_name: default
-    providers:
+    - aws
+    - azure
+    - gcp
     - kubernetes
-    - kubernetes-alpha
-    - helm
-spec:
-  type: object
-  properties:
-    data:
-      title: Data
-      type: object
-      description: Data objects containing key, value pair
-      patternProperties:
-        ^[a-zA-Z0-9_.-]*$:
-          title: Data Object Block
-          description: something
-          type: object
-          properties:
-            key:
-              title: ConfigMap Data Key Name
-              description: Key name of the configmap object
-              type: string
-            value:
-              title: ConfigMap Data Object Value
-              description: Value of the configmap object
-              type: string
-              x-ui-textarea: true
-outputs:
-  default:
-    type: '@facets/config_map'
-    title: ConfigMap Details
-sample:
-  $schema: https://facets-cloud.github.io/facets-schemas/schemas/config_map/config_map.schema.json
-  kind: config_map
-  flavor: k8s_standard
-  version: '1.0'
-  metadata: {}
-  disabled: true
-  spec:
-    data: {}
+description: config_map - k8s
+flavor: k8s_standard
 iac:
-  validated_files:
-  - variables.tf
+    validated_files:
+        - variables.tf
+inputs:
+    kubernetes_details:
+        default:
+            resource_name: default
+            resource_type: kubernetes_cluster
+        displayName: Kubernetes Cluster
+        optional: false
+        providers:
+            - kubernetes
+            - kubernetes-alpha
+            - helm
+        type: '@facets/kubernetes-details'
+intent: config_map
+outputs:
+    default:
+        mock:
+            attributes:
+                hash: mock-string-value
+                name: mock-string-value
+            interfaces: {}
+        title: ConfigMap Details
+        type: '@facets/config_map'
+sample:
+    $schema: https://facets-cloud.github.io/facets-schemas/schemas/config_map/config_map.schema.json
+    disabled: true
+    flavor: k8s_standard
+    kind: config_map
+    metadata: {}
+    spec:
+        data: {}
+    version: "1.0"
+spec:
+    properties:
+        data:
+            description: Data objects containing key, value pair
+            patternProperties:
+                ^[a-zA-Z0-9_.-]*$:
+                    description: something
+                    properties:
+                        key:
+                            description: Key name of the configmap object
+                            title: ConfigMap Data Key Name
+                            type: string
+                        value:
+                            description: Value of the configmap object
+                            title: ConfigMap Data Object Value
+                            type: string
+                            x-ui-textarea: true
+                    title: Data Object Block
+                    type: object
+            title: Data
+            type: object
+    type: object
+version: "1.0"

@@ -58,5 +58,30 @@ variable "environment" {
 }
 
 variable "inputs" {
-  type = any
+  type = object({
+    prometheus_details = optional(object({
+      attributes = optional(any)
+    }))
+    kubernetes_details = object({
+      attributes = object({
+        cluster_endpoint = string
+        cluster_name     = optional(string)
+        cluster_id       = optional(string)
+      })
+      interfaces = optional(object({
+        kubernetes = optional(object({
+          host                   = string
+          cluster_ca_certificate = string
+        }))
+      }))
+    })
+    kubernetes_node_pool_details = optional(object({
+      node_selector = optional(map(string))
+      taints = optional(map(object({
+        key    = string
+        value  = string
+        effect = string
+      })))
+    }))
+  })
 }

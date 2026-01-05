@@ -15,6 +15,11 @@ properties:
       tenant_id:
         description: Azure tenant ID
         type: string
+      secrets:
+        description: List of attribute names that contain sensitive values
+        type: array
+        items:
+          type: string
   interfaces:
     type: object
 providers:

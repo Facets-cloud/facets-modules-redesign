@@ -40,6 +40,35 @@ variable "environment" {
 }
 
 variable "inputs" {
-  type    = any
-  default = {}
+  type = object({
+    kubernetes_details = object({
+      attributes = object({
+        cluster_id             = string
+        cluster_name           = string
+        cluster_endpoint       = string
+        cluster_location       = string
+        node_resource_group    = string
+        resource_group_name    = string
+        cluster_ca_certificate = string
+        oidc_issuer_url        = optional(string)
+        network_details        = optional(any)
+      })
+      interfaces = optional(object({
+        kubernetes = optional(object({
+          host                   = string
+          cluster_ca_certificate = string
+          client_certificate     = optional(string)
+          client_key             = optional(string)
+        }))
+      }))
+    })
+    cloud_account = object({
+      attributes = object({
+        subscription_id = string
+        tenant_id       = string
+        client_id       = optional(string)
+        client_secret   = optional(string)
+      })
+    })
+  })
 }

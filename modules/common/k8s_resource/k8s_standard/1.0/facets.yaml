@@ -1,88 +1,85 @@
-intent: k8s_resource
-flavor: k8s_standard
-version: '1.0'
-description: Adds kubernetes objects inside the cluster via yaml manifests
 clouds:
-- aws
-- azure
-- gcp
-- kubernetes
-inputs:
-  kubernetes_details:
-    optional: false
-    type: '@facets/kubernetes-details'
-    displayName: Kubernetes Cluster
-    default:
-      resource_type: kubernetes_cluster
-      resource_name: default
-    providers:
+    - aws
+    - azure
+    - gcp
     - kubernetes
-    - kubernetes-alpha
-    - helm
-spec:
-  title: K8s resource
-  description: Specification of the K8s resource intent
-  type: object
-  properties:
-    resource:
-      type: object
-      title: Resource
-      description: This should contain the kubernetes YAML manifest. You can only
-        pass one manifest per resource. To add more manifests, use the Additional
-        Resources section below.
-      x-ui-yaml-editor: true
-      x-ui-placeholder: Enter kubernetes manifest in YAML format
-    additional_resources:
-      type: object
-      title: Additional Resources
-      description: Additional resources that can be configured for k8s
-      x-ui-title-replace: manifest
-      patternProperties:
-        ^[0-9]+[m]?$:
-          type: object
-          title: Additional resource name
-          description: Define the k8s resource
-          x-ui-allow-blueprint-merge: true
-          properties:
-            configuration:
-              type: object
-              title: Resource
-              x-ui-ignore-parentkey: true
-              description: This should contain the kubernetes YAML manifest. You can
-                only pass one manifest per resource.
-              x-ui-yaml-editor: true
-              x-ui-placeholder: Enter kubernetes manifest in YAML format
-  required:
-  - resource
-outputs:
-  default:
-    type: '@facets/k8s_resource'
-    title: K8s Resource Details
-sample:
-  $schema: https://facets-cloud.github.io/facets-schemas/schemas/k8s_resource/k8s_resource.schema.json
-  kind: k8s_resource
-  metadata: {}
-  flavor: k8s_standard
-  version: '1.0'
-  disabled: true
-  spec:
-    additional_resources: {}
-    resource:
-      apiVersion: v1
-      kind: Service
-      metadata:
-        name: k8s-resource
-        annotations:
-          service.beta.kubernetes.io/aws-load-balancer-scheme: internal
-          service.beta.kubernetes.io/aws-load-balancer-type: nlb
-      spec:
-        selector:
-          app: facetsapi
-        type: ClusterIP
-        ports:
-        - port: 80
-          name: http
-          targetPort: 80
+description: Adds kubernetes objects inside the cluster via yaml manifests
+flavor: k8s_standard
 iac:
-  validated_files:
-  - variables.tf
+    validated_files:
+        - variables.tf
+inputs:
+    kubernetes_details:
+        default:
+            resource_name: default
+            resource_type: kubernetes_cluster
+        displayName: Kubernetes Cluster
+        optional: false
+        providers:
+            - kubernetes
+            - kubernetes-alpha
+            - helm
+        type: '@facets/kubernetes-details'
+intent: k8s_resource
+outputs:
+    default:
+        title: K8s Resource Details
+        type: '@facets/k8s_resource'
+sample:
+    $schema: https://facets-cloud.github.io/facets-schemas/schemas/k8s_resource/k8s_resource.schema.json
+    disabled: true
+    flavor: k8s_standard
+    kind: k8s_resource
+    metadata: {}
+    spec:
+        additional_resources: {}
+        resource:
+            apiVersion: v1
+            kind: Service
+            metadata:
+                annotations:
+                    service.beta.kubernetes.io/aws-load-balancer-scheme: internal
+                    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+                name: k8s-resource
+            spec:
+                ports:
+                    - name: http
+                      port: 80
+                      targetPort: 80
+                selector:
+                    app: facetsapi
+                type: ClusterIP
+    version: "1.0"
+spec:
+    description: Specification of the K8s resource intent
+    properties:
+        additional_resources:
+            description: Additional resources that can be configured for k8s
+            patternProperties:
+                ^[0-9]+[m]?$:
+                    description: Define the k8s resource
+                    properties:
+                        configuration:
+                            description: This should contain the kubernetes YAML manifest. You can only pass one manifest per resource.
+                            title: Resource
+                            type: object
+                            x-ui-ignore-parentkey: true
+                            x-ui-placeholder: Enter kubernetes manifest in YAML format
+                            x-ui-yaml-editor: true
+                    title: Additional resource name
+                    type: object
+                    x-ui-allow-blueprint-merge: true
+            title: Additional Resources
+            type: object
+            x-ui-title-replace: manifest
+        resource:
+            description: This should contain the kubernetes YAML manifest. You can only pass one manifest per resource. To add more manifests, use the Additional Resources section below.
+            title: Resource
+            type: object
+            x-ui-placeholder: Enter kubernetes manifest in YAML format
+            x-ui-yaml-editor: true
+    required:
+        - resource
+    title: K8s resource
+    type: object
+version: "1.0"

@@ -5,11 +5,24 @@ properties:
     properties:
       node_class_name:
         type: string
+        description: Name of the node class
       node_pool_name:
         type: string
+        description: Name of the node pool
+      node_pool_id:
+        type: string
+        description: ID of the node pool resource
+      disk_size_gb:
+        type: number
+        description: OS disk size in GB
+      node_count:
+        type: number
+        description: Current node count
       taints:
-        type: string
+        type: object
+        description: Taints applied to nodes
       node_selector:
-        type: string
+        type: object
+        description: Labels for node selection
   interfaces:
     type: object

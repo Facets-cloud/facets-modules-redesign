@@ -197,6 +197,24 @@ variable "inputs" {
       interfaces = optional(any, {})
     })
 
+    # Required: Cloud account for Azure
+    cloud_account = object({
+      attributes = optional(any, {})
+      interfaces = optional(any, {})
+    })
+
+    # Required: Network details
+    network_details = object({
+      attributes = optional(any, {})
+      interfaces = optional(any, {})
+    })
+
+    # Required: Node pool details
+    kubernetes_node_pool_details = object({
+      attributes = optional(any, {})
+      interfaces = optional(any, {})
+    })
+
     # Optional: Container registry access
     artifactories = optional(object({
       attributes = object({

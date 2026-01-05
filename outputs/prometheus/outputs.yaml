@@ -5,10 +5,28 @@ properties:
     properties:
       alertmanager_url:
         type: string
+        description: URL to access Alertmanager service
       helm_release_id:
         type: string
+        description: Helm release ID for the Prometheus stack
       prometheus_url:
         type: string
+        description: URL to access Prometheus service
+      grafana_url:
+        type: string
+        description: URL to access Grafana service
+      prometheus_release:
+        type: string
+        description: Name of the Prometheus helm release
+      alertmanager_service:
+        type: string
+        description: Kubernetes service name for Alertmanager
+      grafana_service:
+        type: string
+        description: Kubernetes service name for Grafana
+      namespace:
+        type: string
+        description: Kubernetes namespace where Prometheus stack is deployed
   interfaces:
     type: object
 providers: []

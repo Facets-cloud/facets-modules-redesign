@@ -457,7 +457,7 @@ sample:
   spec:
     enable_crds: true
     node_selector: {}
-    tolerations: []
+    tolerations: {}
     values: {}
     operator:
       enabled: true

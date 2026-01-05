@@ -23,14 +23,14 @@ module "iam_policy_name" {
 
 resource "aws_iam_user" "cert_manager_iam_user" {
   count    = local.deploy_aws_resources ? 1 : 0
-  provider = "aws3tooling"
+  provider = aws.tooling
   name     = lower(module.iam_user_name[0].name)
   tags     = merge(local.user_defined_tags, var.environment.cloud_tags)
 }
 
 resource "aws_iam_user_policy" "cert_manager_r53_policy" {
   count    = local.deploy_aws_resources ? 1 : 0
-  provider = "aws3tooling"
+  provider = aws.tooling
   name     = lower(module.iam_policy_name[0].name)
   user     = try(aws_iam_user.cert_manager_iam_user[0].name, "na")
   policy   = <<EOF
@@ -62,7 +62,7 @@ EOF
 
 resource "aws_iam_access_key" "cert_manager_access_key" {
   count    = local.deploy_aws_resources ? 1 : 0
-  provider = "aws3tooling"
+  provider = aws.tooling
   user     = try(aws_iam_user.cert_manager_iam_user[0].name, "na")
 }
 

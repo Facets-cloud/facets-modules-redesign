@@ -57,7 +57,15 @@ variable "environment" {
 }
 
 variable "inputs" {
-  type        = any
+  type = object({
+    kubernetes_details = object({
+      attributes = optional(any, {})
+      interfaces = optional(any, {})
+    })
+    prometheus_details = optional(object({
+      attributes = optional(any, {})
+      interfaces = optional(any, {})
+    }))
+  })
   description = "Inputs from other modules"
-  default     = {}
 }
