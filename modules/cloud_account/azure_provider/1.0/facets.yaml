@@ -64,7 +64,8 @@ sample:
   flavor: azure_provider
   kind: cloud_account
   disabled: false
-  spec: {}
+  spec:
+    cloud_account: example-azure-account-id
 iac:
   validated_files:
   - variables.tf
