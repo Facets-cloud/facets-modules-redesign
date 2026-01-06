@@ -1,59 +1,59 @@
-clouds:
-    - aws
-    - azure
-    - gcp
-    - kubernetes
-description: kubernetes_secret - k8s
-flavor: k8s_standard
-iac:
-    validated_files:
-        - variables.tf
-inputs:
-    kubernetes_details:
-        default:
-            resource_name: default
-            resource_type: kubernetes_cluster
-        displayName: Kubernetes Cluster
-        optional: false
-        providers:
-            - kubernetes
-            - kubernetes-alpha
-            - helm
-        type: '@facets/kubernetes-details'
 intent: kubernetes_secret
-outputs:
+flavor: k8s_standard
+version: '1.0'
+description: kubernetes_secret - k8s
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+inputs:
+  kubernetes_details:
+    optional: false
+    type: '@facets/kubernetes-details'
+    displayName: Kubernetes Cluster
     default:
-        title: Kubernetes Secret Details
-        type: '@facets/kubernetes_secret'
-sample:
-    $schema: https://facets-cloud.github.io/facets-schemas/schemas/kubernetes_secret/kubernetes_secret.schema.json
-    disabled: true
-    flavor: k8s_standard
-    kind: kubernetes_secret
-    metadata: {}
-    spec:
-        data: {}
-    version: "1.0"
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+    - kubernetes
+    - kubernetes-alpha
+    - helm
 spec:
-    properties:
-        data:
-            description: Data objects containing key, value pair
-            patternProperties:
-                ^[a-zA-Z0-9_.-]*$:
-                    description: something
-                    properties:
-                        key:
-                            description: Key name of the kubernetes secret object
-                            title: Kubernetes secret Data Key name
-                            type: string
-                        value:
-                            description: Value of the kubernetes secret object
-                            title: Kubernetes secret Data Object Value
-                            type: string
-                            x-ui-textarea: true
-                    title: Data Object Block
-                    type: object
-            title: Data
-            type: object
-    type: object
-version: "1.0"
+  type: object
+  properties:
+    data:
+      title: Data
+      type: object
+      description: Data objects containing key, value pair
+      patternProperties:
+        ^[a-zA-Z0-9_.-]*$:
+          title: Data Object Block
+          description: something
+          type: object
+          properties:
+            key:
+              title: Kubernetes secret Data Key name
+              description: Key name of the kubernetes secret object
+              type: string
+            value:
+              title: Kubernetes secret Data Object Value
+              description: Value of the kubernetes secret object
+              type: string
+              x-ui-textarea: true
+outputs:
+  default:
+    type: '@facets/kubernetes_secret'
+    title: Kubernetes Secret Details
+sample:
+  $schema: https://facets-cloud.github.io/facets-schemas/schemas/kubernetes_secret/kubernetes_secret.schema.json
+  kind: kubernetes_secret
+  disabled: true
+  flavor: k8s_standard
+  version: '1.0'
+  metadata: {}
+  spec:
+    data: {}
+iac:
+  validated_files:
+  - variables.tf
