@@ -541,10 +541,10 @@ spec:
               x-ui-error-message: This is not a valid yaml
               default: {}
               x-ui-yaml-editor: true
-      required:
-      - service_name
-      - path
-      - port
+          required:
+          - service_name
+          - path
+          - port
     custom_error_pages:
       type: object
       title: Custom Error Pages
