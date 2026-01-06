@@ -322,7 +322,6 @@ spec:
                   - X-Xss-Protection
                   - reflected-xss
                   - Cache-Control
-                  - Cache-Control
                   - Vary
                   - Content-Disposition
                   - X-Tenant-ID
@@ -396,7 +395,6 @@ spec:
                       - X-Content-Type-Options
                       - X-Xss-Protection
                       - reflected-xss
-                      - Cache-Control
                       - Cache-Control
                       - Vary
                       - Content-Disposition
@@ -522,7 +520,6 @@ spec:
                               - X-Content-Type-Options
                               - X-Xss-Protection
                               - reflected-xss
-                              - Cache-Control
                               - Cache-Control
                               - Vary
                               - Content-Disposition
