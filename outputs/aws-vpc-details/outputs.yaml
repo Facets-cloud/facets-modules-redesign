@@ -30,29 +30,19 @@ properties:
                 type: string
             vpc_endpoint_dynamodb_id:
                 description: The ID of the DynamoDB VPC endpoint (if enabled)
-                type:
-                    - string
-                    - "null"
+                type: string
             vpc_endpoint_ecr_api_id:
                 description: The ID of the ECR API VPC endpoint (if enabled)
-                type:
-                    - string
-                    - "null"
+                type: string
             vpc_endpoint_ecr_dkr_id:
                 description: The ID of the ECR Docker VPC endpoint (if enabled)
-                type:
-                    - string
-                    - "null"
+                type: string
             vpc_endpoint_s3_id:
                 description: The ID of the S3 VPC endpoint (if enabled)
-                type:
-                    - string
-                    - "null"
+                type: string
             vpc_endpoints_security_group_id:
                 description: The ID of the security group for VPC endpoints (if any interface endpoints are enabled)
-                type:
-                    - string
-                    - "null"
+                type: string
             vpc_id:
                 description: The ID of the VPC
                 type: string
