@@ -1,5 +1,6 @@
 name: '@facets/azure_cloud_account'
-type: objectproperties:
+type: object
+properties:
   attributes:
     type: object
     properties:
