@@ -2,33 +2,12 @@ name: '@facets/redis'
 properties:
   attributes:
     type: object
-    properties:
-      cache_name:
-        type: string
-      cache_id:
-        type: string
-      private_endpoint_ip:
-        type: string
-      private_endpoint_id:
-        type: string
-      private_endpoint_name:
-        type: string
-      private_dns_zone_id:
-        type: string
-      private_dns_zone_name:
-        type: string
-      private_hostname:
-        type: string
-      public_hostname:
-        type: string
   interfaces:
     type: object
     properties:
       cluster:
         type: object
         properties:
-          host:
-            type: string
           auth_token:
             type: string
           connection_string:

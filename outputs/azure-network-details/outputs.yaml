@@ -4,9 +4,7 @@ properties:
     type: object
     properties:
       availability_zones:
-        type: array
-        items:
-          type: string
+        type: string
       database_general_subnet_cidr:
         type: string
       database_general_subnet_id:
@@ -42,15 +40,11 @@ properties:
       private_subnet_cidrs:
         type: string
       private_subnet_ids:
-        type: array
-        items:
-          type: string
+        type: string
       public_subnet_cidrs:
         type: string
       public_subnet_ids:
-        type: array
-        items:
-          type: string
+        type: string
       region:
         type: string
       resource_group_id:

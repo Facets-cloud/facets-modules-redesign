@@ -4,13 +4,9 @@ properties:
     type: object
     properties:
       registry_secret_objects:
-        type: object
-        description: Registry secret objects map
+        type: string
       registry_secrets_list:
-        type: array
-        description: List of registry secrets
-        items:
-          type: object
+        type: string
   interfaces:
     type: object
 providers: []

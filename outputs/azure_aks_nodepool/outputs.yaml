@@ -6,11 +6,8 @@ properties:
       cluster_id:
         description: Cluster ID of the node pool
         type: string
-      node_pool_id:
-        description: ID of the node pool resource
-        type: string
-      disk_size_gb:
-        description: OS disk size in GB
+      disk_size:
+        description: Disk size in GB
         type: number
       node_count:
         description: Current node count

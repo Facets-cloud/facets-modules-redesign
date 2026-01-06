@@ -5,10 +5,6 @@ properties:
     properties:
       release_name:
         type: string
-        description: Name of the Helm release
-      values:
-        type: object
-        description: Values passed to the Helm chart
   interfaces:
     type: object
 providers: []
