@@ -1,0 +1,198 @@
+clouds:
+    - aws
+description: |
+    Deploys Karpenter autoscaler for EKS clusters with automatic node provisioning and cost optimization.
+    Karpenter directly provisions EC2 instances based on pod requirements, providing faster scaling and better cost efficiency than traditional Cluster Autoscaler.
+    Each instance creates a single NodePool. Create multiple instances for multiple node pools.
+flavor: karpenter
+inputs:
+    cloud_account:
+        description: The AWS Cloud Account for EC2 instance provisioning
+        displayName: Cloud Account
+        optional: false
+        providers:
+            - aws
+        type: '@facets/aws_cloud_account'
+    kubernetes_details:
+        description: The EKS cluster where Karpenter will be deployed
+        displayName: Kubernetes Cluster
+        optional: false
+        providers:
+            - kubernetes
+            - helm
+        type: '@facets/kubernetes-details'
+    network_details:
+        default:
+            resource_name: default
+            resource_type: network
+        displayName: Network
+        type: '@facets/aws-vpc-details'
+    karpenter_details:
+        description: Reference to existing Karpenter installation. Required when install_karpenter is false.
+        displayName: Karpenter Details
+        optional: true
+        type: '@facets/karpenter-details'
+intent: kubernetes_node_pool
+outputs:
+    default:
+        mock:
+            attributes:
+                controller_role_arn: mock-string-value
+                interruption_queue_name: mock-string-value
+                karpenter_namespace: mock-string-value
+                karpenter_service_account: mock-string-value
+                karpenter_version: mock-string-value
+                node_instance_profile_name: mock-string-value
+                node_role_arn: mock-string-value
+                nodepool_name: mock-string-value
+                nodeclass_name: mock-string-value
+                secrets: []
+            interfaces: {}
+        type: '@facets/karpenter-details'
+sample:
+    disabled: false
+    flavor: karpenter
+    kind: kubernetes_node_pool
+    spec:
+        install_karpenter: true
+        karpenter_version: 1.0.1
+        karpenter_replicas: 2
+        instance_families:
+            - t3
+            - t3a
+        instance_sizes:
+            - medium
+            - large
+            - xlarge
+        capacity_types:
+            - on-demand
+            - spot
+        architecture:
+            - amd64
+        cpu_limits: "1000"
+        memory_limits: 1000Gi
+        enable_consolidation: true
+        interruption_handling: true
+    version: "1.0"
+spec:
+    description: Configure Karpenter autoscaler and NodePool for your EKS cluster
+    properties:
+        install_karpenter:
+            default: true
+            description: Install Karpenter controller and CRDs. Set to false if Karpenter is already installed by another instance.
+            title: Install Karpenter
+            type: boolean
+        karpenter_version:
+            default: 1.0.1
+            description: Version of Karpenter to deploy (should match your Kubernetes version)
+            title: Karpenter Version
+            type: string
+            x-ui-overrides-only: true
+        karpenter_replicas:
+            default: 2
+            description: Number of Karpenter controller replicas for high availability
+            maximum: 5
+            minimum: 1
+            title: Controller Replicas
+            type: integer
+        instance_families:
+            default:
+                - t3
+                - t3a
+            description: EC2 instance families to use (e.g., t3, c5, r5, m5)
+            items:
+                type: string
+            title: Instance Families
+            type: array
+            x-ui-placeholder: t3, c5, m5
+        instance_sizes:
+            default:
+                - medium
+                - large
+                - xlarge
+            description: Instance sizes to allow (e.g., medium, large, xlarge)
+            items:
+                type: string
+            title: Instance Sizes
+            type: array
+            x-ui-placeholder: medium, large
+        capacity_types:
+            default:
+                - on-demand
+                - spot
+            description: Capacity types (on-demand, spot, or both)
+            items:
+                enum:
+                    - on-demand
+                    - spot
+                type: string
+            title: Capacity Types
+            type: array
+        architecture:
+            default:
+                - amd64
+            description: CPU architecture (amd64, arm64, or both)
+            items:
+                enum:
+                    - amd64
+                    - arm64
+                type: string
+            title: Architecture
+            type: array
+        cpu_limits:
+            default: "1000"
+            description: Maximum CPU cores across all nodes in this pool
+            title: CPU Limits
+            type: string
+            x-ui-placeholder: "1000"
+        memory_limits:
+            default: 1000Gi
+            description: Maximum memory across all nodes in this pool
+            title: Memory Limits
+            type: string
+            x-ui-placeholder: 1000Gi
+        enable_consolidation:
+            default: true
+            description: Enable automatic node consolidation to optimize costs
+            title: Enable Consolidation
+            type: boolean
+        interruption_handling:
+            default: true
+            description: Enable interruption handling for Spot instances
+            title: Enable Interruption Handling
+            type: boolean
+        labels:
+            description: Kubernetes labels to apply to provisioned nodes
+            title: Node Labels
+            type: object
+            x-ui-yaml-editor: true
+        taints:
+            description: Kubernetes taints to apply to provisioned nodes
+            title: Node Taints
+            type: object
+            x-ui-yaml-editor: true
+        tags:
+            description: Additional AWS tags to apply to provisioned instances
+            title: Instance Tags
+            type: object
+            x-ui-yaml-editor: true
+    required:
+        - karpenter_version
+    title: Karpenter Configuration
+    type: object
+    x-ui-order:
+        - install_karpenter
+        - karpenter_version
+        - karpenter_replicas
+        - instance_families
+        - instance_sizes
+        - capacity_types
+        - architecture
+        - cpu_limits
+        - memory_limits
+        - enable_consolidation
+        - interruption_handling
+        - labels
+        - taints
+        - tags
+version: "1.0"
