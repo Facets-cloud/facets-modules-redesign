@@ -1,5 +1,6 @@
 name: '@facets/k8s_resource'
-type: objectproperties:
+type: object
+properties:
   attributes:
     type: object
     properties:

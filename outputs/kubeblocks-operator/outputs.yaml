@@ -1,5 +1,6 @@
 name: '@facets/kubeblocks-operator'
-type: objectproperties:
+type: object
+properties:
   attributes:
     type: object
     properties:

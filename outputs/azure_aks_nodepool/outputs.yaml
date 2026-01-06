@@ -1,5 +1,6 @@
 name: '@facets/azure_aks_nodepool'
-type: objectproperties:
+type: object
+properties:
   attributes:
     type: object
     properties:

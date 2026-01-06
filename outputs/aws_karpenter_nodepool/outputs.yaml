@@ -1,5 +1,6 @@
 name: '@facets/aws_karpenter_nodepool'
-type: objectproperties:
+type: object
+properties:
   attributes:
     type: object
     properties:
