@@ -1,6 +1,6 @@
 # Define your locals here
 locals {
-  tenant_provider           = lower(try(var.cc_metadata.cc_tenant_provider, "aws"))
+  tenant_provider           = lower(try(var.cc_metadata.cc_tenant_provider, try(var.inputs.external_dns_details.attributes.provider, "aws")))
   spec                      = lookup(var.instance, "spec", {})
   user_supplied_helm_values = try(local.spec.cert_manager.values, try(var.instance.advanced.cert_manager.values, {}))
   cert_manager              = lookup(local.spec, "cert_manager", try(var.instance.advanced.cert_manager, {}))
@@ -9,31 +9,45 @@ locals {
   cnameStrategy             = lookup(local.spec, "cname_strategy", "Follow")
   disable_dns_validation    = lookup(local.spec, "disable_dns_validation", lookup(local.advanced, "disable_dns_validation", false))
   user_defined_tags         = try(local.cert_manager.tags, {})
-  deploy_aws_resources      = local.tenant_provider == "aws" ? local.disable_dns_validation ? false : true : false
-  dns_providers = {
-    aws = {
+  
+  # External DNS configuration (if provided)
+  external_dns              = try(var.inputs.external_dns_details.attributes, null)
+  has_external_dns          = local.external_dns != null && !local.disable_dns_validation
+  
+  # Build DNS provider configuration from external_dns input
+  dns_providers = local.has_external_dns ? (
+    local.external_dns.provider == "aws" ? {
       route53 = {
-        region = try(var.cc_metadata.cc_region, null)
+        region = local.external_dns.region
         accessKeyIDSecretRef = {
-          key  = "access-key-id"
-          name = local.disable_dns_validation ? "na" : kubernetes_secret.cert_manager_r53_secret[0].metadata[0].name
+          key  = local.external_dns.aws_access_key_id_key
+          name = local.external_dns.secret_name
         }
         secretAccessKeySecretRef = {
-          key  = "secret-access-key"
-          name = local.disable_dns_validation ? "na" : kubernetes_secret.cert_manager_r53_secret[0].metadata[0].name
+          key  = local.external_dns.aws_secret_access_key_key
+          name = local.external_dns.secret_name
         }
       }
-    }
-    google = {
+    } : local.external_dns.provider == "gcp" ? {
       cloudDNS = {
-        project = lookup(try(data.kubernetes_secret_v1.dns[0].data, {}), "project", "")
+        project = try(var.inputs.cloud_account.attributes.project, "")
         serviceAccountSecretRef = {
-          key  = "credentials.json"
-          name = local.disable_dns_validation ? "na" : kubernetes_secret.cert_manager_r53_secret[0].metadata[0].name
+          key  = local.external_dns.gcp_credentials_json_key
+          name = local.external_dns.secret_name
         }
       }
-    }
-  }
+    } : local.external_dns.provider == "azure" ? {
+      azureDNS = {
+        subscriptionID = try(var.inputs.cloud_account.attributes.subscription_id, "")
+        tenantID       = try(var.inputs.cloud_account.attributes.tenant_id, "")
+        clientID       = try(var.inputs.cloud_account.attributes.client_id, "")
+        clientSecretSecretRef = {
+          key  = local.external_dns.azure_credentials_json_key
+          name = local.external_dns.secret_name
+        }
+      }
+    } : {}
+  ) : {}
   dns01_validations = {
     staging = {
       name = "letsencrypt-staging"
@@ -113,8 +127,9 @@ locals {
   acme_email      = lookup(local.spec, "acme_email", "") != "" ? lookup(local.spec, "acme_email", "") : try(var.cluster.createdBy, null)
 }
 
+# Fallback: Read existing DNS credentials secret if external_dns not provided (for GCP/Azure)
 data "kubernetes_secret_v1" "dns" {
-  count = local.tenant_provider == "aws" ? 0 : 1
+  count = local.has_external_dns ? 0 : (local.tenant_provider == "aws" ? 0 : 1)
   metadata {
     name      = "facets-tenant-dns"
     namespace = "default"

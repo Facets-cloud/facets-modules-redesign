@@ -1,5 +1,9 @@
 variable "instance" {
-  type = any
+  type = object({
+    spec = object({
+      hosted_zone_id = optional(string, "")
+    })
+  })
 }
 
 variable "instance_name" {
@@ -15,5 +19,13 @@ variable "environment" {
 }
 
 variable "inputs" {
+  type = object({
+    kubernetes_details = any
+    cloud_account      = any
+  })
+}
+
+variable "cc_metadata" {
   type = any
+  default = {}
 }

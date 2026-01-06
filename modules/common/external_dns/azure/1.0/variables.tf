@@ -1,5 +1,7 @@
 variable "instance" {
-  type = any
+  type = object({
+    spec = object({})
+  })
 }
 
 variable "instance_name" {
@@ -15,5 +17,7 @@ variable "environment" {
 }
 
 variable "inputs" {
-  type = any
+  type = object({
+    kubernetes_details = any
+  })
 }
