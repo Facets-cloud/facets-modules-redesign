@@ -1,5 +1,5 @@
 name: '@facets/ingress'
-properties:
+type: objectproperties:
   attributes:
     type: object
     properties:

@@ -1,5 +1,5 @@
 name: '@facets/config_map'
-properties:
+type: objectproperties:
   attributes:
     type: object
     properties:
