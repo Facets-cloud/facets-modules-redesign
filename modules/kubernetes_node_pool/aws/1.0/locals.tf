@@ -41,9 +41,8 @@ locals {
   subnet_type = "private"
   # Map subnet type to actual subnet IDs from network output
   subnet_ids_map = {
-    private  = local.network_details.attributes.private_subnet_ids
-    public   = local.network_details.attributes.public_subnet_ids
-    database = local.network_details.attributes.database_subnet_ids
+    private = local.network_details.attributes.private_subnet_ids
+    public  = local.network_details.attributes.public_subnet_ids
   }
   # Build subnet selector terms using selected subnet type
   subnet_selector_terms = [
