@@ -30,16 +30,8 @@ variable "environment" {
 
 variable "inputs" {
   description = "A map of inputs requested by the module developer."
-  type = object({
-    cloud_account = object({
-      attributes = object({
-        subscription_id = string
-        tenant_id       = string
-        client_id       = optional(string)
-        client_secret   = optional(string)
-      })
-    })
-  })
+  type        = any
+  default     = {}
 }
 
 #########################################################################
