@@ -1,5 +1,5 @@
 name: '@facets/kubeblocks-crd'
-properties:
+type: objectproperties:
   attributes:
     type: object
     properties:

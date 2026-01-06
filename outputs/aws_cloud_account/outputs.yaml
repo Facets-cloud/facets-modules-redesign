@@ -1,4 +1,5 @@
 name: '@facets/aws_cloud_account'
+type: object
 properties:
   attributes:
     type: object

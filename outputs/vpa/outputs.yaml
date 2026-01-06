@@ -1,5 +1,5 @@
 name: '@facets/vpa'
-properties:
+type: objectproperties:
   attributes:
     type: object
     properties:
