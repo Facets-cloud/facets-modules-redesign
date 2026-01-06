@@ -3,7 +3,7 @@ description: Azure project type with AKS and common services
 
 # Git repository details
 gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
-gitRef: master
+gitRef: main
 baseTemplatePath: project-type/azure/base
 
 # IaC modules to include
