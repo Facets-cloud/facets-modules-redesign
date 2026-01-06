@@ -1,5 +1,6 @@
 name: '@facets/kubernetes_secret'
-type: objectproperties:
+type: object
+properties:
   attributes:
     type: object
     properties:

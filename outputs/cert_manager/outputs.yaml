@@ -1,5 +1,6 @@
 name: '@facets/cert_manager'
-type: objectproperties:
+type: object
+properties:
   attributes:
     type: object
     properties:

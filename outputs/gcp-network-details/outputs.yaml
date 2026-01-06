@@ -1,5 +1,6 @@
 name: '@facets/gcp-network-details'
-type: objectproperties:
+type: object
+properties:
   attributes:
     type: object
     properties:

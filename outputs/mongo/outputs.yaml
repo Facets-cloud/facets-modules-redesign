@@ -1,5 +1,6 @@
 name: '@facets/mongo'
-type: objectproperties:
+type: object
+properties:
   attributes:
     type: object
   interfaces:
