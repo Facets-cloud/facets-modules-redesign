@@ -1,4 +1,7 @@
 locals {
+  # Flag to control Karpenter installation
+  install_karpenter = lookup(var.instance.spec, "install_karpenter", true)
+
   karpenter_namespace       = "kube-system"
   karpenter_service_account = "karpenter"
   cluster_name              = var.inputs.kubernetes_details.attributes.cluster_name
@@ -6,6 +9,10 @@ locals {
   oidc_provider             = var.inputs.kubernetes_details.attributes.oidc_provider
   aws_region                = var.inputs.cloud_account.attributes.aws_region
   node_security_group_id    = var.inputs.kubernetes_details.attributes.node_security_group_id
+
+  # When install_karpenter is false, use values from karpenter_details input
+  node_instance_profile_name = local.install_karpenter ? aws_iam_instance_profile.karpenter_node[0].name : var.inputs.karpenter_details.attributes.node_instance_profile_name
+  node_role_arn              = local.install_karpenter ? aws_iam_role.karpenter_node[0].arn : var.inputs.karpenter_details.attributes.node_role_arn
 
   # Merge environment tags with instance tags
   instance_tags = merge(
@@ -21,6 +28,8 @@ locals {
 
 # IAM Role for Karpenter Controller
 resource "aws_iam_role" "karpenter_controller" {
+  count = local.install_karpenter ? 1 : 0
+
   name = "karpenter-controller-${local.cluster_name}"
 
   assume_role_policy = jsonencode({
@@ -47,6 +56,8 @@ resource "aws_iam_role" "karpenter_controller" {
 
 # IAM Policy for Karpenter Controller
 resource "aws_iam_policy" "karpenter_controller" {
+  count = local.install_karpenter ? 1 : 0
+
   name        = "karpenter-controller-${local.cluster_name}"
   description = "IAM policy for Karpenter controller to manage EC2 instances"
 
@@ -93,7 +104,7 @@ resource "aws_iam_policy" "karpenter_controller" {
         Sid      = "PassNodeIAMRole"
         Effect   = "Allow"
         Action   = "iam:PassRole"
-        Resource = aws_iam_role.karpenter_node.arn
+        Resource = aws_iam_role.karpenter_node[0].arn
       },
       {
         Sid      = "EKSClusterEndpointLookup"
@@ -163,12 +174,16 @@ resource "aws_iam_policy" "karpenter_controller" {
 
 # Attach policy to controller role
 resource "aws_iam_role_policy_attachment" "karpenter_controller" {
-  role       = aws_iam_role.karpenter_controller.name
-  policy_arn = aws_iam_policy.karpenter_controller.arn
+  count = local.install_karpenter ? 1 : 0
+
+  role       = aws_iam_role.karpenter_controller[0].name
+  policy_arn = aws_iam_policy.karpenter_controller[0].arn
 }
 
 # IAM Role for Karpenter Nodes
 resource "aws_iam_role" "karpenter_node" {
+  count = local.install_karpenter ? 1 : 0
+
   name = "karpenter-node-${local.cluster_name}"
 
   assume_role_policy = jsonencode({
@@ -189,27 +204,31 @@ resource "aws_iam_role" "karpenter_node" {
 
 # Attach required policies to node role
 resource "aws_iam_role_policy_attachment" "karpenter_node_policies" {
-  for_each = toset([
+  for_each = local.install_karpenter ? toset([
     "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
     "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
     "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
     "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-  ])
+  ]) : toset([])
 
-  role       = aws_iam_role.karpenter_node.name
+  role       = aws_iam_role.karpenter_node[0].name
   policy_arn = each.value
 }
 
 # Create instance profile for nodes
 resource "aws_iam_instance_profile" "karpenter_node" {
+  count = local.install_karpenter ? 1 : 0
+
   name = "karpenter-node-${local.cluster_name}"
-  role = aws_iam_role.karpenter_node.name
+  role = aws_iam_role.karpenter_node[0].name
 
   tags = local.instance_tags
 }
 
 # Deploy Karpenter via Helm
 resource "helm_release" "karpenter" {
+  count = local.install_karpenter ? 1 : 0
+
   namespace        = local.karpenter_namespace
   create_namespace = false
   name             = "karpenter"
@@ -224,7 +243,7 @@ resource "helm_release" "karpenter" {
       serviceAccount = {
         name = local.karpenter_service_account
         annotations = {
-          "eks.amazonaws.com/role-arn" = aws_iam_role.karpenter_controller.arn
+          "eks.amazonaws.com/role-arn" = aws_iam_role.karpenter_controller[0].arn
         }
       }
       settings = {
@@ -255,7 +274,7 @@ resource "helm_release" "karpenter" {
 
 # SQS Queue for Spot Interruption Handling (optional)
 resource "aws_sqs_queue" "karpenter_interruption" {
-  count = var.instance.spec.interruption_handling ? 1 : 0
+  count = local.install_karpenter && var.instance.spec.interruption_handling ? 1 : 0
 
   name                      = "karpenter-${local.cluster_name}"
   message_retention_seconds = 300
@@ -265,7 +284,7 @@ resource "aws_sqs_queue" "karpenter_interruption" {
 }
 
 resource "aws_sqs_queue_policy" "karpenter_interruption" {
-  count = var.instance.spec.interruption_handling ? 1 : 0
+  count = local.install_karpenter && var.instance.spec.interruption_handling ? 1 : 0
 
   queue_url = aws_sqs_queue.karpenter_interruption[0].id
 
@@ -290,7 +309,7 @@ resource "aws_sqs_queue_policy" "karpenter_interruption" {
 
 # EventBridge rules for interruption handling
 resource "aws_cloudwatch_event_rule" "karpenter_interruption" {
-  for_each = var.instance.spec.interruption_handling ? {
+  for_each = local.install_karpenter && var.instance.spec.interruption_handling ? {
     scheduled_change = {
       event_pattern = jsonencode({
         source      = ["aws.health"]
@@ -326,7 +345,7 @@ resource "aws_cloudwatch_event_rule" "karpenter_interruption" {
 }
 
 resource "aws_cloudwatch_event_target" "karpenter_interruption" {
-  for_each = var.instance.spec.interruption_handling ? {
+  for_each = local.install_karpenter && var.instance.spec.interruption_handling ? {
     scheduled_change      = "scheduled_change"
     spot_interruption     = "spot_interruption"
     rebalance             = "rebalance"
@@ -341,9 +360,19 @@ resource "aws_cloudwatch_event_target" "karpenter_interruption" {
 # Add Karpenter node role to aws-auth ConfigMap using EKS access entry
 # This allows Karpenter-provisioned nodes to join the cluster
 resource "aws_eks_access_entry" "karpenter_node" {
+  count = local.install_karpenter ? 1 : 0
+
   cluster_name  = local.cluster_name
-  principal_arn = aws_iam_role.karpenter_node.arn
+  principal_arn = aws_iam_role.karpenter_node[0].arn
   type          = "EC2_LINUX"
+
+  # Prevent updates that fail due to AWS API restrictions on system:nodes group
+  lifecycle {
+    ignore_changes = [
+      kubernetes_groups,
+      user_name
+    ]
+  }
 
   depends_on = [
     aws_iam_role.karpenter_node
