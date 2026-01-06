@@ -7,8 +7,8 @@ Generated: 2026-01-06
 | Status | Count |
 |--------|-------|
 | ✓ Uploaded | 2 |
-| ❌ Failed | 12 |
-| ✅ Fixed | 1 |
+| ❌ Failed | 11 |
+| ✅ Fixed | 2 |
 
 ---
 
@@ -40,7 +40,25 @@ Details:
 
 ---
 
-## Failed Modules (12)
+### ✅ kubernetes_node_pool/aws
+
+**Error Type:** Terraform Validation - Unsupported Attribute
+
+**Original Error:**
+```
+terraform validation failed with 1 error(s)
+Unsupported attribute: This object does not have an attribute named "database_subnet_ids".
+```
+
+**Root Cause:** The `subnet_ids_map` in `locals.tf` referenced `database_subnet_ids` which doesn't exist in the network output schema. Node pools only need private and public subnets.
+
+**Fix Applied:** Removed `database` entry from `subnet_ids_map` in `modules/kubernetes_node_pool/aws/1.0/locals.tf`
+
+**Commit:** `82a485f` - fix: remove database_subnet_ids from kubernetes_node_pool/aws
+
+---
+
+## Failed Modules (11)
 
 ### 1. kubernetes_cluster/eks
 
@@ -58,23 +76,7 @@ var.inputs validation failed:
 
 ---
 
-### 2. kubernetes_node_pool/aws
-
-**Error Type:** Terraform Validation - Unsupported Attribute
-
-**Error:**
-```
-terraform validation failed with 1 error(s)
-Unsupported attribute: This object does not have an attribute named "database_subnet_ids".
-```
-
-**Root Cause:** The module references `database_subnet_ids` which doesn't exist in the input schema.
-
-**File to Fix:** Check `modules/kubernetes_node_pool/aws/1.0/*.tf` for reference to `database_subnet_ids`
-
----
-
-### 3. network/aws_vpc
+### 2. network/aws_vpc
 
 **Error Type:** Output Schema Missing Type Field
 
@@ -90,7 +92,7 @@ var.inputs validation failed:
 
 ---
 
-### 4. service/aws
+### 3. service/aws
 
 **Error Type:** Output Schema Missing Type Field
 
@@ -106,7 +108,7 @@ var.inputs validation failed:
 
 ---
 
-### 5. artifactories/standard
+### 4. artifactories/standard
 
 **Error Type:** Terraform Validation - Invalid File Reference
 
@@ -123,7 +125,7 @@ this function works only with files that are distributed as part of the configur
 
 ---
 
-### 6. cert_manager/standard
+### 5. cert_manager/standard
 
 **Error Type:** Terraform Init - Invalid Provider
 
@@ -140,7 +142,7 @@ provider registry registry.terraform.io does not have a provider named registry.
 
 ---
 
-### 7. helm/k8s_standard
+### 6. helm/k8s_standard
 
 **Error Type:** Output Schema - Unexpected Properties Type
 
@@ -155,7 +157,7 @@ failed to fetch schema for input 'kubernetes_details' (type '@facets/kubernetes-
 
 ---
 
-### 8. k8s_callback/k8s_standard
+### 7. k8s_callback/k8s_standard
 
 **Error Type:** Output Schema - Unexpected Properties Type
 
@@ -170,7 +172,7 @@ failed to fetch schema for input 'kubernetes_details' (type '@facets/kubernetes-
 
 ---
 
-### 9. k8s_resource/k8s_standard
+### 8. k8s_resource/k8s_standard
 
 **Error Type:** Output Schema - Unexpected Properties Type
 
@@ -185,7 +187,7 @@ failed to fetch schema for input 'kubernetes_details' (type '@facets/kubernetes-
 
 ---
 
-### 10. kubernetes_secret/k8s_standard
+### 9. kubernetes_secret/k8s_standard
 
 **Error Type:** Output Schema - Unexpected Properties Type
 
@@ -200,7 +202,7 @@ failed to fetch schema for input 'kubernetes_details' (type '@facets/kubernetes-
 
 ---
 
-### 11. prometheus/k8s_standard
+### 10. prometheus/k8s_standard
 
 **Error Type:** Output Schema - Unexpected Properties Type
 
@@ -215,7 +217,7 @@ failed to fetch schema for input 'kubernetes_details' (type '@facets/kubernetes-
 
 ---
 
-### 12. vpa/standard
+### 11. vpa/standard
 
 **Error Type:** Output Schema - Unexpected Properties Type
 
@@ -254,7 +256,7 @@ failed to fetch schema for input 'kubernetes_details' (type '@facets/kubernetes-
 ---
 
 ### Group C: Terraform Validation Errors (2 modules)
-- kubernetes_node_pool/aws - `database_subnet_ids` attribute doesn't exist
+- ~~kubernetes_node_pool/aws - `database_subnet_ids` attribute doesn't exist~~ → Fixed in commit `82a485f`
 - artifactories/standard - File reference `../deploymentcontext.json` doesn't exist
 
 ---
@@ -274,6 +276,6 @@ failed to fetch schema for input 'kubernetes_details' (type '@facets/kubernetes-
 1. **`outputs/kubernetes-details/outputs.yaml`** - Fixes 7 modules (CP backend issue #38)
 2. **`outputs/aws_cloud_account/outputs.yaml`** - Fixes 3 modules (CP backend issue #42)
 3. ~~**`modules/common/ingress/nginx_k8s/1.0/facets.yaml`** - Fixes 1 module~~ ✅ FIXED
-4. **`modules/kubernetes_node_pool/aws/1.0/*.tf`** - Fixes 1 module
+4. ~~**`modules/kubernetes_node_pool/aws/1.0/*.tf`** - Fixes 1 module~~ ✅ FIXED
 5. **`modules/common/artifactories/standard/1.0/*.tf`** - Fixes 1 module
 6. **`modules/common/cert_manager/standard/1.0/*.tf`** - Fixes 1 module
