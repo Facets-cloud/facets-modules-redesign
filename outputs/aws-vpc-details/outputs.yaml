@@ -1,5 +1,5 @@
 name: '@facets/aws-vpc-details'
-properties:
+type: objectproperties:
     attributes:
         properties:
             availability_zones:

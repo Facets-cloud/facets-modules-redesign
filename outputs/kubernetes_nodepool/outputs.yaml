@@ -1,5 +1,5 @@
 name: '@facets/kubernetes_nodepool'
-properties:
+type: objectproperties:
   attributes:
     type: object
     properties:

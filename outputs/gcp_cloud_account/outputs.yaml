@@ -1,5 +1,5 @@
 name: '@facets/gcp_cloud_account'
-properties:
+type: objectproperties:
   attributes:
     type: object
     properties:

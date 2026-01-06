@@ -1,5 +1,5 @@
 name: '@facets/redis'
-properties:
+type: objectproperties:
   attributes:
     type: object
   interfaces:

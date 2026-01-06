@@ -1,5 +1,5 @@
 name: '@facets/gke'
-properties:
+type: objectproperties:
   attributes:
     type: object
     properties:

@@ -1,5 +1,5 @@
 name: '@facets/helm'
-properties:
+type: objectproperties:
   attributes:
     type: object
     properties:

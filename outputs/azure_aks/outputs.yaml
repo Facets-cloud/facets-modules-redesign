@@ -1,5 +1,5 @@
 name: '@facets/azure_aks'
-properties:
+type: objectproperties:
   attributes:
     type: object
     properties:
