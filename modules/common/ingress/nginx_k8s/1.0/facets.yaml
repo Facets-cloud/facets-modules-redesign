@@ -118,7 +118,7 @@ spec:
               type: string
               title: Domain
               description: Host name of the domain
-              pattern: ^(?=.{1,253}$)(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63})*\.[A-Za-z]{2,6}$
+              pattern: ^[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*\.[A-Za-z]{2,6}$
               x-ui-unique: true
               x-ui-placeholder: 'Domain to map ingress. Eg: example.com, sub.example.com,
                 my-domain.co.uk'
@@ -191,7 +191,6 @@ spec:
               - X-Xss-Protection
               - reflected-xss
               - Cache-Control
-              - Cache-Control
               - Vary
               - Content-Disposition
               - X-Tenant-ID
@@ -218,7 +217,7 @@ spec:
               type: string
               title: Domain Prefix
               description: Subdomain prefix
-              pattern: ^(?!-)[a-z0-9-]{1,36}(?<!-)$
+              pattern: ^[a-z0-9]([a-z0-9-]{0,34}[a-z0-9])?$|^[a-z0-9]$
               x-ui-placeholder: Enter the subdomain you want to expose your application
               x-ui-error-message: Value doesn't match pattern, max characters of 36,
                 only hyphen special characters is accepted with numbers and alphabets

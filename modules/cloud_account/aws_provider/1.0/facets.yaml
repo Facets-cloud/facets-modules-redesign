@@ -66,7 +66,9 @@ sample:
   flavor: aws_provider
   kind: cloud_account
   disabled: false
-  spec: {}
+  spec:
+    cloud_account: ""
+    region: ""
 iac:
   validated_files:
   - variables.tf
