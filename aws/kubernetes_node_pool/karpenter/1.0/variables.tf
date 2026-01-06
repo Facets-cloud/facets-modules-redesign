@@ -4,20 +4,33 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
+      # Karpenter installation settings
+      install_karpenter     = optional(bool, true)
       karpenter_version     = string
-      enable_spot_instances = optional(bool, true)
-      enable_consolidation  = optional(bool, true)
+      karpenter_replicas    = optional(number, 2)
       interruption_handling = optional(bool, true)
-      node_pools = optional(map(object({
-        cpu_limits        = optional(string, "1000")
-        memory_limits     = optional(string, "1000Gi")
-        instance_families = optional(list(string), ["t3", "t3a"])
-        instance_sizes    = optional(list(string), ["medium", "large", "xlarge"])
-        capacity_types    = optional(list(string), ["on-demand", "spot"])
-        architecture      = optional(list(string), ["amd64"])
-        labels            = optional(map(string), {})
-        taints            = optional(map(string), {})
+
+      # Node pool instance configuration
+      instance_families = optional(list(string), ["t3", "t3a"])
+      instance_sizes    = optional(list(string), ["medium", "large", "xlarge"])
+      capacity_types    = optional(list(string), ["on-demand", "spot"])
+      architecture      = optional(list(string), ["amd64"])
+
+      # Node pool limits
+      cpu_limits    = optional(string, "1000")
+      memory_limits = optional(string, "1000Gi")
+
+      # Node pool behavior
+      enable_consolidation = optional(bool, true)
+
+      # Node scheduling
+      labels = optional(map(string), {})
+      taints = optional(map(object({
+        value  = string
+        effect = string
       })), {})
+
+      # Tags
       tags = optional(map(string), {})
     })
   })
@@ -81,6 +94,16 @@ variable "inputs" {
         database_subnet_ids = optional(list(string), [])
       })
     })
+    # Optional input - required when install_karpenter is false
+    karpenter_details = optional(object({
+      attributes = object({
+        node_instance_profile_name = string
+        node_role_arn              = string
+        controller_role_arn        = optional(string)
+        karpenter_namespace        = optional(string, "kube-system")
+        karpenter_service_account  = optional(string, "karpenter")
+      })
+    }))
   })
   description = "Inputs from dependent modules"
 }
