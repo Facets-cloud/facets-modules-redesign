@@ -1,10 +1,14 @@
 name: '@facets/config_map'
 properties:
     attributes:
-        hash:
-            type: string
-        name:
-            type: string
-    interfaces: {}
+        type: object
+        properties:
+            hash:
+                type: string
+            name:
+                type: string
+    interfaces:
+        type: object
+        properties: {}
 providers: []
 

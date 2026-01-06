@@ -1,10 +1,14 @@
-name: AWS
+name: redesign-aws
 description: AWS project type with common configurations.
 
 # Git repository details
 gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
 gitRef: master
 baseTemplatePath: project-type/aws/base
+
+# IaC tool configuration
+iacTool: OPENTOFU
+iacToolVersion: 1.11.0
 
 # IaC modules to include
 modules:

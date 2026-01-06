@@ -1,8 +1,10 @@
 name: '@facets/ingress'
 properties:
     attributes:
-        type: string
+        type: object
+        properties: {}
     interfaces:
-        type: string
+        type: object
+        properties: {}
 providers: []
 

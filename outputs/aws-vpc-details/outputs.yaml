@@ -57,6 +57,8 @@ properties:
                 description: The ID of the VPC
                 type: string
         type: object
-    interfaces: null
+    interfaces:
+        type: object
+        properties: {}
 providers: []
 

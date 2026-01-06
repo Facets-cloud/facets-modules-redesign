@@ -1,4 +1,10 @@
 name: '@facets/artifactories'
-properties: null
+properties:
+    attributes:
+        type: object
+        properties: {}
+    interfaces:
+        type: object
+        properties: {}
 providers: []
 
