@@ -12,7 +12,7 @@ variable "instance" {
         memory_request = string
         memory_limit   = string
       })
-      helm_values      = map(any)
+      helm_values = map(any)
     })
   })
   validation {
