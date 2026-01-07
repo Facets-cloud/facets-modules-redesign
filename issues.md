@@ -590,16 +590,20 @@ variable "instance" {
 ---
 
 ### Issue: Missing Required Property in var.instance.spec
-**Status:** ⚠️ ACTIVE
+**Status:** ✅ FIXED
 
 **Error:**
 ```
 var.instance.spec does not match schema defined in facets.yaml: at spec: missing required property 'name'
 ```
 
-**Modules:** `workload_identity/azure` (missing `name`), `workload_identity/gcp` (missing `identity_name`)
+**Modules:** ~~`workload_identity/azure`~~ (missing `identity_name`), ~~`workload_identity/gcp`~~ (missing `name`)
 
-**Problem:** The Terraform variable type definition doesn't include required properties from the facets.yaml schema.
+**Problem:** The Terraform variable type definition had `spec = object({})` (empty) but facets.yaml schema defined required properties.
+
+**Fix Applied:** Added explicit spec type definitions with all required and optional fields matching facets.yaml schema.
+
+**Commit:** `30c3956` - fix: add explicit spec type for workload_identity modules
 
 **Rule:** Ensure var.instance.spec type definition includes all required properties from facets.yaml schema.
 
@@ -848,7 +852,7 @@ Unable to evaluate directory symlink: lstat /Users/X: no such file or directory
 | 6 | var.inputs type=any | ✅ FIXED | ~~multiple modules~~ |
 | 7 | Output schema missing type | ⚠️ BACKEND | kubernetes_cluster/eks, network/aws_vpc, service/aws |
 | 8 | patternProperties indentation | ✅ FIXED | ~~ingress/nginx_k8s~~ |
-| 9 | var.instance.spec mismatch | ⚠️ PARTIAL | ~~vpa/standard~~, workload_identity/azure, workload_identity/gcp |
+| 9 | var.instance.spec mismatch | ✅ FIXED | ~~vpa/standard~~, ~~workload_identity/azure~~, ~~workload_identity/gcp~~ |
 | 10 | Undeclared variables | ⚠️ ACTIVE | k8s_callback/k8s_standard, prometheus/k8s_standard, service/aws |
 | 11 | Nested duplicate enum | ✅ FIXED | ~~ingress/nginx_k8s~~ |
 | 12 | Nested invalid regex | ✅ FIXED | ~~service/aws~~, ~~service/azure~~, ~~service/gcp~~ |
@@ -860,9 +864,9 @@ Unable to evaluate directory symlink: lstat /Users/X: no such file or directory
 
 ---
 
-## Current Status (as of 2026-01-07, updated after commit 38e4e10)
+## Current Status (as of 2026-01-07, updated after commit 30c3956)
 
-### Modules Successfully Validated (19)
+### Modules Successfully Validated (21)
 - `cloud_account/aws_provider` ✅
 - `cloud_account/gcp_provider` ✅
 - `common/config_map/k8s_standard` ✅
@@ -882,8 +886,10 @@ Unable to evaluate directory symlink: lstat /Users/X: no such file or directory
 - `kubernetes_node_pool/azure` ✅
 - `network/azure_network` ✅
 - `pubsub/gcp` ✅
+- `workload_identity/azure` ✅ (fixed in 30c3956)
+- `workload_identity/gcp` ✅ (fixed in 30c3956)
 
-### Modules Failed Validation (18)
+### Modules Failed Validation (16)
 
 | Module | Error Type | Issue # |
 |--------|------------|---------|
@@ -903,8 +909,6 @@ Unable to evaluate directory symlink: lstat /Users/X: no such file or directory
 | `service/aws` | TF validate: 9 errors | #10 |
 | `service/azure` | Provider not found: facets | #15 |
 | `service/gcp` | Provider not found: facets | #15 |
-| `workload_identity/azure` | var.instance.spec: missing `identity_name` | #9 |
-| `workload_identity/gcp` | var.instance.spec: missing `name` | #9 |
 
 ---
 
