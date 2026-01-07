@@ -5,10 +5,14 @@ locals {
     aws_access_key_id_key      = "access-key-id"
     aws_secret_access_key_key  = "secret-access-key"
     gcp_credentials_json_key   = ""
-    azure_credentials_json_key  = ""
+    azure_credentials_json_key = ""
     hosted_zone_id             = local.hosted_zone_id
     region                     = local.aws_region
     provider                   = "aws"
+    subscription_id            = ""
+    tenant_id                  = ""
+    client_id                  = ""
+    project_id                 = ""
   }
   output_interfaces = {}
 }

@@ -14,6 +14,12 @@ inputs:
       resource_name: default
     providers:
     - kubernetes
+  cloud_account:
+    optional: false
+    type: '@facets/azure_cloud_account'
+    displayName: Azure Cloud Account
+    providers:
+    - azurerm
 spec:
   title: External DNS Controller for Azure DNS
   description: Manages DNS credentials for Azure DNS operations

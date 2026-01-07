@@ -30,6 +30,20 @@ properties:
       provider:
         type: string
         description: Cloud provider (aws, gcp, azure)
+      # Azure-specific fields
+      subscription_id:
+        type: string
+        description: Azure subscription ID (Azure only)
+      tenant_id:
+        type: string
+        description: Azure tenant ID (Azure only)
+      client_id:
+        type: string
+        description: Azure client ID (Azure only)
+      # GCP-specific fields
+      project_id:
+        type: string
+        description: GCP project ID (GCP only)
   interfaces:
     type: object
 providers: []

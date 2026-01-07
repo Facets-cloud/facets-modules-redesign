@@ -33,7 +33,7 @@ resource "aws_iam_user" "external_dns_user" {
 resource "aws_iam_user_policy" "external_dns_r53_policy" {
   name = lower(module.iam_policy_name.name)
   user = aws_iam_user.external_dns_user.name
-  policy   = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {

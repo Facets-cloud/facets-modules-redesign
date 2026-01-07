@@ -1,7 +1,8 @@
 intent: external_dns
 flavor: aws
 version: '1.0'
-description: Manages DNS credentials and IAM resources for Route53 DNS operations in Kubernetes clusters
+description: Manages DNS credentials and IAM resources for Route53 DNS operations
+  in Kubernetes clusters
 clouds:
 - aws
 inputs:

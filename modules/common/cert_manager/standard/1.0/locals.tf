@@ -1,6 +1,9 @@
 # Define your locals here
 locals {
-  tenant_provider           = lower(try(var.cc_metadata.cc_tenant_provider, try(var.inputs.external_dns_details.attributes.provider, "aws")))
+  # Determine tenant provider from external_dns module output (primary) or kubernetes_details (cluster module output)
+  tenant_provider = lower(
+    try(var.inputs.external_dns_details.attributes.provider,
+  try(var.inputs.kubernetes_details.attributes.cloud_provider, "aws")))
   spec                      = lookup(var.instance, "spec", {})
   user_supplied_helm_values = try(local.spec.cert_manager.values, try(var.instance.advanced.cert_manager.values, {}))
   cert_manager              = lookup(local.spec, "cert_manager", try(var.instance.advanced.cert_manager, {}))
@@ -9,41 +12,49 @@ locals {
   cnameStrategy             = lookup(local.spec, "cname_strategy", "Follow")
   disable_dns_validation    = lookup(local.spec, "disable_dns_validation", lookup(local.advanced, "disable_dns_validation", false))
   user_defined_tags         = try(local.cert_manager.tags, {})
-  
+
   # External DNS configuration (if provided)
-  external_dns              = try(var.inputs.external_dns_details.attributes, null)
-  has_external_dns          = local.external_dns != null && !local.disable_dns_validation
-  
+  external_dns     = try(var.inputs.external_dns_details.attributes, null)
+  has_external_dns = local.external_dns != null && !local.disable_dns_validation
+
   # Build DNS provider configuration from external_dns input
-  dns_providers = local.has_external_dns ? (
+  # Use merge() with conditional maps to ensure consistent types
+  dns_providers = local.has_external_dns ? merge(
     local.external_dns.provider == "aws" ? {
       route53 = {
         region = local.external_dns.region
         accessKeyIDSecretRef = {
-          key  = local.external_dns.aws_access_key_id_key
-          name = local.external_dns.secret_name
+          name      = local.external_dns.secret_name
+          key       = local.external_dns.aws_access_key_id_key
+          namespace = local.external_dns.secret_namespace
         }
         secretAccessKeySecretRef = {
-          key  = local.external_dns.aws_secret_access_key_key
-          name = local.external_dns.secret_name
+          name      = local.external_dns.secret_name
+          key       = local.external_dns.aws_secret_access_key_key
+          namespace = local.external_dns.secret_namespace
         }
       }
-    } : local.external_dns.provider == "gcp" ? {
+    } : {},
+    local.external_dns.provider == "gcp" ? {
       cloudDNS = {
-        project = try(var.inputs.cloud_account.attributes.project, "")
+        project = local.external_dns.project_id
         serviceAccountSecretRef = {
-          key  = local.external_dns.gcp_credentials_json_key
-          name = local.external_dns.secret_name
+          name      = local.external_dns.secret_name
+          key       = local.external_dns.gcp_credentials_json_key
+          namespace = local.external_dns.secret_namespace
         }
       }
-    } : local.external_dns.provider == "azure" ? {
+    } : {},
+    local.external_dns.provider == "azure" ? {
       azureDNS = {
-        subscriptionID = try(var.inputs.cloud_account.attributes.subscription_id, "")
-        tenantID       = try(var.inputs.cloud_account.attributes.tenant_id, "")
-        clientID       = try(var.inputs.cloud_account.attributes.client_id, "")
+        subscriptionID    = local.external_dns.subscription_id
+        tenantID          = local.external_dns.tenant_id
+        clientID          = local.external_dns.client_id
+        resourceGroupName = local.external_dns.resource_group_name
         clientSecretSecretRef = {
-          key  = local.external_dns.azure_credentials_json_key
-          name = local.external_dns.secret_name
+          name      = local.external_dns.secret_name
+          key       = local.external_dns.azure_credentials_json_key
+          namespace = local.external_dns.secret_namespace
         }
       }
     } : {}
@@ -56,7 +67,7 @@ locals {
         {
           dns01 = merge({
             cnameStrategy = "Follow"
-          }, lookup(local.dns_providers, local.tenant_provider, {}))
+          }, local.dns_providers)
         },
       ]
     }
@@ -67,7 +78,7 @@ locals {
         {
           dns01 = merge({
             cnameStrategy = "Follow"
-          }, lookup(local.dns_providers, local.tenant_provider, {}))
+          }, local.dns_providers)
         },
       ]
     }
@@ -124,15 +135,5 @@ locals {
   # GTS and ACME configuration
   use_gts         = lookup(local.spec, "use_gts", false)
   gts_private_key = lookup(local.spec, "gts_private_key", "")
-  acme_email      = lookup(local.spec, "acme_email", "") != "" ? lookup(local.spec, "acme_email", "") : try(var.cluster.createdBy, null)
-}
-
-# Fallback: Read existing DNS credentials secret if external_dns not provided (for GCP/Azure)
-data "kubernetes_secret_v1" "dns" {
-  count = local.has_external_dns ? 0 : (local.tenant_provider == "aws" ? 0 : 1)
-  metadata {
-    name      = "facets-tenant-dns"
-    namespace = "default"
-  }
-  provider = kubernetes.release-pod
+  acme_email      = lookup(local.spec, "acme_email", "") != "" ? lookup(local.spec, "acme_email", "") : null
 }

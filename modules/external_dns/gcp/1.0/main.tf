@@ -21,6 +21,10 @@ resource "kubernetes_secret" "external_dns_gcp_secret" {
     namespace = local.namespace
   }
   data = {
-    "credentials.json" = lookup(data.kubernetes_secret_v1.dns.data, "credentials.json", "")
+    # Handle null data gracefully - use try() to safely access nested data
+    "credentials.json" = try(
+      lookup(try(data.kubernetes_secret_v1.dns.data, {}), "credentials.json", null),
+      ""
+    )
   }
 }
