@@ -119,7 +119,7 @@ sample:
       version: 3.135.0
       namespace: default
       wait: false
-    values: null
+    values: {}
 iac:
   validated_files:
   - variables.tf
