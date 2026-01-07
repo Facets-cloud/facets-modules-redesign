@@ -5,6 +5,21 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
+      # Required fields
+      name                = string
+      use_existing_gcp_sa = bool
+      use_existing_k8s_sa = bool
+      roles = map(object({
+        role = string
+      }))
+
+      # Optional fields with defaults handled in locals.tf
+      gcp_sa_name                     = optional(string)
+      gcp_sa_description              = optional(string)
+      k8s_sa_name                     = optional(string)
+      namespace                       = optional(string)
+      annotate_k8s_sa                 = optional(bool, false)
+      automount_service_account_token = optional(bool, false)
     })
   })
 }

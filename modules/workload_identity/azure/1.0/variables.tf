@@ -5,6 +5,22 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
+      # Required fields
+      identity_name         = string
+      use_existing_identity = bool
+
+      # Optional fields with defaults handled in locals.tf
+      existing_identity_resource_id   = optional(string)
+      service_account_namespace       = optional(string, "default")
+      service_account_name            = optional(string, "workload-identity-sa")
+      use_existing_k8s_sa             = optional(bool, false)
+      annotate_k8s_sa                 = optional(bool, true)
+      automount_service_account_token = optional(bool, false)
+      tags                            = optional(map(string), {})
+      role_assignments = optional(map(object({
+        scope              = string
+        role_definition_id = string
+      })), {})
     })
   })
 }
