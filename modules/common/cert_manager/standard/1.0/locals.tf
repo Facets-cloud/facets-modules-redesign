@@ -119,5 +119,5 @@ data "kubernetes_secret_v1" "dns" {
     name      = "facets-tenant-dns"
     namespace = "default"
   }
-  provider = "kubernetes.release-pod"
+  provider = kubernetes.release-pod
 }
