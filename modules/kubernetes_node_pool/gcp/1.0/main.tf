@@ -25,18 +25,18 @@ resource "google_project_iam_member" "np-account-iam" {
 }
 
 resource "random_string" "name_suffix" {
-  length = 4
+  length  = 4
   special = false
-  lower = true
-  upper = false
+  lower   = true
+  upper   = false
 }
 
 resource "google_container_node_pool" "node_pool" {
-  project     = var.inputs.cloud_account.attributes.project_id
-  provider    = google-beta
-  name        = "${var.instance_name}-${random_string.name_suffix.result}"
-  cluster     = var.inputs.kubernetes_details.cluster_name
-  location    = var.inputs.cloud_account.attributes.region
+  project  = var.inputs.cloud_account.attributes.project_id
+  provider = google-beta
+  name     = "${var.instance_name}-${random_string.name_suffix.result}"
+  cluster  = var.inputs.kubernetes_details.cluster_name
+  location = var.inputs.cloud_account.attributes.region
 
   autoscaling {
     total_min_node_count = local.autoscaling_per_zone ? null : lookup(local.spec, "min_node_count", null)
