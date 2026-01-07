@@ -21,7 +21,7 @@ modules:
       flavor: aws
 
     # Common Modules
-    - intent: artifactory
+    - intent: artifactories
       flavor: standard
     - intent: cert_manager
       flavor: standard
