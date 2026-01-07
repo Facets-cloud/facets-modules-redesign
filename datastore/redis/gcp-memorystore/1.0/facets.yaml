@@ -1,6 +1,6 @@
 intent: redis
 flavor: gcp-memorystore
-version: '1.0'
+version: '1.2'
 clouds:
 - gcp
 description: Managed Redis instance using Google Cloud Memorystore with high availability
@@ -18,7 +18,8 @@ spec:
         redis_version:
           type: string
           title: Redis Version
-          description: Version of the Redis engine
+          description: Version of the Redis engine (Redis 7.0+ recommended for better
+            TLS performance)
           enum:
           - REDIS_5_0
           - REDIS_6_X
@@ -75,11 +76,11 @@ spec:
       properties:
         enable_tls:
           type: boolean
-          title: Enable TLS
-          description: Enable transit encryption (TLS) for Redis connections
+          title: Enable TLS (In-Transit Encryption)
+          description: Enable transit encryption (TLS) for Redis connections. When
+            enabled, uses SERVER_AUTHENTICATION mode with TLS 1.2+. Port will be 6378.
+            Cannot be changed after creation.
           default: true
-      required:
-      - enable_tls
     imports:
       type: object
       title: Import Existing Resources
@@ -129,7 +130,7 @@ iac:
 sample:
   kind: redis
   flavor: gcp-memorystore
-  version: '1.0'
+  version: '1.2'
   disabled: true
   spec:
     version_config:

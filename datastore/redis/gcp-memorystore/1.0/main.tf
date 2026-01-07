@@ -16,7 +16,13 @@ resource "google_redis_instance" "main" {
   display_name  = "Redis instance for ${var.instance_name}"
 
   # Security configuration
-  auth_enabled            = true
+  # AUTH is always enabled for secure access
+  auth_enabled = true
+
+  # TLS configuration (in-transit encryption)
+  # When enabled: Uses SERVER_AUTHENTICATION mode with TLS 1.2+, port 6378
+  # When disabled: No encryption, port 6379 (not recommended for production)
+  # Note: Cannot be changed after instance creation (ForceNew)
   transit_encryption_mode = local.enable_tls ? "SERVER_AUTHENTICATION" : "DISABLED"
 
   # High availability configuration (STANDARD_HA tier only)
