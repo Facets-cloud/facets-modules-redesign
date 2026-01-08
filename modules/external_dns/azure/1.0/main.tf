@@ -15,14 +15,6 @@ resource "kubernetes_namespace" "namespace" {
   }
 }
 
-# Read existing DNS credentials secret (created by platform)
-data "kubernetes_secret_v1" "dns" {
-  metadata {
-    name      = "facets-tenant-dns"
-    namespace = "default"
-  }
-}
-
 # Kubernetes secret with Azure DNS credentials
 # cert-manager expects the client secret in a key named "client-secret"
 resource "kubernetes_secret" "external_dns_azure_secret" {
@@ -33,20 +25,36 @@ resource "kubernetes_secret" "external_dns_azure_secret" {
   }
   data = {
     # cert-manager azureDNS solver expects the key to be "client-secret"
-    # Handle null data gracefully - use try() to safely access nested data
-    "client-secret" = try(
-      lookup(try(data.kubernetes_secret_v1.dns.data, {}), "client-secret", null),
-      try(
-        lookup(try(data.kubernetes_secret_v1.dns.data, {}), "credentials.json", null),
-        ""
-      )
-    )
+    # Use client_secret directly from cloud_account input
+    "client-secret" = var.inputs.cloud_account.attributes.client_secret
+  }
+}
+
+# Create azure.json ConfigMap for kubernetes-sigs external-dns chart
+# The official chart expects Azure credentials in /etc/kubernetes/azure.json file
+resource "kubernetes_config_map" "azure_json" {
+  depends_on = [kubernetes_namespace.namespace]
+  metadata {
+    name      = "${module.helm_name.name}-azure-config"
+    namespace = local.namespace
+  }
+  data = {
+    "azure.json" = jsonencode({
+      tenantId        = local.tenant_id
+      subscriptionId  = local.subscription_id
+      resourceGroup   = local.resource_group_name
+      aadClientId     = local.client_id
+      aadClientSecret = var.inputs.cloud_account.attributes.client_secret
+    })
   }
 }
 
 # Deploy external-dns Helm chart
 resource "helm_release" "external_dns" {
-  depends_on       = [kubernetes_secret.external_dns_azure_secret]
+  depends_on = [
+    kubernetes_secret.external_dns_azure_secret,
+    kubernetes_config_map.azure_json
+  ]
   name             = module.helm_name.name
   chart            = local.chart_source
   repository       = local.chart_repository
@@ -108,21 +116,37 @@ resource "helm_release" "external_dns" {
       }
 
       # Azure provider configuration
+      # kubernetes-sigs chart expects credentials via azure.json file mounted as volume
       azure = {
-        resourceGroup      = local.resource_group_name
-        tenantId           = local.tenant_id
-        subscriptionId     = local.subscription_id
-        aadClientId        = local.client_id
-        aadClientSecret    = local.secret_name
-        aadClientSecretKey = "client-secret"
+        resourceGroup = local.resource_group_name
+        # Note: tenantId, subscriptionId, aadClientId, aadClientSecret are read from
+        # /etc/kubernetes/azure.json file mounted via extraVolumes/extraVolumeMounts
       }
+
+      # Mount azure.json ConfigMap as volume
+      extraVolumes = [
+        {
+          name = "azure-config"
+          configMap = {
+            name = kubernetes_config_map.azure_json.metadata[0].name
+          }
+        }
+      ]
+
+      extraVolumeMounts = [
+        {
+          name      = "azure-config"
+          mountPath = "/etc/kubernetes"
+          readOnly  = true
+        }
+      ]
 
       # Node scheduling
       nodeSelector = local.node_selector
       tolerations  = local.tolerations
 
       # Priority class
-      priorityClassName = "facets-critical"
+      priorityClassName = local.priority_class_name
     }),
     yamlencode(local.user_supplied_helm_values)
   ]

@@ -47,6 +47,11 @@ locals {
   image_repository = lookup(local.externaldns, "image_repository", "external-dns/external-dns")
   image_tag        = lookup(local.externaldns, "image_tag", "")
 
+  # Priority class configuration
+  # Allow override via advanced config, default to "facets-critical"
+  # Users can set advanced.externaldns.priority_class_name to use a different priority class
+  priority_class_name = lookup(local.externaldns, "priority_class_name", "facets-critical")
+
   # Node scheduling
   node_selector = try(
     var.inputs.kubernetes_node_pool_details.attributes.node_selector,
