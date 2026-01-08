@@ -22,5 +22,11 @@ variable "environment" {
 variable "inputs" {
   description = "A map of inputs requested by the module developer."
   type = object({
+    kubernetes_cluster = object({
+      attributes = optional(object({
+        cluster_name = optional(string)
+        region       = optional(string)
+      }))
+    })
   })
 }
