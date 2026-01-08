@@ -35,7 +35,7 @@ resource "google_container_node_pool" "node_pool" {
   project  = var.inputs.cloud_account.attributes.project_id
   provider = google-beta
   name     = "${var.instance_name}-${random_string.name_suffix.result}"
-  cluster  = var.inputs.kubernetes_details.cluster_name
+  cluster  = lookup(local.kubernetes_attributes, "cluster_name", "")
   location = var.inputs.cloud_account.attributes.region
 
   autoscaling {
@@ -58,7 +58,7 @@ resource "google_container_node_pool" "node_pool" {
     max_surge       = lookup(local.spec, "max_surge", 1)
     max_unavailable = lookup(local.spec, "max_unavailable", 0)
   }
-  version = var.inputs.kubernetes_details.cluster_version
+  version = lookup(local.kubernetes_attributes, "cluster_version", "")
 
   node_config {
     machine_type = lookup(local.spec, "instance_type", null)
@@ -85,7 +85,7 @@ resource "google_container_node_pool" "node_pool" {
     }
     preemptible = lookup(local.spec, "preemptible", false)
     tags = [
-      "gke-${var.inputs.kubernetes_details.cluster_name}"
+      "gke-${lookup(local.kubernetes_attributes, "cluster_name", "")}"
     ]
     spot = local.spot
 
