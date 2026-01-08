@@ -1,10 +1,10 @@
 # KubeBlocks Operator Module
 
-This module deploys the KubeBlocks operator (v1.0.1) on Kubernetes with optional database addons. The operator enables declarative management of stateful database workloads including PostgreSQL, MySQL, MongoDB, Redis, and Kafka.
+This module deploys the KubeBlocks operator (v1.0.1) on Kubernetes with all database addons enabled by default. The operator enables declarative management of stateful database workloads including PostgreSQL, MySQL, MongoDB, Redis, and Kafka.
 
 ## Overview
 
-KubeBlocks extends Kubernetes with Custom Resource Definitions (CRDs) that abstract database lifecycle operations. This module installs the core operator and optionally deploys database-specific addon charts (v1.0.1) as separate Helm releases managed by Terraform.
+KubeBlocks extends Kubernetes with Custom Resource Definitions (CRDs) that abstract database lifecycle operations. This module installs the core operator and automatically deploys all database-specific addon charts (v1.0.1) as separate Helm releases managed by Terraform.
 
 ## Environment Awareness
 
@@ -16,12 +16,12 @@ The module uses `var.environment.cloud_tags` to tag Kubernetes namespace resourc
 
 - **Kubernetes Namespace**: `kb-system` namespace with metadata labels and CRD dependency tracking
 - **KubeBlocks Operator**: Helm release installing the core operator controllers and webhooks
-- **Database Addon Helm Releases**: Optional separate releases for each enabled database type (PostgreSQL, MySQL, MongoDB, Redis, Kafka)
+- **Database Addon Helm Releases**: Separate releases for all database types (PostgreSQL, MySQL, MongoDB, Redis, Kafka) - automatically installed
 - **Dependency Outputs**: Release IDs and status indicators for other modules to coordinate installation order
 
 ## Database Addons
 
-The module can optionally install database addon charts that provide ComponentDefinitions and ClusterDefinitions. Each addon is deployed as an independent Helm release (v1.0.1):
+The module automatically installs all database addon charts that provide ComponentDefinitions and ClusterDefinitions. Each addon is deployed as an independent Helm release (v1.0.1):
 
 ### Available Addons
 
@@ -33,19 +33,7 @@ The module can optionally install database addon charts that provide ComponentDe
 
 ### Addon Installation
 
-Enable addons in the module configuration:
-
-```yaml
-spec:
-  database_addons:
-    postgresql: true
-    mysql: true
-    mongodb: true
-    redis: true
-    kafka: true
-```
-
-Each enabled addon creates a separate Helm release:
+All database addons are automatically enabled and installed by default. Each addon creates a separate Helm release:
 - Release name: `kb-addon-<database>`
 - Namespace: `kb-system`
 - Chart version: `1.0.1`
@@ -85,7 +73,7 @@ The addon controller is explicitly disabled (`addonController.enabled = false`) 
 1. Creates `kb-system` namespace with dependency annotations
 2. Installs KubeBlocks operator (v1.0.1) via Helm with CRD installation skipped. CRD's are installed using a separate module.
 3. Waits 2 minutes for operator controllers to stabilize
-4. Installs enabled database addon Helm releases sequentially
+4. Installs all database addon Helm releases (PostgreSQL, MySQL, MongoDB, Redis, Kafka) sequentially
 
 ## Destruction Workflow
 
@@ -100,7 +88,7 @@ terraform destroy
 ```
 
 Terraform handles cleanup automatically:
-1. Deletes database addon Helm releases (removes ComponentDefinitions and ClusterDefinitions)
+1. Deletes all database addon Helm releases (PostgreSQL, MySQL, MongoDB, Redis, Kafka) - removes ComponentDefinitions and ClusterDefinitions
 2. Removes KubeBlocks operator Helm release
 3. Deletes `kb-system` namespace
 

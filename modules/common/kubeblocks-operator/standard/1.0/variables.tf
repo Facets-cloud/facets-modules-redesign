@@ -15,13 +15,6 @@ variable "instance" {
         cpu_request    = optional(string)
         memory_request = optional(string)
       }))
-      database_addons = optional(object({
-        postgresql = optional(bool)
-        mysql      = optional(bool)
-        mongodb    = optional(bool)
-        redis      = optional(bool)
-        kafka      = optional(bool)
-      }))
     })
   })
 }
