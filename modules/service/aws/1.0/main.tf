@@ -1,9 +1,21 @@
 locals {
+  # Core instance spec
+  spec = lookup(var.instance, "spec", {})
+
   aws_advanced_config   = lookup(lookup(var.instance, "advanced", {}), "aws", {})
   aws_cloud_permissions = lookup(lookup(local.spec, "cloud_permissions", {}), "aws", {})
   enable_irsa           = lookup(local.aws_cloud_permissions, "enable_irsa", lookup(local.aws_advanced_config, "enable_irsa", false))
   iam_arns              = lookup(local.aws_cloud_permissions, "iam_policies", lookup(local.aws_advanced_config, "iam", {}))
   sa_name               = lower(var.instance_name)
+
+  # Spec type for actions (application, cronjob, job, statefulset)
+  spec_type                 = lookup(local.spec, "type", "application")
+  actions_required_vars_set = can(var.instance.kind) && can(var.instance.version) && can(var.instance.flavor) && !contains(["cronjob", "job"], local.spec_type)
+
+  enable_actions             = lookup(var.instance.spec, "enable_actions", true) && local.actions_required_vars_set ? true : false
+  enable_deployment_actions  = local.enable_actions && local.spec_type == "application" ? 1 : 0
+  enable_statefulset_actions = local.enable_actions && local.spec_type == "statefulset" ? 1 : 0
+
   release_metadata_labels = {
     "facets.cloud/blueprint_version" = tostring(lookup(local.release_metadata.metadata, "blueprint_version", "NA")) == null ? "NA" : tostring(lookup(local.release_metadata.metadata, "blueprint_version", "NA"))
     "facets.cloud/override_version"  = tostring(lookup(local.release_metadata.metadata, "override_version", "NA")) == null ? "NA" : tostring(lookup(local.release_metadata.metadata, "override_version", "NA"))
