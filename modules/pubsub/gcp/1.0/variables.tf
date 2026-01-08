@@ -42,6 +42,8 @@ variable "inputs" {
       attributes = optional(object({
         credentials = optional(string)
         project     = optional(string)
+        project_id  = optional(string)
+        region      = optional(string)
       }))
       interfaces = optional(object({}))
     }))
