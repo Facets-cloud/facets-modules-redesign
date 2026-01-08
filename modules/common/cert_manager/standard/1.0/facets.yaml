@@ -1,6 +1,6 @@
 intent: cert_manager
 flavor: standard
-version: '1.0'
+version: '2.0'
 description: Deploys Cert Manager for managing ssl certificates
 clouds:
 - aws
@@ -30,6 +30,12 @@ inputs:
     type: '@facets/kubernetes_nodepool'
     displayName: Node Pool
     optional: false
+  external_dns_details:
+    type: '@facets/external_dns'
+    displayName: External DNS
+    optional: true
+    description: External DNS module providing DNS credentials for cert-manager DNS-01
+      challenges
 outputs:
   default:
     type: '@facets/cert_manager'
@@ -85,10 +91,12 @@ sample:
   flavor: standard
   disabled: true
   metadata: {}
-  version: '1.0'
+  version: '2.0'
   spec:
     cname_strategy: Follow
     cert_manager: {}
 iac:
   validated_files:
+  - main.tf
   - variables.tf
+  - outputs.tf

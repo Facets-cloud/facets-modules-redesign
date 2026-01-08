@@ -1,0 +1,49 @@
+intent: external_dns
+flavor: aws
+version: '1.0'
+description: Manages DNS credentials and IAM resources for Route53 DNS operations
+  in Kubernetes clusters
+clouds:
+- aws
+inputs:
+  kubernetes_details:
+    optional: false
+    type: '@facets/kubernetes-details'
+    displayName: Kubernetes Cluster
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+    - kubernetes
+  cloud_account:
+    optional: false
+    type: '@facets/aws_cloud_account'
+    displayName: AWS Cloud Account
+    providers:
+    - aws
+spec:
+  title: External DNS Controller for AWS Route53
+  description: Manages DNS credentials and IAM resources for Route53 DNS operations
+  type: object
+  properties:
+    hosted_zone_id:
+      type: string
+      title: Route53 Hosted Zone ID
+      description: AWS Route53 hosted zone ID for DNS operations
+      x-ui-overrides-only: true
+  required: []
+outputs:
+  default:
+    type: '@facets/external_dns'
+    title: External DNS Details
+sample:
+  kind: external_dns
+  flavor: aws
+  version: '1.0'
+  disabled: true
+  spec: {}
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf

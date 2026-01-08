@@ -1,0 +1,48 @@
+name: '@facets/external_dns'
+properties:
+  attributes:
+    type: object
+    properties:
+      secret_name:
+        type: string
+        description: Name of the Kubernetes secret containing DNS credentials
+      secret_namespace:
+        type: string
+        description: Namespace where the DNS credentials secret is stored
+      aws_access_key_id_key:
+        type: string
+        description: Secret key name for AWS access key ID (AWS only)
+      aws_secret_access_key_key:
+        type: string
+        description: Secret key name for AWS secret access key (AWS only)
+      gcp_credentials_json_key:
+        type: string
+        description: Secret key name for GCP credentials JSON (GCP only)
+      azure_credentials_json_key:
+        type: string
+        description: Secret key name for Azure credentials JSON (Azure only)
+      hosted_zone_id:
+        type: string
+        description: AWS Route53 hosted zone ID (AWS only)
+      region:
+        type: string
+        description: Cloud region for DNS operations
+      provider:
+        type: string
+        description: Cloud provider (aws, gcp, azure)
+      subscription_id:
+        type: string
+        description: Azure subscription ID (Azure only)
+      tenant_id:
+        type: string
+        description: Azure tenant ID (Azure only)
+      client_id:
+        type: string
+        description: Azure client ID (Azure only)
+      project_id:
+        type: string
+        description: GCP project ID (GCP only)
+  interfaces:
+    type: object
+providers: []
+

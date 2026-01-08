@@ -1,0 +1,43 @@
+intent: external_dns
+flavor: gcp
+version: '1.0'
+description: Manages DNS credentials and service account for Google Cloud DNS operations in Kubernetes clusters
+clouds:
+- gcp
+inputs:
+  kubernetes_details:
+    optional: false
+    type: '@facets/kubernetes-details'
+    displayName: Kubernetes Cluster
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+    - kubernetes
+  cloud_account:
+    optional: false
+    type: '@facets/gcp_cloud_account'
+    displayName: GCP Cloud Account
+    providers:
+    - google
+spec:
+  title: External DNS Controller for GCP Cloud DNS
+  description: Manages DNS credentials and service account for Google Cloud DNS operations
+  type: object
+  properties: {}
+  required: []
+outputs:
+  default:
+    type: '@facets/external_dns'
+    title: External DNS Details
+sample:
+  kind: external_dns
+  flavor: gcp
+  version: '1.0'
+  disabled: true
+  spec: {}
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
