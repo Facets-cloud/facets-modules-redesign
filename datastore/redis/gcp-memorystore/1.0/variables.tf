@@ -53,7 +53,7 @@ variable "inputs" {
   type = object({
     gcp_provider = object({
       attributes = object({
-        project     = string
+        project_id     = string
         credentials = string
       })
     })

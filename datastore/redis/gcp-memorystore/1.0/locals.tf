@@ -1,6 +1,6 @@
 locals {
   # GCP provider configuration
-  project_id = var.inputs.gcp_provider.attributes.project
+  project_id = var.inputs.gcp_provider.attributes.project_id
   region     = var.inputs.network.attributes.region
   vpc_name   = var.inputs.network.attributes.vpc_name
 
