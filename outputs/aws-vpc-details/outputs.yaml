@@ -50,5 +50,6 @@ properties:
         type: object
     interfaces:
         type: object
+        properties: {}
 providers: []
 

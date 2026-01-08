@@ -48,14 +48,16 @@ variable "inputs" {
     })
     node_pool = optional(object({
       attributes = object({
-        node_selector = map(string)
-        taints = map(object({
+        node_pool_name  = optional(string)
+        node_class_name = optional(string)
+        node_selector   = optional(map(string), {})
+        taints = optional(list(object({
           key    = string
           value  = string
           effect = string
-        }))
+        })), [])
       })
-      interfaces = map(any)
+      interfaces = optional(any)
     }))
   })
 }
