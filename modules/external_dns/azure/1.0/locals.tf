@@ -52,9 +52,16 @@ locals {
     var.inputs.kubernetes_node_pool_details.attributes.node_selector,
     {}
   )
+  # Handle taints: convert null/object to empty list, ensure it's always a list
+  # taints can come as: null, {}, [], or list of objects with {key, value, effect}
+  # Check if taints exists and is a list, otherwise return empty list
+  nodepool_taints = try(
+    var.inputs.kubernetes_node_pool_details.attributes.taints,
+    null
+  )
   tolerations = concat(
     try(var.environment.default_tolerations, []),
-    try(var.inputs.kubernetes_node_pool_details.attributes.taints, [])
+    local.nodepool_taints != null && can(tolist(local.nodepool_taints)) ? tolist(local.nodepool_taints) : []
   )
 }
 
