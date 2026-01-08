@@ -1,4 +1,5 @@
 name: '@facets/gcp_cloud_account'
+type: object
 properties:
   attributes:
     type: object
@@ -6,11 +7,15 @@ properties:
       credentials:
         description: Service account key (sensitive)
         type: string
-      project:
-        description: GCP project ID from external data source
+      project_id:
+        description: GCP project ID
+        type: string
+      region:
+        description: GCP region
         type: string
   interfaces:
     type: object
+    properties: {}
 providers:
   - name: google
     source: hashicorp/google

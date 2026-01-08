@@ -1,0 +1,21 @@
+name: '@facets/grafana_dashboards'
+type: object
+properties:
+  attributes:
+    type: object
+    properties:
+      dashboard_count:
+        description: Number of dashboards deployed
+        type: string
+      dashboard_names:
+        description: List of dashboard names
+        type: string
+      configmap_names:
+        description: List of ConfigMap names containing dashboards
+        type: string
+      namespace:
+        description: Kubernetes namespace where dashboards are deployed
+        type: string
+  interfaces:
+    type: object
+    properties: {}

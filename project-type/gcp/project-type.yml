@@ -3,7 +3,7 @@ description: GCP project type with GKE and common services
 
 # Git repository details
 gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
-gitRef: master
+gitRef: main
 baseTemplatePath: project-type/gcp/base
 
 # IaC modules to include
@@ -18,7 +18,7 @@ modules:
     - intent: kubernetes_node_pool
       flavor: gcp_node_fleet
     - intent: network
-      flavor: gcp-vpc
+      flavor: gcp_network
     - intent: service
       flavor: gcp
 
@@ -29,7 +29,7 @@ modules:
       flavor: gcp
 
     # Common Modules
-    - intent: artifactory
+    - intent: artifactories
       flavor: standard
     - intent: cert_manager
       flavor: standard

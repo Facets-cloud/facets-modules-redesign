@@ -1,6 +1,6 @@
 {
   "kind": "network",
-  "flavor": "aws_vpc",
+  "flavor": "aws_network",
   "version": "1.0",
   "spec": {
     "vpc_cidr": "10.0.0.0/16",

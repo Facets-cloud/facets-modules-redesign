@@ -1,4 +1,5 @@
 name: '@facets/kafka'
+type: object
 properties:
   attributes:
     type: object

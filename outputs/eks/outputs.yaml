@@ -1,4 +1,5 @@
 name: '@facets/eks'
+type: object
 properties:
   attributes:
     type: object

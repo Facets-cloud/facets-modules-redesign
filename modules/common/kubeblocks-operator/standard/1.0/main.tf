@@ -140,12 +140,16 @@ locals {
     }
   }
 
-  # Filter only enabled addons
-  enabled_addons = {
-    for name, config in local.addon_configs :
-    name => config
-    if lookup(lookup(var.instance.spec, "database_addons", {}), name, false) == true
-  }
+  # All database addons are enabled by default
+  # To make addons configurable, add boolean fields in facets.yaml under spec.database_addons
+  # and uncomment the filtering logic below:
+  #
+  # enabled_addons = {
+  #   for name, config in local.addon_configs :
+  #   name => config
+  #   if lookup(lookup(var.instance.spec, "database_addons", {}), name, false) == true
+  # }
+  enabled_addons = local.addon_configs
 }
 
 # Install each enabled addon as a separate Helm release

@@ -1,4 +1,5 @@
 name: '@facets/k8s_resource'
+type: object
 properties:
   attributes:
     type: object
@@ -9,4 +10,5 @@ properties:
         type: string
   interfaces:
     type: object
+    properties: {}
 providers: []

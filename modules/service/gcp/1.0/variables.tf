@@ -258,8 +258,12 @@ variable "inputs" {
     # Optional: Node pool details
     kubernetes_node_pool_details = optional(object({
       topology_spread_key = string
-      taints              = string
-      node_selector       = string
+      taints = optional(list(object({
+        key    = string
+        value  = string
+        effect = string
+      })), [])
+      node_selector = optional(map(string), {})
     }))
   })
 }

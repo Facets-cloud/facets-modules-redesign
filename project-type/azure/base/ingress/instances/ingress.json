@@ -25,8 +25,8 @@
       "resource_type": "cert_manager"
     },
     "artifactories": {
-      "resource_name": "artifactory",
-      "resource_type": "artifactory"
+      "resource_name": "artifactories",
+      "resource_type": "artifactories"
     },
     "kubernetes_node_pool_details": {
       "resource_name": "nodepool",

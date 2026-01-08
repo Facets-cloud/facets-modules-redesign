@@ -3,7 +3,7 @@ description: AWS project type with common configurations.
 
 # Git repository details
 gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
-gitRef: master
+gitRef: main
 baseTemplatePath: project-type/aws/base
 
 # IaC modules to include
@@ -16,12 +16,12 @@ modules:
     - intent: kubernetes_node_pool
       flavor: aws
     - intent: network
-      flavor: aws_vpc
+      flavor: aws_network
     - intent: service
       flavor: aws
 
     # Common Modules
-    - intent: artifactory
+    - intent: artifactories
       flavor: standard
     - intent: cert_manager
       flavor: standard
