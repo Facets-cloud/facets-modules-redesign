@@ -820,7 +820,7 @@ security scan failed: found X HIGH/CRITICAL security issue(s)
 
 ---
 
-## 17. Unreadable Module Directory - ACTIVE
+## 17. Unreadable Module Directory - ✅ FIXED
 
 ### Error Pattern
 ```
@@ -830,13 +830,283 @@ Unable to evaluate directory symlink: lstat /Users/X: no such file or directory
 ```
 
 ### Issue: Broken Symlink in Module
-**Status:** ⚠️ ACTIVE - Requires module fix
+**Status:** ✅ FIXED
 
 **Module:** `kubernetes_node_pool/gcp_node_fleet`
 
 **Problem:** Module contains a symlink that points to a non-existent path.
 
-**Solution:** Fix or remove the broken symlink in the module.
+**Solution:** Remove the broken symlink from the module.
+
+**Commit:** `2a24e93` - remove symlink
+
+---
+
+## 18. Output Type Schema Field Name Mismatch ✅ FIXED
+
+### Error Pattern
+```
+terraform validate failed: Unsupported attribute
+This object does not have an attribute named "project_id".
+```
+
+### Issue: Output Schema Uses Different Field Name Than Module Code
+**Status:** ✅ FIXED
+
+**Module:** `kubernetes_node_pool/gcp_node_fleet`, and all GCP modules using `@facets/gcp_cloud_account`
+
+**Problem:** The `@facets/gcp_cloud_account` output schema defined `project` but module code accessed `project_id`. The actual `gcp_provider` module outputs both:
+```terraform
+output_attributes = {
+  project_id  = data.external.gcp_fetch_cloud_secret.result["project"]
+  project     = data.external.gcp_fetch_cloud_secret.result["project"] # Keep for backward compatibility
+  region      = var.instance.spec.region
+}
+```
+
+**Root Cause:** Output schema was incomplete - only had `project` and `credentials`, missing `project_id` and `region`.
+
+**Incorrect (outputs/gcp_cloud_account/outputs.yaml):**
+```yaml
+attributes:
+  type: object
+  properties:
+    credentials:
+      type: string
+    project:          # Deprecated field name
+      type: string
+```
+
+**Correct:**
+```yaml
+attributes:
+  type: object
+  properties:
+    credentials:
+      type: string
+    project_id:       # Canonical field name
+      type: string
+    region:
+      type: string
+```
+
+**Rule:** Output type schemas must match what the module actually outputs. Use canonical field names, not deprecated ones.
+
+**Commit:** `04b9a51` - fix: standardize gcp_cloud_account schema and fix var.inputs across GCP modules
+
+---
+
+## 19. Nested Object in Output Schema Causing Parse Errors ✅ FIXED
+
+### Error Pattern
+```
+var.inputs validation failed:
+  - var.inputs.X: failed to parse schema: property 'interfaces': schema missing 'type' field
+```
+
+### Issue: Complex Nested Objects in Output Schema
+**Status:** ✅ FIXED
+
+**Module:** `workload_identity/gcp`, `kubernetes_node_pool/gcp`, `kubernetes_node_pool/gcp_node_fleet`
+
+**Problem:** The `@facets/gke` output schema had a nested `exec` object inside `interfaces.kubernetes` that the raptor validator couldn't parse correctly.
+
+**Incorrect (outputs/gke/outputs.yaml):**
+```yaml
+interfaces:
+  type: object
+  properties:
+    kubernetes:
+      type: object
+      properties:
+        cluster_ca_certificate:
+          type: string
+        host:
+          type: string
+        exec:                    # Nested object causing parse issues
+          type: object
+          properties:
+            api_version:
+              type: string
+            args:
+              type: array
+              items:
+                type: string
+            command:
+              type: string
+        secrets:
+          type: string
+```
+
+**Correct:**
+```yaml
+interfaces:
+  type: object
+  properties:
+    kubernetes:
+      type: object
+      properties:
+        cluster_ca_certificate:
+          type: string
+        host:
+          type: string
+        secrets:
+          type: string
+```
+
+**Rule:** Keep output schema interfaces simple. Move complex nested objects to attributes if needed, or handle them in module code.
+
+**Commit:** `04b9a51` - fix: standardize gcp_cloud_account schema and fix var.inputs across GCP modules
+
+---
+
+## 20. Module Code Accessing Wrong Input Source ✅ FIXED
+
+### Error Pattern
+```
+terraform validate failed: Unsupported attribute
+This object does not have an attribute named "region".
+```
+
+### Issue: Module Accesses Field From Wrong Input
+**Status:** ✅ FIXED
+
+**Module:** `kubernetes_node_pool/gcp_node_fleet/gke_node_pool`
+
+**Problem:** The submodule code was accessing `project_id` and `region` from `cloud_account.attributes`, but these fields should come from `kubernetes_details.attributes` (which has them in the `@facets/gke` schema).
+
+**Incorrect:**
+```terraform
+resource "google_container_node_pool" "node_pool" {
+  project  = var.inputs.cloud_account.attributes.project_id    # Wrong source!
+  location = var.inputs.cloud_account.attributes.region        # Wrong source!
+  ...
+}
+```
+
+**Correct:**
+```terraform
+resource "google_container_node_pool" "node_pool" {
+  project  = lookup(local.kubernetes_attributes, "project_id", "")
+  location = lookup(local.kubernetes_attributes, "region", "")
+  ...
+}
+```
+
+**Rule:** Check which input actually provides the required fields. Use the output schema to verify which attributes are available from each input.
+
+**Commit:** `04b9a51` - fix: standardize gcp_cloud_account schema and fix var.inputs across GCP modules
+
+---
+
+## 21. var.inputs Missing Required Input From facets.yaml ✅ FIXED
+
+### Error Pattern
+```
+var.inputs validation failed:
+  - input 'X' defined in facets.yaml but not declared in var.inputs
+```
+
+### Issue: var.inputs Missing Input Declared in facets.yaml
+**Status:** ✅ FIXED
+
+**Modules:** `service/azure` (missing cloud_account, network_details, kubernetes_node_pool_details), `workload_identity/azure` (missing cloud_account), `workload_identity/gcp` (missing cloud_account)
+
+**Problem:** The facets.yaml declares inputs that are not present in the var.inputs type definition.
+
+**How to Fix:**
+1. Check facets.yaml `inputs:` section for all declared inputs
+2. Look up each input's `type:` (e.g., `@facets/azure_cloud_account`)
+3. Find the schema in `outputs/{type}/outputs.yaml`
+4. Add the input to var.inputs with matching structure
+
+**Example Fix for service/azure:**
+```terraform
+variable "inputs" {
+  type = object({
+    # Add missing inputs from facets.yaml
+    cloud_account = object({
+      attributes = optional(object({
+        subscription_id = optional(string)
+        tenant_id       = optional(string)
+        client_id       = optional(string)
+      }), {})
+      interfaces = optional(object({}), {})
+    })
+    network_details = object({
+      attributes = optional(object({...}), {})
+      interfaces = optional(object({}), {})
+    })
+    kubernetes_node_pool_details = object({
+      attributes = optional(object({...}), {})
+      interfaces = optional(object({}), {})
+    })
+    # ... existing inputs
+  })
+}
+```
+
+**Rule:** Every input in facets.yaml must have a corresponding entry in var.inputs.
+
+**Commit:** `04b9a51` - fix: standardize gcp_cloud_account schema and fix var.inputs across GCP modules
+
+---
+
+## 22. var.inputs Flat Structure vs attributes/interfaces Pattern ✅ FIXED
+
+### Error Pattern
+```
+var.inputs validation failed:
+  - var.inputs.X does not match output-type schema '@facets/Y': at X: missing required property 'attributes'
+```
+
+### Issue: Input Uses Flat Structure Instead of attributes/interfaces
+**Status:** ✅ FIXED
+
+**Module:** `workload_identity/azure` (aks_cluster had flat structure)
+
+**Problem:** The var.inputs declared an input with flat field access instead of the standard `attributes`/`interfaces` pattern that Facets expects.
+
+**Incorrect:**
+```terraform
+variable "inputs" {
+  type = object({
+    aks_cluster = object({
+      oidc_issuer_url        = optional(string)    # Flat!
+      cluster_id             = optional(string)
+      cluster_name           = optional(string)
+      ...
+    })
+  })
+}
+
+# Code accesses directly:
+var.inputs.aks_cluster.oidc_issuer_url
+```
+
+**Correct:**
+```terraform
+variable "inputs" {
+  type = object({
+    aks_cluster = object({
+      attributes = optional(object({
+        oidc_issuer_url        = optional(string)
+        cluster_id             = optional(string)
+        cluster_name           = optional(string)
+        ...
+      }), {})
+      interfaces = optional(object({}), {})
+    })
+  })
+}
+
+# Code accesses via attributes:
+lookup(local.aks_attributes, "oidc_issuer_url", "")
+```
+
+**Rule:** All inputs must use the `attributes`/`interfaces` structure pattern. Update both var.inputs declaration AND module code that accesses the fields.
+
+**Commit:** `04b9a51` - fix: standardize gcp_cloud_account schema and fix var.inputs across GCP modules
 
 ---
 
@@ -844,7 +1114,7 @@ Unable to evaluate directory symlink: lstat /Users/X: no such file or directory
 
 | Issue # | Error Type | Status | Modules Affected |
 |---------|------------|--------|------------------|
-| 1 | Sample.spec validation | ⚠️ PARTIAL | ~~cloud_account/aws_provider~~, cloud_account/azure_provider |
+| 1 | Sample.spec validation | ⚠️ PARTIAL | ~~cloud_account/aws_provider~~, ~~cloud_account/azure_provider~~ |
 | 2 | Invalid regex patterns | ✅ FIXED | ~~service/aws~~, ~~service/azure~~, ~~service/gcp~~, ~~ingress/nginx_k8s~~ |
 | 3 | Duplicate enum values | ✅ FIXED | ~~ingress/nginx_k8s~~ |
 | 4 | Remote module references | ✅ FIXED | (validation now opt-in) |
@@ -860,52 +1130,57 @@ Unable to evaluate directory symlink: lstat /Users/X: no such file or directory
 | 14 | Output type corruption | ✅ FIXED | (backend fix deployed) |
 | 15 | Provider not found | ⚠️ ACTIVE | service/azure, service/gcp, cert_manager, ingress |
 | 16 | Security scan failures | ⚠️ ACTIVE | aks, eks, gke, gcp node_pool, aws_vpc, gcp_vpc |
-| 17 | Unreadable module directory | ⚠️ ACTIVE | kubernetes_node_pool/gcp_node_fleet |
+| 17 | Unreadable module directory | ✅ FIXED | ~~kubernetes_node_pool/gcp_node_fleet~~ |
+| 18 | Output schema field name mismatch | ✅ FIXED | ~~GCP modules using gcp_cloud_account~~ |
+| 19 | Nested object in output schema | ✅ FIXED | ~~GCP modules using @facets/gke~~ |
+| 20 | Module accessing wrong input source | ✅ FIXED | ~~gcp_node_fleet/gke_node_pool~~ |
+| 21 | var.inputs missing facets.yaml input | ✅ FIXED | ~~service/azure~~, ~~workload_identity/azure~~, ~~workload_identity/gcp~~ |
+| 22 | var.inputs flat vs attributes/interfaces | ✅ FIXED | ~~workload_identity/azure~~ |
 
 ---
 
-## Current Status (as of 2026-01-07, updated after commit 30c3956)
+## Current Status (as of 2026-01-08, updated after commit 04b9a51)
 
-### Modules Successfully Validated (21)
+### Modules Successfully Validated (17)
 - `cloud_account/aws_provider` ✅
+- `cloud_account/azure_provider` ✅ (fixed in e53ab3e)
 - `cloud_account/gcp_provider` ✅
 - `common/config_map/k8s_standard` ✅
-- `common/eck-operator/helm` ✅
-- `common/grafana_dashboards/k8s` ✅
 - `common/helm/k8s_standard` ✅
 - `common/k8s_resource/k8s_standard` ✅
-- `common/kubeblocks-crd/standard` ✅
-- `common/kubeblocks-operator/standard` ✅
 - `common/kubernetes_secret/k8s_standard` ✅
-- `common/monitoring/mongo` ✅
-- `common/strimzi-operator/helm` ✅
 - `common/vpa/standard` ✅
-- `common/wireguard-operator/standard` ✅
-- `common/wireguard-vpn/standard` ✅
 - `kubernetes_node_pool/aws` ✅
-- `kubernetes_node_pool/azure` ✅
+- `kubernetes_node_pool/azure` ✅ (fixed in 3f78397)
+- `kubernetes_node_pool/gcp_node_fleet` ✅ (fixed in 04b9a51)
 - `network/azure_network` ✅
-- `pubsub/gcp` ✅
-- `workload_identity/azure` ✅ (fixed in 30c3956)
-- `workload_identity/gcp` ✅ (fixed in 30c3956)
+- `network/gcp_vpc` ✅ (var.inputs fixed, Trivy fails)
+- `pubsub/gcp` ✅ (fixed in 04b9a51)
+- `workload_identity/azure` ✅ (fixed in 04b9a51)
+- `workload_identity/gcp` ✅ (fixed in 04b9a51)
 
-### Modules Failed Validation (16)
+### Modules Failed Validation (20)
 
 | Module | Error Type | Issue # |
 |--------|------------|---------|
-| `cloud_account/azure_provider` | Sample.spec: missing `cloud_account` | #1 |
 | `common/artifactories/standard` | TF validate: 1 error | #10 |
 | `common/cert_manager/standard` | Provider not found: aws3tooling | #15 |
+| `common/eck-operator/helm` | Non-existent output type | #18 (pending-errors) |
+| `common/grafana_dashboards/k8s` | Non-existent output type | #18 (pending-errors) |
 | `common/ingress/nginx_k8s` | Provider not found: aws3tooling | #15 |
 | `common/k8s_callback/k8s_standard` | TF validate: 4 errors (undeclared variables) | #10 |
+| `common/kubeblocks-crd/standard` | Non-existent output type | #18 (pending-errors) |
+| `common/kubeblocks-operator/standard` | Schema mismatch | #19 (pending-errors) |
+| `common/monitoring/mongo` | Non-existent output type | #18 (pending-errors) |
 | `common/prometheus/k8s_standard` | TF validate: 4 errors (undeclared variables) | #10 |
+| `common/strimzi-operator/helm` | Non-existent output type | #18 (pending-errors) |
+| `common/wireguard-operator/standard` | Non-existent output type | #18 (pending-errors) |
+| `common/wireguard-vpn/standard` | Non-existent output type | #18 (pending-errors) |
 | `kubernetes_cluster/aks` | Security scan: 9 issues | #16 |
 | `kubernetes_cluster/eks` | Security scan: 13 issues | #16 |
 | `kubernetes_cluster/gke` | Security scan: 1 issue | #16 |
 | `kubernetes_node_pool/gcp` | Security scan: 1 issue | #16 |
-| `kubernetes_node_pool/gcp_node_fleet` | Unreadable module directory | #17 |
 | `network/aws_vpc` | Security scan: 1 issue | #16 |
-| `network/gcp_vpc` | Security scan: 1 issue | #16 |
 | `service/aws` | TF validate: 9 errors | #10 |
 | `service/azure` | Provider not found: facets | #15 |
 | `service/gcp` | Provider not found: facets | #15 |
@@ -916,18 +1191,35 @@ Unable to evaluate directory symlink: lstat /Users/X: no such file or directory
 
 Before publishing a module, verify:
 
+**Sample Validation:**
 - [ ] Sample.spec includes all required fields with valid values
 - [ ] Sample values match enum constraints
 - [ ] Use `{}` for object types, `[]` for array types (never `null`)
+
+**Schema Validation:**
 - [ ] Regex patterns avoid lookahead/lookbehind (check ALL occurrences including nested structures)
 - [ ] Enum arrays have no duplicates (check ALL occurrences including nested patternProperties)
 - [ ] `required` arrays in patternProperties are correctly indented (inside pattern, not sibling)
-- [ ] No external module sources (use local paths only) - or use `--block-remote-modules` flag
-- [ ] No `required_providers` block in terraform files (now warning, but best to remove)
-- [ ] `var.inputs` has explicit object type (not `any` or `map(any)`)
 - [ ] Output schemas have `type: object` for all object properties
 - [ ] Output schemas use simple types (no union types like `["string", "null"]`)
+- [ ] Output schema field names match what the module actually outputs (e.g., `project_id` not `project`)
+- [ ] Output schema interfaces are kept simple (avoid deeply nested objects)
+
+**var.inputs Validation:**
+- [ ] `var.inputs` has explicit object type (not `any` or `map(any)`)
+- [ ] Every input in facets.yaml has a corresponding entry in var.inputs
+- [ ] All inputs use `attributes`/`interfaces` structure pattern (not flat)
+- [ ] var.inputs type matches output-type schema exactly
+
+**var.instance.spec Validation:**
 - [ ] `var.instance.spec` types match facets.yaml schema exactly
+
+**Terraform Validation:**
+- [ ] No external module sources (use local paths only) - or use `--block-remote-modules` flag
+- [ ] No `required_providers` block in terraform files (now warning, but best to remove)
 - [ ] All referenced variables are declared in variables.tf
 - [ ] No broken symlinks or missing file references
+- [ ] Module code accesses fields from the correct input source
+
+**Security Validation:**
 - [ ] Security scan passes (no HIGH/CRITICAL issues)
