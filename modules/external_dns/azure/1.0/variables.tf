@@ -41,7 +41,7 @@ variable "inputs" {
         network_details = optional(object({
           resource_group_name = optional(string)
           region              = optional(string)
-        }))
+        }), {})
       })
       interfaces = optional(any)
     })
@@ -53,5 +53,11 @@ variable "inputs" {
         client_secret   = string
       })
     })
+    kubernetes_node_pool_details = optional(object({
+      attributes = optional(object({
+        node_selector = optional(map(string), {})
+        taints        = optional(any, null)
+      }), {})
+    }), null)
   })
 }

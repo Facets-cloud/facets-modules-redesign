@@ -52,9 +52,10 @@ variable "inputs" {
     # Kubernetes cluster details (required)
     kubernetes_details = object({
       attributes = object({
-        cluster_name     = string
-        cluster_endpoint = optional(string)
-        cloud_provider   = optional(string)
+        cluster_name        = string
+        cluster_endpoint    = optional(string)
+        cloud_provider      = optional(string)
+        resource_group_name = optional(string) # Azure resource group name (Azure only)
       })
       interfaces = optional(any)
     })
@@ -68,6 +69,7 @@ variable "inputs" {
         # AWS-specific fields
         aws_access_key_id_key     = optional(string, "")
         aws_secret_access_key_key = optional(string, "")
+        hosted_zone_id            = optional(string, "")
         # GCP-specific fields
         gcp_credentials_json_key = optional(string, "")
         project_id               = optional(string, "")

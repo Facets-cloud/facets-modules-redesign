@@ -1,5 +1,6 @@
 locals {
-  spec = lookup(var.instance, "spec", {})
+  spec     = lookup(var.instance, "spec", {})
+  advanced = lookup(var.instance, "advanced", {})
 
   # Namespace and secret
   namespace   = "external-dns"
@@ -18,6 +19,42 @@ locals {
     var.inputs.kubernetes_details.attributes.cluster_location,
     var.inputs.kubernetes_details.attributes.network_details.region,
     ""
+  )
+
+  # DNS configuration
+  domain_filters = lookup(local.spec, "domain_filters", [])
+
+  # Helm configuration
+  externaldns               = lookup(local.advanced, "externaldns", {})
+  helm_version              = lookup(local.externaldns, "version", "1.14.5")
+  cleanup_on_fail           = lookup(local.externaldns, "cleanup_on_fail", true)
+  wait                      = lookup(local.externaldns, "wait", false)
+  atomic                    = lookup(local.externaldns, "atomic", false)
+  timeout                   = lookup(local.externaldns, "timeout", 300)
+  recreate_pods             = lookup(local.externaldns, "recreate_pods", false)
+  user_supplied_helm_values = lookup(local.externaldns, "values", {})
+
+  # Chart source configuration (configurable with fallback)
+  # Default to official Kubernetes SIGs external-dns Helm chart
+  chart_path       = lookup(local.externaldns, "chart_path", "")
+  use_local_chart  = local.chart_path != ""
+  chart_source     = local.use_local_chart ? local.chart_path : "external-dns"
+  chart_repository = lookup(local.externaldns, "chart_repository", "https://kubernetes-sigs.github.io/external-dns")
+
+  # Image configuration (configurable with fallback)
+  # Default to official external-dns image from registry.k8s.io
+  image_registry   = lookup(local.externaldns, "image_registry", "registry.k8s.io")
+  image_repository = lookup(local.externaldns, "image_repository", "external-dns/external-dns")
+  image_tag        = lookup(local.externaldns, "image_tag", "")
+
+  # Node scheduling
+  node_selector = try(
+    var.inputs.kubernetes_node_pool_details.attributes.node_selector,
+    {}
+  )
+  tolerations = concat(
+    try(var.environment.default_tolerations, []),
+    try(var.inputs.kubernetes_node_pool_details.attributes.taints, [])
   )
 }
 
