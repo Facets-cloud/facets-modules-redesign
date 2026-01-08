@@ -1,6 +1,6 @@
 intent: redis
 flavor: gcp-memorystore
-version: '1.2'
+version: '1.0'
 clouds:
 - gcp
 description: Managed Redis instance using Google Cloud Memorystore with high availability
@@ -130,7 +130,7 @@ iac:
 sample:
   kind: redis
   flavor: gcp-memorystore
-  version: '1.2'
+  version: '1.0'
   disabled: true
   spec:
     version_config:
