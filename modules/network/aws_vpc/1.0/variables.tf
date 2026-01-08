@@ -14,8 +14,17 @@ variable "environment" {
 
 variable "inputs" {
   description = "Input references from other modules"
-  type        = map(any)
-  default     = {}
+  type = object({
+    cloud_account = object({
+      attributes = optional(object({
+        aws_iam_role = optional(string)
+        aws_region   = optional(string)
+        external_id  = optional(string)
+        session_name = optional(string)
+      }))
+      interfaces = optional(object({}))
+    })
+  })
 }
 
 variable "instance" {

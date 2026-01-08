@@ -1,4 +1,5 @@
 name: '@facets/vpa'
+type: object
 properties:
   attributes:
     type: object
@@ -19,4 +20,5 @@ properties:
         type: boolean
   interfaces:
     type: object
+    properties: {}
 providers: []

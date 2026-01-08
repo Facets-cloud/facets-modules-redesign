@@ -1,4 +1,5 @@
 name: '@facets/helm'
+type: object
 properties:
   attributes:
     type: object
@@ -7,4 +8,5 @@ properties:
         type: string
   interfaces:
     type: object
+    properties: {}
 providers: []

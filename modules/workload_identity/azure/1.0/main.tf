@@ -45,7 +45,7 @@ resource "azurerm_federated_identity_credential" "main" {
   name                = "${var.instance_name}-federated-credential"
   resource_group_name = local.resource_group_name
   audience            = ["api://AzureADTokenExchange"]
-  issuer              = var.inputs.aks_cluster.oidc_issuer_url
+  issuer              = lookup(local.aks_attributes, "oidc_issuer_url", "")
   parent_id           = local.managed_identity_id
   subject             = "system:serviceaccount:${local.k8s_sa_namespace}:${local.k8s_sa_name}"
 

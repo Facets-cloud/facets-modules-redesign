@@ -16,9 +16,10 @@ locals {
   annotate_k8s_sa                 = lookup(var.instance.spec, "annotate_k8s_sa", true)
   automount_service_account_token = lookup(var.instance.spec, "automount_service_account_token", false)
 
-  # Azure configuration
-  resource_group_name = var.inputs.aks_cluster.resource_group_name
-  location            = var.inputs.aks_cluster.cluster_location
+  # Azure configuration - access via attributes
+  aks_attributes      = lookup(var.inputs.aks_cluster, "attributes", {})
+  resource_group_name = lookup(local.aks_attributes, "resource_group_name", "")
+  location            = lookup(local.aks_attributes, "cluster_location", "")
 
   # Tags
   tags = lookup(var.instance.spec, "tags", {})
@@ -37,8 +38,8 @@ locals {
     kind       = "Config"
     clusters = [{
       cluster = {
-        certificate-authority-data = base64encode(var.inputs.aks_cluster.cluster_ca_certificate)
-        server                     = var.inputs.aks_cluster.cluster_endpoint
+        certificate-authority-data = base64encode(lookup(local.aks_attributes, "cluster_ca_certificate", ""))
+        server                     = lookup(local.aks_attributes, "cluster_endpoint", "")
       }
       name = "aks-cluster"
     }]
@@ -53,8 +54,8 @@ locals {
     users = [{
       name = "aks-user"
       user = {
-        client-certificate-data = base64encode(var.inputs.aks_cluster.client_certificate)
-        client-key-data         = base64encode(var.inputs.aks_cluster.client_key)
+        client-certificate-data = base64encode(lookup(local.aks_attributes, "client_certificate", ""))
+        client-key-data         = base64encode(lookup(local.aks_attributes, "client_key", ""))
       }
     }]
   }))

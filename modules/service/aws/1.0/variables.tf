@@ -176,26 +176,91 @@ variable "instance" {
 variable "inputs" {
   description = "Input dependencies from other resources defined in facets.yaml inputs section"
   type = object({
-    # Required: Kubernetes cluster details
+    # Required: AWS Cloud Account
+    cloud_account = object({
+      attributes = optional(object({
+        aws_iam_role = optional(string)
+        aws_region   = optional(string)
+        external_id  = optional(string)
+        session_name = optional(string)
+      }))
+      interfaces = optional(object({}))
+    })
+
+    # Required: Kubernetes cluster details (EKS)
     kubernetes_details = object({
-      attributes = optional(any, {})
-      interfaces = optional(any, {})
+      attributes = optional(object({
+        cloud_provider         = optional(string)
+        cluster_arn            = optional(string)
+        cluster_ca_certificate = optional(string)
+        cluster_endpoint       = optional(string)
+        cluster_id             = optional(string)
+        cluster_name           = optional(string)
+        cluster_location       = optional(string)
+        cluster_version        = optional(string)
+        node_iam_role_arn      = optional(string)
+        node_iam_role_name     = optional(string)
+        node_security_group_id = optional(string)
+        oidc_issuer_url        = optional(string)
+        oidc_provider          = optional(string)
+        oidc_provider_arn      = optional(string)
+        secrets                = optional(list(string))
+        kubernetes_provider_exec = optional(object({
+          api_version = optional(string)
+          args        = optional(list(string))
+          command     = optional(string)
+        }))
+      }))
+      interfaces = optional(object({
+        kubernetes = optional(object({
+          cluster_ca_certificate = optional(string)
+          host                   = optional(string)
+          secrets                = optional(list(string))
+          kubernetes_provider_exec = optional(object({
+            api_version = optional(string)
+            args        = optional(list(string))
+            command     = optional(string)
+          }))
+        }))
+      }))
+    })
+
+    # Required: Kubernetes node pool details (Karpenter)
+    kubernetes_node_pool_details = object({
+      attributes = optional(object({
+        node_class_name = optional(string)
+        node_pool_name  = optional(string)
+        taints          = optional(string)
+        node_selector   = optional(string)
+      }))
+      interfaces = optional(object({}))
     })
 
     # Optional: Container registry access
     artifactories = optional(object({
-      attributes = object({
-        registry_secrets_list = optional(list(any), [])
-      })
-      interfaces = optional(any, {})
+      attributes = optional(object({
+        registry_secret_objects = optional(map(list(object({
+          name = string
+        }))), {})
+        registry_secrets_list = optional(list(object({
+          name = string
+        })), [])
+      }))
+      interfaces = optional(object({}))
     }))
 
     # Optional: Vertical Pod Autoscaler
     vpa_details = optional(object({
-      attributes = object({
-        helm_release_id = optional(string, "")
-      })
-      interfaces = optional(any, {})
+      attributes = optional(object({
+        helm_release_id              = optional(string)
+        helm_release_name            = optional(string)
+        namespace                    = optional(string)
+        version                      = optional(string)
+        recommender_enabled          = optional(bool)
+        updater_enabled              = optional(bool)
+        admission_controller_enabled = optional(bool)
+      }))
+      interfaces = optional(object({}))
     }))
   })
 }

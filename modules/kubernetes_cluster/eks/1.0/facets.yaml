@@ -198,5 +198,5 @@ sample:
           enabled: true
           configuration_values: {}
         eks-cluster-addons2:
-          name: metrics-server
+          name: eks-node-agent
           enabled: true

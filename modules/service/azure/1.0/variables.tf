@@ -191,26 +191,67 @@ variable "instance" {
 variable "inputs" {
   description = "Input dependencies from other resources defined in facets.yaml inputs section"
   type = object({
+    # Required: Azure Cloud Account
+    cloud_account = object({
+      attributes = optional(object({
+        subscription_id = optional(string)
+        tenant_id       = optional(string)
+        client_id       = optional(string)
+      }), {})
+      interfaces = optional(object({}), {})
+    })
+
     # Required: Kubernetes cluster details
     kubernetes_details = object({
       attributes = optional(any, {})
       interfaces = optional(any, {})
     })
 
+    # Required: Node pool details
+    kubernetes_node_pool_details = object({
+      attributes = optional(object({
+        cluster_id     = optional(string)
+        disk_size      = optional(number)
+        node_count     = optional(number)
+        node_pool_name = optional(string)
+        node_selector  = optional(map(string), {})
+        taints         = optional(list(string), [])
+      }), {})
+      interfaces = optional(object({}), {})
+    })
+
+    # Required: Network details
+    network_details = object({
+      attributes = optional(object({
+        availability_zones   = optional(list(string), [])
+        private_subnet_ids   = optional(list(string), [])
+        private_subnet_cidrs = optional(list(string), [])
+        public_subnet_ids    = optional(list(string), [])
+        public_subnet_cidrs  = optional(list(string), [])
+        vnet_id              = optional(string)
+        vnet_name            = optional(string)
+        vnet_cidr_block      = optional(string)
+        resource_group_name  = optional(string)
+        resource_group_id    = optional(string)
+        region               = optional(string)
+      }), {})
+      interfaces = optional(object({}), {})
+    })
+
     # Optional: Container registry access
     artifactories = optional(object({
-      attributes = object({
+      attributes = optional(object({
         registry_secrets_list = optional(list(any), [])
-      })
-      interfaces = optional(any, {})
+      }), {})
+      interfaces = optional(object({}), {})
     }))
 
     # Optional: Vertical Pod Autoscaler
     vpa_details = optional(object({
-      attributes = object({
+      attributes = optional(object({
         helm_release_id = optional(string, "")
-      })
-      interfaces = optional(any, {})
+      }), {})
+      interfaces = optional(object({}), {})
     }))
   })
 }

@@ -1,4 +1,5 @@
 name: '@facets/azure_aks'
+type: object
 properties:
   attributes:
     type: object
