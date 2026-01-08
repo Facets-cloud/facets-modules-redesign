@@ -12,7 +12,8 @@ locals {
     subscription_id            = ""
     tenant_id                  = ""
     client_id                  = ""
-    project_id                 = var.inputs.cloud_account.attributes.project
+    resource_group_name        = ""
+    project_id                 = local.project_id
   }
   output_interfaces = {}
 }

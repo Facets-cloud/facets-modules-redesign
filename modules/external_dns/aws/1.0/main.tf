@@ -19,6 +19,16 @@ module "iam_policy_name" {
   is_k8s          = false
 }
 
+module "helm_name" {
+  source          = "github.com/Facets-cloud/facets-utility-modules//name"
+  environment     = var.environment
+  limit           = 53
+  globally_unique = false
+  resource_name   = var.instance_name
+  resource_type   = "externaldns"
+  is_k8s          = true
+}
+
 # IAM User for Route53 access
 resource "aws_iam_user" "external_dns_user" {
   name = lower(module.iam_user_name.name)
@@ -81,4 +91,72 @@ resource "kubernetes_secret" "external_dns_r53_secret" {
     "access-key-id"     = aws_iam_access_key.external_dns_access_key.id
     "secret-access-key" = aws_iam_access_key.external_dns_access_key.secret
   }
+}
+
+# Deploy external-dns Helm chart
+resource "helm_release" "external_dns" {
+  depends_on       = [kubernetes_secret.external_dns_r53_secret]
+  name             = module.helm_name.name
+  chart            = "external-dns"
+  repository       = "oci://registry-1.docker.io/bitnamicharts"
+  version          = local.helm_version
+  namespace        = local.namespace
+  create_namespace = false
+  cleanup_on_fail  = local.cleanup_on_fail
+  wait             = local.wait
+  atomic           = local.atomic
+  timeout          = local.timeout
+  recreate_pods    = local.recreate_pods
+
+  values = [
+    yamlencode({
+      provider      = "aws"
+      txtOwnerId    = "${module.helm_name.name}-${var.environment.unique_name}"
+      txtSuffix     = var.environment.unique_name
+      policy        = "sync"
+      domainFilters = local.domain_filters
+      priorityClassName = "facets-critical"
+
+      image = {
+        registry   = "docker.io"
+        repository = "bitnamilegacy/external-dns"
+      }
+
+      resources = {
+        limits = {
+          cpu    = "500m"
+          memory = "500Mi"
+        }
+        requests = {
+          cpu    = "100m"
+          memory = "100Mi"
+        }
+      }
+
+      metrics = {
+        serviceMonitor = {
+          enabled = true
+        }
+      }
+
+      aws = {
+        region    = local.aws_region
+        zoneType  = local.zone_type
+        credentials = {
+          accessKeyIDSecretRef = {
+            name = local.secret_name
+            key  = "access-key-id"
+          }
+          secretAccessKeySecretRef = {
+            name = local.secret_name
+            key  = "secret-access-key"
+          }
+        }
+      }
+
+      nodeSelector = local.node_selector
+      tolerations  = local.tolerations
+    }),
+    yamlencode(local.user_supplied_helm_values)
+  ]
 }

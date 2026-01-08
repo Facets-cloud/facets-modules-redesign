@@ -3,22 +3,27 @@ locals {
   # Determine tenant provider from external_dns module output (primary) or kubernetes_details (cluster module output)
   tenant_provider = lower(
     try(var.inputs.external_dns_details.attributes.provider,
-  try(var.inputs.kubernetes_details.attributes.cloud_provider, "aws")))
-  spec                      = lookup(var.instance, "spec", {})
-  user_supplied_helm_values = try(local.spec.cert_manager.values, try(var.instance.advanced.cert_manager.values, {}))
-  cert_manager              = lookup(local.spec, "cert_manager", try(var.instance.advanced.cert_manager, {}))
+    try(var.inputs.kubernetes_details.attributes.cloud_provider, "aws"))
+  )
+
+  spec     = lookup(var.instance, "spec", {})
+  advanced = lookup(var.instance, "advanced", {})
+
+  # Helm values configuration
+  cert_manager_advanced     = lookup(local.advanced, "cert_manager", {})
+  user_supplied_helm_values = lookup(local.cert_manager_advanced, "values", {})
   cert_mgr_namespace        = "cert-manager"
-  advanced                  = lookup(lookup(var.instance, "advanced", {}), "cert_manager", {})
-  cnameStrategy             = lookup(local.spec, "cname_strategy", "Follow")
-  disable_dns_validation    = lookup(local.spec, "disable_dns_validation", lookup(local.advanced, "disable_dns_validation", false))
-  user_defined_tags         = try(local.cert_manager.tags, {})
+
+  # DNS validation settings
+  cnameStrategy          = lookup(local.spec, "cname_strategy", "Follow")
+  disable_dns_validation = lookup(local.spec, "disable_dns_validation", false)
 
   # External DNS configuration (if provided)
   external_dns     = try(var.inputs.external_dns_details.attributes, null)
   has_external_dns = local.external_dns != null && !local.disable_dns_validation
 
   # Build DNS provider configuration from external_dns input
-  # Use merge() with conditional maps to ensure consistent types
+  # This creates the provider-specific configuration block for cert-manager
   dns_providers = local.has_external_dns ? merge(
     local.external_dns.provider == "aws" ? {
       route53 = {
@@ -59,6 +64,7 @@ locals {
       }
     } : {}
   ) : {}
+  # Let's Encrypt DNS01 validation cluster issuers
   dns01_validations = {
     staging = {
       name = "letsencrypt-staging"
@@ -66,7 +72,7 @@ locals {
       solvers = [
         {
           dns01 = merge({
-            cnameStrategy = "Follow"
+            cnameStrategy = local.cnameStrategy
           }, local.dns_providers)
         },
       ]
@@ -77,12 +83,14 @@ locals {
       solvers = [
         {
           dns01 = merge({
-            cnameStrategy = "Follow"
+            cnameStrategy = local.cnameStrategy
           }, local.dns_providers)
         },
       ]
     }
   }
+
+  # Let's Encrypt HTTP01 validation cluster issuers
   http_validations = {
     staging-http01 = {
       name = "letsencrypt-staging-http01"
@@ -93,8 +101,8 @@ locals {
             ingress = {
               podTemplate = {
                 spec = {
-                  nodeSelector = local.nodepool_labels
-                  tolerations  = local.nodepool_tolerations
+                  nodeSelector = local.nodeSelector
+                  tolerations  = local.tolerations
                 }
               }
             }
@@ -111,8 +119,8 @@ locals {
             ingress = {
               podTemplate = {
                 spec = {
-                  nodeSelector = local.nodepool_labels
-                  tolerations  = local.nodepool_tolerations
+                  nodeSelector = local.nodeSelector
+                  tolerations  = local.tolerations
                 }
               }
             }
@@ -121,12 +129,25 @@ locals {
       ]
     }
   }
-  environments = merge(local.http_validations, local.disable_dns_validation ? {} : local.dns01_validations)
+
+  # Combine HTTP and DNS validations (skip DNS if disabled)
+  environments = merge(
+    local.http_validations,
+    local.disable_dns_validation ? {} : local.dns01_validations
+  )
 
   # Nodepool configuration from inputs
-  nodepool_config      = lookup(var.inputs, "kubernetes_node_pool_details", null)
-  nodepool_tolerations = lookup(local.nodepool_config, "taints", [])
-  nodepool_labels      = lookup(local.nodepool_config, "node_selector", {})
+  nodepool_config = try(var.inputs.kubernetes_node_pool_details.attributes, null)
+
+  # Handle taints: convert null/object to empty list, ensure it's always a list
+  # taints can come as: null, {}, [], or list of objects with {key, value, effect}
+  # Check if taints exists and is a list, otherwise return empty list
+  # Use can() to safely check if we can convert to list (works for lists, fails for objects)
+  nodepool_tolerations = local.nodepool_config != null && local.nodepool_config.taints != null ? (
+    can(tolist(local.nodepool_config.taints)) ? tolist(local.nodepool_config.taints) : []
+  ) : []
+
+  nodepool_labels = local.nodepool_config != null ? try(local.nodepool_config.node_selector, {}) : {}
 
   # Use only nodepool configuration (no fallback to default tolerations)
   tolerations  = local.nodepool_tolerations

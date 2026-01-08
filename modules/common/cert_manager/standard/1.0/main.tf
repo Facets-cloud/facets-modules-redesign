@@ -12,18 +12,15 @@ resource "helm_release" "cert_manager" {
   chart            = "${path.module}/cert-manager-v1.17.1.tgz"
   namespace        = local.cert_mgr_namespace
   create_namespace = false
-  # version          = lookup(local.cert_manager, "version", "1.13.3")
-  cleanup_on_fail = lookup(local.cert_manager, "cleanup_on_fail", true)
-  wait            = lookup(local.cert_manager, "wait", true)
-  atomic          = lookup(local.cert_manager, "atomic", false)
-  timeout         = lookup(local.cert_manager, "timeout", 600)
-  recreate_pods   = lookup(local.cert_manager, "recreate_pods", false)
+  # version          = lookup(local.cert_manager_advanced, "version", "1.13.3")
+  cleanup_on_fail = lookup(local.cert_manager_advanced, "cleanup_on_fail", true)
+  wait            = lookup(local.cert_manager_advanced, "wait", true)
+  atomic          = lookup(local.cert_manager_advanced, "atomic", false)
+  timeout         = lookup(local.cert_manager_advanced, "timeout", 600)
+  recreate_pods   = lookup(local.cert_manager_advanced, "recreate_pods", false)
 
   values = [
-    <<EOF
-prometheus_id: ${try(var.inputs.prometheus_details.attributes.helm_release_id, "")}
-EOF
-    , yamlencode({
+    yamlencode({
       installCRDs  = true
       nodeSelector = local.nodeSelector
       tolerations  = local.tolerations
@@ -113,7 +110,7 @@ module "cluster-issuer-gts-prod" {
     spec = {
       acme = {
         email                       = local.acme_email
-        server                      = local.use_gts ? "https://dv.acme-v02.api.pki.goog/directory" : "https://acme-v02.api.letsencrypt.org/directory"
+        server                      = "https://dv.acme-v02.api.pki.goog/directory"
         disableAccountKeyGeneration = true
         privateKeySecretRef = {
           name = kubernetes_secret.google-trust-services-prod-account-key[0].metadata[0].name
@@ -122,7 +119,7 @@ module "cluster-issuer-gts-prod" {
           {
             dns01 = merge({
               cnameStrategy = local.cnameStrategy
-            }, lookup(local.dns_providers, local.tenant_provider, {}))
+            }, local.dns_providers)
           },
         ]
       }

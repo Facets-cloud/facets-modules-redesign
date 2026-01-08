@@ -12,6 +12,7 @@ locals {
     subscription_id            = ""
     tenant_id                  = ""
     client_id                  = ""
+    resource_group_name        = ""
     project_id                 = ""
   }
   output_interfaces = {}

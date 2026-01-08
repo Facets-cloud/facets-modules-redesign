@@ -16,6 +16,7 @@ variable "environment" {
     namespace = "default"
   }
 }
+
 variable "instance" {
   description = "The external DNS resource instance configuration"
   type = object({
@@ -23,7 +24,7 @@ variable "instance" {
     flavor   = optional(string)
     version  = optional(string)
     disabled = optional(bool, false)
-    spec     = object({})
+    spec     = optional(object({}), {})
   })
 }
 
@@ -32,18 +33,24 @@ variable "inputs" {
   type = object({
     kubernetes_details = object({
       attributes = object({
-        cluster_name     = string
-        cluster_endpoint = optional(string)
-        cloud_provider   = optional(string)
+        cluster_name        = string
+        cluster_endpoint    = optional(string)
+        cloud_provider      = optional(string)
+        resource_group_name = string           # Comes from AKS cluster (which gets it from network module)
+        cluster_location    = optional(string) # Azure region
+        network_details = optional(object({
+          resource_group_name = optional(string)
+          region              = optional(string)
+        }))
       })
       interfaces = optional(any)
     })
     cloud_account = object({
       attributes = object({
-        subscription_id     = string
-        tenant_id           = string
-        client_id           = string
-        resource_group_name = string
+        subscription_id = string
+        tenant_id       = string
+        client_id       = string
+        client_secret   = string
       })
     })
   })

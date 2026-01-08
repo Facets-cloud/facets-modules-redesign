@@ -7,10 +7,11 @@ variable "instance_name" {
 variable "environment" {
   description = "An object containing details about the environment."
   type = object({
-    name        = optional(string)
-    unique_name = optional(string)
-    cloud_tags  = optional(map(string), {})
-    namespace   = optional(string, "default")
+    name                = optional(string)
+    unique_name         = optional(string)
+    cloud_tags          = optional(map(string), {})
+    namespace           = optional(string, "default")
+    default_tolerations = optional(list(any), [])
   })
   default = {
     namespace = "default"
@@ -30,9 +31,22 @@ variable "instance" {
     flavor   = optional(string)
     version  = optional(string)
     disabled = optional(bool, false)
-    spec = object({
-      hosted_zone_id = optional(string, "")
-    })
+    spec = optional(object({
+      hosted_zone_id = optional(string, "*")
+      domain_filters = optional(list(string), [])
+      zone_type      = optional(string, "public")
+    }), {})
+    advanced = optional(object({
+      externaldns = optional(object({
+        version         = optional(string, "6.28.5")
+        cleanup_on_fail = optional(bool, true)
+        wait            = optional(bool, false)
+        atomic          = optional(bool, false)
+        timeout         = optional(number, 300)
+        recreate_pods   = optional(bool, false)
+        values          = optional(map(any), {})
+      }), {})
+    }), {})
   })
 }
 
@@ -56,5 +70,11 @@ variable "inputs" {
         external_id  = optional(string)
       })
     })
+    kubernetes_node_pool_details = optional(object({
+      attributes = optional(object({
+        node_selector = optional(map(string), {})
+        taints        = optional(list(any), [])
+      }), {})
+    }), null)
   })
 }
