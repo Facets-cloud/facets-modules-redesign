@@ -1,0 +1,24 @@
+name: '@facets/wireguard-details'
+type: object
+properties:
+  attributes:
+    type: object
+    properties:
+      release_name:
+        description: Helm release name
+        type: string
+      namespace:
+        description: Kubernetes namespace where WireGuard is deployed
+        type: string
+      chart:
+        description: Helm chart name
+        type: string
+      version:
+        description: Helm chart version
+        type: string
+      status:
+        description: Helm release status
+        type: string
+  interfaces:
+    type: object
+    properties: {}
