@@ -18,6 +18,7 @@ properties:
         type: string
   interfaces:
     type: object
+    properties: {}
 providers:
   - name: aws
     source: hashicorp/aws

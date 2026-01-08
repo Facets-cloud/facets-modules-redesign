@@ -5,7 +5,10 @@ properties:
     type: object
     properties:
       availability_zones:
-        type: string
+        type: array
+        items:
+          type: string
+        description: List of availability zones
       database_general_subnet_cidr:
         type: string
       database_general_subnet_id:
@@ -31,21 +34,39 @@ properties:
       mysql_dns_zone_name:
         type: string
       nat_gateway_ids:
-        type: string
+        type: array
+        items:
+          type: string
+        description: List of NAT gateway IDs
       nat_gateway_public_ip_ids:
-        type: string
+        type: array
+        items:
+          type: string
+        description: List of NAT gateway public IP IDs
       postgresql_dns_zone_id:
         type: string
       postgresql_dns_zone_name:
         type: string
       private_subnet_cidrs:
-        type: string
+        type: array
+        items:
+          type: string
+        description: List of private subnet CIDR blocks
       private_subnet_ids:
-        type: string
+        type: array
+        items:
+          type: string
+        description: List of private subnet IDs
       public_subnet_cidrs:
-        type: string
+        type: array
+        items:
+          type: string
+        description: List of public subnet CIDR blocks
       public_subnet_ids:
-        type: string
+        type: array
+        items:
+          type: string
+        description: List of public subnet IDs
       region:
         type: string
       resource_group_id:
@@ -60,4 +81,5 @@ properties:
         type: string
   interfaces:
     type: object
+    properties: {}
 providers: []

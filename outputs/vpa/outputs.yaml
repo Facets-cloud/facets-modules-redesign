@@ -20,4 +20,5 @@ properties:
         type: boolean
   interfaces:
     type: object
+    properties: {}
 providers: []

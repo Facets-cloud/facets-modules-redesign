@@ -3,6 +3,7 @@ type: object
 properties:
   attributes:
     type: object
+    properties: {}
   interfaces:
     type: object
     properties:

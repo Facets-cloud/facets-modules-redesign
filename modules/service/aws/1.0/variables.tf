@@ -239,8 +239,12 @@ variable "inputs" {
     # Optional: Container registry access
     artifactories = optional(object({
       attributes = optional(object({
-        registry_secret_objects = optional(string)
-        registry_secrets_list   = optional(string)
+        registry_secret_objects = optional(map(list(object({
+          name = string
+        }))), {})
+        registry_secrets_list = optional(list(object({
+          name = string
+        })), [])
       }))
       interfaces = optional(object({}))
     }))

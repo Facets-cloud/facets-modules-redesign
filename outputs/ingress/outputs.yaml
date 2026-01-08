@@ -16,6 +16,7 @@ properties:
         type: boolean
   interfaces:
     type: object
+    properties: {}
     additionalProperties:
       type: object
       properties:
