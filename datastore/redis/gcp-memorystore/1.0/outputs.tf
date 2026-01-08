@@ -34,7 +34,7 @@ locals {
       )
       tls_enabled     = local.enable_tls
       server_ca_certs = local.enable_tls ? google_redis_instance.main.server_ca_certs : []
-      secrets         = "[auth_token, connection_string, server_ca_certs]"
+      secrets         = ["auth_token", "connection_string", "server_ca_certs"]
     }
   }
 }
