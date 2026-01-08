@@ -1,281 +1,205 @@
 # Pending Module Validation Errors
 
-Generated: 2026-01-06
+Generated: 2026-01-08 (after commit 3f78397)
 
 ## Summary
 
 | Status | Count |
 |--------|-------|
-| ✓ Uploaded | 2 |
-| ❌ Failed | 11 |
-| ✅ Fixed | 2 |
+| ✅ Passed | 12 |
+| ❌ Failed | 25 |
 
 ---
 
-## Successful Modules (2)
+## Passed Modules (12)
 
-1. `cloud_account/aws_provider` - ✓ Published
-2. `config_map/k8s_standard` - ✓ Published
-
----
-
-## Fixed Modules (1)
-
-### ✅ ingress/nginx_k8s
-
-**Error Type:** Sample Spec Validation - patternProperties required indentation
-
-**Original Error:**
-```
-sample.spec does not comply with module's spec schema: Validation error at '': doesn't validate with schema://sample.spec.json#
-Details:
-  - /rules: missing properties: 'service_name', 'path', 'port'
-```
-
-**Root Cause:** The `required: [service_name, path, port]` was at the wrong indentation level (6 spaces, sibling of `patternProperties`) instead of inside the pattern definition (10 spaces). This made JSON Schema interpret it as "the `rules` object itself must have these properties" rather than "matched pattern objects must have these properties".
-
-**Fix Applied:** Moved `required` block from 6-space indentation to 10-space indentation in `modules/common/ingress/nginx_k8s/1.0/facets.yaml`
-
-**Commit:** `c3dfccb` - fix: correct required field indentation in ingress/nginx_k8s schema
+1. `cloud_account/aws_provider` ✅
+2. `cloud_account/azure_provider` ✅ (NEW - was failing with missing sample.spec field)
+3. `cloud_account/gcp_provider` ✅
+4. `common/config_map/k8s_standard` ✅
+5. `common/helm/k8s_standard` ✅
+6. `common/k8s_resource/k8s_standard` ✅
+7. `common/kubernetes_secret/k8s_standard` ✅
+8. `common/vpa/standard` ✅
+9. `kubernetes_node_pool/aws` ✅
+10. `kubernetes_node_pool/azure` ✅ (NEW - fixed var.inputs in 3f78397)
+11. `network/azure_network` ✅
+12. `pubsub/gcp` ✅ (NEW - fixed var.inputs in 3f78397)
 
 ---
 
-### ✅ kubernetes_node_pool/aws
+## Failed Modules by Error Category
 
-**Error Type:** Terraform Validation - Unsupported Attribute
+### Category A: Security Scan Failures (6 modules)
 
-**Original Error:**
-```
-terraform validation failed with 1 error(s)
-Unsupported attribute: This object does not have an attribute named "database_subnet_ids".
-```
+| Module | Issue Count | Issue # |
+|--------|-------------|---------|
+| `kubernetes_cluster/aks` | 9 HIGH/CRITICAL | #16 |
+| `kubernetes_cluster/eks` | 13 HIGH/CRITICAL | #16 |
+| `kubernetes_cluster/gke` | 1 HIGH/CRITICAL | #16 |
+| `kubernetes_node_pool/gcp` | 1 HIGH/CRITICAL | #16 |
+| `network/aws_vpc` | 1 HIGH/CRITICAL | #16 |
+| `network/gcp_vpc` | 1 HIGH/CRITICAL | #16 |
 
-**Root Cause:** The `subnet_ids_map` in `locals.tf` referenced `database_subnet_ids` which doesn't exist in the network output schema. Node pools only need private and public subnets.
-
-**Fix Applied:** Removed `database` entry from `subnet_ids_map` in `modules/kubernetes_node_pool/aws/1.0/locals.tf`
-
-**Commit:** `82a485f` - fix: remove database_subnet_ids from kubernetes_node_pool/aws
+**Notes:** These pass all other validations (TF init, TF validate, facets.yaml). Security issues need review.
 
 ---
 
-## Failed Modules (11)
+### Category B: Non-existent Output Type (8 modules)
 
-### 1. kubernetes_cluster/eks
+| Module | Missing Output Type | Issue # |
+|--------|---------------------|---------|
+| `common/eck-operator/helm` | `@facets/kubernetes-cluster` (input) | NEW #18 |
+| `common/grafana_dashboards/k8s` | `@facets/grafana_dashboards` (output) | NEW #18 |
+| `common/kubeblocks-crd/standard` | `@facets/kubernetes-cluster` (input) | NEW #18 |
+| `common/monitoring/mongo` | `@facets/monitoring-rules` (output) | NEW #18 |
+| `common/strimzi-operator/helm` | `@facets/kubernetes-cluster` (input) | NEW #18 |
+| `common/wireguard-operator/standard` | `@facets/wireguard-details` (output) | NEW #18 |
+| `common/wireguard-vpn/standard` | `@facets/wireguard-details` (input) | NEW #18 |
+| `workload_identity/azure` | `@facets/azure_workload_identity` (output) | NEW #18 |
 
-**Error Type:** Output Schema Missing Type Field
+**Root Cause:** These output types don't exist in the control plane. Either:
+1. Output types need to be registered in CP
+2. facets.yaml references are incorrect
 
-**Error:**
+---
+
+### Category C: var.inputs Missing Fields (3 modules)
+
+| Module | Error | Issue # |
+|--------|-------|---------|
+| `workload_identity/gcp` | input 'cloud_account' defined in facets.yaml but not declared in var.inputs | #6 |
+| `common/kubeblocks-operator/standard` | node_pool.attributes.node_selector: expected string, got map | NEW #19 |
+| `kubernetes_cluster/aks` | network_details.attributes.private_subnet_ids: expected string, got list | NEW #19 |
+
+**Notes:**
+- `workload_identity/gcp`: Needs cloud_account added to var.inputs
+- Schema mismatch issues: var.inputs type doesn't match output-type schema
+
+---
+
+### Category D: var.inputs Schema Mismatch (3 modules)
+
+| Module | Error | Issue # |
+|--------|-------|---------|
+| `service/azure` | artifactories.attributes.registry_secrets_list: expected string, got list | NEW #19 |
+| `service/gcp` | artifactories.attributes.registry_secret_objects: expected string, got map | NEW #19 |
+| `service/azure` | Also missing: network_details, cloud_account, kubernetes_node_pool_details | #6 |
+
+**Root Cause:** The module's var.inputs type has `list` or `map` types where the output type schema expects `string`.
+
+---
+
+### Category E: Provider Not Found (2 modules)
+
+| Module | Missing Provider | Issue # |
+|--------|------------------|---------|
+| `common/cert_manager/standard` | hashicorp/aws3tooling | #15 |
+| `common/ingress/nginx_k8s` | hashicorp/aws3tooling | #15 |
+
+**Root Cause:** Provider alias `aws3tooling` is interpreted as `hashicorp/aws3tooling` which doesn't exist.
+
+---
+
+### Category F: Terraform Validation Errors (3 modules)
+
+| Module | Error | Issue # |
+|--------|-------|---------|
+| `common/artifactories/standard` | no file exists at "../deploymentcontext.json" | #10 |
+| `common/k8s_callback/k8s_standard` | undeclared variables (4 errors) | #10 |
+| `common/prometheus/k8s_standard` | undeclared variables (4 errors) | #10 |
+
+---
+
+### Category G: Terraform Validation - Multiple Errors (2 modules)
+
+| Module | Errors | Issue # |
+|--------|--------|---------|
+| `kubernetes_node_pool/gcp_node_fleet` | TF validate: 2 errors | NEW |
+| `service/aws` | TF validate: 9 errors (undeclared cc_metadata, inconsistent conditionals) | #10 |
+
+---
+
+## New Issues Discovered (vs issues.md)
+
+### NEW Issue #18: Non-existent Output Type References
+
+**Error Pattern:**
+```
+facets.yaml validation failed: Input/Output type validation failed:
+  - input/output 'X' references non-existent output type '@facets/Y': output type does not exist
+```
+
+**Modules Affected:** 8 modules
+
+**Missing Output Types:**
+- `@facets/kubernetes-cluster`
+- `@facets/grafana_dashboards`
+- `@facets/monitoring-rules`
+- `@facets/wireguard-details`
+- `@facets/azure_workload_identity`
+
+**Fix:** Register these output types in control plane, or fix references in facets.yaml
+
+---
+
+### NEW Issue #19: var.inputs Type vs Output-Type Schema Mismatch
+
+**Error Pattern:**
 ```
 var.inputs validation failed:
-  - var.inputs.cloud_account: failed to parse schema: property 'attributes': schema missing 'type' field
+  - var.inputs.X does not match output-type schema '@facets/Y': at X.attributes.Z: expected string, got list/map
 ```
 
-**Root Cause:** The `@facets/aws_cloud_account` output type schema is missing `type: object` for the `attributes` property.
+**Modules Affected:** 4 modules
+- `kubernetes_cluster/aks` - private_subnet_ids: expected string, got list
+- `common/kubeblocks-operator/standard` - node_selector: expected string, got map
+- `service/azure` - registry_secrets_list: expected string, got list
+- `service/gcp` - registry_secret_objects: expected string, got map
 
-**File to Fix:** `outputs/aws_cloud_account/outputs.yaml`
+**Root Cause:** The output type schema in CP defines these attributes as `string`, but modules declare them as `list` or `map`.
+
+**Fix Options:**
+1. Update output type schema in CP to use correct types
+2. Update var.inputs in modules to use `string` (then parse in code)
 
 ---
 
-### 2. network/aws_vpc
+## Summary by Issue Type
 
-**Error Type:** Output Schema Missing Type Field
-
-**Error:**
-```
-var.inputs validation failed:
-  - var.inputs.cloud_account: failed to parse schema: property 'attributes': schema missing 'type' field
-```
-
-**Root Cause:** Same as #1 - The `@facets/aws_cloud_account` output type schema issue.
-
-**File to Fix:** `outputs/aws_cloud_account/outputs.yaml`
+| Issue Type | Count | Status |
+|------------|-------|--------|
+| Security scan failures | 6 | #16 - ACTIVE |
+| Non-existent output type | 8 | NEW #18 |
+| var.inputs missing fields | 1 | #6 - needs fix |
+| var.inputs schema mismatch | 4 | NEW #19 |
+| Provider not found | 2 | #15 - ACTIVE |
+| TF validation errors | 5 | #10 - ACTIVE |
 
 ---
 
-### 3. service/aws
-
-**Error Type:** Output Schema Missing Type Field
-
-**Error:**
-```
-var.inputs validation failed:
-  - var.inputs.cloud_account: failed to parse schema: property 'attributes': schema missing 'type' field
-```
-
-**Root Cause:** Same as #1 - The `@facets/aws_cloud_account` output type schema issue.
-
-**File to Fix:** `outputs/aws_cloud_account/outputs.yaml`
-
----
-
-### 4. artifactories/standard
-
-**Error Type:** Terraform Validation - Invalid File Reference
-
-**Error:**
-```
-terraform validation failed with 1 error(s)
-Invalid function argument: Invalid value for "path" parameter: no file exists at "../deploymentcontext.json";
-this function works only with files that are distributed as part of the configuration source code
-```
-
-**Root Cause:** Module references `../deploymentcontext.json` which doesn't exist during validation.
-
-**File to Fix:** `modules/common/artifactories/standard/1.0/*.tf`
-
----
-
-### 5. cert_manager/standard
-
-**Error Type:** Terraform Init - Invalid Provider
-
-**Error:**
-```
-terraform init failed:
-Could not retrieve the list of available versions for provider hashicorp/aws3tooling:
-provider registry registry.terraform.io does not have a provider named registry.terraform.io/hashicorp/aws3tooling
-```
-
-**Root Cause:** Invalid provider reference `hashicorp/aws3tooling` (typo or non-existent provider).
-
-**File to Fix:** `modules/common/cert_manager/standard/1.0/*.tf` - search for `aws3tooling` reference
-
----
-
-### 6. helm/k8s_standard
-
-**Error Type:** Output Schema - Unexpected Properties Type
-
-**Error:**
-```
-failed to fetch schema for input 'kubernetes_details' (type '@facets/kubernetes-details'): unexpected properties type: <nil>
-```
-
-**Root Cause:** The `@facets/kubernetes-details` output type schema has malformed properties structure.
-
-**File to Fix:** `outputs/kubernetes-details/outputs.yaml`
-
----
-
-### 7. k8s_callback/k8s_standard
-
-**Error Type:** Output Schema - Unexpected Properties Type
-
-**Error:**
-```
-failed to fetch schema for input 'kubernetes_details' (type '@facets/kubernetes-details'): unexpected properties type: <nil>
-```
-
-**Root Cause:** Same as #7 - The `@facets/kubernetes-details` output type schema issue.
-
-**File to Fix:** `outputs/kubernetes-details/outputs.yaml`
-
----
-
-### 8. k8s_resource/k8s_standard
-
-**Error Type:** Output Schema - Unexpected Properties Type
-
-**Error:**
-```
-failed to fetch schema for input 'kubernetes_details' (type '@facets/kubernetes-details'): unexpected properties type: <nil>
-```
-
-**Root Cause:** Same as #7 - The `@facets/kubernetes-details` output type schema issue.
-
-**File to Fix:** `outputs/kubernetes-details/outputs.yaml`
-
----
-
-### 9. kubernetes_secret/k8s_standard
-
-**Error Type:** Output Schema - Unexpected Properties Type
-
-**Error:**
-```
-failed to fetch schema for input 'kubernetes_details' (type '@facets/kubernetes-details'): unexpected properties type: <nil>
-```
-
-**Root Cause:** Same as #7 - The `@facets/kubernetes-details` output type schema issue.
-
-**File to Fix:** `outputs/kubernetes-details/outputs.yaml`
-
----
-
-### 10. prometheus/k8s_standard
-
-**Error Type:** Output Schema - Unexpected Properties Type
-
-**Error:**
-```
-failed to fetch schema for input 'kubernetes_details' (type '@facets/kubernetes-details'): unexpected properties type: <nil>
-```
-
-**Root Cause:** Same as #7 - The `@facets/kubernetes-details` output type schema issue.
-
-**File to Fix:** `outputs/kubernetes-details/outputs.yaml`
-
----
-
-### 11. vpa/standard
-
-**Error Type:** Output Schema - Unexpected Properties Type
-
-**Error:**
-```
-failed to fetch schema for input 'kubernetes_details' (type '@facets/kubernetes-details'): unexpected properties type: <nil>
-```
-
-**Root Cause:** Same as #7 - The `@facets/kubernetes-details` output type schema issue.
-
-**File to Fix:** `outputs/kubernetes-details/outputs.yaml`
-
----
-
-## Errors Grouped by Root Cause
-
-### Group A: `@facets/aws_cloud_account` - Missing `type: object` (3 modules)
-- kubernetes_cluster/eks
-- network/aws_vpc
-- service/aws
-
-**Fix:** Add `type: object` to `attributes` property in `outputs/aws_cloud_account/outputs.yaml`
-
----
-
-### Group B: `@facets/kubernetes-details` - Malformed Properties (7 modules)
-- helm/k8s_standard
-- k8s_callback/k8s_standard
-- k8s_resource/k8s_standard
-- kubernetes_secret/k8s_standard
-- prometheus/k8s_standard
-- vpa/standard
-
-**Fix:** Fix the properties structure in `outputs/kubernetes-details/outputs.yaml`
-
----
-
-### Group C: Terraform Validation Errors (2 modules)
-- ~~kubernetes_node_pool/aws - `database_subnet_ids` attribute doesn't exist~~ → Fixed in commit `82a485f`
-- artifactories/standard - File reference `../deploymentcontext.json` doesn't exist
-
----
-
-### Group D: Provider Issues (1 module)
-- cert_manager/standard - Invalid provider `hashicorp/aws3tooling`
-
----
-
-### ~~Group E: Sample Spec Validation (1 module)~~ ✅ FIXED
-- ~~ingress/nginx_k8s - Missing required properties in `rules`~~ → Fixed in commit `c3dfccb`
+## Changes from Previous Run
+
+**Newly Passing (3 modules):**
+1. `cloud_account/azure_provider` - sample.spec was fixed
+2. `kubernetes_node_pool/azure` - var.inputs fixed in commit 3f78397
+3. `pubsub/gcp` - var.inputs fixed in commit 3f78397
+
+**Newly Failing (0 modules):**
+None - all failures existed before
+
+**Status Changes:**
+- Previous: 10 passed, 27 failed (after commit 30c3956)
+- Current: 12 passed, 25 failed (after commit 3f78397)
+- Net improvement: +2 passing modules
 
 ---
 
 ## Priority Fix Order
 
-1. **`outputs/kubernetes-details/outputs.yaml`** - Fixes 7 modules (CP backend issue #38)
-2. **`outputs/aws_cloud_account/outputs.yaml`** - Fixes 3 modules (CP backend issue #42)
-3. ~~**`modules/common/ingress/nginx_k8s/1.0/facets.yaml`** - Fixes 1 module~~ ✅ FIXED
-4. ~~**`modules/kubernetes_node_pool/aws/1.0/*.tf`** - Fixes 1 module~~ ✅ FIXED
-5. **`modules/common/artifactories/standard/1.0/*.tf`** - Fixes 1 module
-6. **`modules/common/cert_manager/standard/1.0/*.tf`** - Fixes 1 module
+1. **Output Type Registration** (8 modules) - Register missing output types in CP
+2. **Output Type Schema Fixes** (4 modules) - Fix type definitions in output schemas
+3. **var.inputs Missing Fields** (1 module) - Add cloud_account to workload_identity/gcp
+4. **Provider Issues** (2 modules) - Handle aws3tooling provider alias
+5. **TF Validation Errors** (5 modules) - Fix undeclared variables, missing files
+6. **Security Scan** (6 modules) - Review and address HIGH/CRITICAL issues
