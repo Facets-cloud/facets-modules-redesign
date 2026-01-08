@@ -38,14 +38,43 @@ variable "environment" {
 variable "inputs" {
   description = "Input dependencies from other resources defined in facets.yaml inputs section"
   type = object({
+    # Required: Azure Cloud Account
+    cloud_account = object({
+      attributes = optional(object({
+        subscription_id = optional(string)
+        tenant_id       = optional(string)
+        client_id       = optional(string)
+      }), {})
+      interfaces = optional(object({}), {})
+    })
+
+    # Required: AKS Cluster
     aks_cluster = object({
-      resource_group_name    = string
-      cluster_location       = string
-      oidc_issuer_url        = string
-      cluster_endpoint       = string
-      cluster_ca_certificate = string
-      client_certificate     = string
-      client_key             = string
+      attributes = optional(object({
+        oidc_issuer_url        = optional(string)
+        cluster_id             = optional(string)
+        cluster_name           = optional(string)
+        cluster_fqdn           = optional(string)
+        cluster_private_fqdn   = optional(string)
+        cluster_endpoint       = optional(string)
+        cluster_location       = optional(string)
+        node_resource_group    = optional(string)
+        resource_group_name    = optional(string)
+        cluster_ca_certificate = optional(string)
+        client_certificate     = optional(string)
+        client_key             = optional(string)
+        cloud_provider         = optional(string)
+        secrets                = optional(list(string), [])
+      }), {})
+      interfaces = optional(object({
+        kubernetes = optional(object({
+          host                   = optional(string)
+          client_key             = optional(string)
+          client_certificate     = optional(string)
+          cluster_ca_certificate = optional(string)
+          secrets                = optional(list(string), [])
+        }))
+      }), {})
     })
   })
 }

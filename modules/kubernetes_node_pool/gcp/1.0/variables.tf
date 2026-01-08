@@ -19,16 +19,15 @@ variable "instance_name" {
 
 variable "inputs" {
   type = object({
-    cloud_account = optional(object({
+    cloud_account = object({
       attributes = optional(object({
         credentials = optional(string)
-        project     = optional(string)
         project_id  = optional(string)
         region      = optional(string)
-      }))
-      interfaces = optional(object({}))
-    }))
-    network_details = optional(object({
+      }), {})
+      interfaces = optional(object({}), {})
+    })
+    network_details = object({
       attributes = optional(object({
         database_subnet_cidrs               = optional(list(string))
         database_subnet_ids                 = optional(list(string))
@@ -52,15 +51,10 @@ variable "inputs" {
         vpc_name                            = optional(string)
         vpc_self_link                       = optional(string)
         zones                               = optional(list(string))
-      }))
-      interfaces = optional(object({}))
-    }))
-    kubernetes_details = optional(object({
-      # Direct access attributes (module accesses these directly)
-      auto_upgrade    = optional(string)
-      cluster_name    = optional(string)
-      cluster_version = optional(string)
-      # Standard output type structure
+      }), {})
+      interfaces = optional(object({}), {})
+    })
+    kubernetes_details = object({
       attributes = optional(object({
         auto_upgrade           = optional(string)
         cloud_provider         = optional(string)
@@ -87,22 +81,10 @@ variable "inputs" {
         services_range_name                    = optional(string)
         subnetwork                             = optional(string)
         workload_identity_config_workload_pool = optional(string)
-      }))
-      interfaces = optional(object({
-        kubernetes = optional(object({
-          cluster_ca_certificate = optional(string)
-          host                   = optional(string)
-          exec = optional(object({
-            api_version = optional(string)
-            args        = optional(list(string))
-            command     = optional(string)
-          }))
-          secrets = optional(string)
-        }))
-      }))
-    }))
+      }), {})
+      interfaces = optional(object({}), {})
+    })
   })
-  default = {}
 }
 
 variable "environment" {
