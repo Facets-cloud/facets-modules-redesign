@@ -27,11 +27,6 @@ inputs:
             resource_type: network
         displayName: Network
         type: '@facets/aws-vpc-details'
-    karpenter_details:
-        description: Reference to existing Karpenter installation. Required when install_karpenter is false.
-        displayName: Karpenter Details
-        optional: true
-        type: '@facets/karpenter-details'
 intent: kubernetes_node_pool
 outputs:
     default:
