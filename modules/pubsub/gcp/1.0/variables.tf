@@ -37,5 +37,14 @@ variable "environment" {
 }
 
 variable "inputs" {
-  type = any
+  type = object({
+    cloud_account = optional(object({
+      attributes = optional(object({
+        credentials = optional(string)
+        project     = optional(string)
+      }))
+      interfaces = optional(object({}))
+    }))
+  })
+  default = {}
 }

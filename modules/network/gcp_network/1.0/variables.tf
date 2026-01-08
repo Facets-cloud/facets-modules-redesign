@@ -15,8 +15,16 @@ variable "environment" {
 
 variable "inputs" {
   description = "Input references from other modules"
-  type        = map(any)
-  default     = {}
+  type = object({
+    cloud_account = optional(object({
+      attributes = optional(object({
+        credentials = optional(string)
+        project     = optional(string)
+      }))
+      interfaces = optional(object({}))
+    }))
+  })
+  default = {}
 }
 
 variable "instance" {
