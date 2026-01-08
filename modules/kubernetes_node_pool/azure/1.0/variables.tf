@@ -42,6 +42,12 @@ variable "environment" {
 variable "inputs" {
   type = object({
     kubernetes_details = optional(object({
+      # Direct access attributes (module accesses these directly)
+      cluster_id = optional(string)
+      network_details = optional(object({
+        private_subnet_ids = optional(list(string))
+      }))
+      # Standard output type structure
       attributes = optional(object({
         oidc_issuer_url           = optional(string)
         cluster_id                = optional(string)
