@@ -1,13 +1,12 @@
 intent: kubernetes_cluster
 flavor: eks
 alias-flavors:
-- default
+  - default
 version: '1.0'
 clouds:
-- aws
+  - aws
 title: EKS Cluster with Auto Mode support
-description: A Kubernetes EKS cluster module with auto mode enabled by default and
-  all necessary configurations preset.
+description: A Kubernetes EKS cluster module with auto mode enabled by default and all necessary configurations preset.
 inputs:
   network_details:
     type: '@facets/aws-vpc-details'
@@ -21,7 +20,7 @@ inputs:
     description: The AWS Cloud Account where the EKS cluster will be created
     optional: false
     providers:
-    - aws
+      - aws
 outputs:
   default:
     type: '@facets/kubernetes-details'
@@ -65,8 +64,8 @@ outputs:
 spec:
   type: object
   x-ui-order:
-  - cluster
-  - tags
+    - cluster
+    - tags
   properties:
     cluster:
       type: object
@@ -83,14 +82,15 @@ spec:
         cluster_endpoint_public_access_cidrs:
           type: array
           title: Cluster Endpoint Public Access CIDRs
-          description: List of CIDR blocks which can access the Amazon EKS public
+          description:
+            List of CIDR blocks which can access the Amazon EKS public
             API server endpoint.
           x-ui-visible-if:
             field: spec.cluster.cluster_endpoint_public_access
             values:
-            - true
+              - true
           default:
-          - 0.0.0.0/0
+            - 0.0.0.0/0
           x-ui-overrides-only: true
         cloudwatch:
           type: object
@@ -111,13 +111,14 @@ spec:
               description: List of EKS control plane log types to enable.
               x-ui-overrides-only: true
               default:
-              - api
-              - audit
-              - authenticator
+                - api
+                - audit
+                - authenticator
         cluster_addons:
           type: object
           title: EKS Cluster Addons
-          description: Configuration for EKS cluster addons. Add multiple addons with
+          description:
+            Configuration for EKS cluster addons. Add multiple addons with
             their specific configurations.
           x-ui-toggle: true
           patternProperties:
@@ -126,30 +127,27 @@ spec:
               title: Addon Configuration
               description: Configuration for an individual EKS addon
               x-ui-order:
-              - name
-              - enabled
-              - configuration_values
-              - service_account_role_arn
+                - name
+                - enabled
+                - configuration_values
+                - service_account_role_arn
               properties:
                 name:
                   type: string
                   title: Addon Name
                   description: Select the addon to install
                   enum:
-                  - aws-efs-csi-driver
-                  - aws-fsx-csi-driver
-                  - aws-mountpoint-s3-csi-driver
-                  - eks-node-agent
-                  - snapshot-controller
-                  - aws-network-flow-monitor-agent
-                  - aws-guardduty-agent
-                  - amazon-cloudwatch-observability
-                  - adot
-                  - aws-privateca-connector
-                  - sriov-network-metrics-exporter
-                  - sagemaker-hyperpod-task-governance
-                  - sagemaker-hyperpod-observability
-                  - sagemaker-hyperpod-training-operator
+                    - aws-efs-csi-driver
+                    - aws-fsx-csi-driver
+                    - aws-mountpoint-s3-csi-driver
+                    - eks-node-monitoring-agent
+                    - snapshot-controller
+                    - aws-network-flow-monitoring-agent
+                    - aws-guardduty-agent
+                    - amazon-cloudwatch-observability
+                    - adot
+                    - aws-privateca-connector-for-kubernetes
+                    - sriov-network-metrics-exporter
                   x-ui-typeable: true
                   x-ui-overrides-only: false
                   x-ui-unique: true
@@ -169,7 +167,7 @@ spec:
                   title: Service Account Role ARN
                   description: ARN of IAM role to bind to the addon's service account
               required:
-              - name
+                - name
       required: []
     tags:
       type: object
@@ -178,12 +176,12 @@ spec:
       x-ui-toggle: false
       x-ui-yaml-editor: true
   required:
-  - cluster
+    - cluster
 sample:
   kind: kubernetes_cluster
   flavor: eks
   alias-flavors:
-  - default
+    - default
   version: '1.0'
   metadata:
     name: eks-cluster
@@ -191,12 +189,5 @@ sample:
     cluster:
       cluster_endpoint_public_access: true
       cluster_endpoint_public_access_cidrs:
-      - 0.0.0.0/0
-      cluster_addons:
-        eks-cluster-addons1:
-          name: snapshot-controller
-          enabled: true
-          configuration_values: {}
-        eks-cluster-addons2:
-          name: eks-node-agent
-          enabled: true
+        - 0.0.0.0/0
+      cluster_addons: {}
