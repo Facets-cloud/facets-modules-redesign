@@ -36,8 +36,9 @@ resource "helm_release" "mongodb_exporter" {
 
           # ServiceMonitor configuration for Prometheus Operator
           serviceMonitor = {
-            enabled  = true
-            interval = local.metrics_interval
+            enabled       = true
+            interval      = local.metrics_interval
+            scrapeTimeout = "30s" # Increased from default 10s to handle collection stats timeouts
 
             additionalLabels = {
               # Required: Prometheus Operator uses serviceMonitorSelector.matchLabels.release
