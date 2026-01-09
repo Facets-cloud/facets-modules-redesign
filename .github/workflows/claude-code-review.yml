@@ -25,9 +25,9 @@ jobs:
 
       - name: Install Raptor CLI
         run: |
-          wget https://github.com/Facets-cloud/raptor/releases/latest/download/raptor-linux-amd64
-          chmod +x raptor-linux-amd64
-          sudo mv raptor-linux-amd64 /usr/local/bin/raptor
+          curl -L -o raptor https://github.com/Facets-cloud/raptor/releases/latest/download/raptor-linux-amd64
+          chmod +x raptor
+          sudo mv raptor /usr/local/bin/raptor
 
       - name: Run Claude Facets Validation
         env:
