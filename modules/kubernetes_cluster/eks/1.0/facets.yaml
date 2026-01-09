@@ -148,9 +148,6 @@ spec:
                     - adot
                     - aws-privateca-connector-for-kubernetes
                     - sriov-network-metrics-exporter
-                    - amazon-sagemaker-hyperpod-taskgovernance
-                    - amazon-sagemaker-hyperpod-observability
-                    - amazon-sagemaker-hyperpod-training-operator
                   x-ui-typeable: true
                   x-ui-overrides-only: false
                   x-ui-unique: true
