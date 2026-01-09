@@ -1,29 +1,31 @@
 name: '@facets/azure_aks_nodepool'
-type: object
 properties:
-  attributes:
-    type: object
-    properties:
-      cluster_id:
-        description: Cluster ID of the node pool
-        type: string
-      disk_size:
-        description: Disk size in GB
-        type: number
-      node_count:
-        description: Current node count
-        type: number
-      node_pool_name:
-        description: Name of the node pool
-        type: string
-      node_selector:
-        description: Labels for node selection
-        type: object
-      taints:
-        description: List of taints applied to nodes
-        type: array
-        items:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        cluster_id:
+          description: Cluster ID of the node pool
           type: string
-  interfaces:
-    type: object
-    properties: {}
+        disk_size:
+          description: Disk size in GB
+          type: number
+        node_count:
+          description: Current node count
+          type: number
+        node_pool_name:
+          description: Name of the node pool
+          type: string
+        node_selector:
+          description: Labels for node selection
+          type: object
+        taints:
+          description: List of taints applied to nodes
+          type: array
+          items:
+            type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

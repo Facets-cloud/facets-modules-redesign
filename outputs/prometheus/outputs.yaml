@@ -1,16 +1,17 @@
 name: '@facets/prometheus'
-type: object
 properties:
-  attributes:
-    type: object
-    properties:
-      alertmanager_url:
-        type: string
-      helm_release_id:
-        type: string
-      prometheus_url:
-        type: string
-  interfaces:
-    type: object
-    properties: {}
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        alertmanager_url:
+          type: string
+        helm_release_id:
+          type: string
+        prometheus_url:
+          type: string
+    interfaces:
+      type: object
+      properties: {}
 providers: []

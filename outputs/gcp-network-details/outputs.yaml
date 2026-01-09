@@ -1,92 +1,94 @@
 name: '@facets/gcp-network-details'
-type: object
 properties:
-  attributes:
-    type: object
-    properties:
-      database_subnet_cidrs:
-        description: List of database subnet CIDR blocks
-        type: array
-        items:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        database_subnet_cidrs:
+          description: List of database subnet CIDR blocks
+          type: array
+          items:
+            type: string
+        database_subnet_ids:
+          description: List of database subnet IDs
+          type: array
+          items:
+            type: string
+        firewall_rule_ids:
+          description: List of firewall rule IDs
+          type: array
+          items:
+            type: string
+        nat_gateway_ids:
+          description: List of Cloud NAT gateway IDs
+          type: array
+          items:
+            type: string
+        private_services_connection_id:
+          description: The ID of the service networking connection
           type: string
-      database_subnet_ids:
-        description: List of database subnet IDs
-        type: array
-        items:
+        private_services_connection_status:
+          description: Whether private services connection is enabled
+          type: boolean
+        private_services_peering_connection:
+          description: The network ID of the private services peering connection
           type: string
-      firewall_rule_ids:
-        description: List of firewall rule IDs
-        type: array
-        items:
+        private_services_range_address:
+          description: The actual IP address allocated for the private services range
           type: string
-      nat_gateway_ids:
-        description: List of Cloud NAT gateway IDs
-        type: array
-        items:
+        private_services_range_id:
+          description: The ID of the global address resource for private services
           type: string
-      private_services_connection_id:
-        description: The ID of the service networking connection
-        type: string
-      private_services_connection_status:
-        description: Whether private services connection is enabled
-        type: boolean
-      private_services_peering_connection:
-        description: The network ID of the private services peering connection
-        type: string
-      private_services_range_address:
-        description: The actual IP address allocated for the private services range
-        type: string
-      private_services_range_id:
-        description: The ID of the global address resource for private services
-        type: string
-      private_services_range_name:
-        description: The name of the global address reserved for private services
-        type: string
-      private_subnet_cidrs:
-        description: List of private subnet CIDR blocks
-        type: array
-        items:
+        private_services_range_name:
+          description: The name of the global address reserved for private services
           type: string
-      private_subnet_ids:
-        description: List of private subnet IDs
-        type: array
-        items:
+        private_subnet_cidrs:
+          description: List of private subnet CIDR blocks
+          type: array
+          items:
+            type: string
+        private_subnet_ids:
+          description: List of private subnet IDs
+          type: array
+          items:
+            type: string
+        project_id:
+          description: The GCP project ID
           type: string
-      project_id:
-        description: The GCP project ID
-        type: string
-      public_subnet_cidrs:
-        description: List of public subnet CIDR blocks
-        type: array
-        items:
+        public_subnet_cidrs:
+          description: List of public subnet CIDR blocks
+          type: array
+          items:
+            type: string
+        public_subnet_ids:
+          description: List of public subnet IDs
+          type: array
+          items:
+            type: string
+        region:
+          description: The GCP region
           type: string
-      public_subnet_ids:
-        description: List of public subnet IDs
-        type: array
-        items:
+        router_ids:
+          description: List of Cloud Router IDs
+          type: array
+          items:
+            type: string
+        vpc_id:
+          description: The ID of the VPC
           type: string
-      region:
-        description: The GCP region
-        type: string
-      router_ids:
-        description: List of Cloud Router IDs
-        type: array
-        items:
+        vpc_name:
+          description: The name of the VPC
           type: string
-      vpc_id:
-        description: The ID of the VPC
-        type: string
-      vpc_name:
-        description: The name of the VPC
-        type: string
-      vpc_self_link:
-        description: The URI of the VPC
-        type: string
-      zones:
-        description: List of zones used
-        type: array
-        items:
+        vpc_self_link:
+          description: The URI of the VPC
           type: string
-  interfaces:
-    type: object
-    properties: {}
+        zones:
+          description: List of zones used
+          type: array
+          items:
+            type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

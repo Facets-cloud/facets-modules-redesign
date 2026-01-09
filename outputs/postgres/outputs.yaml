@@ -1,43 +1,44 @@
 name: '@facets/postgres'
-type: object
 properties:
-  attributes:
-    type: object
-  interfaces:
-    type: object
-    properties:
-      reader:
-        type: object
-        properties:
-          connection_string:
-            type: string
-          host:
-            type: string
-          password:
-            type: string
-          port:
-            type: string
-          secrets:
-            type: array
-            items:
+  type: object
+  properties:
+    attributes:
+      type: object
+    interfaces:
+      type: object
+      properties:
+        reader:
+          type: object
+          properties:
+            connection_string:
               type: string
-          username:
-            type: string
-      writer:
-        type: object
-        properties:
-          connection_string:
-            type: string
-          host:
-            type: string
-          password:
-            type: string
-          port:
-            type: string
-          secrets:
-            type: array
-            items:
+            host:
               type: string
-          username:
-            type: string
+            password:
+              type: string
+            port:
+              type: string
+            secrets:
+              type: array
+              items:
+                type: string
+            username:
+              type: string
+        writer:
+          type: object
+          properties:
+            connection_string:
+              type: string
+            host:
+              type: string
+            password:
+              type: string
+            port:
+              type: string
+            secrets:
+              type: array
+              items:
+                type: string
+            username:
+              type: string
 providers: []

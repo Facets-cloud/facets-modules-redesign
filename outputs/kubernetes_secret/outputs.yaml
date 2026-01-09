@@ -1,14 +1,15 @@
 name: '@facets/kubernetes_secret'
-type: object
 properties:
-  attributes:
-    type: object
-    properties:
-      hash:
-        type: string
-      name:
-        type: string
-  interfaces:
-    type: object
-    properties: {}
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        hash:
+          type: string
+        name:
+          type: string
+    interfaces:
+      type: object
+      properties: {}
 providers: []

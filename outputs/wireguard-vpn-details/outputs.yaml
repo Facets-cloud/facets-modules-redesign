@@ -1,27 +1,29 @@
 name: '@facets/wireguard-vpn-details'
-type: object
 properties:
-  attributes:
-    type: object
-    properties:
-      name:
-        description: Name of the WireGuard VPN instance
-        type: string
-      namespace:
-        description: Kubernetes namespace where VPN is deployed
-        type: string
-      mtu:
-        description: MTU setting for the VPN
-        type: string
-      service_type:
-        description: Kubernetes service type for VPN
-        type: string
-      enable_ip_forward:
-        description: Whether IP forwarding is enabled
-        type: string
-      operator_namespace:
-        description: Namespace of the WireGuard operator
-        type: string
-  interfaces:
-    type: object
-    properties: {}
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        name:
+          description: Name of the WireGuard VPN instance
+          type: string
+        namespace:
+          description: Kubernetes namespace where VPN is deployed
+          type: string
+        mtu:
+          description: MTU setting for the VPN
+          type: string
+        service_type:
+          description: Kubernetes service type for VPN
+          type: string
+        enable_ip_forward:
+          description: Whether IP forwarding is enabled
+          type: string
+        operator_namespace:
+          description: Namespace of the WireGuard operator
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

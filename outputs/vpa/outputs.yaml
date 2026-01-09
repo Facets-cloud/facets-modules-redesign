@@ -1,24 +1,25 @@
 name: '@facets/vpa'
-type: object
 properties:
-  attributes:
-    type: object
-    properties:
-      helm_release_id:
-        type: string
-      helm_release_name:
-        type: string
-      namespace:
-        type: string
-      version:
-        type: string
-      recommender_enabled:
-        type: boolean
-      updater_enabled:
-        type: boolean
-      admission_controller_enabled:
-        type: boolean
-  interfaces:
-    type: object
-    properties: {}
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        helm_release_id:
+          type: string
+        helm_release_name:
+          type: string
+        namespace:
+          type: string
+        version:
+          type: string
+        recommender_enabled:
+          type: boolean
+        updater_enabled:
+          type: boolean
+        admission_controller_enabled:
+          type: boolean
+    interfaces:
+      type: object
+      properties: {}
 providers: []
