@@ -36,7 +36,10 @@ locals {
   # Parse proxy bypass domains
   proxy_bypass_list = try(local.networking.proxy_configuration.bypass_domains, "") != "" ? split(",", local.networking.proxy_configuration.bypass_domains) : split(",", "localhost,127.0.0.1,169.254.169.254,.internal,.eks.amazonaws.com")
   # Automatically detect IAM role from EKS cluster - updated path for new structure
-  node_iam_role_arn = local.kubernetes_details.attributes.node_iam_role_arn
+  node_iam_role_arn = local.kubernetes_details.node_iam_role_arn
+  # Extract just the role name from the ARN (format: arn:aws:iam::<account-id>:role/<role-name>)
+  # NodeClass spec.role field requires the role name, not the full ARN (max 64 bytes)
+  node_iam_role_name = element(split("/", local.node_iam_role_arn), length(split("/", local.node_iam_role_arn)) - 1)
   # Always use private subnets by default
   subnet_type = "private"
   # Map subnet type to actual subnet IDs from network output
@@ -51,7 +54,7 @@ locals {
     }
   ]
   # Always use the node security group ID from EKS cluster output
-  node_security_group_id = local.kubernetes_details.attributes.node_security_group_id
+  node_security_group_id = local.kubernetes_details.node_security_group_id
   # Combine user tags with environment tags - updated cluster name path
   combined_tags = merge(
     local.tags,
@@ -124,8 +127,8 @@ locals {
     }
     spec = merge(
       {
-        # IAM role automatically detected from EKS cluster
-        role = local.node_iam_role_arn
+        # IAM role name automatically detected from EKS cluster (extracted from ARN)
+        role = local.node_iam_role_name
         # Use the smart subnet selector terms
         subnetSelectorTerms = local.subnet_selector_terms
         # Security group selection - always use node security group ID from EKS cluster
