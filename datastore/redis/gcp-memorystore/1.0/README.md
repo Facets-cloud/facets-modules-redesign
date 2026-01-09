@@ -54,8 +54,8 @@ When TLS is enabled:
 - Certificates are valid for **10 years** from creation
 - New certificates become available **5 years** after creation (5-year overlap for rotation)
 - Server certificate rotation occurs every **180 days** (causes brief connection drop - implement retry logic)
-- CA certificates are exposed in module outputs for client configuration
-- Clients must download and install CA certificates from the `server_ca_certs` output
+- CA certificates are exposed in module outputs (`attributes.server_ca_certs`) for client configuration
+- Clients must download and install CA certificates from the `attributes.server_ca_certs` output
 
 ### Data Protection
 - **Lifecycle Protection**: `prevent_destroy = true` configuration prevents accidental data loss
@@ -141,7 +141,7 @@ The network input module must provide:
 When TLS is enabled (`enable_tls = true`), clients must be configured properly:
 
 ### Required Client Setup
-1. **Download CA certificates**: From module outputs (`server_ca_certs` attribute)
+1. **Download CA certificates**: From module outputs (`attributes.server_ca_certs`)
 2. **Configure TLS**: Point client to port **6378** (not 6379)
 3. **Install certificates**: Place CA certificate file on client machine
 4. **Use TLS-capable client**: Redis client library must support TLS (Redis 6.0+ for native support)
@@ -168,20 +168,18 @@ The module automatically provides connection strings:
 ## Module Outputs
 
 ### Attributes
-- `instance_id`, `instance_name`: Instance identifiers
-- `host`, `port`: Connection endpoint details (port is 6378 when TLS enabled)
-- `redis_version`, `tier`, `memory_size_gb`: Instance configuration
-- `transit_encryption_mode`: Current TLS mode (SERVER_AUTHENTICATION or DISABLED)
-- `tls_enabled`: Boolean indicating TLS status
-- `server_ca_certs`: CA certificates for TLS (sensitive, array of certificate objects)
-- `auth_string`: Redis authentication token (sensitive)
+- `server_ca_certs`: Server CA certificates for TLS client configuration (sensitive, array of certificate objects, empty array if TLS disabled)
+- `secrets`: List of sensitive attribute names (`["server_ca_certs"]`)
 
 ### Interfaces
-- `cluster.endpoint`: Full connection endpoint (host:port)
-- `cluster.auth_token`: Authentication token (sensitive)
-- `cluster.connection_string`: Ready-to-use connection string with correct scheme (sensitive)
-- `cluster.tls_enabled`: TLS status flag
-- `cluster.server_ca_certs`: CA certificates when TLS is enabled (sensitive)
+The module provides a `cluster` interface with all connection details:
+- `cluster.port`: Redis connection port (6378 for TLS, 6379 for non-TLS)
+- `cluster.endpoint`: Full connection endpoint in `host:port` format
+- `cluster.auth_token`: Redis authentication token (sensitive, always enabled)
+- `cluster.connection_string`: Ready-to-use connection string with authentication:
+  - With TLS: `rediss://:AUTH_TOKEN@HOST:6378`
+  - Without TLS: `redis://:AUTH_TOKEN@HOST:6379`
+- `cluster.secrets`: List of sensitive interface fields (`["auth_token", "connection_string"]`)
 
 ## Best Practices
 
