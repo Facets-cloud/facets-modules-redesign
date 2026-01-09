@@ -1,0 +1,84 @@
+# Example: Deploy a workload that will trigger Karpenter to provision nodes
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inflate
+  namespace: default
+spec:
+  replicas: 0  # Scale this up to test Karpenter
+  selector:
+    matchLabels:
+      app: inflate
+  template:
+    metadata:
+      labels:
+        app: inflate
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: inflate
+          image: public.ecr.aws/eks-distro/kubernetes/pause:3.7
+          resources:
+            requests:
+              cpu: 1
+              memory: 1.5Gi
+---
+# Example: Deployment that targets specific node pool
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: compute-workload
+  namespace: default
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: compute-workload
+  template:
+    metadata:
+      labels:
+        app: compute-workload
+    spec:
+      nodeSelector:
+        workload-type: compute  # Targets 'compute' node pool
+      tolerations:
+        - key: dedicated
+          operator: Equal
+          value: compute
+          effect: NoSchedule
+      containers:
+        - name: compute
+          image: public.ecr.aws/eks-distro/kubernetes/pause:3.7
+          resources:
+            requests:
+              cpu: 2
+              memory: 4Gi
+
+---
+# Example: ARM workload
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: arm-workload
+  namespace: default
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: arm-workload
+  template:
+    metadata:
+      labels:
+        app: arm-workload
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: arm64
+        workload-type: arm
+      containers:
+        - name: arm
+          image: public.ecr.aws/eks-distro/kubernetes/pause:3.7
+          resources:
+            requests:
+              cpu: 1
+              memory: 2Gi
