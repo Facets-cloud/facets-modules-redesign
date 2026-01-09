@@ -1550,8 +1550,8 @@
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "mongodb_rs_members_id{facets_resource_type=\"mongo\",facets_resource_name=\"${var.instance_name}\", member_state=\"PRIMARY\"}",
-              "legendFormat": "{{member_state}} - {{instance}}",
+              "expr": "label_replace(mongodb_rs_members_id{facets_resource_type=\"mongo\",facets_resource_name=\"${var.instance_name}\", member_state=\"PRIMARY\"}, \"pod_name\", \"$1\", \"member_idx\", \"([^.]+).*\")",
+              "legendFormat": "{{pod_name}}",
               "range": true,
               "refId": "A"
             }
@@ -1646,8 +1646,8 @@
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "mongodb_rs_members_pingMs{facets_resource_type=\"mongo\",facets_resource_name=\"${var.instance_name}\"}",
-              "legendFormat": "{{member_state}} - {{instance}}",
+              "expr": "label_replace(mongodb_rs_members_pingMs{facets_resource_type=\"mongo\",facets_resource_name=\"${var.instance_name}\"}, \"pod_name\", \"$1\", \"member_idx\", \"([^.]+).*\")",
+              "legendFormat": "{{pod_name}}",
               "range": true,
               "refId": "A"
             }
@@ -1815,8 +1815,8 @@
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "mongodb_rs_members_id{facets_resource_type=\"mongo\",facets_resource_name=\"${var.instance_name}\", member_state=\"SECONDARY\"}",
-              "legendFormat": "{{member_state}} - {{instance}}",
+              "expr": "label_replace(mongodb_rs_members_id{facets_resource_type=\"mongo\",facets_resource_name=\"${var.instance_name}\", member_state=\"SECONDARY\"}, \"pod_name\", \"$1\", \"member_idx\", \"([^.]+).*\")",
+              "legendFormat": "{{pod_name}}",
               "range": true,
               "refId": "A"
             }
