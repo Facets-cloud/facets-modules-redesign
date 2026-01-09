@@ -1,5 +1,4 @@
 locals {
-  spec          = lookup(var.instance, "spec", {})
   release       = lookup(local.spec, "release", {})
   strategy      = lookup(local.release, "strategy", {})
   runtime       = lookup(var.instance.spec, "runtime", {})
