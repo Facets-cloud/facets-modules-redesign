@@ -60,4 +60,4 @@ jobs:
 
             Use `gh pr comment` to post your validation report.
 
-          claude_args: '--allowed-tools "Bash(raptor:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Read,Grep,Glob,WebSearch"'
+          claude_args: '--allowed-tools "Bash(raptor:*),Bash(terraform:*),Bash(git:*),Bash(gh:*),Bash(cat:*),Bash(ls:*),Bash(file:*),Bash(head:*),Bash(tail:*),Bash(curl:*),Bash(wget:*),Bash(find:*),Bash(grep:*),Bash(awk:*),Bash(sed:*),Bash(wc:*),Bash(sort:*),Bash(uniq:*),Bash(diff:*),Bash(echo:*),Bash(pwd:*),Bash(mkdir:*),Bash(cp:*),Bash(mv:*),Bash(rm:*),Bash(chmod:*),Bash(which:*),Bash(env:*),Bash(jq:*),Bash(yq:*),Read,Grep,Glob,WebSearch"'
