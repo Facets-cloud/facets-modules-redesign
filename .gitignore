@@ -21,3 +21,11 @@
 # Facets output files
 **/output.facets.yaml
 **/output-lookup-tree.json
+
+# Local tracking files (not for CI/Claude)
+issues.md
+pending-issues.md
+pending-issues-backup.yml
+pending-errors.md
+debug-report.md
+testing.md

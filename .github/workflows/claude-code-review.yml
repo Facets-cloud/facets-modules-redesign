@@ -1,27 +1,19 @@
-name: Claude Code Review
+name: Claude Facets Module Validation
 
 on:
   pull_request:
     types: [opened, synchronize]
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+    paths:
+      - 'modules/**'
+      - 'datastore/**'
+      - 'outputs/**'
 
 jobs:
-  claude-review:
-    # Optional: Filter by PR author
-    # if: |
-    #   github.event.pull_request.user.login == 'external-contributor' ||
-    #   github.event.pull_request.user.login == 'new-developer' ||
-    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
-
+  claude-validate:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
       issues: read
       id-token: write
 
@@ -29,29 +21,42 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
-      - name: Run Claude Code Review
-        id: claude-review
+      - name: Install Raptor CLI
+        run: |
+          wget https://github.com/Facets-cloud/raptor/releases/latest/download/raptor-linux-amd64
+          chmod +x raptor-linux-amd64
+          sudo mv raptor-linux-amd64 /usr/local/bin/raptor
+
+      - name: Run Claude Facets Validation
+        env:
+          FACETS_API_TOKEN: ${{ secrets.FACETS_API_TOKEN }}
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
-            REPO: ${{ github.repository }}
-            PR NUMBER: ${{ github.event.pull_request.number }}
+            You are validating a Facets module PR.
 
-            Please review this pull request and provide feedback on:
-            - Code quality and best practices
-            - Potential bugs or issues
-            - Performance considerations
-            - Security concerns
-            - Test coverage
+            ## Required Reading
+            1. Read CLAUDE.md for repository structure and raptor commands
+            2. Read rules.md for complete validation ruleset with good/bad examples
+            3. Find relevant `*_module_standard.md` for each changed module type
 
-            Use the repository's CLAUDE.md for guidance on style and conventions. Be constructive and helpful in your feedback.
+            ## Your Task
+            1. Identify which modules were changed in this PR using `gh pr diff`
+            2. For each changed module, run: `raptor create iac-module -f <module-path> --dry-run`
+            3. If validation fails, identify which rules from rules.md were violated
+            4. If security scan fails, report findings in a table format, then retry with `--skip-security-scan`
+            5. If provider issues (aws3tooling, facets provider not found), report to user - do NOT skip validation
 
-            Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR.
+            ## Output Format
+            Post a PR comment with:
+            - List of modules validated
+            - For each issue: rule ID (e.g., RULE-004), description, and fix suggestion
+            - Security scan results in table format (if any)
+            - Provider issues (if any)
 
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://code.claude.com/docs/en/cli-reference for available options
-          claude_args: '--allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
+            Use `gh pr comment` to post your validation report.
 
+          claude_args: '--allowed-tools "Bash(raptor:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Read,Grep,Glob,WebSearch"'
