@@ -1,18 +1,3 @@
-# Use existing private services connection from network module when available
-# Falls back to default VPC for testing when network module is not provided
-# The network module provides private service networking in production
-
-# Import existing Redis instance if specified
-# Import blocks with dynamic IDs are not supported in Terraform
-# The import functionality will be handled by the Facets platform
-# using the import declaration in facets.yaml
-
-# Generate random auth string for Redis (not needed for imports - Redis generates its own)
-# Removed conditional resource creation to prevent issues during import operations
-# The imported Redis instance will have its own auth_string that we reference directly
-
-# Redis Memorystore Instance
-# Uses existing private services connection provided by the network module when available
 resource "google_redis_instance" "main" {
   name           = local.instance_name
   tier           = local.tier
@@ -22,26 +7,29 @@ resource "google_redis_instance" "main" {
   region      = local.region
   location_id = local.location_id
 
-  # Network configuration - use existing private services connection when available
-  # For testing without network module, this will create in default network
+  # Network configuration - uses private service access from network module
   authorized_network = local.authorized_network
-  connect_mode       = local.authorized_network != null ? "PRIVATE_SERVICE_ACCESS" : "DIRECT_PEERING"
+  connect_mode       = "PRIVATE_SERVICE_ACCESS"
 
-  # Redis configuration
+  # Redis engine configuration
   redis_version = local.redis_version
   display_name  = "Redis instance for ${var.instance_name}"
 
-  # Security configuration (hardcoded for security)
-  # These settings are managed by ignore_changes for imported resources
-  auth_enabled            = true
-  transit_encryption_mode = local.authorized_network != null ? "SERVER_AUTHENTICATION" : "DISABLED"
+  # Security configuration
+  # AUTH is always enabled for secure access
+  auth_enabled = true
 
-  # High availability for standard tier
-  # These settings are managed by ignore_changes for imported resources
+  # TLS configuration (in-transit encryption)
+  # When enabled: Uses SERVER_AUTHENTICATION mode with TLS 1.2+, port 6378
+  # When disabled: No encryption, port 6379 (not recommended for production)
+  # Note: Cannot be changed after instance creation (ForceNew)
+  transit_encryption_mode = local.enable_tls ? "SERVER_AUTHENTICATION" : "DISABLED"
+
+  # High availability configuration (STANDARD_HA tier only)
   replica_count      = local.tier == "STANDARD_HA" ? 1 : 0
   read_replicas_mode = local.tier == "STANDARD_HA" ? "READ_REPLICAS_ENABLED" : "READ_REPLICAS_DISABLED"
 
-  # Labels for resource management
+  # Resource labels
   labels = merge(
     var.environment.cloud_tags,
     {
@@ -53,47 +41,24 @@ resource "google_redis_instance" "main" {
     }
   )
 
-  # Lifecycle management
+  # Lifecycle management - prevents accidental deletion and ignores external changes
   lifecycle {
     prevent_destroy = true
     ignore_changes = [
-      # Core immutable attributes (cannot be changed after creation)
-      name,               # Instance name cannot be changed
-      region,             # Region cannot be changed after creation
-      location_id,        # Location cannot be changed after creation
-      authorized_network, # Network configuration should not change
-      connect_mode,       # Connection mode should not change
-
-      # Configuration attributes that may drift or be managed externally
-      labels,                  # Ignore label changes (managed by tags)
-      display_name,            # Ignore display name changes
-      transit_encryption_mode, # Ignore encryption mode changes (immutable after creation)
-      auth_enabled,            # Ignore auth changes (should remain enabled)
-      replica_count,           # Ignore replica count changes (managed by tier)
-      read_replicas_mode,      # Ignore read replica mode changes (managed by tier)
-
-      # Version can be upgraded through GCP console/CLI, ignore drift
-      redis_version, # Allow manual version upgrades through GCP
-
-      # For imported resources, ignore these computed values
-      tier,           # Service tier (imported resources keep existing)
-      memory_size_gb, # Memory size (imported resources keep existing)
+      name,
+      region,
+      location_id,
+      authorized_network,
+      connect_mode,
+      labels,
+      display_name,
+      transit_encryption_mode,
+      auth_enabled,
+      replica_count,
+      read_replicas_mode,
+      redis_version,
+      tier,
+      memory_size_gb,
     ]
   }
-
-  # Restore from backup is handled by GCP's point-in-time recovery features
-  # This is typically done through Google Cloud Console or gcloud CLI
-  # rather than Terraform configuration
 }
-
-# Note: This module is designed to work with or without a network module
-# 
-# With network module (production):
-# - Uses private service access and existing VPC from network module
-# - Provides proper network isolation and security
-# - Requires network module to provide private services connection
-#
-# Without network module (testing):
-# - Falls back to default VPC with direct peering
-# - Suitable for testing but not recommended for production
-# - May have limited security and networking capabilities
