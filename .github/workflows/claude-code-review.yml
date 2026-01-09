@@ -31,7 +31,9 @@ jobs:
 
       - name: Run Claude Facets Validation
         env:
-          FACETS_API_TOKEN: ${{ secrets.FACETS_API_TOKEN }}
+          CONTROL_PLANE_URL: ${{ secrets.CONTROL_PLANE_URL }}
+          FACETS_USERNAME: ${{ secrets.FACETS_USERNAME }}
+          FACETS_TOKEN: ${{ secrets.FACETS_TOKEN }}
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
