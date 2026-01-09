@@ -14,7 +14,7 @@ This module adapts to different cloud environments:
 - **Azure**: Uses existing DNS credentials for certificate validation  
 - **GCP**: Integrates with Google Cloud DNS for certificate validation and supports GTS certificates
 
-The module automatically detects the cloud provider from `var.cc_metadata.cc_tenant_provider` and configures appropriate DNS solvers and authentication mechanisms.
+The module automatically detects the cloud provider from the `TF_VAR_cc_tenant_provider` environment variable and configures appropriate DNS solvers and authentication mechanisms.
 
 ## Nodepool Integration
 

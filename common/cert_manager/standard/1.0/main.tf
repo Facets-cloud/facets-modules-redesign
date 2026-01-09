@@ -48,7 +48,7 @@ resource "aws_iam_user_policy" "cert_manager_r53_policy" {
         "route53:ChangeResourceRecordSets",
         "route53:ListResourceRecordSets"
       ],
-      "Resource": "arn:aws:route53:::hostedzone/${try(var.cc_metadata.tenant_base_domain_id, "*")}"
+      "Resource": "arn:aws:route53:::hostedzone/${local.tenant_base_domain_id != "" ? local.tenant_base_domain_id : "*"}"
     },
     {
       "Effect": "Allow",
