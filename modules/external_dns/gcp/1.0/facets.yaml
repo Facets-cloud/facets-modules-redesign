@@ -1,7 +1,8 @@
 intent: external_dns
 flavor: gcp
 version: '1.0'
-description: Manages DNS credentials and service account for Google Cloud DNS operations in Kubernetes clusters
+description: Manages DNS credentials and service account for Google Cloud DNS operations
+  in Kubernetes clusters
 clouds:
 - gcp
 inputs:

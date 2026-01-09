@@ -1,3 +1,14 @@
+# Name generation for GCP resources
+module "service_account_name" {
+  source          = "github.com/Facets-cloud/facets-utility-modules//name"
+  environment     = var.environment
+  limit           = 30
+  globally_unique = false
+  resource_name   = local.cluster_name
+  resource_type   = "external-dns"
+  is_k8s          = false
+}
+
 module "helm_name" {
   source          = "github.com/Facets-cloud/facets-utility-modules//name"
   environment     = var.environment
@@ -8,18 +19,30 @@ module "helm_name" {
   is_k8s          = true
 }
 
+# GCP Service Account for Cloud DNS access
+resource "google_service_account" "external_dns_sa" {
+  account_id   = lower(module.service_account_name.name)
+  display_name = "external-dns-${local.cluster_name}"
+  description  = "Service account for external-dns to manage Cloud DNS records"
+  project      = local.project_id
+}
+
+# Grant Cloud DNS permissions to the service account
+resource "google_project_iam_member" "external_dns_dns_admin" {
+  project = local.project_id
+  role    = "roles/dns.admin"
+  member  = "serviceAccount:${google_service_account.external_dns_sa.email}"
+}
+
+# Create service account key
+resource "google_service_account_key" "external_dns_key" {
+  service_account_id = google_service_account.external_dns_sa.name
+}
+
 # Kubernetes namespace for external-dns
 resource "kubernetes_namespace" "namespace" {
   metadata {
     name = local.namespace
-  }
-}
-
-# Read existing DNS credentials secret (created by platform)
-data "kubernetes_secret_v1" "dns" {
-  metadata {
-    name      = "facets-tenant-dns"
-    namespace = "default"
   }
 }
 
@@ -31,11 +54,7 @@ resource "kubernetes_secret" "external_dns_gcp_secret" {
     namespace = local.namespace
   }
   data = {
-    # Handle null data gracefully - use try() to safely access nested data
-    "credentials.json" = try(
-      lookup(try(data.kubernetes_secret_v1.dns.data, {}), "credentials.json", null),
-      ""
-    )
+    "credentials.json" = base64decode(google_service_account_key.external_dns_key.private_key)
   }
 }
 
@@ -43,8 +62,8 @@ resource "kubernetes_secret" "external_dns_gcp_secret" {
 resource "helm_release" "external_dns" {
   depends_on       = [kubernetes_secret.external_dns_gcp_secret]
   name             = module.helm_name.name
-  chart            = "external-dns"
-  repository       = "oci://registry-1.docker.io/bitnamicharts"
+  chart            = local.chart_source
+  repository       = local.chart_repository
   version          = local.helm_version
   namespace        = local.namespace
   create_namespace = false
@@ -56,18 +75,34 @@ resource "helm_release" "external_dns" {
 
   values = [
     yamlencode({
-      provider      = "google"
-      txtOwnerId    = "${module.helm_name.name}-${var.environment.unique_name}"
-      txtSuffix     = var.environment.unique_name
-      policy        = "sync"
-      domainFilters = local.domain_filters
-      priorityClassName = "facets-critical"
+      # Provider configuration
+      provider = "google"
+      policy   = "sync"
 
-      image = {
-        registry   = "docker.io"
-        repository = "bitnamilegacy/external-dns"
+      # Domain filters
+      domainFilters = local.domain_filters
+
+      # TXT record configuration
+      txtOwnerId = "${module.helm_name.name}-${var.environment.unique_name}"
+      txtSuffix  = var.environment.unique_name
+
+      # Service account configuration
+      serviceAccount = {
+        create = true
+        name   = module.helm_name.name
       }
 
+      # Image configuration (official external-dns image from registry.k8s.io)
+      # The kubernetes-sigs chart doesn't properly construct image from registry+repository+tag
+      # Use full image path in repository field (matches manual fix that worked)
+      image = {
+        repository = "${local.image_registry}/${local.image_repository}"
+        tag        = local.image_tag != "" ? local.image_tag : "v0.14.2"
+        pullPolicy = "IfNotPresent"
+        # Ensure registry is not set separately (chart might use it incorrectly)
+      }
+
+      # Resource limits
       resources = {
         limits = {
           cpu    = "500m"
@@ -79,22 +114,28 @@ resource "helm_release" "external_dns" {
         }
       }
 
+      # Metrics configuration
       metrics = {
         serviceMonitor = {
           enabled = true
         }
       }
 
+      # GCP provider configuration
       google = {
-        project = local.project_id
+        project                 = local.project_id
         serviceAccountSecret    = local.secret_name
         serviceAccountSecretKey = "credentials.json"
         zoneVisibility          = local.zone_visibility
         batchChangeSize         = local.batch_change_size
       }
 
+      # Node scheduling
       nodeSelector = local.node_selector
       tolerations  = local.tolerations
+
+      # Priority class
+      priorityClassName = local.priority_class_name
     }),
     yamlencode(local.user_supplied_helm_values)
   ]

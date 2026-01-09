@@ -19,29 +19,18 @@ variable "environment" {
 }
 
 variable "instance" {
-  description = "The external DNS resource instance configuration"
+  description = "Configuration for the external-dns GCP module"
   type = object({
     kind     = optional(string)
     flavor   = optional(string)
     version  = optional(string)
     disabled = optional(bool, false)
     spec = optional(object({
-      domain_filters    = optional(list(string), [])
-      zone_visibility   = optional(string, "")
+      zone_visibility   = optional(string, "public")
       batch_change_size = optional(number, 1000)
     }), {})
-    advanced = optional(object({
-      externaldns = optional(object({
-        version         = optional(string, "6.28.5")
-        cleanup_on_fail = optional(bool, true)
-        wait            = optional(bool, false)
-        atomic          = optional(bool, false)
-        timeout         = optional(number, 300)
-        recreate_pods   = optional(bool, false)
-        values          = optional(map(any), {})
-      }), {})
-    }), {})
   })
+  default = {}
 }
 
 variable "inputs" {
@@ -59,7 +48,7 @@ variable "inputs" {
     })
     cloud_account = object({
       attributes = object({
-        project_id  = string # GCP project ID
+        project_id  = string           # GCP project ID
         project     = optional(string) # Backward compatibility
         credentials = optional(string) # Service account JSON
         region      = optional(string)
@@ -68,7 +57,7 @@ variable "inputs" {
     kubernetes_node_pool_details = optional(object({
       attributes = optional(object({
         node_selector = optional(map(string), {})
-        taints        = optional(list(any), [])
+        taints        = optional(any, null)
       }), {})
     }), null)
   })
