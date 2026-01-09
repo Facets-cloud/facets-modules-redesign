@@ -19,32 +19,67 @@ jobs:
       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      pull-requests: read
-      issues: read
+      contents: write
+      pull-requests: write
+      issues: write
       id-token: write
-      actions: read # Required for Claude to read CI results on PRs
+      actions: read
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+
+      - name: Install Raptor CLI
+        run: |
+          curl -L -o raptor https://github.com/Facets-cloud/raptor/releases/latest/download/raptor-linux-amd64
+          chmod +x raptor
+          sudo mv raptor /usr/local/bin/raptor
+
+      - name: Setup Git Identity
+        run: |
+          git config --global user.name "facets-automation"
+          git config --global user.email "automation@facets.cloud"
 
       - name: Run Claude Code
-        id: claude
+        env:
+          CONTROL_PLANE_URL: ${{ secrets.CONTROL_PLANE_URL }}
+          FACETS_USERNAME: ${{ secrets.FACETS_USERNAME }}
+          FACETS_TOKEN: ${{ secrets.FACETS_TOKEN }}
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-
-          # This is an optional setting that allows Claude to read CI results on PRs
           additional_permissions: |
             actions: read
 
-          # Optional: Give a custom prompt to Claude. If this is not specified, Claude will perform the instructions specified in the comment that tagged it.
-          # prompt: 'Update the pull request description to include a summary of changes.'
+          prompt: |
+            ## Required Reading (ALWAYS read these first)
+            1. Read CLAUDE.md for repository structure and raptor commands
+            2. Read rules.md for validation ruleset - understand these rules to avoid making the same mistakes
+            3. Find relevant `*_module_standard.md` for the module type you're working on
+            4. For creating NEW modules, read `.claude/skills/module_writing.md` for complete development guide
 
-          # Optional: Add claude_args to customize behavior and configuration
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://code.claude.com/docs/en/cli-reference for available options
-          # claude_args: '--allowed-tools Bash(gh pr:*)'
+            ## When Writing/Fixing Code
+            - Apply rules from rules.md to avoid validation errors
+            - Use patterns from the Good examples, never the Bad examples
+            - After making changes, validate with: `raptor create iac-module -f <module-path> --dry-run`
 
+            ## Branch and Commit Guidelines
+            - Create branch: `fix/<issue-number>-<short-description>`
+            - PRs MUST target the `main` branch
+            - Do NOT include "claude" or "co-authored-by" in commits
+            - Commit messages should describe the fix, not the author
+
+            ## Validation Behavior
+            - If security scan fails: report findings in table format, retry with `--skip-security-scan`
+            - If provider issues (aws3tooling, facets provider): report to user, do NOT auto-skip
+            - NEVER use `--skip-validation` flag
+
+            ## After Fixing
+            1. Run validation to confirm fix works
+            2. Create PR targeting main branch
+            3. Include rule IDs (e.g., RULE-004) in PR description if fixing validation issues
+
+          claude_args: |
+            --allowed-tools "Bash(raptor:*),Bash(terraform:*),Bash(git:*),Bash(gh:*),Read,Write,Edit,Grep,Glob,WebSearch"
