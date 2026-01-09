@@ -23,7 +23,7 @@ locals {
 
   # Note: Port is dynamically assigned by GCP (6378 with TLS, 6379 without)
   # and is accessed via google_redis_instance.main.port
-  
+
   # Location configuration
   location_id = "${local.region}-a"
 }

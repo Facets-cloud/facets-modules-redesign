@@ -1,7 +1,7 @@
 locals {
   output_attributes = {
-    server_ca_certs         = sensitive(local.enable_tls ? google_redis_instance.main.server_ca_certs : [])
-    secrets                 = ["server_ca_certs"]
+    server_ca_certs = sensitive(local.enable_tls ? google_redis_instance.main.server_ca_certs : [])
+    secrets         = ["server_ca_certs"]
   }
   output_interfaces = {
     cluster = {
@@ -15,7 +15,7 @@ locals {
         google_redis_instance.main.host,
         google_redis_instance.main.port
       )
-      secrets         = ["auth_token", "connection_string", "server_ca_certs"]
+      secrets = ["auth_token", "connection_string"]
     }
   }
 }
