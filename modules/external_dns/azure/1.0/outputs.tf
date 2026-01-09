@@ -16,13 +16,6 @@ locals {
 
     # Region (from AKS cluster)
     region = local.region
-
-    # Empty fields for other cloud providers
-    aws_access_key_id_key     = ""
-    aws_secret_access_key_key = ""
-    gcp_credentials_json_key  = ""
-    hosted_zone_id            = ""
-    project_id                = ""
   }
   output_interfaces = {}
 }

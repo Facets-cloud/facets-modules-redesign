@@ -24,34 +24,6 @@ variable "instance" {
     flavor   = optional(string)
     version  = optional(string)
     disabled = optional(bool, false)
-
-    # Advanced, rarely-changed settings (chart version, custom values, etc.)
-    advanced = optional(object({
-      externaldns = optional(object({
-        # Helm chart behaviour
-        version         = optional(string)
-        cleanup_on_fail = optional(bool)
-        wait            = optional(bool)
-        atomic          = optional(bool)
-        timeout         = optional(number)
-        recreate_pods   = optional(bool)
-
-        # Extra Helm values to merge into the generated ones
-        values = optional(map(any))
-
-        # Chart source overrides (for debugging or custom forks)
-        chart_path       = optional(string)
-        chart_repository = optional(string)
-
-        # Image overrides (for debugging or custom images)
-        image_registry   = optional(string)
-        image_repository = optional(string)
-        image_tag        = optional(string)
-
-        # Priority class override
-        priority_class_name = optional(string)
-      }), {})
-    }), {})
   })
   default = {}
 }
