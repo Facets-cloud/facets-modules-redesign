@@ -59,17 +59,11 @@ locals {
   memory       = lookup(local.size, "memory", "1000Mi")
   memory_limit = lookup(local.size, "memory_limit", local.memory)
 
-  # We need to split cpu/memory limit as it may contain unit
-  split_cpu_limit          = regex("([0-9.]+)([a-zA-Z]+)?", local.cpu_limit)
-  processed_cpu_request    = "${local.split_cpu_limit[0] * var.cluster.k8sRequestsToLimitsRatio}${local.split_cpu_limit[1] != null ? local.split_cpu_limit[1] : ""}"
-  split_memory_limit       = regex("([0-9.]+)([a-zA-Z]+)?", local.memory_limit)
-  processed_memory_request = "${local.split_memory_limit[0] * var.cluster.k8sRequestsToLimitsRatio}${local.split_memory_limit[1] != null ? local.split_memory_limit[1] : ""}"
-
   processed_size = {
     cpu_limit    = lookup(local.size, "cpu_limit", local.cpu_limit)
-    cpu          = lookup(local.size, "cpu", local.processed_cpu_request)
+    cpu          = lookup(local.size, "cpu", local.cpu)
     memory_limit = lookup(local.size, "memory_limit", local.memory_limit)
-    memory       = lookup(local.size, "memory", local.processed_memory_request)
+    memory       = lookup(local.size, "memory", local.memory)
   }
 
   type           = lookup(var.values.spec, "type", "application")
