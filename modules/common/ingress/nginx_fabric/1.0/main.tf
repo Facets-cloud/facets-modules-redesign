@@ -136,7 +136,45 @@ locals {
     )
   }
 
-  # HTTPRoute Resources
+  # HTTP to HTTPS Redirect Route (only created when force_ssl_redirection is enabled)
+  # Single route that handles ALL HTTP (port 80) traffic and redirects to HTTPS
+  # MUST NOT have backendRefs - only RequestRedirect filter
+  http_redirect_resources = lookup(var.instance.spec, "force_ssl_redirection", false) ? {
+    "httproute-redirect-${local.name}" = {
+      apiVersion = "gateway.networking.k8s.io/v1"
+      kind       = "HTTPRoute"
+      metadata = {
+        name      = "${local.name}-http-redirect"
+        namespace = var.environment.namespace
+      }
+      spec = {
+        parentRefs = [{
+          name        = local.name
+          namespace   = var.environment.namespace
+          sectionName = "http" # Reference HTTP listener (port 80)
+        }]
+
+        rules = [{
+          matches = [{
+            path = {
+              type  = "PathPrefix"
+              value = "/"
+            }
+          }]
+          filters = [{
+            type = "RequestRedirect"
+            requestRedirect = {
+              scheme     = "https"
+              statusCode = 301
+            }
+          }]
+          # No backendRefs - redirect only
+        }]
+      }
+    }
+  } : {}
+
+  # HTTPRoute Resources (HTTPS traffic - port 443)
   # Note: GatewayClass, Gateway, and NginxProxy are created by the Helm chart
   httproute_resources = {
     for k, v in local.rulesFiltered : "httproute-${lower(var.instance_name)}-${k}" => {
@@ -204,7 +242,7 @@ locals {
                     lookup(lookup(v, "response_header_modifier", {}), "add", {}),
                     local.cors_headers[k],
                     local.security_headers
-                  )) > 0 ? {
+                    )) > 0 ? {
                     add = [for name, value in merge(
                       lookup(lookup(v, "response_header_modifier", {}), "add", {}),
                       local.cors_headers[k],
@@ -227,17 +265,9 @@ locals {
                   hostname = lookup(v.url_rewrite, "hostname", null)
                   path     = lookup(v.url_rewrite, "path", null)
                 }
-              } : null,
-
-              # Request redirect for SSL
-              lookup(var.instance.spec, "force_ssl_redirection", false) &&
-              lookup(v, "path", "/") == "/" ? {
-                type = "RequestRedirect"
-                requestRedirect = {
-                  scheme     = "https"
-                  statusCode = 301
-                }
               } : null
+              # Note: SSL redirection is handled by separate http_redirect_resources HTTPRoutes
+              # RequestRedirect filter cannot be used together with backendRefs in the same rule
             ] : filter if filter != null
           ]
 
@@ -344,7 +374,7 @@ locals {
     } if lookup(lookup(v, "ip_whitelist", {}), "enabled", false)
   }
 
-  # Load Balancing Policies
+  # Load Balancing Policies (targets Services, not HTTPRoutes)
   loadbalancing_resources = {
     for k, v in local.rulesFiltered : "loadbalancing-${lower(var.instance_name)}-${k}" => {
       apiVersion = "gateway.nginx.org/v1alpha1"
@@ -355,9 +385,9 @@ locals {
       }
       spec = {
         targetRefs = [{
-          group = "gateway.networking.k8s.io"
-          kind  = "HTTPRoute"
-          name  = "${lower(var.instance_name)}-${k}"
+          group = ""
+          kind  = "Service"
+          name  = v.service_name
         }]
         loadBalancingMethod = lookup(lookup(v, "load_balancing", {}), "algorithm", "round_robin")
       }
@@ -394,6 +424,7 @@ locals {
 
   # Merge all Gateway API resources
   gateway_api_resources = merge(
+    local.http_redirect_resources,
     local.httproute_resources,
     local.grpcroute_resources,
     local.ratelimit_resources,
