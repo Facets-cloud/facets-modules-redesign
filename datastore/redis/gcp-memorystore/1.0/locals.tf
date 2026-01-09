@@ -1,26 +1,14 @@
-# Local values for GCP Redis Memorystore configuration
-
 locals {
-  # Basic configuration
-  project_id = var.inputs.gcp_provider.attributes.project
-  region     = var.inputs.network != null ? var.inputs.network.attributes.region : "us-central1"
-  vpc_name   = var.inputs.network != null ? var.inputs.network.attributes.vpc_name : "default"
+  # GCP provider configuration
+  project_id = var.inputs.gcp_provider.attributes.project_id
+  region     = var.inputs.network.attributes.region
+  vpc_name   = var.inputs.network.attributes.vpc_name
 
-  # Instance naming - ensuring GCP naming compliance (40 chars max for Redis)
-  instance_name = substr(
-    replace(
-      replace(
-        "${var.instance_name}-${var.environment.unique_name}",
-        "/[^a-z0-9-]/",
-        "-"
-      ),
-      "/^-+|-+$/",
-      ""
-    ),
-    0, 40
-  )
+  # Instance naming (GCP constraint: max 40 chars, lowercase alphanumeric and hyphens)
+  name_sanitized = lower(replace("${var.instance_name}-${var.environment.unique_name}", "/[^a-zA-Z0-9-]/", "-"))
+  instance_name  = substr(trim(local.name_sanitized, "-"), 0, 40)
 
-  # Redis configuration
+  # Redis configuration from spec
   redis_version  = var.instance.spec.version_config.redis_version
   memory_size_gb = var.instance.spec.sizing.memory_size_gb
   tier           = var.instance.spec.sizing.tier
@@ -29,13 +17,13 @@ locals {
   restore_from_backup = var.instance.spec.restore_config.restore_from_backup
   source_instance_id  = lookup(var.instance.spec.restore_config, "source_instance_id", null)
 
-  # Network configuration - use existing private services connection from network module if available
-  # Fall back to default VPC for testing when network module is not available
-  authorized_network = var.inputs.network != null ? var.inputs.network.attributes.vpc_self_link : null
+  # Security and network configuration
+  enable_tls         = var.instance.spec.security.enable_tls
+  authorized_network = var.inputs.network.attributes.vpc_self_link
 
-  # Redis port (standard)
-  redis_port = 6379
+  # Note: Port is dynamically assigned by GCP (6378 with TLS, 6379 without)
+  # and is accessed via google_redis_instance.main.port
 
-  # Location - use first zone from the region
+  # Location configuration
   location_id = "${local.region}-a"
 }
