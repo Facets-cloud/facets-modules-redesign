@@ -1,20 +1,21 @@
 name: '@facets/kubeblocks-operator'
-type: object
 properties:
-  attributes:
-    type: object
-    properties:
-      chart_version:
-        type: string
-      namespace:
-        type: string
-      release_name:
-        type: string
-      version:
-        type: string
-      release_id:
-        type: string
-  interfaces:
-    type: object
-    properties: {}
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        chart_version:
+          type: string
+        namespace:
+          type: string
+        release_name:
+          type: string
+        version:
+          type: string
+        release_id:
+          type: string
+    interfaces:
+      type: object
+      properties: {}
 providers: []
