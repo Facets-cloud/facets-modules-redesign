@@ -23,40 +23,26 @@ variable "inputs" {
   description = "Input dependencies from Facets"
   type = object({
     kubernetes_details = object({
-      attributes = optional(object({
-        cloud_provider         = optional(string)
-        cluster_arn            = optional(string)
-        cluster_ca_certificate = optional(string)
-        cluster_endpoint       = optional(string)
-        cluster_id             = optional(string)
-        cluster_name           = optional(string)
-        cluster_location       = optional(string)
-        cluster_version        = optional(string)
-        kubernetes_provider_exec = optional(object({
-          api_version = optional(string)
-          args        = optional(list(string))
-          command     = optional(string)
-        }))
-        node_iam_role_arn      = optional(string)
-        node_iam_role_name     = optional(string)
-        node_security_group_id = optional(string)
-        oidc_issuer_url        = optional(string)
-        oidc_provider          = optional(string)
-        oidc_provider_arn      = optional(string)
-        secrets                = optional(list(string))
+      cloud_provider         = optional(string)
+      cluster_arn            = optional(string)
+      cluster_ca_certificate = optional(string)
+      cluster_endpoint       = optional(string)
+      cluster_id             = optional(string)
+      cluster_name           = optional(string)
+      cluster_location       = optional(string)
+      cluster_version        = optional(string)
+      kubernetes_provider_exec = optional(object({
+        api_version = optional(string)
+        args        = optional(list(string))
+        command     = optional(string)
       }))
-      interfaces = optional(object({
-        kubernetes = optional(object({
-          cluster_ca_certificate = optional(string)
-          host                   = optional(string)
-          kubernetes_provider_exec = optional(object({
-            api_version = optional(string)
-            args        = optional(list(string))
-            command     = optional(string)
-          }))
-          secrets = optional(list(string))
-        }))
-      }))
+      node_iam_role_arn      = optional(string)
+      node_iam_role_name     = optional(string)
+      node_security_group_id = optional(string)
+      oidc_issuer_url        = optional(string)
+      oidc_provider          = optional(string)
+      oidc_provider_arn      = optional(string)
+      secrets                = optional(list(string))
     })
     network_details = object({
       attributes = optional(object({
