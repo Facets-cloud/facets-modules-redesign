@@ -181,11 +181,17 @@ locals {
               # Request header modification
               lookup(v, "request_header_modifier", null) != null ? {
                 type = "RequestHeaderModifier"
-                requestHeaderModifier = {
-                  add    = lookup(v.request_header_modifier, "add", null)
-                  set    = lookup(v.request_header_modifier, "set", null)
-                  remove = lookup(v.request_header_modifier, "remove", null)
-                }
+                requestHeaderModifier = merge(
+                  lookup(v.request_header_modifier, "add", null) != null ? {
+                    add = [for name, value in v.request_header_modifier.add : { name = name, value = value }]
+                  } : {},
+                  lookup(v.request_header_modifier, "set", null) != null ? {
+                    set = [for name, value in v.request_header_modifier.set : { name = name, value = value }]
+                  } : {},
+                  lookup(v.request_header_modifier, "remove", null) != null ? {
+                    remove = v.request_header_modifier.remove
+                  } : {}
+                )
               } : null,
 
               # Response header modification (CORS + custom headers + security headers)
@@ -193,15 +199,25 @@ locals {
                 lookup(lookup(v, "cors", {}), "enabled", false) ||
                 length(local.security_headers) > 0) ? {
                 type = "ResponseHeaderModifier"
-                responseHeaderModifier = {
-                  add = merge(
+                responseHeaderModifier = merge(
+                  length(merge(
                     lookup(lookup(v, "response_header_modifier", {}), "add", {}),
                     local.cors_headers[k],
                     local.security_headers
-                  )
-                  set    = lookup(lookup(v, "response_header_modifier", {}), "set", null)
-                  remove = lookup(lookup(v, "response_header_modifier", {}), "remove", null)
-                }
+                  )) > 0 ? {
+                    add = [for name, value in merge(
+                      lookup(lookup(v, "response_header_modifier", {}), "add", {}),
+                      local.cors_headers[k],
+                      local.security_headers
+                    ) : { name = name, value = value }]
+                  } : {},
+                  lookup(lookup(v, "response_header_modifier", {}), "set", null) != null ? {
+                    set = [for name, value in v.response_header_modifier.set : { name = name, value = value }]
+                  } : {},
+                  lookup(lookup(v, "response_header_modifier", {}), "remove", null) != null ? {
+                    remove = v.response_header_modifier.remove
+                  } : {}
+                )
               } : null,
 
               # URL rewriting
@@ -338,11 +354,11 @@ locals {
         namespace = var.environment.namespace
       }
       spec = {
-        targetRef = {
+        targetRefs = [{
           group = "gateway.networking.k8s.io"
           kind  = "HTTPRoute"
           name  = "${lower(var.instance_name)}-${k}"
-        }
+        }]
         loadBalancingMethod = lookup(lookup(v, "load_balancing", {}), "algorithm", "round_robin")
       }
     } if lookup(v, "load_balancing", null) != null
