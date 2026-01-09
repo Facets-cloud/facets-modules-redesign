@@ -97,8 +97,8 @@ resource "kubernetes_secret" "external_dns_r53_secret" {
 resource "helm_release" "external_dns" {
   depends_on       = [kubernetes_secret.external_dns_r53_secret]
   name             = module.helm_name.name
-  chart            = "external-dns"
-  repository       = "oci://registry-1.docker.io/bitnamicharts"
+  chart            = local.chart_source
+  repository       = local.chart_repository
   version          = local.helm_version
   namespace        = local.namespace
   create_namespace = false
@@ -110,18 +110,34 @@ resource "helm_release" "external_dns" {
 
   values = [
     yamlencode({
-      provider      = "aws"
-      txtOwnerId    = "${module.helm_name.name}-${var.environment.unique_name}"
-      txtSuffix     = var.environment.unique_name
-      policy        = "sync"
-      domainFilters = local.domain_filters
-      priorityClassName = "facets-critical"
+      # Provider configuration
+      provider = "aws"
+      policy   = "sync"
 
-      image = {
-        registry   = "docker.io"
-        repository = "bitnamilegacy/external-dns"
+      # Domain filters
+      domainFilters = local.domain_filters
+
+      # TXT record configuration
+      txtOwnerId = "${module.helm_name.name}-${var.environment.unique_name}"
+      txtSuffix  = var.environment.unique_name
+
+      # Service account configuration
+      serviceAccount = {
+        create = true
+        name   = module.helm_name.name
       }
 
+      # Image configuration (official external-dns image from registry.k8s.io)
+      # The kubernetes-sigs chart doesn't properly construct image from registry+repository+tag
+      # Use full image path in repository field (matches manual fix that worked)
+      image = {
+        repository = "${local.image_registry}/${local.image_repository}"
+        tag        = local.image_tag != "" ? local.image_tag : "v0.14.2"
+        pullPolicy = "IfNotPresent"
+        # Ensure registry is not set separately (chart might use it incorrectly)
+      }
+
+      # Resource limits
       resources = {
         limits = {
           cpu    = "500m"
@@ -133,15 +149,17 @@ resource "helm_release" "external_dns" {
         }
       }
 
+      # Metrics configuration
       metrics = {
         serviceMonitor = {
           enabled = true
         }
       }
 
+      # AWS provider configuration
       aws = {
-        region    = local.aws_region
-        zoneType  = local.zone_type
+        region   = local.aws_region
+        zoneType = local.zone_type
         credentials = {
           accessKeyIDSecretRef = {
             name = local.secret_name
@@ -154,8 +172,12 @@ resource "helm_release" "external_dns" {
         }
       }
 
+      # Node scheduling
       nodeSelector = local.node_selector
       tolerations  = local.tolerations
+
+      # Priority class
+      priorityClassName = local.priority_class_name
     }),
     yamlencode(local.user_supplied_helm_values)
   ]

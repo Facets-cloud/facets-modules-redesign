@@ -18,14 +18,8 @@ variable "environment" {
   }
 }
 
-#########################################################################
-# Instance Configuration Schema                                         #
-#                                                                       #
-# Matches the spec defined in facets.yaml                              #
-#########################################################################
-
 variable "instance" {
-  description = "The external DNS resource instance configuration"
+  description = "Configuration for the external-dns AWS module"
   type = object({
     kind     = optional(string)
     flavor   = optional(string)
@@ -33,21 +27,11 @@ variable "instance" {
     disabled = optional(bool, false)
     spec = optional(object({
       hosted_zone_id = optional(string, "*")
-      domain_filters = optional(list(string), [])
       zone_type      = optional(string, "public")
-    }), {})
-    advanced = optional(object({
-      externaldns = optional(object({
-        version         = optional(string, "6.28.5")
-        cleanup_on_fail = optional(bool, true)
-        wait            = optional(bool, false)
-        atomic          = optional(bool, false)
-        timeout         = optional(number, 300)
-        recreate_pods   = optional(bool, false)
-        values          = optional(map(any), {})
-      }), {})
+      domain_filters = optional(list(string), [])
     }), {})
   })
+  default = {}
 }
 
 
@@ -73,7 +57,7 @@ variable "inputs" {
     kubernetes_node_pool_details = optional(object({
       attributes = optional(object({
         node_selector = optional(map(string), {})
-        taints        = optional(list(any), [])
+        taints        = optional(any, null)
       }), {})
     }), null)
   })

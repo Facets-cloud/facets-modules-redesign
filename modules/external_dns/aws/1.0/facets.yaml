@@ -15,12 +15,17 @@ inputs:
       resource_name: default
     providers:
     - kubernetes
+    - helm
   cloud_account:
     optional: false
     type: '@facets/aws_cloud_account'
     displayName: AWS Cloud Account
     providers:
     - aws
+  kubernetes_node_pool_details:
+    type: '@facets/kubernetes_nodepool'
+    displayName: Node Pool
+    optional: false
 spec:
   title: External DNS Controller for AWS Route53
   description: Manages DNS credentials and IAM resources for Route53 DNS operations
