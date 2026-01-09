@@ -38,17 +38,16 @@ jobs:
           prompt: |
             You are validating a Facets module PR.
 
-            ## Required Reading
+            ## Required Reading (ALWAYS read these first)
             1. Read CLAUDE.md for repository structure and raptor commands
-            2. Read rules.md for complete validation ruleset with good/bad examples
+            2. Read rules.md for validation ruleset - understand these rules to identify violations
             3. Find relevant `*_module_standard.md` for each changed module type
 
             ## Your Task
             1. Identify which modules were changed in this PR using `gh pr diff`
             2. For each changed module, run: `raptor create iac-module -f <module-path> --dry-run`
             3. If validation fails, identify which rules from rules.md were violated
-            4. If security scan fails, report findings in a table format, then retry with `--skip-security-scan`
-            5. If provider issues (aws3tooling, facets provider not found), report to user - do NOT skip validation
+            4. Follow behavior guidelines from CLAUDE.md for handling security scan and provider issues
 
             ## Output Format
             Post a PR comment with:
