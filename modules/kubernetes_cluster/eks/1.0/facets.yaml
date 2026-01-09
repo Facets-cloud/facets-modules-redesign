@@ -2,20 +2,20 @@ intent: kubernetes_cluster
 flavor: eks
 alias-flavors:
   - default
-version: "1.0"
+version: '1.0'
 clouds:
   - aws
 title: EKS Cluster with Auto Mode support
 description: A Kubernetes EKS cluster module with auto mode enabled by default and all necessary configurations preset.
 inputs:
   network_details:
-    type: "@facets/aws-vpc-details"
+    type: '@facets/aws-vpc-details'
     displayName: Network
     default:
       resource_type: network
       resource_name: default
   cloud_account:
-    type: "@facets/aws_cloud_account"
+    type: '@facets/aws_cloud_account'
     displayName: Cloud Account
     description: The AWS Cloud Account where the EKS cluster will be created
     optional: false
@@ -23,7 +23,7 @@ inputs:
       - aws
 outputs:
   default:
-    type: "@facets/kubernetes-details"
+    type: '@facets/kubernetes-details'
     title: Kubernetes Cluster Output
     providers:
       kubernetes:
@@ -58,7 +58,7 @@ outputs:
             command: attributes.kubernetes_provider_exec.command
             args: attributes.kubernetes_provider_exec.args
   attributes:
-    type: "@facets/eks"
+    type: '@facets/eks'
     title: EKS Cluster Attributes
     description: Additional EKS cluster attributes without provider configuration
 spec:
@@ -185,7 +185,7 @@ sample:
   flavor: eks
   alias-flavors:
     - default
-  version: "1.0"
+  version: '1.0'
   metadata:
     name: eks-cluster
   spec:
