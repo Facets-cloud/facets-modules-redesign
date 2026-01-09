@@ -56,6 +56,7 @@ jobs:
             1. Read CLAUDE.md for repository structure and raptor commands
             2. Read rules.md for validation ruleset - understand these rules to avoid making the same mistakes
             3. Find relevant `*_module_standard.md` for the module type you're working on
+            4. For creating NEW modules, read `.claude/skills/module_writing.md` for complete development guide
 
             ## When Writing/Fixing Code
             - Apply rules from rules.md to avoid validation errors
