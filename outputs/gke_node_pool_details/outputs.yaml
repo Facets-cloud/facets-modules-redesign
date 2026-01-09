@@ -1,39 +1,40 @@
 name: '@facets/gke_node_pool_details'
-type: object
 properties:
-  attributes:
-    type: object
-    properties:
-      node_pool_id:
-        type: string
-        description: GKE node pool ID
-      node_pool_name:
-        type: string
-        description: GKE node pool name
-      node_selector:
-        type: object
-        additionalProperties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        node_pool_id:
           type: string
-        description: Map of labels used as node selector
-      service_account:
-        type: string
-        description: Service account email for the node pool
-      taints:
-        type: array
-        items:
+          description: GKE node pool ID
+        node_pool_name:
+          type: string
+          description: GKE node pool name
+        node_selector:
           type: object
-          properties:
-            key:
-              type: string
-            value:
-              type: string
-            effect:
-              type: string
-        description: List of taints applied to the node pool
-      topology_spread_key:
-        type: string
-        description: Topology spread constraint key
-  interfaces:
-    type: object
-    properties: {}
+          additionalProperties:
+            type: string
+          description: Map of labels used as node selector
+        service_account:
+          type: string
+          description: Service account email for the node pool
+        taints:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+              effect:
+                type: string
+          description: List of taints applied to the node pool
+        topology_spread_key:
+          type: string
+          description: Topology spread constraint key
+    interfaces:
+      type: object
+      properties: {}
 providers: []
