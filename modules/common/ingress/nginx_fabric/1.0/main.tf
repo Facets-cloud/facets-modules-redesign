@@ -2,9 +2,14 @@ locals {
   tenant_provider  = lower(lookup(var.cc_metadata, "cc_tenant_provider", "aws"))
   base_helm_values = lookup(var.instance.spec, "helm_values", {})
 
+  # Load balancer configuration - determine record type based on what's actually available
+  lb_hostname     = try(data.kubernetes_service.gateway_lb.status[0].load_balancer[0].ingress[0].hostname, "")
+  lb_ip           = try(data.kubernetes_service.gateway_lb.status[0].load_balancer[0].ingress[0].ip, "")
+  record_type     = local.lb_hostname != "" ? "CNAME" : "A"
+  lb_record_value = local.lb_hostname != "" ? local.lb_hostname : local.lb_ip
+
   # Rules configuration
-  rulesRaw    = lookup(var.instance.spec, "rules", {})
-  record_type = lookup(var.inputs.kubernetes_details.attributes, "lb_service_record_type", var.environment.cloud == "AWS" ? "CNAME" : "A")
+  rulesRaw = lookup(var.instance.spec, "rules", {})
 
   # Domain configuration (same as nginx_k8s)
   instance_env_name          = length(var.environment.unique_name) + length(var.instance_name) + length(var.cc_metadata.tenant_base_domain) >= 60 ? substr(md5("${var.instance_name}-${var.environment.unique_name}"), 0, 20) : "${var.instance_name}-${var.environment.unique_name}"
@@ -696,24 +701,17 @@ data "kubernetes_service" "gateway_lb" {
   }
 }
 
-locals {
-  lb_hostname = try(data.kubernetes_service.gateway_lb.status[0].load_balancer[0].ingress[0].hostname, "")
-  lb_ip       = try(data.kubernetes_service.gateway_lb.status[0].load_balancer[0].ingress[0].ip, "")
-}
-
 # Route53 DNS Records (AWS)
 resource "aws_route53_record" "cluster-base-domain" {
   count = local.tenant_provider == "aws" && !lookup(var.instance.spec, "disable_base_domain", false) ? 1 : 0
   depends_on = [
     helm_release.nginx_gateway_fabric
   ]
-  zone_id = var.cc_metadata.tenant_base_domain_id
-  name    = local.base_domain
-  type    = local.record_type
-  ttl     = "300"
-  records = [
-    local.record_type == "CNAME" ? data.kubernetes_service.gateway_lb.status.0.load_balancer.0.ingress.0.hostname : data.kubernetes_service.gateway_lb.status.0.load_balancer.0.ingress.0.ip
-  ]
+  zone_id  = var.cc_metadata.tenant_base_domain_id
+  name     = local.base_domain
+  type     = local.record_type
+  ttl      = "300"
+  records  = [local.lb_record_value]
   provider = "aws3tooling"
   lifecycle {
     prevent_destroy = true
@@ -725,13 +723,11 @@ resource "aws_route53_record" "cluster-base-domain-wildcard" {
   depends_on = [
     helm_release.nginx_gateway_fabric
   ]
-  zone_id = var.cc_metadata.tenant_base_domain_id
-  name    = local.base_subdomain
-  type    = local.record_type
-  ttl     = "300"
-  records = [
-    local.record_type == "CNAME" ? data.kubernetes_service.gateway_lb.status.0.load_balancer.0.ingress.0.hostname : data.kubernetes_service.gateway_lb.status.0.load_balancer.0.ingress.0.ip
-  ]
+  zone_id  = var.cc_metadata.tenant_base_domain_id
+  name     = local.base_subdomain
+  type     = local.record_type
+  ttl      = "300"
+  records  = [local.lb_record_value]
   provider = "aws3tooling"
   lifecycle {
     prevent_destroy = true
