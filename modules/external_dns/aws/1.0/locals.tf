@@ -50,21 +50,36 @@ locals {
   # Users can set advanced.externaldns.priority_class_name to use a different priority class
   priority_class_name = lookup(local.externaldns, "priority_class_name", "facets-critical")
 
-  # Node scheduling
-  node_selector = try(
-    var.inputs.kubernetes_node_pool_details.attributes.node_selector,
-    {}
-  )
-  # Handle taints: convert null/object to empty list, ensure it's always a list
-  # taints can come as: null, {}, [], or list of objects with {key, value, effect}
-  # Check if taints exists and is a list, otherwise return empty list
+  # Node scheduling configuration
+  # For system components like external-dns, we want them to schedule on any available node
+  # Only use node selectors if the nodepool has taints (requires pod affinity)
+  # This ensures compatibility with:
+  # - EKS Auto Mode (workload-driven labeling with operator: Exists)
+  # - GKE Autopilot (managed node pools)
+  # - Azure AKS with tainted nodepools (explicit scheduling required)
+
+  # Get nodepool configuration
   nodepool_taints = try(
     var.inputs.kubernetes_node_pool_details.attributes.taints,
     null
   )
-  tolerations = concat(
+  has_nodepool_taints = local.nodepool_taints != null && can(tolist(local.nodepool_taints)) && length(local.nodepool_taints) > 0
+
+  # Only use node selector if nodepool has taints (meaning pods MUST schedule there)
+  # Otherwise, let pods schedule on any node
+  default_node_selector = local.has_nodepool_taints ? try(
+    var.inputs.kubernetes_node_pool_details.attributes.node_selector,
+    {}
+  ) : {}
+
+  # Build tolerations
+  default_tolerations = local.has_nodepool_taints ? concat(
     try(var.environment.default_tolerations, []),
-    local.nodepool_taints != null && can(tolist(local.nodepool_taints)) ? tolist(local.nodepool_taints) : []
-  )
+    tolist(local.nodepool_taints)
+  ) : try(var.environment.default_tolerations, [])
+
+  # Allow override via advanced config if needed
+  node_selector = lookup(local.externaldns, "node_selector", local.default_node_selector)
+  tolerations   = lookup(local.externaldns, "tolerations", local.default_tolerations)
 }
 

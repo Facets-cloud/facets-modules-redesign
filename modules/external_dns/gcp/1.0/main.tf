@@ -121,13 +121,42 @@ resource "helm_release" "external_dns" {
         }
       }
 
+      # GCP credentials via mounted secret
+      # The external-dns GCP provider uses Google Cloud SDK which reads credentials from a JSON file
+      # specified by GOOGLE_APPLICATION_CREDENTIALS environment variable
+      env = [
+        {
+          name  = "GOOGLE_APPLICATION_CREDENTIALS"
+          value = "/etc/gcp/credentials.json"
+        },
+        {
+          name  = "GOOGLE_PROJECT"
+          value = local.project_id
+        }
+      ]
+
+      extraVolumes = [
+        {
+          name = "gcp-credentials"
+          secret = {
+            secretName = local.secret_name
+          }
+        }
+      ]
+
+      extraVolumeMounts = [
+        {
+          name      = "gcp-credentials"
+          mountPath = "/etc/gcp"
+          readOnly  = true
+        }
+      ]
+
       # GCP provider configuration
       google = {
-        project                 = local.project_id
-        serviceAccountSecret    = local.secret_name
-        serviceAccountSecretKey = "credentials.json"
-        zoneVisibility          = local.zone_visibility
-        batchChangeSize         = local.batch_change_size
+        project         = local.project_id
+        zoneVisibility  = local.zone_visibility
+        batchChangeSize = local.batch_change_size
       }
 
       # Node scheduling

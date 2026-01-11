@@ -3,24 +3,46 @@ properties:
   attributes:
     type: object
     properties:
+      # AWS IRSA fields (new approach)
+      iam_role_arn:
+        type: string
+        description: IAM Role ARN for IRSA (AWS only, replaces secret-based auth)
+      iam_role_name:
+        type: string
+        description: IAM Role name for IRSA (AWS only)
+      service_account_name:
+        type: string
+        description: Kubernetes service account name used by external-dns
+      service_account_namespace:
+        type: string
+        description: Namespace where the external-dns service account is created
+      # Cert-manager IAM Role for IRSA (AWS only)
+      cert_manager_iam_role_arn:
+        type: string
+        description: IAM Role ARN for cert-manager IRSA (AWS only, for DNS-01 challenges)
+      cert_manager_iam_role_name:
+        type: string
+        description: IAM Role name for cert-manager IRSA (AWS only)
+      # Legacy secret-based fields (deprecated for AWS, still used for GCP/Azure)
       secret_name:
         type: string
-        description: Name of the Kubernetes secret containing DNS credentials
+        description: Name of the Kubernetes secret containing DNS credentials (GCP/Azure only, deprecated for AWS)
       secret_namespace:
         type: string
-        description: Namespace where the DNS credentials secret is stored
+        description: Namespace where the DNS credentials secret is stored (GCP/Azure only)
       aws_access_key_id_key:
         type: string
-        description: Secret key name for AWS access key ID (AWS only)
+        description: '[DEPRECATED] Use IRSA instead. Secret key name for AWS access key ID'
       aws_secret_access_key_key:
         type: string
-        description: Secret key name for AWS secret access key (AWS only)
+        description: '[DEPRECATED] Use IRSA instead. Secret key name for AWS secret access key'
       gcp_credentials_json_key:
         type: string
         description: Secret key name for GCP credentials JSON (GCP only)
       azure_credentials_json_key:
         type: string
         description: Secret key name for Azure credentials JSON (Azure only)
+      # Common fields
       hosted_zone_id:
         type: string
         description: AWS Route53 hosted zone ID (AWS only)
@@ -42,6 +64,9 @@ properties:
       project_id:
         type: string
         description: GCP project ID (GCP only)
+      resource_group_name:
+        type: string
+        description: Azure resource group name (Azure only)
   interfaces:
     type: object
 providers: []

@@ -137,21 +137,31 @@ locals {
   )
 
   # Nodepool configuration from inputs
+  # For system components like cert-manager, we want them to schedule on any available node
+  # Only use node selectors if the nodepool has taints (requires pod affinity)
+  # This ensures compatibility with:
+  # - EKS Auto Mode (workload-driven labeling with operator: Exists)
+  # - GKE Autopilot (managed node pools)
+  # - Azure AKS with tainted nodepools (explicit scheduling required)
+
   nodepool_config = try(var.inputs.kubernetes_node_pool_details.attributes, null)
 
-  # Handle taints: convert null/object to empty list, ensure it's always a list
-  # taints can come as: null, {}, [], or list of objects with {key, value, effect}
-  # Check if taints exists and is a list, otherwise return empty list
-  # Use can() to safely check if we can convert to list (works for lists, fails for objects)
-  nodepool_tolerations = local.nodepool_config != null && local.nodepool_config.taints != null ? (
+  # Check if nodepool has taints
+  nodepool_taints = local.nodepool_config != null && local.nodepool_config.taints != null ? (
     can(tolist(local.nodepool_config.taints)) ? tolist(local.nodepool_config.taints) : []
   ) : []
+  has_nodepool_taints = length(local.nodepool_taints) > 0
 
-  nodepool_labels = local.nodepool_config != null ? try(local.nodepool_config.node_selector, {}) : {}
+  # Only use node selector if nodepool has taints (meaning pods MUST schedule there)
+  # Otherwise, let pods schedule on any node
+  default_nodepool_labels = local.has_nodepool_taints && local.nodepool_config != null ? try(local.nodepool_config.node_selector, {}) : {}
 
-  # Use only nodepool configuration (no fallback to default tolerations)
-  tolerations  = local.nodepool_tolerations
-  nodeSelector = local.nodepool_labels
+  # Only add tolerations if nodepool has taints
+  default_nodepool_tolerations = local.has_nodepool_taints ? local.nodepool_taints : []
+
+  # Allow override via advanced config if needed
+  tolerations  = lookup(local.cert_manager_advanced, "tolerations", local.default_nodepool_tolerations)
+  nodeSelector = lookup(local.cert_manager_advanced, "node_selector", local.default_nodepool_labels)
 
   # GTS and ACME configuration
   use_gts         = lookup(local.spec, "use_gts", false)

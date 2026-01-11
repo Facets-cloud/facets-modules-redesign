@@ -60,8 +60,11 @@ resource "aws_iam_user_policy" "external_dns_r53_policy" {
         Resource = "arn:aws:route53:::hostedzone/${local.hosted_zone_id}"
       },
       {
-        Effect   = "Allow"
-        Action   = "route53:ListHostedZonesByName"
+        Effect = "Allow"
+        Action = [
+          "route53:ListHostedZones",
+          "route53:ListHostedZonesByName"
+        ]
         Resource = "*"
       }
     ]
@@ -156,20 +159,37 @@ resource "helm_release" "external_dns" {
         }
       }
 
+      # AWS credentials via environment variables
+      # The external-dns AWS provider uses the AWS SDK which reads credentials from environment variables
+      env = [
+        {
+          name = "AWS_ACCESS_KEY_ID"
+          valueFrom = {
+            secretKeyRef = {
+              name = local.secret_name
+              key  = "access-key-id"
+            }
+          }
+        },
+        {
+          name = "AWS_SECRET_ACCESS_KEY"
+          valueFrom = {
+            secretKeyRef = {
+              name = local.secret_name
+              key  = "secret-access-key"
+            }
+          }
+        },
+        {
+          name  = "AWS_REGION"
+          value = local.aws_region
+        }
+      ]
+
       # AWS provider configuration
       aws = {
         region   = local.aws_region
         zoneType = local.zone_type
-        credentials = {
-          accessKeyIDSecretRef = {
-            name = local.secret_name
-            key  = "access-key-id"
-          }
-          secretAccessKeySecretRef = {
-            name = local.secret_name
-            key  = "secret-access-key"
-          }
-        }
       }
 
       # Node scheduling
