@@ -14,7 +14,7 @@ locals {
   # Management settings from spec
   auto_repair = lookup(lookup(local.spec, "management", {}), "auto_repair", true)
   # auto_upgrade follows cluster auto_upgrade setting - access via attributes
-  kubernetes_attributes = lookup(lookup(var.inputs, "kubernetes_details", {}), "attributes", {})
+  kubernetes_attributes = lookup(var.inputs, "kubernetes_details", {})
   auto_upgrade          = lookup(local.kubernetes_attributes, "auto_upgrade", "false")
 
   # Network configuration
