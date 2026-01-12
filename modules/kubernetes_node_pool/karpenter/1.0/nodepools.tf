@@ -7,7 +7,7 @@ resource "kubernetes_manifest" "ec2_node_class" {
       name = "${var.instance_name}-nodeclass"
     }
     spec = {
-      # Use the instance profile from locals (either created or from input)
+      # Use the instance profile from karpenter_details input
       instanceProfile = local.node_instance_profile_name
 
       # Specify AMI family so Karpenter can generate correct UserData
@@ -48,14 +48,6 @@ resource "kubernetes_manifest" "ec2_node_class" {
   field_manager {
     force_conflicts = true
   }
-
-  # When install_karpenter is true, depend on helm release and tagging
-  # When false, Karpenter is already installed, just need subnet/sg tags
-  depends_on = [
-    helm_release.karpenter,
-    aws_ec2_tag.karpenter_subnet_discovery,
-    aws_ec2_tag.karpenter_sg_discovery
-  ]
 }
 
 # Create NodePool for this instance

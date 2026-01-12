@@ -4,30 +4,20 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
-      # Node pool instance configuration
-      instance_families = optional(list(string), ["t3", "t3a"])
-      instance_sizes    = optional(list(string), ["medium", "large", "xlarge"])
-      capacity_types    = optional(list(string), ["on-demand", "spot"])
-      architecture      = optional(list(string), ["amd64"])
-
-      # Node pool limits
-      cpu_limits    = optional(string, "1000")
-      memory_limits = optional(string, "1000Gi")
-
-      # Node pool behavior
-      enable_consolidation = optional(bool, true)
-
-      # Node scheduling
-      labels = optional(map(string), {})
-      taints = optional(map(object({
-        value  = string
-        effect = string
-      })), {})
+      # Karpenter installation settings
+      karpenter_version     = string
+      karpenter_replicas    = optional(number, 2)
+      interruption_handling = optional(bool, true)
 
       # Tags
       tags = optional(map(string), {})
     })
   })
+
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+$", var.instance.spec.karpenter_version))
+    error_message = "Karpenter version must be in semantic version format (e.g., 1.0.1)"
+  }
 }
 
 variable "instance_name" {
@@ -81,16 +71,6 @@ variable "inputs" {
         private_subnet_ids  = list(string)
         public_subnet_ids   = list(string)
         database_subnet_ids = optional(list(string), [])
-      })
-    })
-    # Required input - from karpenter controller module
-    karpenter_details = object({
-      attributes = object({
-        node_instance_profile_name = string
-        node_role_arn              = string
-        controller_role_arn        = optional(string)
-        karpenter_namespace        = optional(string, "kube-system")
-        karpenter_service_account  = optional(string, "karpenter")
       })
     })
   })
