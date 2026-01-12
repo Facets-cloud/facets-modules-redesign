@@ -20,109 +20,45 @@ inputs:
         type: '@facets/aws-vpc-details'
 intent: kubernetes_cluster
 outputs:
-    attributes:
-        description: Additional EKS cluster attributes without provider configuration
-        mock:
-            attributes:
-                cloud_provider: mock-string-value
-                cluster_arn: mock-string-value
-                cluster_ca_certificate: mock-string-value
-                cluster_endpoint: mock-string-value
-                cluster_iam_role_arn: mock-string-value
-                cluster_id: mock-string-value
-                cluster_name: mock-string-value
-                cluster_primary_security_group_id: mock-string-value
-                cluster_security_group_id: mock-string-value
-                cluster_version: mock-string-value
-                kubernetes_provider_exec:
-                    api_version: mock-string-value
-                    args: []
-                    command: mock-string-value
-                node_iam_role_arn: mock-string-value
-                node_iam_role_name: mock-string-value
-                node_security_group_id: mock-string-value
-                oidc_issuer_url: mock-string-value
-                oidc_provider: mock-string-value
-                oidc_provider_arn: mock-string-value
-                secrets: []
-            interfaces:
-                kubernetes:
-                    cluster_ca_certificate: mock-string-value
-                    host: mock-string-value
-                    kubernetes_provider_exec:
-                        api_version: mock-string-value
-                        args: []
-                        command: mock-string-value
-                    secrets: []
-        title: EKS Cluster Attributes
-        type: '@facets/eks'
-    default:
-        mock:
-            attributes:
-                cloud_provider: mock-string-value
-                cluster_arn: mock-string-value
-                cluster_ca_certificate: mock-string-value
-                cluster_endpoint: mock-string-value
-                cluster_iam_role_arn: mock-string-value
-                cluster_id: mock-string-value
-                cluster_name: mock-string-value
-                cluster_primary_security_group_id: mock-string-value
-                cluster_security_group_id: mock-string-value
-                cluster_version: mock-string-value
-                kubernetes_provider_exec:
-                    api_version: mock-string-value
-                    args: []
-                    command: mock-string-value
-                node_iam_role_arn: mock-string-value
-                node_iam_role_name: mock-string-value
-                node_security_group_id: mock-string-value
-                oidc_issuer_url: mock-string-value
-                oidc_provider: mock-string-value
-                oidc_provider_arn: mock-string-value
-                secrets: []
-            interfaces:
-                kubernetes:
-                    cluster_ca_certificate: mock-string-value
-                    host: mock-string-value
-                    kubernetes_provider_exec:
-                        api_version: mock-string-value
-                        args: []
-                        command: mock-string-value
-                    secrets: []
-        providers:
-            helm:
-                attributes:
-                    kubernetes:
-                        cluster_ca_certificate: attributes.cluster_ca_certificate
-                        exec:
-                            api_version: attributes.kubernetes_provider_exec.api_version
-                            args: attributes.kubernetes_provider_exec.args
-                            command: attributes.kubernetes_provider_exec.command
-                        host: attributes.cluster_endpoint
-                source: hashicorp/helm
-                version: 3.0.2
-            kubernetes:
-                attributes:
-                    cluster_ca_certificate: attributes.cluster_ca_certificate
-                    exec:
-                        api_version: attributes.kubernetes_provider_exec.api_version
-                        args: attributes.kubernetes_provider_exec.args
-                        command: attributes.kubernetes_provider_exec.command
-                    host: attributes.cluster_endpoint
-                source: hashicorp/kubernetes
-                version: 2.38.0
-            kubernetes-alpha:
-                attributes:
-                    cluster_ca_certificate: attributes.cluster_ca_certificate
-                    exec:
-                        api_version: attributes.kubernetes_provider_exec.api_version
-                        args: attributes.kubernetes_provider_exec.args
-                        command: attributes.kubernetes_provider_exec.command
-                    host: attributes.cluster_endpoint
-                source: hashicorp/kubernetes-alpha
-                version: 0.6.0
-        title: Kubernetes Cluster Output
-        type: '@facets/kubernetes-details'
+  default:
+    type: '@facets/kubernetes-details'
+    title: Kubernetes Cluster Output
+    providers:
+      kubernetes:
+        source: hashicorp/kubernetes
+        version: 2.38.0
+        attributes:
+          host: attributes.cluster_endpoint
+          cluster_ca_certificate: attributes.cluster_ca_certificate
+          exec:
+            api_version: attributes.kubernetes_provider_exec.api_version
+            command: attributes.kubernetes_provider_exec.command
+            args: attributes.kubernetes_provider_exec.args
+      helm:
+        source: hashicorp/helm
+        version: 2.17.0
+        attributes:
+          kubernetes:
+            host: attributes.cluster_endpoint
+            cluster_ca_certificate: attributes.cluster_ca_certificate
+            exec:
+              api_version: attributes.kubernetes_provider_exec.api_version
+              command: attributes.kubernetes_provider_exec.command
+              args: attributes.kubernetes_provider_exec.args
+      kubernetes-alpha:
+        source: hashicorp/kubernetes-alpha
+        version: 0.6.0
+        attributes:
+          host: attributes.cluster_endpoint
+          cluster_ca_certificate: attributes.cluster_ca_certificate
+          exec:
+            api_version: attributes.kubernetes_provider_exec.api_version
+            command: attributes.kubernetes_provider_exec.command
+            args: attributes.kubernetes_provider_exec.args
+  attributes:
+    type: '@facets/eks'
+    title: EKS Cluster Attributes
+    description: Additional EKS cluster attributes without provider configuration
 sample:
     disabled: false
     flavor: eks_standard
