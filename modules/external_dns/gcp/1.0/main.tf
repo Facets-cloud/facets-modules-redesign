@@ -21,7 +21,7 @@ module "helm_name" {
 
 # GCP Service Account for Cloud DNS access
 resource "google_service_account" "external_dns_sa" {
-  account_id   = lower(module.service_account_name.name)
+  account_id   = local.service_account_id
   display_name = "external-dns-${local.cluster_name}"
   description  = "Service account for external-dns to manage Cloud DNS records"
   project      = local.project_id

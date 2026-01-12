@@ -6,10 +6,10 @@ locals {
   namespace   = "external-dns"
   secret_name = "${lower(var.instance_name)}-dns-secret"
 
-  # Cluster details
+  # Cluster details from GKE
   cluster_name = var.inputs.kubernetes_details.attributes.cluster_name
 
-  # Project ID can come from kubernetes_details (GKE) or cloud_account
+  # Project ID from GKE or cloud_account
   project_id = try(
     var.inputs.kubernetes_details.attributes.project_id,
     var.inputs.cloud_account.attributes.project_id,
@@ -17,7 +17,7 @@ locals {
     ""
   )
 
-  # Region can come from kubernetes_details (GKE) or cloud_account
+  # Region from GKE or cloud_account
   region = try(
     var.inputs.kubernetes_details.attributes.region,
     var.inputs.cloud_account.attributes.region,
@@ -73,11 +73,14 @@ locals {
   # - Azure AKS with tainted nodepools (explicit scheduling required)
 
   # Get nodepool configuration
+  # Handle cases where kubernetes_node_pool_details is null, attributes are null, or taints are null/empty
   nodepool_taints = try(
     var.inputs.kubernetes_node_pool_details.attributes.taints,
-    null
+    []
   )
-  has_nodepool_taints = local.nodepool_taints != null && can(tolist(local.nodepool_taints)) && length(local.nodepool_taints) > 0
+  # Taints can be null, empty list [], or a populated list
+  # Only consider it "has taints" if it's a non-empty list
+  has_nodepool_taints = try(length(local.nodepool_taints), 0) > 0
 
   # Only use node selector if nodepool has taints (meaning pods MUST schedule there)
   # Otherwise, let pods schedule on any node
@@ -87,13 +90,24 @@ locals {
   ) : {}
 
   # Build tolerations
+  # Only add nodepool taints if they exist, otherwise just use environment defaults
   default_tolerations = local.has_nodepool_taints ? concat(
     try(var.environment.default_tolerations, []),
-    tolist(local.nodepool_taints)
+    local.nodepool_taints
   ) : try(var.environment.default_tolerations, [])
 
   # Allow override via advanced config if needed
   node_selector = lookup(local.externaldns, "node_selector", local.default_node_selector)
   tolerations   = lookup(local.externaldns, "tolerations", local.default_tolerations)
+
+  # Service account name cleanup for GCP validation
+  # GCP service account IDs must:
+  # - Start with a lowercase letter
+  # - Be 6-30 characters long
+  # - Match regex ^[a-z]([-a-z0-9]*[a-z0-9])?$
+  raw_sa_name        = module.service_account_name.name
+  sa_name_trimmed    = trimsuffix(trimprefix(lower(local.raw_sa_name), "-"), "-")
+  sa_name_prefixed   = length(regexall("^[a-z]", local.sa_name_trimmed)) > 0 ? local.sa_name_trimmed : "a${local.sa_name_trimmed}"
+  service_account_id = substr(local.sa_name_prefixed, 0, min(30, length(local.sa_name_prefixed)))
 }
 

@@ -38,11 +38,9 @@ variable "inputs" {
   type = object({
     kubernetes_details = object({
       attributes = object({
-        cluster_name     = string
-        cluster_endpoint = optional(string)
-        cloud_provider   = optional(string)
-        project_id       = optional(string) # Comes from GKE cluster
-        region           = optional(string) # Comes from GKE cluster
+        cluster_name = string
+        project_id   = optional(string) # Comes from GKE cluster
+        region       = optional(string) # Comes from GKE cluster
       })
       interfaces = optional(any)
     })
