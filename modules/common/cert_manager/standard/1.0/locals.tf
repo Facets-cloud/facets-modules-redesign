@@ -1,6 +1,6 @@
 # Define your locals here
 locals {
-  tenant_provider           = lower(try(var.cc_metadata.cc_tenant_provider, "aws"))
+  tenant_provider           = lower(local.cc_tenant_provider != "" ? local.cc_tenant_provider : "aws")
   spec                      = lookup(var.instance, "spec", {})
   user_supplied_helm_values = try(local.spec.cert_manager.values, try(var.instance.advanced.cert_manager.values, {}))
   cert_manager              = lookup(local.spec, "cert_manager", try(var.instance.advanced.cert_manager, {}))
@@ -13,7 +13,7 @@ locals {
   dns_providers = {
     aws = {
       route53 = {
-        region = try(var.cc_metadata.cc_region, null)
+        region = local.cc_region != "" ? local.cc_region : null
         accessKeyIDSecretRef = {
           key  = "access-key-id"
           name = local.disable_dns_validation ? "na" : kubernetes_secret.cert_manager_r53_secret[0].metadata[0].name
@@ -110,7 +110,7 @@ locals {
   # GTS and ACME configuration
   use_gts         = lookup(local.spec, "use_gts", false)
   gts_private_key = lookup(local.spec, "gts_private_key", "")
-  acme_email      = lookup(local.spec, "acme_email", "") != "" ? lookup(local.spec, "acme_email", "") : try(var.cluster.createdBy, null)
+  acme_email      = lookup(local.spec, "acme_email", "") != "" ? lookup(local.spec, "acme_email", "") : null
 }
 
 data "kubernetes_secret_v1" "dns" {
