@@ -177,7 +177,7 @@ When importing project types with `--outputs-dir`:
 ```bash
 raptor import project-type \
   -f ./project-type/aws/project-type.yml \
-  --modules-dir . \
+  --modules-dir ./modules \
   --outputs-dir ./outputs
 ```
 
@@ -194,7 +194,7 @@ raptor import project-type -f ./project-type/aws/project-type.yml
 ```bash
 raptor import project-type \
   -f ./project-type/aws/project-type.yml \
-  --modules-dir . \
+  --modules-dir ./modules \
   --outputs-dir ./outputs
 ```
 
@@ -207,7 +207,7 @@ raptor get accounts --type VERSION_CONTROL
 raptor import project-type \
   -f ./project-type/aws/project-type.yml \
   --vcs-account-id acc_xyz123 \
-  --modules-dir . \
+  --modules-dir ./modules \
   --outputs-dir ./outputs
 ```
 
@@ -227,14 +227,14 @@ raptor import project-type \
 1. **Read Metadata:** Parses `project-type.yml`
 2. **Create/Update Project Type:** Upserts the project type in control plane
 3. **Create Output Types:** (if `--outputs-dir` provided) Creates required output types
-4. **Discover Modules:** (if `--modules-dir` provided) Finds matching modules
-5. **Validate Modules:** Runs terraform fmt, validate, and security scans
-6. **Upload Modules:** Publishes modules to control plane
-7. **Report Results:** Shows success/failure for each step
+4. i. **Discover Modules:** (if `--modules-dir` provided) Finds matching modules
+   ii. **Validate Modules:** Runs terraform fmt, validate, and security scans
+   iii. **Upload Modules:** Publishes modules to control plane
+   iv. **Report Results:** Shows success/failure for each step
 
-## Validation
+### Validation
 
-During import, each module undergoes validation:
+During import of project type, if modules directory is provided, then each module undergoes validation:
 
 - Facets.yaml structure validation
 - Terraform formatting check (`terraform fmt -check`)
@@ -268,7 +268,7 @@ modules:
 
 Create directory structure:
 ```bash
-mkdir -p project-type/myproject/base
+mkdir -p project-type/<name>/base
 ```
 
 Add `stack.json` and instance configurations for each module.
@@ -277,8 +277,8 @@ Add `stack.json` and instance configurations for each module.
 
 ```bash
 raptor import project-type \
-  -f ./project-type/myproject/project-type.yml \
-  --modules-dir . \
+  -f ./project-type/<name>/project-type.yml \
+  --modules-dir ./modules \
   --outputs-dir ./outputs
 ```
 
@@ -344,7 +344,7 @@ raptor get iac-module --type network --flavor aws_vpc
 
 ### Version Management
 
-1. **Git Refs:** Use stable branches or tags (e.g., `master`, `v1.0.0`)
+1. **Git Refs:** Use stable branches or tags (e.g., `main`, `v1.0.0`)
 2. **Module Versions:** Specify version in module definitions
 3. **Compatibility:** Ensure module versions are compatible with each other
 
@@ -394,36 +394,21 @@ raptor get iac-module --type network --flavor aws_vpc
 See: `project-type/aws/project-type.yml`
 
 Key modules:
-- AWS provider setup
-- VPC networking
-- EKS cluster
-- Node pools
-- Application services
-- Common Kubernetes components
+- AWS provider setup, VPC networking, EKS cluster, Node pools, Application services, Common Kubernetes components
 
 ### Complete Azure Project Type
 
 See: `project-type/azure/project-type.yml`
 
 Key modules:
-- Azure provider setup
-- Virtual network
-- AKS cluster
-- Node pools
-- Application services
-- Common Kubernetes components
+- Azure provider setup, Virtual network, AKS cluster, Node pools, Application services, Common Kubernetes components
 
 ### Complete GCP Project Type
 
 See: `project-type/gcp/project-type.yml`
 
 Key modules:
-- GCP provider setup
-- VPC networking
-- GKE cluster
-- Node pools
-- Application services
-- Common Kubernetes components
+- GCP provider setup, VPC networking, GKE cluster, Node pools, Application services, Common Kubernetes components
 
 ## Related Documentation
 
