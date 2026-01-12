@@ -42,6 +42,25 @@ locals {
     maintenance_policy_enabled = local.auto_upgrade
 
     secrets = "[\"cluster_ca_certificate\"]"
+
+    legacy_outputs = {
+      k8s_details = {
+        auth = {
+          host                   = ""
+          cluster_ca_certificate = ""
+          token                  = ""
+        }
+        helm_details = {
+          tiller_sa = "na"
+        }
+        node_group_iam_role_arn = "arn:aws:iam::337909761441:role/337909761441-ciq-apps-beta"
+        oidc_provider_arn       = ""
+        cluster_oidc_issuer_url = ""
+        cluster_id              = ""
+      }
+      registry_secret_objects = {}
+      pmm_admin_pass          = ""
+    }
   }
 
   output_interfaces = {
