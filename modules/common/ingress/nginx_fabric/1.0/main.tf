@@ -100,10 +100,12 @@ locals {
     "networking.gke.io/internal-load-balancer-allow-global-access" = "true"
   } : {}
 
+  cloud_provider = upper(try(var.inputs.kubernetes_details.attributes.cloud_provider, "aws"))
+
   service_annotations = merge(
-    var.environment.cloud == "AWS" ? local.aws_annotations : {},
-    var.environment.cloud == "AZURE" ? local.azure_annotations : {},
-    var.environment.cloud == "GCP" ? local.gcp_annotations : {}
+    local.cloud_provider == "AWS" ? local.aws_annotations : {},
+    local.cloud_provider == "AZURE" ? local.azure_annotations : {},
+    local.cloud_provider == "GCP" ? local.gcp_annotations : {}
   )
 
   # Get ClusterIssuer names from cert-manager
