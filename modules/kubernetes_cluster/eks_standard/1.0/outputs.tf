@@ -9,8 +9,8 @@ locals {
     oidc_issuer_url                   = module.eks.cluster_oidc_issuer_url
     oidc_provider                     = module.eks.oidc_provider
     oidc_provider_arn                 = module.eks.oidc_provider_arn
-    node_iam_role_arn                 = try(module.eks.eks_managed_node_groups_autoscaling_group_names[0], "")
-    node_iam_role_name                = try(module.eks.eks_managed_node_groups[0].iam_role_name, "")
+    node_iam_role_arn                 = try(module.eks.eks_managed_node_groups["system"].iam_role_arn, "")
+    node_iam_role_name                = try(module.eks.eks_managed_node_groups["system"].iam_role_name, "")
     node_security_group_id            = module.eks.node_security_group_id
     cluster_iam_role_arn              = module.eks.cluster_iam_role_arn
     cluster_primary_security_group_id = module.eks.cluster_primary_security_group_id
