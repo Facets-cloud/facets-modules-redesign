@@ -1,8 +1,8 @@
 clouds:
     - aws
 description: |
-    Deploys Karpenter autoscaler for EKS clusters with automatic node provisioning and cost optimization.
-    Karpenter directly provisions EC2 instances based on pod requirements, providing faster scaling and better cost efficiency than traditional Cluster Autoscaler.
+    Creates Karpenter NodePool and EC2NodeClass for EKS clusters.
+    This module requires the karpenter controller module to be deployed first.
     Each instance creates a single NodePool. Create multiple instances for multiple node pools.
 flavor: karpenter
 inputs:
@@ -14,12 +14,11 @@ inputs:
             - aws
         type: '@facets/aws_cloud_account'
     kubernetes_details:
-        description: The EKS cluster where Karpenter will be deployed
+        description: The EKS cluster where NodePool will be created
         displayName: Kubernetes Cluster
         optional: false
         providers:
             - kubernetes
-            - helm
         type: '@facets/kubernetes-details'
     network_details:
         default:
@@ -27,31 +26,24 @@ inputs:
             resource_type: network
         displayName: Network
         type: '@facets/aws-vpc-details'
+    karpenter_details:
+        description: Karpenter controller details (from karpenter module)
+        displayName: Karpenter Controller
+        optional: false
+        type: '@facets/karpenter-details'
 intent: kubernetes_node_pool
 outputs:
-    default:
-        mock:
-            attributes:
-                controller_role_arn: mock-string-value
-                interruption_queue_name: mock-string-value
-                karpenter_namespace: mock-string-value
-                karpenter_service_account: mock-string-value
-                karpenter_version: mock-string-value
-                node_instance_profile_name: mock-string-value
-                node_role_arn: mock-string-value
-                nodepool_name: mock-string-value
-                nodeclass_name: mock-string-value
-                secrets: []
-            interfaces: {}
-        type: '@facets/karpenter-details'
+  default:
+    type: '@facets/kubernetes_nodepool'
+    title: Kubernetes Nodepool
+  attributes:
+    type: '@facets/aws_karpenter_nodepool'
+    title: AWS Karpenter NodePool
 sample:
     disabled: false
     flavor: karpenter
     kind: kubernetes_node_pool
     spec:
-        install_karpenter: true
-        karpenter_version: 1.0.1
-        karpenter_replicas: 2
         instance_families:
             - t3
             - t3a
@@ -67,29 +59,10 @@ sample:
         cpu_limits: "1000"
         memory_limits: 1000Gi
         enable_consolidation: true
-        interruption_handling: true
     version: "1.0"
 spec:
-    description: Configure Karpenter autoscaler and NodePool for your EKS cluster
+    description: Configure Karpenter NodePool for your EKS cluster
     properties:
-        install_karpenter:
-            default: true
-            description: Install Karpenter controller and CRDs. Set to false if Karpenter is already installed by another instance.
-            title: Install Karpenter
-            type: boolean
-        karpenter_version:
-            default: 1.0.1
-            description: Version of Karpenter to deploy (should match your Kubernetes version)
-            title: Karpenter Version
-            type: string
-            x-ui-overrides-only: true
-        karpenter_replicas:
-            default: 2
-            description: Number of Karpenter controller replicas for high availability
-            maximum: 5
-            minimum: 1
-            title: Controller Replicas
-            type: integer
         instance_families:
             default:
                 - t3
@@ -151,11 +124,6 @@ spec:
             description: Enable automatic node consolidation to optimize costs
             title: Enable Consolidation
             type: boolean
-        interruption_handling:
-            default: true
-            description: Enable interruption handling for Spot instances
-            title: Enable Interruption Handling
-            type: boolean
         labels:
             description: Kubernetes labels to apply to provisioned nodes
             title: Node Labels
@@ -171,14 +139,9 @@ spec:
             title: Instance Tags
             type: object
             x-ui-yaml-editor: true
-    required:
-        - karpenter_version
-    title: Karpenter Configuration
+    title: Karpenter NodePool Configuration
     type: object
     x-ui-order:
-        - install_karpenter
-        - karpenter_version
-        - karpenter_replicas
         - instance_families
         - instance_sizes
         - capacity_types
@@ -186,7 +149,6 @@ spec:
         - cpu_limits
         - memory_limits
         - enable_consolidation
-        - interruption_handling
         - labels
         - taints
         - tags
