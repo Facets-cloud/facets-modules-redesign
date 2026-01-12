@@ -3,6 +3,7 @@ flavor: gke
 version: '1.0'
 clouds:
 - gcp
+- aws
 title: GKE Cluster Control Plane
 description: Creates a GKE cluster control plane without default node pool. Use kubernetes_node_pool
   module to add node pools.
@@ -79,7 +80,7 @@ outputs:
     providers:
       kubernetes:
         source: hashicorp/kubernetes
-        version: 2.38.0
+        version: 2.17.0
         attributes:
           host: attributes.cluster_endpoint
           cluster_ca_certificate: attributes.cluster_ca_certificate
@@ -89,7 +90,7 @@ outputs:
             args: attributes.kubernetes_provider_exec.args
       helm:
         source: hashicorp/helm
-        version: 2.17.0
+        version: 2.8.0
         attributes:
           kubernetes:
             host: attributes.cluster_endpoint

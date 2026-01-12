@@ -4,6 +4,7 @@ version: '1.0'
 description: Module to configure and provision resources within a cloud account
 clouds:
 - gcp
+- aws
 spec:
   description: Module to configure and provision resources within a cloud account
     (AWS, GCP, Azure)
