@@ -109,8 +109,9 @@ locals {
   )
 
   # Get ClusterIssuer names from cert-manager
-  cluster_issuer_dns  = lookup(var.inputs, "cert_manager_details", null) != null ? var.inputs.cert_manager_details.attributes.cluster_issuer_dns : "letsencrypt-prod"
-  cluster_issuer_http = lookup(var.inputs, "cert_manager_details", null) != null ? var.inputs.cert_manager_details.attributes.cluster_issuer_http : "letsencrypt-prod-http01"
+  cluster_issuer_dns          = lookup(var.inputs, "cert_manager_details", null) != null ? var.inputs.cert_manager_details.attributes.cluster_issuer_dns : "letsencrypt-prod"
+  cluster_issuer_http         = lookup(var.inputs, "cert_manager_details", null) != null ? var.inputs.cert_manager_details.attributes.cluster_issuer_http : "letsencrypt-prod-http01"
+  cluster_issuer_gateway_http = "letsencrypt-prod-gateway-http01"
 
   # Security headers
   security_headers = merge(
@@ -564,11 +565,6 @@ resource "helm_release" "nginx_gateway_fabric" {
         tolerations  = local.ingress_tolerations
         nodeSelector = local.nodepool_labels
 
-        service = {
-          type        = "LoadBalancer"
-          annotations = local.service_annotations
-        }
-
         metrics = {
           enabled = lookup(lookup(lookup(var.instance.spec, "observability", {}), "metrics", {}), "enabled", true)
           port    = lookup(lookup(lookup(var.instance.spec, "observability", {}), "metrics", {}), "port", 9113)
@@ -583,14 +579,31 @@ resource "helm_release" "nginx_gateway_fabric" {
           proxySendTimeout    = lookup(lookup(lookup(var.instance.spec, "nginx_config", {}), "proxy_timeouts", {}), "send", "60s")
           proxyReadTimeout    = lookup(lookup(lookup(var.instance.spec, "nginx_config", {}), "proxy_timeouts", {}), "read", "60s")
         }
+        service = {
+          type                  = "LoadBalancer"
+          externalTrafficPolicy = "Local"
+          patches = length(local.service_annotations) > 0 ? [
+            {
+              type = "StrategicMerge"
+              value = {
+                metadata = {
+                  annotations = local.service_annotations
+                }
+              }
+            }
+          ] : []
+        }
       }
 
       # Gateway configuration
       gateways = [{
         name      = local.name
         namespace = var.environment.namespace
+        labels = {
+          gateway = "facets"
+        }
         annotations = {
-          "cert-manager.io/cluster-issuer" = local.disable_endpoint_validation ? local.cluster_issuer_dns : local.cluster_issuer_http
+          "cert-manager.io/cluster-issuer" = local.disable_endpoint_validation ? local.cluster_issuer_dns : local.cluster_issuer_gateway_http
           "cert-manager.io/renew-before"   = lookup(var.instance.spec, "renew_cert_before", "720h")
         }
         spec = {
