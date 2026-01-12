@@ -87,6 +87,7 @@ locals {
       "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"                   = "ip"
       "service.beta.kubernetes.io/aws-load-balancer-backend-protocol"                  = "tcp"
       "service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled" = "true"
+      "service.beta.kubernetes.io/aws-load-balancer-proxy-protocol"                    = "*"
     }
   )
 
@@ -579,10 +580,20 @@ resource "helm_release" "nginx_gateway_fabric" {
           proxyConnectTimeout = lookup(lookup(lookup(var.instance.spec, "nginx_config", {}), "proxy_timeouts", {}), "connect", "60s")
           proxySendTimeout    = lookup(lookup(lookup(var.instance.spec, "nginx_config", {}), "proxy_timeouts", {}), "send", "60s")
           proxyReadTimeout    = lookup(lookup(lookup(var.instance.spec, "nginx_config", {}), "proxy_timeouts", {}), "read", "60s")
+          # Enable Proxy Protocol to get real client IP with externalTrafficPolicy: Cluster
+          rewriteClientIP = local.cloud_provider == "AWS" ? {
+            mode = "ProxyProtocol"
+            trustedAddresses = [
+              {
+                type  = "CIDR"
+                value = "0.0.0.0/0"
+              }
+            ]
+          } : null
         }
         service = {
           type                  = "LoadBalancer"
-          externalTrafficPolicy = "Local"
+          externalTrafficPolicy = "Cluster"
           patches = length(local.service_annotations) > 0 ? [
             {
               type = "StrategicMerge"
