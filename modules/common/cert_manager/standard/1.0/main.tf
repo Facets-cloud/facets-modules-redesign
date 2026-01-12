@@ -100,10 +100,7 @@ resource "helm_release" "cert_manager" {
   recreate_pods    = lookup(local.cert_manager, "recreate_pods", false)
 
   values = [
-    <<EOF
-prometheus_id: ${try(var.inputs.prometheus_details.attributes.helm_release_id, "")}
-EOF
-    , yamlencode({
+    yamlencode({
       crds = {
         enabled = true
       }
@@ -135,6 +132,9 @@ EOF
         enabled = true
         servicemonitor = {
           enabled = true
+          labels = {
+            prometheus_id = try(var.inputs.prometheus_details.attributes.helm_release_id, "")
+          }
         }
       }
     }),
