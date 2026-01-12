@@ -108,10 +108,11 @@ locals {
     local.cloud_provider == "GCP" ? local.gcp_annotations : {}
   )
 
-  # Get ClusterIssuer names from cert-manager
+  # Get ClusterIssuer names and config from cert-manager
   cluster_issuer_dns          = lookup(var.inputs, "cert_manager_details", null) != null ? var.inputs.cert_manager_details.attributes.cluster_issuer_dns : "letsencrypt-prod"
   cluster_issuer_http         = lookup(var.inputs, "cert_manager_details", null) != null ? var.inputs.cert_manager_details.attributes.cluster_issuer_http : "letsencrypt-prod-http01"
-  cluster_issuer_gateway_http = "letsencrypt-prod-gateway-http01"
+  cluster_issuer_gateway_http = "${local.name}-gateway-http01"
+  acme_email                  = lookup(var.inputs, "cert_manager_details", null) != null ? var.inputs.cert_manager_details.attributes.acme_email : try(var.cluster.createdBy, "admin@example.com")
 
   # Security headers
   security_headers = merge(
@@ -649,6 +650,49 @@ resource "helm_release" "nginx_gateway_fabric" {
   depends_on = [
     kubernetes_job_v1.gateway_api_crd_installer
   ]
+}
+
+# Gateway API HTTP-01 ClusterIssuer - bundled here as it requires parentRefs to the Gateway
+# See: https://github.com/cert-manager/cert-manager/issues/7890
+module "cluster-issuer-gateway-http01" {
+  count           = local.disable_endpoint_validation ? 0 : 1
+  depends_on      = [helm_release.nginx_gateway_fabric]
+  source          = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
+  name            = local.cluster_issuer_gateway_http
+  namespace       = var.environment.namespace
+  advanced_config = {}
+
+  data = {
+    apiVersion = "cert-manager.io/v1"
+    kind       = "ClusterIssuer"
+    metadata = {
+      name = local.cluster_issuer_gateway_http
+    }
+    spec = {
+      acme = {
+        email  = local.acme_email
+        server = "https://acme-v02.api.letsencrypt.org/directory"
+        privateKeySecretRef = {
+          name = "${local.cluster_issuer_gateway_http}-account-key"
+        }
+        solvers = [
+          {
+            http01 = {
+              gatewayHTTPRoute = {
+                parentRefs = [
+                  {
+                    name      = local.name
+                    namespace = var.environment.namespace
+                    kind      = "Gateway"
+                  }
+                ]
+              }
+            }
+          },
+        ]
+      }
+    }
+  }
 }
 
 # Deploy all Gateway API resources using facets-utility-modules
