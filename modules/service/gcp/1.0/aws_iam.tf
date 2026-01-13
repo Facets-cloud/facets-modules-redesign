@@ -30,7 +30,7 @@ locals {
 
   # GCP identity for AWS trust policy
   # Format: system:serviceaccount:<namespace>:<k8s-service-account>
-  gcp_service_account_identity = "system:serviceaccount:${local.namespace}:${lower(var.instance_name)}"
+  gcp_service_account_identity = local.enable_aws_access ? "system:serviceaccount:${module.gcp-workload-identity.0.k8s_service_account_namespace}:${module.gcp-workload-identity.0.k8s_service_account_name}" : ""
 }
 
 # ================================================================================
