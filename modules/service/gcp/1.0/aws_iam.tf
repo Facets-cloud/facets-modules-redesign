@@ -19,7 +19,7 @@ locals {
   aws_region        = local.aws_cloud_account != null ? lookup(local.aws_cloud_account.attributes, "aws_region", "us-east-1") : "us-east-1"
 
   # Automatically enable AWS access if IAM ARNs are provided
-  enable_aws_access = local.aws_cloud_account != null && length(local.aws_iam_arns) > 0
+  enable_aws_access = length(local.aws_iam_arns) > 0
 
   # Use the same name as the GCP service account from the workload identity module
   # This is fetched from module.gcp-workload-identity[0].name
