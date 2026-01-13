@@ -24,6 +24,7 @@ variable "instance" {
     flavor   = optional(string)
     version  = optional(string)
     disabled = optional(bool, false)
+    spec     = optional(object({}), {})
   })
   default = {}
 }
