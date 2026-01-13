@@ -53,7 +53,6 @@ resource "kubernetes_cron_job_v1" "ecr-token-refresher-cron" {
         template {
           metadata {}
           spec {
-            priority_class_name = "system-node-critical"
             dynamic "toleration" {
               for_each = length(local.node_pool_tolerations) > 0 ? local.node_pool_tolerations : [{
                 operator = "Exists"
@@ -208,7 +207,6 @@ resource "kubernetes_job_v1" "ecr-token-refresher-initial" {
     template {
       metadata {}
       spec {
-        priority_class_name = "system-node-critical"
         dynamic "toleration" {
           for_each = length(local.node_pool_tolerations) > 0 ? local.node_pool_tolerations : [{
             operator = "Exists"
