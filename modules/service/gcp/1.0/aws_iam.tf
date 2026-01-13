@@ -16,22 +16,21 @@ locals {
 
   # Get AWS cloud account details (if provided)
   aws_cloud_account = lookup(var.inputs, "aws_cloud_account", null)
-  aws_account_id    = local.aws_cloud_account != null ? local.aws_cloud_account.attributes.aws_account_id : null
   aws_region        = local.aws_cloud_account != null ? lookup(local.aws_cloud_account.attributes, "aws_region", "us-east-1") : "us-east-1"
-  aws_external_id   = local.aws_cloud_account != null ? lookup(local.aws_cloud_account.attributes, "external_id", null) : null
 
   # Automatically enable AWS access if IAM ARNs are provided
   enable_aws_access = local.aws_cloud_account != null && length(local.aws_iam_arns) > 0
 
-  # Generate IAM role name
-  aws_iam_role_name = "${var.instance_name}-gcp-to-aws"
+  # Use the same name as the GCP service account from the workload identity module
+  # This is fetched from module.gcp-workload-identity[0].name
+  aws_iam_role_name = local.enable_aws_access ? module.sr-name.0.name : ""
+
+  # GCP service account email from the workload identity module
+  gcp_service_account_email = local.enable_aws_access ? module.gcp-workload-identity[0].gcp_service_account_email : ""
 
   # GCP identity for AWS trust policy
   # Format: system:serviceaccount:<namespace>:<k8s-service-account>
   gcp_service_account_identity = "system:serviceaccount:${local.namespace}:${lower(var.instance_name)}"
-
-  # GCP service account email (for tags and reference)
-  gcp_service_account_email = "${lower(var.instance_name)}@${local.cluster_project}.iam.gserviceaccount.com"
 }
 
 # ================================================================================
@@ -125,58 +124,3 @@ locals {
     AWS_REGION = local.aws_region
   } : {}
 }
-
-# ================================================================================
-# Outputs
-# ================================================================================
-# These outputs can be referenced by other modules or used for debugging.
-
-output "aws_iam_role_arn" {
-  description = "ARN of the AWS IAM role for cross-cloud access (empty if not enabled)"
-  value       = local.enable_aws_access ? aws_iam_role.gcp_workload[0].arn : ""
-}
-
-output "aws_iam_role_name" {
-  description = "Name of the AWS IAM role for cross-cloud access (empty if not enabled)"
-  value       = local.enable_aws_access ? aws_iam_role.gcp_workload[0].name : ""
-}
-
-output "aws_env_configuration" {
-  description = "Environment variables injected into pods for AWS SDK configuration"
-  value       = local.aws_env_vars
-  sensitive   = false
-}
-
-output "cross_cloud_auth_enabled" {
-  description = "Whether AWS cross-cloud authentication is enabled"
-  value       = local.enable_aws_access
-}
-
-output "aws_attached_policy_arns" {
-  description = "List of AWS IAM policy ARNs attached to the role"
-  value       = local.enable_aws_access ? [for k, v in local.aws_iam_arns : v.arn] : []
-}
-
-# ================================================================================
-# Debug Information (for troubleshooting)
-# ================================================================================
-# Uncomment the output blocks below if you need to debug the configuration
-
-# output "debug_gcp_service_account_identity" {
-#   description = "GCP service account identity used in AWS trust policy"
-#   value       = local.gcp_service_account_identity
-# }
-
-# output "debug_aws_cloud_account_config" {
-#   description = "AWS cloud account configuration"
-#   value = {
-#     account_id  = local.aws_account_id
-#     region      = local.aws_region
-#     external_id = local.aws_external_id != null ? "***REDACTED***" : null
-#   }
-# }
-
-# output "debug_aws_iam_arns" {
-#   description = "AWS IAM ARNs from spec"
-#   value       = local.aws_iam_arns
-# }

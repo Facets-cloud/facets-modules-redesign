@@ -2,17 +2,11 @@ locals {
   # Core instance spec and platform-provided variables
   spec = lookup(var.instance, "spec", {})
 
-  # Platform-provided variables with fallbacks for validation
-  # Get project ID from cloud account input dependency
-  gcp_cloud_account        = lookup(var.inputs, "gcp_cloud_account", {})
-  cloud_account_attributes = lookup(local.gcp_cloud_account, "attributes", {})
+  iam_enabled = local.gcp_iam_arns > 0 || local.aws_iam_arns > 0
   cluster_project          = lookup(local.cloud_account_attributes, "project_id", "validation-project")
   gcp_annotations = {
     "cloud.google.com/neg" = "{\"ingress\":true}"
   }
-  gcp_advanced_config       = lookup(lookup(var.instance, "advanced", {}), "gcp", {})
-  gcp_cloud_permissions     = lookup(lookup(local.spec, "cloud_permissions", {}), "gcp", {})
-  iam_arns                  = lookup(local.gcp_cloud_permissions, "roles", lookup(local.gcp_advanced_config, "iam", {}))
   sa_name                   = lower(var.instance_name)
   spec_type                 = lookup(local.spec, "type", "application")
   actions_required_vars_set = can(var.instance.kind) && can(var.instance.version) && can(var.instance.flavor) && !contains(["cronjob", "job"], local.spec_type)
@@ -29,29 +23,12 @@ locals {
   annotations = merge(
     local.gcp_annotations,
     # Add GCP service account annotation if GCP roles OR AWS IAM ARNs are specified
-    length(local.iam_arns) > 0 || length(local.aws_iam_arns) > 0 ? { "iam.gke.io/gcp-service-account" = module.gcp-workload-identity.0.gcp_service_account_email } : {},
+    local.iam_enabled ? { "iam.gke.io/gcp-service-account" = module.gcp-workload-identity.0.gcp_service_account_email } : {},
     lookup(var.instance.metadata, "annotations", {}),
     local.enable_alb_backend_config ? { "cloud.google.com/backend-config" = "{\"default\": \"${lower(var.instance_name)}\"}" } : {}
   )
-  roles                     = { for key, val in local.iam_arns : val.role => { role = val.role, condition = lookup(val, "condition", {}) } }
   labels                    = merge(lookup(var.instance.metadata, "labels", {}), local.release_metadata_labels)
-  backend_config            = lookup(local.gcp_advanced_config, "backend_config", {})
-  enable_alb_backend_config = lookup(local.backend_config, "enabled", false)
   runtime                   = lookup(local.spec, "runtime", {})
-  backendConfig = {
-    apiVersion = "cloud.google.com/v1",
-    kind       = "BackendConfig",
-    spec = merge({
-      healthCheck = {
-        checkIntervalSec   = lookup(lookup(lookup(local.backend_config, "spec", {}), "healthCheck", {}), "checkIntervalSec", 10),
-        timeoutSec         = lookup(lookup(lookup(local.backend_config, "spec", {}), "healthCheck", {}), "timeoutSec", lookup(lookup(local.runtime, "health_checks", {}), "timeout", 5)),
-        healthyThreshold   = lookup(lookup(lookup(local.backend_config, "spec", {}), "healthCheck", {}), "healthyThreshold", 2),
-        unhealthyThreshold = lookup(lookup(lookup(local.backend_config, "spec", {}), "healthCheck", {}), "unhealthyThreshold", 2),
-        type               = lookup(lookup(lookup(local.backend_config, "spec", {}), "healthCheck", {}), "type", "HTTP"),
-        requestPath        = lookup(lookup(lookup(local.backend_config, "spec", {}), "healthCheck", {}), "requestPath", lookup(lookup(local.runtime, "health_checks", {}), "readiness_url", "/")),
-      }
-    }, lookup(local.backend_config, "spec", {}))
-  }
   resource_type = "service"
   resource_name = var.instance_name
 
@@ -125,34 +102,6 @@ locals {
   })
 }
 
-module "sr-name" {
-  # Create unique name if GCP roles OR AWS IAM ARNs are specified
-  count           = length(local.iam_arns) > 0 || length(local.aws_iam_arns) > 0 ? 1 : 0
-  source          = "github.com/Facets-cloud/facets-utility-modules//name"
-  is_k8s          = false
-  globally_unique = true
-  resource_name   = local.resource_name
-  resource_type   = local.resource_type
-  limit           = 33
-  environment     = var.environment
-  prefix          = "a"
-}
-
-module "gcp-workload-identity" {
-  # Create GCP service account if:
-  # 1. GCP IAM roles are specified, OR
-  # 2. AWS IAM ARNs are specified (for cross-cloud federation)
-  count               = length(local.iam_arns) > 0 || length(local.aws_iam_arns) > 0 ? 1 : 0
-  source              = "./gcp_workload-identity/workload-identity"
-  name                = module.sr-name.0.name
-  k8s_sa_name         = "${local.sa_name}-sa"
-  namespace           = local.namespace
-  project_id          = local.cluster_project
-  roles               = local.roles
-  use_existing_k8s_sa = true
-  annotate_k8s_sa     = false
-}
-
 module "app-helm-chart" {
   depends_on = [
     module.gcp-workload-identity
@@ -167,13 +116,4 @@ module "app-helm-chart" {
   environment    = var.environment
   inputs         = var.inputs
   vpa_release_id = lookup(lookup(lookup(var.inputs, "vpa_details", {}), "attributes", {}), "helm_release_id", "")
-}
-
-module "backend_config" {
-  count           = local.enable_alb_backend_config ? 1 : 0
-  source          = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
-  namespace       = local.namespace
-  advanced_config = {}
-  data            = local.backendConfig
-  name            = lower(var.instance_name)
 }
