@@ -1,4 +1,4 @@
-intent: kubernetes_node_pool
+intent: karpenter_node_pool
 flavor: gke_custom_node_pool
 version: '1.0'
 description: Custom GKE node pool with advanced configuration options
@@ -150,7 +150,7 @@ iac:
 sample:
   flavor: gke_custom_node_pool
   version: '1.0'
-  kind: kubernetes_node_pool
+  kind: karpenter_node_pool
   metadata: {}
   disabled: true
   spec:
