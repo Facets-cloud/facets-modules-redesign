@@ -86,11 +86,10 @@ locals {
       "service.beta.kubernetes.io/aws-load-balancer-scheme" = "internet-facing"
     },
     {
-      "service.beta.kubernetes.io/aws-load-balancer-type"                              = "external"
-      "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"                   = "ip"
-      "service.beta.kubernetes.io/aws-load-balancer-backend-protocol"                  = "tcp"
-      "service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled" = "true"
-      "service.beta.kubernetes.io/aws-load-balancer-proxy-protocol"                    = "*"
+      "service.beta.kubernetes.io/aws-load-balancer-type"                    = "external"
+      "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"         = "ip"
+      "service.beta.kubernetes.io/aws-load-balancer-backend-protocol"        = "http"
+      "service.beta.kubernetes.io/aws-load-balancer-target-group-attributes" = lookup(var.instance.spec, "private", false) ? "proxy_protocol_v2.enabled=true,preserve_client_ip.enabled=false" : "proxy_protocol_v2.enabled=true,preserve_client_ip.enabled=true"
     }
   )
 
