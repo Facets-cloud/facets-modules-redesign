@@ -1,7 +1,8 @@
 locals {
-  username        = lookup(var.instance.spec, "basic_auth", false) && length(random_string.basic_auth_password) > 0 ? "${var.instance_name}-user" : ""
-  password        = lookup(var.instance.spec, "basic_auth", false) && length(random_string.basic_auth_password) > 0 ? random_string.basic_auth_password[0].result : ""
-  is_auth_enabled = length(local.username) > 0 && length(local.password) > 0 ? true : false
+  # Basic auth is not supported in NGINX Gateway Fabric (see main.tf)
+  # username        = lookup(var.instance.spec, "basic_auth", false) && length(random_string.basic_auth_password) > 0 ? "${var.instance_name}-user" : ""
+  # password        = lookup(var.instance.spec, "basic_auth", false) && length(random_string.basic_auth_password) > 0 ? random_string.basic_auth_password[0].result : ""
+  # is_auth_enabled = length(local.username) > 0 && length(local.password) > 0 ? true : false
 
   output_attributes = merge(
     {
@@ -26,12 +27,13 @@ locals {
 
   output_interfaces = {
     for route_key, route in local.rulesFiltered : route_key => {
-      connection_string = local.is_auth_enabled ? "https://${local.username}:${local.password}@${route.host}" : "https://${route.host}"
+      connection_string = "https://${route.host}"
       host              = route.host
       port              = 443
-      username          = local.username
-      password          = local.password
-      secrets           = local.is_auth_enabled ? ["connection_string", "password"] : []
+      # Basic auth not supported - username/password removed
+      # username          = local.username
+      # password          = local.password
+      secrets           = []
     }
   }
 }
