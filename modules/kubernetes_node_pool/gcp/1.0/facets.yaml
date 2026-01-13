@@ -3,8 +3,8 @@ flavor: gke_custom_node_pool
 version: '1.0'
 description: Custom GKE node pool with advanced configuration options
 clouds:
-  - gcp
-  - aws
+- gcp
+- aws
 inputs:
   cloud_account:
     type: '@facets/gcp_cloud_account'
@@ -12,8 +12,8 @@ inputs:
     description: The GCP Cloud Account where the node pool will be created
     optional: false
     providers:
-      - google
-      - google-beta
+    - google
+    - google-beta
   network_details:
     type: '@facets/gcp-network-details'
     displayName: Network
@@ -31,9 +31,9 @@ inputs:
       resource_type: kubernetes_cluster
       resource_name: default
     providers:
-      - kubernetes
-      - kubernetes-alpha
-      - helm
+    - kubernetes
+    - kubernetes-alpha
+    - helm
 outputs:
   default:
     type: '@facets/kubernetes_nodepool'
@@ -42,7 +42,8 @@ outputs:
   attributes:
     type: '@facets/gke_node_pool_details'
     title: GKE Node Pool Details
-    description: Detailed information about the GKE node pool including configuration and status
+    description: Detailed information about the GKE node pool including configuration
+      and status
 spec:
   title: Kubernetes Node Pool
   description: Specification of the custom GKE node pool with advanced configuration
@@ -67,7 +68,8 @@ spec:
       maximum: 100
     autoscaling_per_zone:
       title: Autoscaling Per Zone
-      description: If true, min/max nodes apply per zone. If false, applies as total across all zones.
+      description: If true, min/max nodes apply per zone. If false, applies as total
+        across all zones.
       type: boolean
       default: false
     is_public:
@@ -83,17 +85,20 @@ spec:
       maximum: 1000
     taints:
       title: Taints
-      description: Array of Kubernetes taints which should be applied to nodes in the node pool. Enter array of object in YAML format.
+      description: Array of Kubernetes taints which should be applied to nodes in
+        the node pool. Enter array of object in YAML format.
       type: array
       x-ui-yaml-editor: true
       x-ui-override-disable: true
       default:
-        - key: CriticalAddonsOnly
-          value: 'true'
-          effect: NoSchedule
+      - key: CriticalAddonsOnly
+        value: 'true'
+        effect: NoSchedule
     labels:
       title: Labels
-      description: 'Map of labels to be added to nodes in node pool. Enter key-value pair for labels in YAML format. Eg. key: value (provide a space after '':'' as expected in the YAML format)'
+      description: 'Map of labels to be added to nodes in node pool. Enter key-value
+        pair for labels in YAML format. Eg. key: value (provide a space after '':''
+        as expected in the YAML format)'
       x-ui-placeholder: 'Eg. key1: value1'
       type: object
       x-ui-yaml-editor: true
@@ -117,27 +122,31 @@ spec:
                   description: Role to be added to the nodepool service account
                   type: string
                   x-ui-placeholder: e.g. roles/container.defaultNodeServiceAccount
-              x-ui-error-message: Key name should start with an alphabet and should contain alphanumeric characters with allowed special characters like underscore, period and hyphen
+              x-ui-error-message: Key name should start with an alphabet and should
+                contain alphanumeric characters with allowed special characters like
+                underscore, period and hyphen
     single_az:
       title: Single AZ
-      description: Deploy node pool in single availability zone (uses first zone from network configuration)
+      description: Deploy node pool in single availability zone (uses first zone from
+        network configuration)
       type: boolean
       default: false
     spot:
       title: Spot Instances
-      description: Enable spot/preemptible instances for cost savings (~70% cheaper, but can be terminated)
+      description: Enable spot/preemptible instances for cost savings (~70% cheaper,
+        but can be terminated)
       type: boolean
       default: false
   required:
-    - instance_type
-    - min_node_count
-    - max_node_count
-    - disk_size
-    - labels
+  - instance_type
+  - min_node_count
+  - max_node_count
+  - disk_size
+  - labels
 iac:
   validated_files:
-    - main.tf
-    - variables.tf
+  - main.tf
+  - variables.tf
 sample:
   flavor: gke_custom_node_pool
   version: '1.0'
