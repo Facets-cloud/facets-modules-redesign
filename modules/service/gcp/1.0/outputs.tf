@@ -27,11 +27,11 @@ locals {
   )
 
   output_attributes = {
-    selector_labels = module.app-helm-chart.selector_labels
-    namespace       = module.app-helm-chart.namespace
-    resource_type   = local.resource_type
-    resource_name   = local.resource_name
-    service_name    = var.instance_name
+    selector_labels  = module.app-helm-chart.selector_labels
+    namespace        = module.app-helm-chart.namespace
+    resource_type    = local.resource_type
+    resource_name    = local.resource_name
+    service_name     = var.instance_name
     aws_iam_role_arn = local.enable_aws_access ? aws_iam_role.gcp_workload[0].arn : ""
   }
 }

@@ -1,10 +1,10 @@
 locals {
   gcp_cloud_account        = lookup(var.inputs, "gcp_cloud_account", {})
   cloud_account_attributes = lookup(local.gcp_cloud_account, "attributes", {})
-  gcp_advanced_config       = lookup(lookup(var.instance, "advanced", {}), "gcp", {})
-  gcp_cloud_permissions     = lookup(lookup(local.spec, "cloud_permissions", {}), "gcp", {})
-  gcp_iam_arns = lookup(local.gcp_cloud_permissions, "roles", lookup(local.gcp_advanced_config, "iam", {}))
-  roles                     = { for key, val in local.gcp_iam_arns : val.role => { role = val.role, condition = lookup(val, "condition", {}) } }
+  gcp_advanced_config      = lookup(lookup(var.instance, "advanced", {}), "gcp", {})
+  gcp_cloud_permissions    = lookup(lookup(local.spec, "cloud_permissions", {}), "gcp", {})
+  gcp_iam_arns             = lookup(local.gcp_cloud_permissions, "roles", lookup(local.gcp_advanced_config, "iam", {}))
+  roles                    = { for key, val in local.gcp_iam_arns : val.role => { role = val.role, condition = lookup(val, "condition", {}) } }
 }
 
 

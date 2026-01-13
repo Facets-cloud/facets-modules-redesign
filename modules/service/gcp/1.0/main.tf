@@ -2,13 +2,13 @@ locals {
   # Core instance spec and platform-provided variables
   spec = lookup(var.instance, "spec", {})
 
-  iam_enabled = local.gcp_iam_arns > 0 || local.aws_iam_arns > 0
-  cluster_project          = lookup(local.cloud_account_attributes, "project_id", "validation-project")
+  iam_enabled     = local.gcp_iam_arns > 0 || local.aws_iam_arns > 0
+  cluster_project = lookup(local.cloud_account_attributes, "project_id", "validation-project")
   gcp_annotations = {
     "cloud.google.com/neg" = "{\"ingress\":true}"
   }
-  sa_name                   = lower(var.instance_name)
-  spec_type                 = lookup(local.spec, "type", "application")
+  sa_name   = lower(var.instance_name)
+  spec_type = lookup(local.spec, "type", "application")
 
   release_metadata_labels = {
     "facets.cloud/blueprint_version" = tostring(lookup(local.release_metadata.metadata, "blueprint_version", "NA")) == null ? "NA" : tostring(lookup(local.release_metadata.metadata, "blueprint_version", "NA"))
@@ -22,8 +22,8 @@ locals {
     lookup(var.instance.metadata, "annotations", {}),
     local.enable_alb_backend_config ? { "cloud.google.com/backend-config" = "{\"default\": \"${lower(var.instance_name)}\"}" } : {}
   )
-  labels                    = merge(lookup(var.instance.metadata, "labels", {}), local.release_metadata_labels)
-  runtime                   = lookup(local.spec, "runtime", {})
+  labels        = merge(lookup(var.instance.metadata, "labels", {}), local.release_metadata_labels)
+  runtime       = lookup(local.spec, "runtime", {})
   resource_type = "service"
   resource_name = var.instance_name
 

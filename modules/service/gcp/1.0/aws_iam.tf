@@ -12,7 +12,7 @@
 locals {
   # Extract AWS configuration from spec
   aws_cloud_permissions = lookup(lookup(local.spec, "cloud_permissions", {}), "aws", {})
-  aws_iam_arns         = lookup(local.aws_cloud_permissions, "iam", {})
+  aws_iam_arns          = lookup(local.aws_cloud_permissions, "iam", {})
 
   # Get AWS cloud account details (if provided)
   aws_cloud_account = lookup(var.inputs, "aws_cloud_account", null)
@@ -74,15 +74,15 @@ resource "aws_iam_role" "gcp_workload" {
   # Tags for tracking and management
   tags = merge(
     {
-      Name                    = local.aws_iam_role_name
-      ManagedBy               = "Facets"
-      FacetsService           = var.instance_name
-      GCPProject              = local.cluster_project
-      GCPServiceAccount       = local.gcp_service_account_email
-      KubernetesNamespace     = local.namespace
+      Name                     = local.aws_iam_role_name
+      ManagedBy                = "Facets"
+      FacetsService            = var.instance_name
+      GCPProject               = local.cluster_project
+      GCPServiceAccount        = local.gcp_service_account_email
+      KubernetesNamespace      = local.namespace
       KubernetesServiceAccount = lower(var.instance_name)
-      Environment             = var.environment.name
-      CrossCloudAuth          = "GCP-to-AWS"
+      Environment              = var.environment.name
+      CrossCloudAuth           = "GCP-to-AWS"
     },
     lookup(var.environment, "cloud_tags", {})
   )
