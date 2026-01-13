@@ -776,27 +776,32 @@ module "gateway_api_resources" {
 }
 
 # Basic Authentication
-resource "random_string" "basic_auth_password" {
-  count   = lookup(var.instance.spec, "basic_auth", false) ? 1 : 0
-  length  = 16
-  special = true
-}
-
-resource "kubernetes_secret" "basic_auth" {
-  count = lookup(var.instance.spec, "basic_auth", false) ? 1 : 0
-
-  metadata {
-    name      = "${local.name}-basic-auth"
-    namespace = var.environment.namespace
-  }
-
-  data = {
-    username = "${var.instance_name}-user"
-    password = random_string.basic_auth_password[0].result
-  }
-
-  type = "Opaque"
-}
+# NOTE: Basic auth is not natively supported in NGINX Gateway Fabric.
+# Unlike ingress-nginx, NGF doesn't have auth annotations.
+# Implementation would require SnippetsFilter + volume mounts which is complex and fragile.
+# TODO: Implement when NGF adds native policy support or use app-level auth.
+#
+# resource "random_string" "basic_auth_password" {
+#   count   = lookup(var.instance.spec, "basic_auth", false) ? 1 : 0
+#   length  = 16
+#   special = true
+# }
+#
+# resource "kubernetes_secret" "basic_auth" {
+#   count = lookup(var.instance.spec, "basic_auth", false) ? 1 : 0
+#
+#   metadata {
+#     name      = "${local.name}-basic-auth"
+#     namespace = var.environment.namespace
+#   }
+#
+#   data = {
+#     username = "${var.instance_name}-user"
+#     password = random_string.basic_auth_password[0].result
+#   }
+#
+#   type = "Opaque"
+# }
 
 # Load Balancer Service Discovery
 # Note: The LoadBalancer service is created by NGINX Gateway Fabric controller
@@ -815,7 +820,8 @@ data "kubernetes_service" "gateway_lb" {
 resource "aws_route53_record" "cluster-base-domain" {
   count = local.tenant_provider == "aws" && !lookup(var.instance.spec, "disable_base_domain", false) ? 1 : 0
   depends_on = [
-    helm_release.nginx_gateway_fabric
+    helm_release.nginx_gateway_fabric,
+    data.kubernetes_service.gateway_lb
   ]
   zone_id  = var.cc_metadata.tenant_base_domain_id
   name     = local.base_domain
@@ -831,7 +837,8 @@ resource "aws_route53_record" "cluster-base-domain" {
 resource "aws_route53_record" "cluster-base-domain-wildcard" {
   count = local.tenant_provider == "aws" && !lookup(var.instance.spec, "disable_base_domain", false) ? 1 : 0
   depends_on = [
-    helm_release.nginx_gateway_fabric
+    helm_release.nginx_gateway_fabric,
+    data.kubernetes_service.gateway_lb
   ]
   zone_id  = var.cc_metadata.tenant_base_domain_id
   name     = local.base_subdomain

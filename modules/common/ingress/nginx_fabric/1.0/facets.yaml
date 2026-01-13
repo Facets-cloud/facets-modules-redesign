@@ -42,11 +42,6 @@ spec:
   title: NGINX Gateway Fabric
   type: object
   properties:
-    basic_auth:
-      type: boolean
-      title: Basic Authentication
-      description: Enable/disable basic auth for all routes
-      default: false
     private:
       type: boolean
       title: Private Load Balancer
@@ -814,7 +809,6 @@ sample:
     annotations: {}
   spec:
     private: false
-    basic_auth: false
     disable_base_domain: false
     rules: {}
     force_ssl_redirection: true
