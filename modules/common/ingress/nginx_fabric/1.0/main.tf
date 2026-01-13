@@ -67,11 +67,14 @@ locals {
 
   disable_endpoint_validation = lookup(var.instance.spec, "disable_endpoint_validation", false) || lookup(var.instance.spec, "private", false)
 
-  # Custom TLS domains
-  custom_tls_domains = {
-    for domain_name, domain in lookup(var.instance.spec, "domains", {}) :
-    domain_name => domain
-    if lookup(lookup(domain, "custom_tls", {}), "enabled", false) == true
+  # Domains that need bootstrap TLS certificates for HTTP-01 validation
+  # Bootstrap cert is needed when HTTP-01 validation is used (disable_endpoint_validation = false)
+  # For HTTP-01, certificate_reference is ignored (same as nginx_k8s_native) - always auto-generate
+  # Bootstrap cert is NOT needed for DNS-01 (uses dns_validation_secret_name)
+  bootstrap_tls_domains = {
+    for domain_key, domain in local.domains :
+    domain_key => domain
+    if !local.disable_endpoint_validation
   }
 
   # Cloud-specific service annotations
@@ -444,6 +447,57 @@ locals {
   )
 }
 
+# Bootstrap TLS Private Key for HTTP-01 validation
+# Creates a temporary self-signed cert so Gateway 443 listener can start
+# cert-manager will overwrite this secret once HTTP-01 challenge succeeds
+resource "tls_private_key" "bootstrap" {
+  for_each  = local.bootstrap_tls_domains
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
+resource "tls_self_signed_cert" "bootstrap" {
+  for_each        = local.bootstrap_tls_domains
+  private_key_pem = tls_private_key.bootstrap[each.key].private_key_pem
+
+  subject {
+    common_name = each.value.domain
+  }
+
+  validity_period_hours = 8760 # 1 year
+
+  dns_names = [
+    each.value.domain,
+    "*.${each.value.domain}"
+  ]
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth"
+  ]
+}
+
+resource "kubernetes_secret" "bootstrap_tls" {
+  for_each = local.bootstrap_tls_domains
+
+  metadata {
+    name      = "${each.key}-tls-cert"
+    namespace = var.environment.namespace
+  }
+
+  data = {
+    "tls.crt" = tls_self_signed_cert.bootstrap[each.key].cert_pem
+    "tls.key" = tls_private_key.bootstrap[each.key].private_key_pem
+  }
+
+  type = "kubernetes.io/tls"
+
+  lifecycle {
+    ignore_changes = [data, metadata[0].annotations, metadata[0].labels]
+  }
+}
+
 # ServiceAccount for Gateway API CRD installer Job
 resource "kubernetes_service_account_v1" "gateway_api_crd_installer" {
   metadata {
@@ -642,7 +696,9 @@ resource "helm_release" "nginx_gateway_fabric" {
                 mode = "Terminate"
                 certificateRefs = [{
                   kind = "Secret"
-                  name = lookup(lookup(domain, "custom_tls", {}), "enabled", false) ? "${domain_key}-custom-tls" : (local.disable_endpoint_validation ? local.dns_validation_secret_name : "${domain_key}-tls-cert")
+                  # DNS-01: use certificate_reference (fallback to dns_validation_secret_name)
+                  # HTTP-01: always use auto-generated name, ignore certificate_reference (same as nginx_k8s_native)
+                  name = local.disable_endpoint_validation ? lookup(domain, "certificate_reference", local.dns_validation_secret_name) : "${domain_key}-tls-cert"
                 }]
               }
               allowedRoutes = {
@@ -659,7 +715,8 @@ resource "helm_release" "nginx_gateway_fabric" {
   ]
 
   depends_on = [
-    kubernetes_job_v1.gateway_api_crd_installer
+    kubernetes_job_v1.gateway_api_crd_installer,
+    kubernetes_secret.bootstrap_tls
   ]
 }
 
@@ -717,22 +774,6 @@ module "gateway_api_resources" {
   advanced_config = {}
 
   depends_on = [helm_release.nginx_gateway_fabric]
-}
-
-resource "kubernetes_secret" "custom_tls" {
-  for_each = local.custom_tls_domains
-
-  metadata {
-    name      = "${each.key}-custom-tls"
-    namespace = var.environment.namespace
-  }
-
-  data = {
-    "tls.crt" = each.value.custom_tls.certificate
-    "tls.key" = each.value.custom_tls.private_key
-  }
-
-  type = "kubernetes.io/tls"
 }
 
 # Basic Authentication
