@@ -4,6 +4,7 @@ version: '1.0'
 description: Custom GKE node pool with advanced configuration options
 clouds:
   - gcp
+  - aws
 inputs:
   cloud_account:
     type: '@facets/gcp_cloud_account'
