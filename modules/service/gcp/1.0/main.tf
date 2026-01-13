@@ -64,6 +64,15 @@ locals {
 
   # Create instance configuration with VPA settings, topology spread constraints, and KEDA configuration
   instance = merge(var.instance, {
+    spec = merge(
+      local.spec,
+      {
+        env = merge(
+          lookup(local.spec, "env", {}),
+          local.enable_aws_access ? local.aws_env_vars : {}
+        )
+      }
+    )
     advanced = merge(
       lookup(var.instance, "advanced", {}),
       {
