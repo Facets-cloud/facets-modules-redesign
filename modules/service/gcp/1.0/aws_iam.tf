@@ -30,7 +30,7 @@ locals {
 
   # GCP identity for AWS trust policy
   # Format: system:serviceaccount:<namespace>:<k8s-service-account>
-  gcp_service_account_identity = local.enable_aws_access ? "system:serviceaccount:${module.gcp-workload-identity.0.k8s_service_account_namespace}:${module.gcp-workload-identity.0.k8s_service_account_name}" : ""
+  gcp_service_account_identity = local.enable_aws_access ? module.gcp-workload-identity[0].gcp_service_account_unique_id : ""
 }
 
 # ================================================================================
@@ -61,6 +61,7 @@ resource "aws_iam_role" "gcp_workload" {
           StringEquals = {
             # Validate the token subject claim matches our service account
             "accounts.google.com:sub" = local.gcp_service_account_identity
+            "accounts.google.com:aud" = local.gcp_service_account_identity
           }
         }
       }

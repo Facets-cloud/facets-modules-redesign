@@ -43,3 +43,8 @@ output "gcp_service_account" {
   description = "GCP service account."
   value       = jsondecode(var.use_existing_gcp_sa ? jsonencode(local.existing_sa) : jsonencode(local.created_sa))
 }
+
+
+output "gcp_service_account_unique_id" {
+  value = var.use_existing_gcp_sa ? "na" : google_service_account.cluster_service_account[0].unique_id
+}
