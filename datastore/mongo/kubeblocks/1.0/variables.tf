@@ -37,8 +37,12 @@ variable "instance" {
       })
 
       high_availability = optional(object({
-        enable_pod_anti_affinity = optional(bool)
-      }))
+        enable_pod_anti_affinity = optional(bool, true)
+        enable_pdb               = optional(bool, false)
+      }), {
+        enable_pod_anti_affinity = true
+        enable_pdb               = false
+      })
 
       backup = optional(object({
         enabled          = optional(bool)
