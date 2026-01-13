@@ -36,13 +36,21 @@ locals {
     for k, v in local.rulesRaw : length(k) < 175 ? k : md5(k) => merge(v, {
       host       = lookup(v, "domain_prefix", null) == null || lookup(v, "domain_prefix", null) == "" ? "${local.base_domain}" : "${lookup(v, "domain_prefix", null)}.${local.base_domain}"
       domain_key = "facets"
-      namespace  = lookup(v, "namespace", var.environment.namespace) # Default namespace if not provided
+      namespace  = v.namespace
     })
     if(
       (lookup(v, "port", null) != null && lookup(v, "port", null) != "") &&
       (lookup(v, "service_name", null) != null && lookup(v, "service_name", "") != "") &&
-      (lookup(v, "path", null) != null && lookup(v, "path", "") != "") &&
-      (lookup(v, "path_type", null) != null && lookup(v, "path_type", "") != "") &&
+      (lookup(v, "namespace", null) != null && lookup(v, "namespace", "") != "") &&
+      (
+        # gRPC routes don't need path/path_type - they use method matching
+        lookup(lookup(v, "grpc", {}), "enabled", false) ||
+        # HTTP routes require path and path_type
+        (
+          (lookup(v, "path", null) != null && lookup(v, "path", "") != "") &&
+          (lookup(v, "path_type", null) != null && lookup(v, "path_type", "") != "")
+        )
+      ) &&
       (lookup(v, "disable", false) == false)
     )
   }
@@ -116,6 +124,13 @@ locals {
   cluster_issuer_http         = lookup(var.inputs, "cert_manager_details", null) != null ? var.inputs.cert_manager_details.attributes.cluster_issuer_http : "letsencrypt-prod-http01"
   cluster_issuer_gateway_http = "${local.name}-gateway-http01"
   acme_email                  = lookup(var.inputs, "cert_manager_details", null) != null ? var.inputs.cert_manager_details.attributes.acme_email : try(var.cluster.createdBy, "admin@example.com")
+
+  # Allow override of ClusterIssuer - useful for staging, custom issuers, or rate limit bypass
+  cluster_issuer_override = lookup(var.instance.spec, "cluster_issuer_override", null)
+  effective_cluster_issuer = coalesce(
+    local.cluster_issuer_override,
+    local.disable_endpoint_validation ? local.cluster_issuer_dns : local.cluster_issuer_gateway_http
+  )
 
   # Security headers
   security_headers = merge(
@@ -289,14 +304,14 @@ locals {
               name      = v.service_name
               port      = tonumber(v.port)
               weight    = lookup(lookup(v, "canary_deployment", {}), "enabled", false) ? 100 - lookup(lookup(v, "canary_deployment", {}), "canary_weight", 10) : 100
-              namespace = lookup(v, "namespace", var.environment.namespace)
+              namespace = v.namespace
             }],
             # Canary backend (if enabled)
             lookup(lookup(v, "canary_deployment", {}), "enabled", false) ? [{
               name      = lookup(lookup(v, "canary_deployment", {}), "canary_service", "")
               port      = tonumber(v.port)
               weight    = lookup(lookup(v, "canary_deployment", {}), "canary_weight", 10)
-              namespace = lookup(v, "namespace", var.environment.namespace)
+              namespace = v.namespace
             }] : []
           )
         }]
@@ -307,7 +322,7 @@ locals {
   # GRPCRoute Resources
   grpcroute_resources = {
     for k, v in local.rulesFiltered : "grpcroute-${lower(var.instance_name)}-${k}" => {
-      apiVersion = "gateway.networking.k8s.io/v1alpha2"
+      apiVersion = "gateway.networking.k8s.io/v1"
       kind       = "GRPCRoute"
       metadata = {
         name      = "${lower(var.instance_name)}-${k}-grpc"
@@ -323,7 +338,8 @@ locals {
         hostnames = [v.host]
 
         rules = [{
-          matches = lookup(lookup(v, "grpc", {}), "method_match", null) != null ? [
+          # If match_all_methods is true (default) or method_match is empty, match all gRPC traffic
+          matches = !lookup(lookup(v, "grpc", {}), "match_all_methods", true) && lookup(lookup(v, "grpc", {}), "method_match", null) != null ? [
             for method in lookup(v.grpc, "method_match", []) : {
               method = {
                 type    = lookup(method, "type", "Exact")
@@ -336,7 +352,7 @@ locals {
           backendRefs = [{
             name      = v.service_name
             port      = tonumber(v.port)
-            namespace = lookup(v, "namespace", var.environment.namespace)
+            namespace = v.namespace
           }]
         }]
       }
@@ -561,7 +577,9 @@ resource "kubernetes_job_v1" "gateway_api_crd_installer" {
           image   = "bitnami/kubectl:latest"
           command = ["/bin/sh", "-c"]
           args = [
-            "kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.1/standard-install.yaml"
+            # Using experimental channel to include GRPCRoute CRD
+            # Using --server-side to avoid annotation size limit (262KB)
+            "kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.1/experimental-install.yaml"
           ]
         }
       }
@@ -668,7 +686,7 @@ resource "helm_release" "nginx_gateway_fabric" {
           gateway = "facets"
         }
         annotations = {
-          "cert-manager.io/cluster-issuer" = local.disable_endpoint_validation ? local.cluster_issuer_dns : local.cluster_issuer_gateway_http
+          "cert-manager.io/cluster-issuer" = local.effective_cluster_issuer
           "cert-manager.io/renew-before"   = lookup(var.instance.spec, "renew_cert_before", "720h")
         }
         spec = {

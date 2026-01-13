@@ -234,19 +234,29 @@ spec:
             path:
               type: string
               title: Path
-              description: Path of the application
+              description: Path of the application (required for HTTP routes)
               pattern: ^(/[^/]+)*(/)?$
               x-ui-placeholder: Enter path (e.g., / or /api)
               x-ui-error-message: 'Value doesn''t match pattern, eg: / or /api'
+              x-ui-visible-if:
+                field: spec.rules.{{this}}.grpc.enabled
+                values:
+                - false
+                - null
             path_type:
               type: string
               title: Path Type
-              description: Path matching type
+              description: Path matching type (required for HTTP routes)
               enum:
               - Exact
               - PathPrefix
               - RegularExpression
               default: PathPrefix
+              x-ui-visible-if:
+                field: spec.rules.{{this}}.grpc.enabled
+                values:
+                - false
+                - null
             header_matches:
               type: array
               title: Header-Based Routing
@@ -514,9 +524,19 @@ spec:
                   type: boolean
                   title: Enable gRPC
                   default: false
+                match_all_methods:
+                  type: boolean
+                  title: Match All Methods
+                  description: Route all gRPC traffic (no method filtering)
+                  default: true
+                  x-ui-visible-if:
+                    field: spec.rules.{{this}}.grpc.enabled
+                    values:
+                    - true
                 method_match:
                   type: array
                   title: gRPC Method Matching
+                  description: Whitelist specific gRPC services/methods
                   items:
                     type: object
                     properties:
@@ -531,14 +551,14 @@ spec:
                       type:
                         type: string
                         title: Match Type
+                        description: NGINX Gateway Fabric only supports Exact matching
                         enum:
                         - Exact
-                        - RegularExpression
                         default: Exact
                   x-ui-visible-if:
-                    field: spec.rules.{{this}}.grpc.enabled
+                    field: spec.rules.{{this}}.grpc.match_all_methods
                     values:
-                    - true
+                    - false
             websocket:
               type: object
               title: WebSocket Configuration
@@ -578,8 +598,7 @@ spec:
           required:
           - service_name
           - port
-          - path
-          - path_type
+          - namespace
     force_ssl_redirection:
       type: boolean
       title: Force SSL Redirection

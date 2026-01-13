@@ -10,7 +10,7 @@ variable "instance_name" {
 
 variable "inputs" {
   type    = any
-  default = []
+  default = {}
 }
 
 variable "environment" {
