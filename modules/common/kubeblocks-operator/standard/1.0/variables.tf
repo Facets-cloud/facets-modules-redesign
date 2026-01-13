@@ -9,11 +9,25 @@ variable "instance" {
       feature_gates = optional(object({
         in_place_pod_vertical_scaling = optional(bool)
       }))
+      high_availability = optional(object({
+        replicas   = optional(number, 1)
+        enable_pdb = optional(bool, false)
+      }), {
+        replicas   = 1
+        enable_pdb = false
+      })
       resources = optional(object({
         cpu_limit      = optional(string)
         memory_limit   = optional(string)
         cpu_request    = optional(string)
         memory_request = optional(string)
+      }))
+      database_addons = optional(object({
+        postgresql = optional(bool)
+        mysql      = optional(bool)
+        mongodb    = optional(bool)
+        redis      = optional(bool)
+        kafka      = optional(bool)
       }))
     })
   })
@@ -51,7 +65,7 @@ variable "inputs" {
     kubeblocks_crd = object({
       attributes = optional(object({
         version    = optional(string)
-        crds_count = optional(number)
+        crds_count = optional(string)
         release_id = optional(string)
       }))
       interfaces = optional(object({}))
