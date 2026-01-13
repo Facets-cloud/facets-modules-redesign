@@ -829,7 +829,9 @@ data "kubernetes_service" "gateway_lb" {
     helm_release.nginx_gateway_fabric
   ]
   metadata {
-    name      = "${local.name}-nginx-fabric"
+    # Service is created by controller with pattern: <release-name>-<gateway-name>
+    # Since both release name and gateway name are local.name, it becomes: <name>-<name>
+    name      = "${local.name}-${local.name}"
     namespace = var.environment.namespace
   }
 }
