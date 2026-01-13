@@ -2,7 +2,7 @@ locals {
   # Core instance spec and platform-provided variables
   spec = lookup(var.instance, "spec", {})
 
-  iam_enabled     = local.gcp_iam_arns > 0 || local.aws_iam_arns > 0
+  iam_enabled     = length(local.gcp_iam_arns) > 0 || length(local.aws_iam_arns) > 0
   cluster_project = lookup(local.cloud_account_attributes, "project_id", "validation-project")
   gcp_annotations = {
     "cloud.google.com/neg" = "{\"ingress\":true}"
