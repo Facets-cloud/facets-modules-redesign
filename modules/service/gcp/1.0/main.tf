@@ -9,11 +9,6 @@ locals {
   }
   sa_name                   = lower(var.instance_name)
   spec_type                 = lookup(local.spec, "type", "application")
-  actions_required_vars_set = can(var.instance.kind) && can(var.instance.version) && can(var.instance.flavor) && !contains(["cronjob", "job"], local.spec_type)
-
-  enable_actions             = lookup(var.instance.spec, "enable_actions", true) && local.actions_required_vars_set ? true : false
-  enable_deployment_actions  = local.enable_actions && local.spec_type == "application" ? 1 : 0
-  enable_statefulset_actions = local.enable_actions && local.spec_type == "statefulset" ? 1 : 0
 
   release_metadata_labels = {
     "facets.cloud/blueprint_version" = tostring(lookup(local.release_metadata.metadata, "blueprint_version", "NA")) == null ? "NA" : tostring(lookup(local.release_metadata.metadata, "blueprint_version", "NA"))

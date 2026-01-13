@@ -1,3 +1,11 @@
+locals {
+  actions_required_vars_set = can(var.instance.kind) && can(var.instance.version) && can(var.instance.flavor) && !contains(["cronjob", "job"], local.spec_type)
+
+  enable_actions             = lookup(var.instance.spec, "enable_actions", true) && local.actions_required_vars_set ? true : false
+  enable_deployment_actions  = local.enable_actions && local.spec_type == "application" ? 1 : 0
+  enable_statefulset_actions = local.enable_actions && local.spec_type == "statefulset" ? 1 : 0
+}
+
 # Deployment Actions
 resource "facets_tekton_action_kubernetes" "rollout_restart_deployment" {
   count = local.enable_deployment_actions
