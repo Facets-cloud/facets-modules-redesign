@@ -340,7 +340,7 @@ locals {
         rules = [{
           # If match_all_methods is true (default) or method_match is empty, match all gRPC traffic
           matches = !lookup(lookup(v, "grpc", {}), "match_all_methods", true) && lookup(lookup(v, "grpc", {}), "method_match", null) != null ? [
-            for method in lookup(v.grpc, "method_match", []) : {
+            for key, method in lookup(v.grpc, "method_match", {}) : {
               method = {
                 type    = lookup(method, "type", "Exact")
                 service = lookup(method, "service", "")

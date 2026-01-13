@@ -534,31 +534,36 @@ spec:
                     values:
                     - true
                 method_match:
-                  type: array
+                  type: object
                   title: gRPC Method Matching
                   description: Whitelist specific gRPC services/methods
-                  items:
-                    type: object
-                    properties:
-                      service:
-                        type: string
-                        title: Service Name
-                        description: Protobuf service name
-                      method:
-                        type: string
-                        title: Method Name
-                        description: gRPC method name
-                      type:
-                        type: string
-                        title: Match Type
-                        description: NGINX Gateway Fabric only supports Exact matching
-                        enum:
-                        - Exact
-                        default: Exact
                   x-ui-visible-if:
                     field: spec.rules.{{this}}.grpc.match_all_methods
                     values:
                     - false
+                  patternProperties:
+                    ^[a-zA-Z0-9_.-]*$:
+                      type: object
+                      title: Method Match
+                      properties:
+                        service:
+                          type: string
+                          title: Service Name
+                          description: Protobuf service name (e.g., helloworld.Greeter)
+                        method:
+                          type: string
+                          title: Method Name
+                          description: gRPC method name (e.g., SayHello)
+                        type:
+                          type: string
+                          title: Match Type
+                          description: NGINX Gateway Fabric only supports Exact matching
+                          enum:
+                          - Exact
+                          default: Exact
+                      required:
+                      - service
+                      - method
             websocket:
               type: object
               title: WebSocket Configuration
