@@ -34,6 +34,13 @@ inputs:
     providers:
     - google
     - google-beta
+  aws_cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: AWS Cloud Account
+    optional: true
+    description: AWS cloud account for cross-cloud service access via IAM role assumption
+    providers:
+    - aws
 outputs:
   default:
     type: '@facets/service'
@@ -217,6 +224,27 @@ spec:
                       x-ui-yaml-editor: true
                   required:
                   - role
+                  type: object
+        aws:
+          type: object
+          title: AWS
+          x-ui-toggle: true
+          properties:
+            iam:
+              type: object
+              title: IAM Policies
+              description: AWS IAM policy ARNs to attach to the role
+              patternProperties:
+                ^[a-zA-Z0-9_.-]*$:
+                  title: policy_key
+                  properties:
+                    arn:
+                      title: Policy ARN
+                      type: string
+                      description: AWS IAM policy ARN to attach
+                      x-ui-placeholder: e.g., arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+                  required:
+                  - arn
                   type: object
     runtime:
       type: object
@@ -1663,6 +1691,8 @@ sample:
     cloud_permissions:
       gcp:
         roles: {}
+      aws:
+        iam: {}
     runtime:
       args: []
       command: []

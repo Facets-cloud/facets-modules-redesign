@@ -28,7 +28,8 @@ locals {
   namespace = lookup(var.instance.metadata, "namespace", null) == null ? var.environment.namespace : var.instance.metadata.namespace
   annotations = merge(
     local.gcp_annotations,
-    length(local.iam_arns) > 0 ? { "iam.gke.io/gcp-service-account" = module.gcp-workload-identity.0.gcp_service_account_email } : {},
+    # Add GCP service account annotation if GCP roles OR AWS IAM ARNs are specified
+    length(local.iam_arns) > 0 || length(local.aws_iam_arns) > 0 ? { "iam.gke.io/gcp-service-account" = module.gcp-workload-identity.0.gcp_service_account_email } : {},
     lookup(var.instance.metadata, "annotations", {}),
     local.enable_alb_backend_config ? { "cloud.google.com/backend-config" = "{\"default\": \"${lower(var.instance_name)}\"}" } : {}
   )
@@ -125,7 +126,8 @@ locals {
 }
 
 module "sr-name" {
-  count           = length(local.iam_arns) > 0 ? 1 : 0
+  # Create unique name if GCP roles OR AWS IAM ARNs are specified
+  count           = length(local.iam_arns) > 0 || length(local.aws_iam_arns) > 0 ? 1 : 0
   source          = "github.com/Facets-cloud/facets-utility-modules//name"
   is_k8s          = false
   globally_unique = true
@@ -137,7 +139,10 @@ module "sr-name" {
 }
 
 module "gcp-workload-identity" {
-  count               = length(local.iam_arns) > 0 ? 1 : 0
+  # Create GCP service account if:
+  # 1. GCP IAM roles are specified, OR
+  # 2. AWS IAM ARNs are specified (for cross-cloud federation)
+  count               = length(local.iam_arns) > 0 || length(local.aws_iam_arns) > 0 ? 1 : 0
   source              = "./gcp_workload-identity/workload-identity"
   name                = module.sr-name.0.name
   k8s_sa_name         = "${local.sa_name}-sa"

@@ -1,0 +1,393 @@
+# Example: GCP GKE Service with AWS Cross-Cloud Access
+#
+# This example shows a service running in GCP GKE that needs to:
+# 1. Read from GCS buckets (GCP)
+# 2. Read from S3 buckets (AWS)
+# 3. Write to DynamoDB (AWS)
+#
+# AWS access is automatically enabled when IAM policy ARNs are provided.
+
+---
+# Basic Example: Service with AWS S3 and DynamoDB Access
+kind: service
+flavor: gcp
+version: '1.0'
+metadata:
+  name: my-cross-cloud-app
+spec:
+  type: application
+
+  # Cloud Permissions - Multi-cloud IAM configuration
+  cloud_permissions:
+    # GCP Permissions (existing functionality)
+    gcp:
+      roles:
+        gcs_reader:
+          role: roles/storage.objectViewer
+
+        bigquery_viewer:
+          role: roles/bigquery.dataViewer
+
+    # AWS Permissions (cross-cloud) - NEW!
+    # AWS access is AUTOMATICALLY ENABLED when IAM ARNs are provided
+    aws:
+      iam:
+        # Key can be any name for identification
+        s3_read:
+          arn: arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+
+        dynamodb_full:
+          arn: arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+
+        # You can also use custom policy ARNs
+        custom_s3_write:
+          arn: arn:aws:iam::123456789012:policy/MyApp-S3-Write-Policy
+
+  # Runtime configuration
+  runtime:
+    size:
+      cpu: 500m
+      memory: 1Gi
+      cpu_limit: 2000m
+      memory_limit: 4Gi
+
+    ports:
+      http:
+        port: "8080"
+        service_port: "80"
+        protocol: tcp
+
+    health_checks:
+      readiness_check_type: HttpCheck
+      liveness_check_type: HttpCheck
+
+    autoscaling:
+      enabled: true
+      min: 2
+      max: 10
+      scaling_on: CPU
+      cpu_threshold: "70"
+
+  # Application environment variables
+  # AWS_* variables are AUTO-INJECTED by the module:
+  #   - AWS_ROLE_ARN
+  #   - AWS_WEB_IDENTITY_TOKEN_FILE
+  #   - AWS_REGION
+  #   - AWS_STS_REGIONAL_ENDPOINTS
+  #   - AWS_DEFAULT_OUTPUT
+  env:
+    APP_NAME: my-cross-cloud-app
+    LOG_LEVEL: INFO
+
+    # GCP configuration
+    GCP_PROJECT_ID: my-gcp-project
+    GCS_BUCKET: gs://my-gcs-bucket
+
+    # AWS configuration (your custom variables)
+    S3_BUCKET: my-s3-bucket
+    DYNAMODB_TABLE: my-table
+
+  # Release configuration
+  release:
+    image: gcr.io/my-project/my-app:latest
+    image_pull_policy: IfNotPresent
+
+    strategy:
+      type: RollingUpdate
+      max_unavailable: "25%"
+      max_available: "150%"
+
+---
+# Application Code Example (Python)
+# File: app.py
+#
+# import boto3
+# from google.cloud import storage
+#
+# # GCP Storage Client (uses GCP Workload Identity automatically)
+# gcs_client = storage.Client()
+# gcs_bucket = gcs_client.bucket('my-gcs-bucket')
+# blob = gcs_bucket.blob('data.json')
+# gcs_data = blob.download_as_text()
+# print(f"GCS Data: {gcs_data}")
+#
+# # AWS S3 Client (uses cross-cloud auth automatically)
+# # NO CREDENTIALS NEEDED - SDK reads environment variables!
+# s3_client = boto3.client('s3')
+# response = s3_client.get_object(Bucket='my-s3-bucket', Key='data.json')
+# s3_data = response['Body'].read().decode('utf-8')
+# print(f"S3 Data: {s3_data}")
+#
+# # AWS DynamoDB Client (same automatic authentication)
+# dynamodb = boto3.resource('dynamodb')
+# table = dynamodb.Table('my-table')
+# table.put_item(Item={'id': '123', 'data': 'from GKE'})
+# print("DynamoDB write successful")
+
+---
+# Advanced Example: Multi-service AWS Access
+kind: service
+flavor: gcp
+version: '1.0'
+metadata:
+  name: advanced-aws-service
+spec:
+  type: application
+
+  cloud_permissions:
+    aws:
+      iam:
+        # S3 full access
+        s3_full:
+          arn: arn:aws:iam::aws:policy/AmazonS3FullAccess
+
+        # DynamoDB full access
+        dynamodb:
+          arn: arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+
+        # SQS full access
+        sqs:
+          arn: arn:aws:iam::aws:policy/AmazonSQSFullAccess
+
+        # SNS publish
+        sns:
+          arn: arn:aws:iam::aws:policy/AmazonSNSFullAccess
+
+        # SES for email
+        ses:
+          arn: arn:aws:iam::aws:policy/AmazonSESFullAccess
+
+        # Secrets Manager read
+        secrets:
+          arn: arn:aws:iam::123456789012:policy/SecretsManager-ReadAccess
+
+        # CloudWatch Logs
+        logs:
+          arn: arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+
+  runtime:
+    size:
+      cpu: 1000m
+      memory: 2Gi
+
+    ports:
+      http:
+        port: "3000"
+        protocol: tcp
+
+  env:
+    # Multi-region AWS access
+    PRIMARY_AWS_REGION: us-east-1
+    SECONDARY_AWS_REGION: eu-west-1
+
+    # Service-specific AWS resources
+    S3_BUCKET_US: my-bucket-us-east-1
+    S3_BUCKET_EU: my-bucket-eu-west-1
+    DYNAMODB_TABLE: my-dynamodb-table
+    SQS_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/123456789012/my-queue
+    SNS_TOPIC_ARN: arn:aws:sns:us-east-1:123456789012:my-topic
+
+  release:
+    image: my-advanced-app:latest
+
+---
+# Minimal Example: Just S3 Read Access
+kind: service
+flavor: gcp
+version: '1.0'
+metadata:
+  name: simple-s3-reader
+spec:
+  type: application
+
+  cloud_permissions:
+    aws:
+      iam:
+        s3_readonly:
+          arn: arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+
+  runtime:
+    size:
+      cpu: 250m
+      memory: 512Mi
+
+  release:
+    image: my-s3-reader:latest
+
+---
+# Example: Using Custom IAM Policies
+kind: service
+flavor: gcp
+version: '1.0'
+metadata:
+  name: custom-policy-service
+spec:
+  type: application
+
+  cloud_permissions:
+    aws:
+      iam:
+        # Custom policy for specific S3 bucket access
+        specific_bucket:
+          arn: arn:aws:iam::123456789012:policy/MyApp-SpecificBucket-Policy
+
+        # Custom policy for specific DynamoDB table
+        specific_table:
+          arn: arn:aws:iam::123456789012:policy/MyApp-SpecificTable-Policy
+
+        # AWS managed policy can be mixed with custom
+        cloudwatch_readonly:
+          arn: arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess
+
+  runtime:
+    size:
+      cpu: 500m
+      memory: 1Gi
+
+  release:
+    image: my-custom-app:latest
+
+---
+# Custom AWS IAM Policy Examples
+# These should be created in AWS before referencing in the service spec
+
+# Policy 1: Specific S3 Bucket Write Access
+# Policy Name: MyApp-SpecificBucket-Policy
+# {
+#   "Version": "2012-10-17",
+#   "Statement": [
+#     {
+#       "Effect": "Allow",
+#       "Action": [
+#         "s3:PutObject",
+#         "s3:PutObjectAcl",
+#         "s3:GetObject",
+#         "s3:DeleteObject"
+#       ],
+#       "Resource": "arn:aws:s3:::my-specific-bucket/*"
+#     },
+#     {
+#       "Effect": "Allow",
+#       "Action": "s3:ListBucket",
+#       "Resource": "arn:aws:s3:::my-specific-bucket"
+#     }
+#   ]
+# }
+
+# Policy 2: Specific DynamoDB Table Access
+# Policy Name: MyApp-SpecificTable-Policy
+# {
+#   "Version": "2012-10-17",
+#   "Statement": [
+#     {
+#       "Effect": "Allow",
+#       "Action": [
+#         "dynamodb:GetItem",
+#         "dynamodb:PutItem",
+#         "dynamodb:UpdateItem",
+#         "dynamodb:DeleteItem",
+#         "dynamodb:Query",
+#         "dynamodb:Scan"
+#       ],
+#       "Resource": [
+#         "arn:aws:dynamodb:us-east-1:123456789012:table/my-table",
+#         "arn:aws:dynamodb:us-east-1:123456789012:table/my-table/index/*"
+#       ]
+#     }
+#   ]
+# }
+
+---
+# How It Works:
+#
+# 1. When you provide IAM ARNs in spec.cloud_permissions.aws.iam,
+#    the module AUTOMATICALLY:
+#    - Creates an AWS IAM role: <service-name>-gcp-to-aws
+#    - Configures trust policy to accept GCP Workload Identity tokens
+#    - Attaches the specified IAM policy ARNs
+#    - Injects environment variables into the pod
+#
+# 2. Your pod gets these environment variables automatically:
+#    AWS_ROLE_ARN=arn:aws:iam::123456789012:role/my-service-gcp-to-aws
+#    AWS_WEB_IDENTITY_TOKEN_FILE=/var/run/secrets/gcp-service-account/token
+#    AWS_REGION=us-east-1
+#    AWS_STS_REGIONAL_ENDPOINTS=regional
+#    AWS_DEFAULT_OUTPUT=json
+#
+# 3. AWS SDK automatically:
+#    - Reads the GCP service account token
+#    - Calls AWS STS AssumeRoleWithWebIdentity
+#    - Gets temporary AWS credentials
+#    - Uses them to access AWS services
+#
+# 4. NO CODE CHANGES NEEDED - just use AWS SDK normally!
+
+---
+# Testing the Configuration
+
+# 1. Deploy the service:
+#    raptor create release -p my-project -e dev
+
+# 2. Verify environment variables:
+#    kubectl exec -it <pod-name> -n <namespace> -- env | grep AWS
+#
+#    Expected output:
+#    AWS_ROLE_ARN=arn:aws:iam::123456789012:role/my-service-gcp-to-aws
+#    AWS_WEB_IDENTITY_TOKEN_FILE=/var/run/secrets/gcp-service-account/token
+#    AWS_REGION=us-east-1
+#    AWS_STS_REGIONAL_ENDPOINTS=regional
+#    AWS_DEFAULT_OUTPUT=json
+
+# 3. Test AWS authentication:
+#    kubectl exec -it <pod-name> -n <namespace> -- aws sts get-caller-identity
+#
+#    Expected output shows the assumed role:
+#    {
+#        "UserId": "AROAXXXXXXXXX:system:serviceaccount:namespace:service-name",
+#        "Account": "123456789012",
+#        "Arn": "arn:aws:sts::123456789012:assumed-role/my-service-gcp-to-aws/..."
+#    }
+
+# 4. Test AWS service access:
+#    kubectl exec -it <pod-name> -n <namespace> -- aws s3 ls
+#    kubectl exec -it <pod-name> -n <namespace> -- aws dynamodb list-tables
+
+# 5. Check IAM role in AWS Console:
+#    - Go to IAM → Roles
+#    - Search for: <service-name>-gcp-to-aws
+#    - Verify trust policy and attached policies
+
+---
+# Common AWS Managed Policy ARNs
+
+# Compute:
+# arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+# arn:aws:iam::aws:policy/AmazonEC2FullAccess
+
+# Storage:
+# arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+# arn:aws:iam::aws:policy/AmazonS3FullAccess
+
+# Databases:
+# arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess
+# arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+# arn:aws:iam::aws:policy/AmazonRDSReadOnlyAccess
+# arn:aws:iam::aws:policy/AmazonRDSFullAccess
+
+# Messaging:
+# arn:aws:iam::aws:policy/AmazonSQSReadOnlyAccess
+# arn:aws:iam::aws:policy/AmazonSQSFullAccess
+# arn:aws:iam::aws:policy/AmazonSNSReadOnlyAccess
+# arn:aws:iam::aws:policy/AmazonSNSFullAccess
+
+# Monitoring:
+# arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess
+# arn:aws:iam::aws:policy/CloudWatchLogsReadOnlyAccess
+# arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+
+# Secrets:
+# arn:aws:iam::aws:policy/SecretsManagerReadWrite
+
+# Other:
+# arn:aws:iam::aws:policy/AmazonSESFullAccess
+# arn:aws:iam::aws:policy/AWSLambda_FullAccess

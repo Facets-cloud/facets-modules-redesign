@@ -44,12 +44,17 @@ variable "instance" {
         path         = string
       })), {})
 
-      # Cloud permissions (GCP IAM)
+      # Cloud permissions (GCP IAM and AWS IAM)
       cloud_permissions = optional(object({
         gcp = optional(object({
           roles = optional(map(object({
             role      = string
             condition = optional(any)
+          })), {})
+        }), {})
+        aws = optional(object({
+          iam = optional(map(object({
+            arn = string
           })), {})
         }), {})
       }), {})
@@ -264,6 +269,16 @@ variable "inputs" {
         effect = string
       })), [])
       node_selector = optional(map(string), {})
+    }))
+
+    # Optional: AWS cloud account for cross-cloud access
+    aws_cloud_account = optional(object({
+      attributes = object({
+        aws_account_id = string
+        aws_region     = optional(string)
+        external_id    = optional(string)
+      })
+      interfaces = optional(any, {})
     }))
   })
 }
