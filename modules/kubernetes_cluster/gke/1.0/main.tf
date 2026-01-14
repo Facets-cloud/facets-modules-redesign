@@ -15,6 +15,8 @@ resource "google_container_cluster" "primary" {
   name     = local.cluster_name
   location = local.region # Regional cluster for HA
 
+  project = var.inputs.network_details.attributes.project_id
+
   # Allow cluster deletion
   deletion_protection = false
 
