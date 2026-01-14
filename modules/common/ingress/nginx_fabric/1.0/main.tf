@@ -75,6 +75,15 @@ locals {
 
   disable_endpoint_validation = lookup(var.instance.spec, "disable_endpoint_validation", false) || lookup(var.instance.spec, "private", false)
 
+  # Common labels for all resources
+  common_labels = {
+    "app.kubernetes.io/name"       = "nginx-gateway-fabric"
+    "app.kubernetes.io/instance"   = local.name
+    "app.kubernetes.io/managed-by" = "facets"
+    "facets.cloud/module"          = "nginx_fabric"
+    "facets.cloud/instance"        = var.instance_name
+  }
+
   # Domains that need bootstrap TLS certificates for HTTP-01 validation
   # Bootstrap cert is needed when HTTP-01 validation is used (disable_endpoint_validation = false)
   # For HTTP-01, certificate_reference is ignored (same as nginx_k8s_native) - always auto-generate
@@ -82,7 +91,7 @@ locals {
   bootstrap_tls_domains = {
     for domain_key, domain in local.domains :
     domain_key => domain
-    if !local.disable_endpoint_validation
+    if !local.disable_endpoint_validation && can(domain.domain)
   }
 
   # Cloud-specific service annotations
@@ -402,24 +411,40 @@ locals {
     } if lookup(lookup(v, "ip_whitelist", {}), "enabled", false)
   }
 
-  # Load Balancing Policies (targets Services, not HTTPRoutes)
-  loadbalancing_resources = {
-    for k, v in local.rulesFiltered : "loadbalancing-${lower(var.instance_name)}-${k}" => {
+  # Upstream Settings Policies (targets Services, not HTTPRoutes)
+  # Supports: keepAlive, zoneSize
+  # Reference: https://docs.nginx.com/nginx-gateway-fabric/reference/api/#gateway.nginx.org%2fv1alpha1.UpstreamSettingsPolicy
+  upstream_settings_resources = {
+    for k, v in local.rulesFiltered : "upstream-${lower(var.instance_name)}-${k}" => {
       apiVersion = "gateway.nginx.org/v1alpha1"
       kind       = "UpstreamSettingsPolicy"
       metadata = {
         name      = "${lower(var.instance_name)}-${k}-lb"
         namespace = var.environment.namespace
       }
-      spec = {
-        targetRefs = [{
-          group = ""
-          kind  = "Service"
-          name  = v.service_name
-        }]
-        loadBalancingMethod = lookup(lookup(v, "load_balancing", {}), "algorithm", "round_robin")
-      }
-    } if lookup(v, "load_balancing", null) != null
+      spec = merge(
+        {
+          targetRefs = [{
+            group = ""
+            kind  = "Service"
+            name  = v.service_name
+          }]
+        },
+        # Zone size configuration
+        lookup(lookup(v, "upstream_settings", {}), "zone_size", null) != null ? {
+          zoneSize = lookup(v.upstream_settings, "zone_size", "512k")
+        } : {},
+        # Keep-alive configuration
+        lookup(lookup(v, "upstream_settings", {}), "keep_alive", null) != null ? {
+          keepAlive = {
+            connections = lookup(lookup(v.upstream_settings, "keep_alive", {}), "connections", 32)
+            requests    = lookup(lookup(v.upstream_settings, "keep_alive", {}), "requests", 100)
+            time        = lookup(lookup(v.upstream_settings, "keep_alive", {}), "time", "1h")
+            timeout     = lookup(lookup(v.upstream_settings, "keep_alive", {}), "timeout", "60s")
+          }
+        } : {}
+      )
+    } if lookup(v, "upstream_settings", null) != null
   }
 
   # ServiceMonitor
@@ -457,7 +482,7 @@ locals {
     local.grpcroute_resources,
     local.ratelimit_resources,
     local.ipwhitelist_resources,
-    local.loadbalancing_resources,
+    local.upstream_settings_resources,
     local.servicemonitor_resources
   )
 }
@@ -615,9 +640,21 @@ resource "helm_release" "nginx_gateway_fabric" {
 
   values = [
     yamlencode({
+      # Use release-specific TLS secret names to support multiple instances in the same namespace
+      certGenerator = {
+        serverTLSSecretName = "${local.name}-server-tls"
+        agentTLSSecretName  = "${local.name}-agent-tls"
+        overwrite           = true
+        tolerations         = local.ingress_tolerations
+        nodeSelector        = local.nodepool_labels
+      }
+
       nginxGateway = {
         # Configure the GatewayClass name
         gatewayClassName = local.gateway_class_name
+
+        # Labels for control plane deployment
+        labels = local.common_labels
 
         image = {
           pullPolicy = "IfNotPresent"
@@ -638,6 +675,11 @@ resource "helm_release" "nginx_gateway_fabric" {
         tolerations  = local.ingress_tolerations
         nodeSelector = local.nodepool_labels
 
+        # Labels for control plane service
+        service = {
+          labels = local.common_labels
+        }
+
         metrics = {
           enabled = lookup(lookup(lookup(var.instance.spec, "observability", {}), "metrics", {}), "enabled", true)
           port    = lookup(lookup(lookup(var.instance.spec, "observability", {}), "metrics", {}), "port", 9113)
@@ -645,12 +687,11 @@ resource "helm_release" "nginx_gateway_fabric" {
       }
 
       # NGINX data plane configuration (NginxProxy)
+      # Note: The following fields are NOT supported in NginxProxy CRD (NGF 2.3.0):
+      # - clientMaxBodySize (use ClientSettingsPolicy body.maxSize instead)
+      # - proxyConnectTimeout, proxySendTimeout, proxyReadTimeout (not exposed in any CRD)
       nginx = {
         config = {
-          clientMaxBodySize   = lookup(lookup(var.instance.spec, "nginx_config", {}), "body_size_limit", "1m")
-          proxyConnectTimeout = lookup(lookup(lookup(var.instance.spec, "nginx_config", {}), "proxy_timeouts", {}), "connect", "60s")
-          proxySendTimeout    = lookup(lookup(lookup(var.instance.spec, "nginx_config", {}), "proxy_timeouts", {}), "send", "60s")
-          proxyReadTimeout    = lookup(lookup(lookup(var.instance.spec, "nginx_config", {}), "proxy_timeouts", {}), "read", "60s")
           # Enable Proxy Protocol to get real client IP with externalTrafficPolicy: Cluster
           rewriteClientIP = local.cloud_provider == "AWS" ? {
             mode = "ProxyProtocol"
@@ -662,19 +703,40 @@ resource "helm_release" "nginx_gateway_fabric" {
             ]
           } : null
         }
+
+        # Data plane pod configuration
+        pod = {
+          tolerations  = local.ingress_tolerations
+          nodeSelector = local.nodepool_labels
+        }
+
+        # Labels for data plane deployment via patches
+        patches = [
+          {
+            type = "StrategicMerge"
+            value = {
+              metadata = {
+                labels = local.common_labels
+              }
+            }
+          }
+        ]
+
         service = {
           type                  = "LoadBalancer"
           externalTrafficPolicy = "Cluster"
-          patches = length(local.service_annotations) > 0 ? [
+          # Service patches for annotations and labels
+          patches = [
             {
               type = "StrategicMerge"
               value = {
                 metadata = {
+                  labels      = local.common_labels
                   annotations = local.service_annotations
                 }
               }
             }
-          ] : []
+          ]
         }
       }
 
@@ -682,9 +744,9 @@ resource "helm_release" "nginx_gateway_fabric" {
       gateways = [{
         name      = local.name
         namespace = var.environment.namespace
-        labels = {
-          gateway = "facets"
-        }
+        labels = merge(local.common_labels, {
+          "gateway.networking.k8s.io/gateway-name" = local.name
+        })
         annotations = {
           "cert-manager.io/cluster-issuer" = local.effective_cluster_issuer
           "cert-manager.io/renew-before"   = lookup(var.instance.spec, "renew_cert_before", "720h")
@@ -723,7 +785,7 @@ resource "helm_release" "nginx_gateway_fabric" {
                   from = "Same"
                 }
               }
-            }]
+            } if can(domain.domain)]
           )
         }
       }]

@@ -584,22 +584,47 @@ spec:
                     field: spec.rules.{{this}}.websocket.enabled
                     values:
                     - true
-            load_balancing:
+            upstream_settings:
               type: object
-              title: Load Balancing Configuration
-              description: Configure load balancing algorithm
+              title: Upstream Settings
+              description: Configure upstream connection settings (keepAlive, zoneSize)
               x-ui-toggle: true
               properties:
-                algorithm:
+                zone_size:
                   type: string
-                  title: Algorithm
-                  description: Load balancing algorithm
-                  enum:
-                  - round_robin
-                  - least_conn
-                  - ip_hash
-                  - random
-                  default: round_robin
+                  title: Zone Size
+                  description: Size of shared memory zone for upstream (e.g., 512k, 1m)
+                  default: 512k
+                  pattern: ^[0-9]+[kmKM]$
+                keep_alive:
+                  type: object
+                  title: Keep-Alive Configuration
+                  description: Configure keep-alive connections to upstream servers
+                  properties:
+                    connections:
+                      type: integer
+                      title: Max Idle Connections
+                      description: Maximum number of idle keep-alive connections to upstream servers
+                      default: 32
+                      minimum: 1
+                    requests:
+                      type: integer
+                      title: Max Requests
+                      description: Maximum number of requests through one keep-alive connection
+                      default: 100
+                      minimum: 1
+                    time:
+                      type: string
+                      title: Max Time
+                      description: Maximum time for processing requests through one keep-alive connection (e.g., 1h)
+                      default: 1h
+                      pattern: ^[0-9]+[smh]$
+                    timeout:
+                      type: string
+                      title: Timeout
+                      description: Keep-alive timeout for upstream connections (e.g., 60s)
+                      default: 60s
+                      pattern: ^[0-9]+[smh]$
           required:
           - service_name
           - port
@@ -626,37 +651,6 @@ spec:
           description: Maximum number of pods unavailable during disruption
           pattern: ^([1-9][0-9]*|([1-9][0-9]?|100)%)$
           x-ui-error-message: Value must be a positive integer or percentage
-    nginx_config:
-      type: object
-      title: NGINX Configuration
-      description: Global NGINX configuration
-      x-ui-toggle: true
-      properties:
-        proxy_timeouts:
-          type: object
-          title: Proxy Timeouts
-          properties:
-            connect:
-              type: string
-              title: Connect Timeout
-              default: 60s
-              pattern: ^\d+[smh]$
-            send:
-              type: string
-              title: Send Timeout
-              default: 60s
-              pattern: ^\d+[smh]$
-            read:
-              type: string
-              title: Read Timeout
-              default: 60s
-              pattern: ^\d+[smh]$
-        body_size_limit:
-          type: string
-          title: Body Size Limit
-          description: Maximum client request body size
-          default: 1m
-          pattern: ^\d+[kmg]?$
     security:
       type: object
       title: Security Configuration
@@ -810,7 +804,6 @@ spec:
   - gateway_class_name
   - resources
   - pdb
-  - nginx_config
   - security
   - observability
   - helm_chart_version

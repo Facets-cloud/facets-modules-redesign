@@ -42,7 +42,7 @@ output "domains" {
   value = concat(
     # Only include base domain if not disabled
     !lookup(var.instance.spec, "disable_base_domain", false) ? [local.base_domain] : [],
-    [for d in lookup(var.instance.spec, "domains", []) : d.domain]
+    [for d in values(lookup(var.instance.spec, "domains", {})) : d.domain if can(d.domain)]
   )
 }
 
