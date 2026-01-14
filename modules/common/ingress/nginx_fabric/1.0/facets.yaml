@@ -246,11 +246,10 @@ spec:
             path_type:
               type: string
               title: Path Type
-              description: Path matching type (required for HTTP routes)
+              description: Path matching type (required for HTTP routes). Note - RegularExpression is NOT supported by NGF.
               enum:
               - Exact
               - PathPrefix
-              - RegularExpression
               default: PathPrefix
               x-ui-visible-if:
                 field: spec.rules.{{this}}.grpc.enabled
