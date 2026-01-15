@@ -2,9 +2,10 @@ locals {
   # Advanced configuration from instance.advanced.externaldns (all optional)
   advanced = lookup(var.instance, "advanced", {})
 
-  # Namespace and secret
-  namespace   = "external-dns"
-  secret_name = "${lower(var.instance_name)}-dns-secret"
+  # Namespaces and secret
+  namespace              = "external-dns"
+  cert_manager_namespace = "cert-manager"
+  secret_name            = "${lower(var.instance_name)}-dns-secret"
 
   # Azure account details (from cloud_account module)
   subscription_id = var.inputs.cloud_account.attributes.subscription_id

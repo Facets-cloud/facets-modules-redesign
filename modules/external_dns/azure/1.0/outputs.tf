@@ -1,8 +1,10 @@
 locals {
   output_attributes = {
     # Secret information (created by this module)
-    secret_name                = kubernetes_secret.external_dns_azure_secret.metadata[0].name
-    secret_namespace           = local.namespace
+    # Note: Secret is created in BOTH external-dns and cert-manager namespaces
+    # Output points to cert-manager namespace since that's what cert-manager module expects
+    secret_name                = kubernetes_secret.cert_manager_azure_secret.metadata[0].name
+    secret_namespace           = local.cert_manager_namespace
     azure_credentials_json_key = "client-secret"
 
     # Cloud provider identifier

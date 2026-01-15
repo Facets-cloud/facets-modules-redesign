@@ -15,8 +15,8 @@ resource "kubernetes_namespace" "namespace" {
   }
 }
 
-# Kubernetes secret with Azure DNS credentials
-# cert-manager expects the client secret in a key named "client-secret"
+# Kubernetes secret with Azure DNS credentials for external-dns
+# This secret is used by the external-dns pod in its own namespace
 resource "kubernetes_secret" "external_dns_azure_secret" {
   depends_on = [kubernetes_namespace.namespace]
   metadata {
@@ -26,6 +26,21 @@ resource "kubernetes_secret" "external_dns_azure_secret" {
   data = {
     # cert-manager azureDNS solver expects the key to be "client-secret"
     # Use client_secret directly from cloud_account input
+    "client-secret" = var.inputs.cloud_account.attributes.client_secret
+  }
+}
+
+# Kubernetes secret with Azure DNS credentials for cert-manager
+# This secret is used by cert-manager for DNS-01 ACME challenges
+# cert-manager pods can only access secrets in their own namespace
+# NOTE: The cert-manager namespace is created by the cert-manager module
+resource "kubernetes_secret" "cert_manager_azure_secret" {
+  metadata {
+    name      = local.secret_name
+    namespace = local.cert_manager_namespace
+  }
+  data = {
+    # cert-manager azureDNS solver expects the key to be "client-secret"
     "client-secret" = var.inputs.cloud_account.attributes.client_secret
   }
 }
