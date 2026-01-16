@@ -65,11 +65,6 @@ sample:
     kind: kubernetes_cluster
     spec:
         cluster_addons:
-            additional_addons:
-                aws-ebs-csi-driver:
-                    enabled: true
-                    service_account_role_arn: ""
-                    version: latest
             coredns:
                 enabled: true
                 version: latest
@@ -77,6 +72,9 @@ sample:
                 enabled: true
                 version: latest
             vpc_cni:
+                enabled: true
+                version: latest
+            ebs_csi:
                 enabled: true
                 version: latest
         cluster_endpoint_private_access: true
@@ -166,6 +164,22 @@ spec:
                                 values:
                                     - true
                     title: VPC CNI
+                    type: object
+                ebs_csi:
+                    properties:
+                        enabled:
+                            default: true
+                            title: Enable EBS CSI Driver
+                            type: boolean
+                        version:
+                            default: latest
+                            title: Version
+                            type: string
+                            x-ui-visible-if:
+                                field: spec.cluster_addons.ebs_csi.enabled
+                                values:
+                                    - true
+                    title: EBS CSI Driver
                     type: object
             title: EKS Add-ons
             type: object
