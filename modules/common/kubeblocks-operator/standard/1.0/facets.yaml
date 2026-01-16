@@ -48,6 +48,23 @@ spec:
           title: In-Place Pod Vertical Scaling
           description: Enable in-place pod vertical scaling feature
           default: false
+    high_availability:
+      type: object
+      title: High Availability Settings
+      description: Configure operator replicas and disruption budget for HA
+      properties:
+        replicas:
+          type: integer
+          title: Operator Replicas
+          description: Number of operator replicas (2 recommended for production to survive node failures)
+          default: 1
+          minimum: 1
+          maximum: 3
+        enable_pdb:
+          type: boolean
+          title: Enable Pod Disruption Budget
+          description: Prevent simultaneous pod eviction during node maintenance (minAvailable=1)
+          default: false
     resources:
       type: object
       title: Resource Allocation
@@ -89,6 +106,9 @@ sample:
   disabled: true
   spec:
     version: 1.0.1
+    high_availability:
+      replicas: 1
+      enable_pdb: false
     resources:
       cpu_limit: 1000m
       memory_limit: 1Gi

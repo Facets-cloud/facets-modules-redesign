@@ -98,7 +98,7 @@ module "mongodb_cluster" {
             # schedulingPolicy (nodeSelector, nodeName, affinity, tolerations)
             {
               schedulingPolicy = merge(
-                # Pod anti-affinity for HA
+                # Pod anti-affinity for HA - soft anti-affinity prefers different nodes
                 local.enable_pod_anti_affinity ? {
                   affinity = {
                     podAntiAffinity = {
@@ -156,6 +156,56 @@ module "mongodb_cluster" {
   }
 }
 
+# PodDisruptionBudget for MongoDB HA
+# maxUnavailable=1 ensures only 1 pod can be disrupted at a time
+# This maintains quorum during node maintenance/upgrades
+module "mongodb_pdb" {
+  count  = local.enable_pdb ? 1 : 0
+  source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
+
+  name         = "${local.cluster_name}-mongodb-pdb"
+  namespace    = local.namespace
+  release_name = "mongo-pdb-${local.cluster_name}-${substr(var.inputs.kubeblocks_operator.attributes.release_id, 0, 8)}"
+
+  data = {
+    apiVersion = "policy/v1"
+    kind       = "PodDisruptionBudget"
+
+    metadata = {
+      name      = "${local.cluster_name}-mongodb-pdb"
+      namespace = local.namespace
+
+      labels = merge(
+        {
+          "app.kubernetes.io/name"       = "mongodb"
+          "app.kubernetes.io/instance"   = local.cluster_name
+          "app.kubernetes.io/managed-by" = "terraform"
+        },
+        var.environment.cloud_tags
+      )
+    }
+
+    spec = {
+      maxUnavailable = 1
+
+      selector = {
+        matchLabels = {
+          "app.kubernetes.io/instance"        = local.cluster_name
+          "app.kubernetes.io/managed-by"      = "kubeblocks"
+          "apps.kubeblocks.io/component-name" = "mongodb"
+        }
+      }
+    }
+  }
+
+  advanced_config = {
+    wait            = false
+    cleanup_on_fail = true
+    max_history     = 3
+  }
+
+  depends_on = [module.mongodb_cluster]
+}
 
 # Wait for KubeBlocks to create and populate the connection secret
 resource "time_sleep" "wait_for_credentials" {

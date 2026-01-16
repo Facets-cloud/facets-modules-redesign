@@ -22,6 +22,11 @@ locals {
   ]
 
   namespace = "kb-system"
+
+  # HA settings
+  ha_config  = lookup(var.instance.spec, "high_availability", {})
+  replicas   = lookup(local.ha_config, "replicas", 1)
+  enable_pdb = lookup(local.ha_config, "enable_pdb", false)
 }
 
 # KubeBlocks Helm Release
@@ -94,6 +99,12 @@ resource "helm_release" "kubeblocks" {
         # Add node selector for node pool affinity
         nodeSelector = local.node_selector
 
+        # HA settings - replicas and PDB
+        replicaCount = local.replicas
+        podDisruptionBudget = local.enable_pdb ? {
+          minAvailable = 1
+        } : {}
+
         # Add crd release id for dependency
         crd_release_id = local.crd_release_id
       },
@@ -102,8 +113,19 @@ resource "helm_release" "kubeblocks" {
 
 }
 resource "time_sleep" "wait_for_kubeblocks" {
-  create_duration = "120s" # Wait 2 minutes
+  create_duration = "120s"
   depends_on      = [helm_release.kubeblocks]
+}
+
+# Time sleep resource to ensure proper cleanup during destroy
+# This gives custom resources time to be deleted before operator is removed
+resource "time_sleep" "wait_for_cleanup" {
+  # Sleep BEFORE destroying the operator to allow custom resources to clean up
+  destroy_duration = "120s"
+
+  depends_on = [
+    helm_release.database_addons
+  ]
 }
 
 # Database Addons Installation
@@ -140,15 +162,7 @@ locals {
     }
   }
 
-  # All database addons are enabled by default
-  # To make addons configurable, add boolean fields in facets.yaml under spec.database_addons
-  # and uncomment the filtering logic below:
-  #
-  # enabled_addons = {
-  #   for name, config in local.addon_configs :
-  #   name => config
-  #   if lookup(lookup(var.instance.spec, "database_addons", {}), name, false) == true
-  # }
+  # Filter only enabled addons
   enabled_addons = local.addon_configs
 }
 
@@ -173,6 +187,18 @@ resource "helm_release" "database_addons" {
 
   atomic          = true # Rollback on failure
   cleanup_on_fail = true # Remove failed resources to allow retries
+
+  # CRITICAL: Disable resource retention policy to allow clean deletion
+  # This removes 'helm.sh/resource-policy: keep' annotation from ComponentDefinitions, ConfigMaps, etc.
+  # Without this, resources are kept after Helm uninstall, blocking CRD deletion
+  # Reference: https://kubeblocks.io/docs/preview/user_docs/references/install-addons
+  values = [
+    yamlencode({
+      extra = {
+        keepResource = false
+      }
+    })
+  ]
 
   # Ensure operator is fully deployed before installing addons
   depends_on = [
