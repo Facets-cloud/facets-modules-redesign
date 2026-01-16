@@ -22,6 +22,16 @@ variable "instance" {
           enabled = optional(bool, true)
           version = optional(string, "latest")
         }), {})
+        ebs_csi = optional(object({
+          enabled = optional(bool, true)
+          version = optional(string, "latest")
+        }), {})
+        additional_addons = optional(map(object({
+          enabled                  = optional(bool, true)
+          version                  = optional(string, "latest")
+          configuration_values     = optional(string)
+          service_account_role_arn = optional(string)
+        })), {})
       }), {})
 
       managed_node_groups = optional(map(object({
@@ -40,8 +50,8 @@ variable "instance" {
   })
 
   validation {
-    condition     = contains(["1.28", "1.29", "1.30", "1.31"], var.instance.spec.cluster_version)
-    error_message = "Kubernetes version must be one of: 1.28, 1.29, 1.30, 1.31"
+    condition     = contains(["1.28", "1.29", "1.30", "1.31", "1.32", "1.33", "1.34", "1.35", "1.36", "1.37"], var.instance.spec.cluster_version)
+    error_message = "Kubernetes version must be one of: 1.28, 1.29, 1.30, 1.31, 1.32, 1.33, 1.34, 1.35, 1.36, 1.37"
   }
 }
 
