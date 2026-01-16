@@ -98,6 +98,7 @@ spec:
       type: object
       title: Import Existing Cache (Terraform State Only)
       description: Import an existing Azure Redis Cache into Terraform state management
+      x-ui-overrides-only: true
       properties:
         cache_resource_id:
           type: string
