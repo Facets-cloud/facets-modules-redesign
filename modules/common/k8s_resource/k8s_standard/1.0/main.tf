@@ -7,7 +7,7 @@ locals {
   namespace_spec       = lookup(lookup(local.data, "metadata", {}), "namespace", null)   # in the .spec.resource.metadata block
   namespace            = coalesce(local.namespace_spec, local.namespace_meta, var.environment.namespace)
   resource_name_meta   = lookup(local.metadata, "name", null)                     # in the .metadata block
-  resource_name_spec   = lookup(lookup(local.data, "metadata", {}), "name", null) # in the .spec.resource.metadata block
+  resource_name_spec   = lookup(lookup(var.instance.spec.resource, "metadata", {}), "name", null) # in var.instance.spec.resource.metadata.name
   resource_name        = coalesce(local.resource_name_spec, local.resource_name_meta, var.instance_name)
   name                 = length(local.resource_name) >= 63 ? substr(md5("${local.resource_name}"), 0, 20) : "${local.resource_name}"
   additional_resources = { for k, v in lookup(local.spec, "additional_resources", {}) : k => v.configuration }
