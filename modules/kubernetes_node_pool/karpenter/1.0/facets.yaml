@@ -1,0 +1,155 @@
+clouds:
+    - aws
+description: |
+    Creates Karpenter NodePool and EC2NodeClass for EKS clusters.
+    This module requires the karpenter controller module to be deployed first.
+    Each instance creates a single NodePool. Create multiple instances for multiple node pools.
+flavor: karpenter
+inputs:
+    cloud_account:
+        description: The AWS Cloud Account for EC2 instance provisioning
+        displayName: Cloud Account
+        optional: false
+        providers:
+            - aws
+        type: '@facets/aws_cloud_account'
+    kubernetes_details:
+        description: The EKS cluster where NodePool will be created
+        displayName: Kubernetes Cluster
+        optional: false
+        providers:
+            - kubernetes
+        type: '@facets/kubernetes-details'
+    network_details:
+        default:
+            resource_name: default
+            resource_type: network
+        displayName: Network
+        type: '@facets/aws-vpc-details'
+    karpenter_details:
+        description: Karpenter controller details (from karpenter module)
+        displayName: Karpenter Controller
+        optional: false
+        type: '@facets/karpenter-details'
+intent: kubernetes_node_pool
+outputs:
+  default:
+    type: '@facets/kubernetes_nodepool'
+    title: Kubernetes Nodepool
+  attributes:
+    type: '@facets/aws_karpenter_nodepool'
+    title: AWS Karpenter NodePool
+sample:
+    disabled: false
+    flavor: karpenter
+    kind: kubernetes_node_pool
+    spec:
+        instance_families:
+            - t3
+            - t3a
+        instance_sizes:
+            - medium
+            - large
+            - xlarge
+        capacity_types:
+            - on-demand
+            - spot
+        architecture:
+            - amd64
+        cpu_limits: "1000"
+        memory_limits: 1000Gi
+        enable_consolidation: true
+    version: "1.0"
+spec:
+    description: Configure Karpenter NodePool for your EKS cluster
+    properties:
+        instance_families:
+            default:
+                - t3
+                - t3a
+            description: EC2 instance families to use (e.g., t3, c5, r5, m5)
+            items:
+                type: string
+            title: Instance Families
+            type: array
+            x-ui-placeholder: t3, c5, m5
+        instance_sizes:
+            default:
+                - medium
+                - large
+                - xlarge
+            description: Instance sizes to allow (e.g., medium, large, xlarge)
+            items:
+                type: string
+            title: Instance Sizes
+            type: array
+            x-ui-placeholder: medium, large
+        capacity_types:
+            default:
+                - on-demand
+                - spot
+            description: Capacity types (on-demand, spot, or both)
+            items:
+                enum:
+                    - on-demand
+                    - spot
+                type: string
+            title: Capacity Types
+            type: array
+        architecture:
+            default:
+                - amd64
+            description: CPU architecture (amd64, arm64, or both)
+            items:
+                enum:
+                    - amd64
+                    - arm64
+                type: string
+            title: Architecture
+            type: array
+        cpu_limits:
+            default: "1000"
+            description: Maximum CPU cores across all nodes in this pool
+            title: CPU Limits
+            type: string
+            x-ui-placeholder: "1000"
+        memory_limits:
+            default: 1000Gi
+            description: Maximum memory across all nodes in this pool
+            title: Memory Limits
+            type: string
+            x-ui-placeholder: 1000Gi
+        enable_consolidation:
+            default: true
+            description: Enable automatic node consolidation to optimize costs
+            title: Enable Consolidation
+            type: boolean
+        labels:
+            description: Kubernetes labels to apply to provisioned nodes
+            title: Node Labels
+            type: object
+            x-ui-yaml-editor: true
+        taints:
+            description: Kubernetes taints to apply to provisioned nodes
+            title: Node Taints
+            type: object
+            x-ui-yaml-editor: true
+        tags:
+            description: Additional AWS tags to apply to provisioned instances
+            title: Instance Tags
+            type: object
+            x-ui-yaml-editor: true
+    title: Karpenter NodePool Configuration
+    type: object
+    x-ui-order:
+        - instance_families
+        - instance_sizes
+        - capacity_types
+        - architecture
+        - cpu_limits
+        - memory_limits
+        - enable_consolidation
+        - labels
+        - taints
+        - tags
+version: "1.0"
