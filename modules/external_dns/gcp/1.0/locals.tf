@@ -2,9 +2,10 @@ locals {
   # Advanced configuration from instance.advanced.externaldns (all optional)
   advanced = lookup(var.instance, "advanced", {})
 
-  # Namespace and secret
-  namespace   = "external-dns"
-  secret_name = "${lower(var.instance_name)}-dns-secret"
+  # Namespaces and secret
+  namespace              = "external-dns"
+  cert_manager_namespace = "cert-manager"
+  secret_name            = "${lower(var.instance_name)}-dns-secret"
 
   # Cluster details from GKE
   cluster_name = var.inputs.kubernetes_details.attributes.cluster_name

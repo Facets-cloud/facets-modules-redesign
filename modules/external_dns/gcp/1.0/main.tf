@@ -46,12 +46,27 @@ resource "kubernetes_namespace" "namespace" {
   }
 }
 
-# Kubernetes secret with GCP DNS credentials
+# Kubernetes secret with GCP DNS credentials for external-dns
+# This secret is used by the external-dns pod in its own namespace
 resource "kubernetes_secret" "external_dns_gcp_secret" {
   depends_on = [kubernetes_namespace.namespace]
   metadata {
     name      = local.secret_name
     namespace = local.namespace
+  }
+  data = {
+    "credentials.json" = base64decode(google_service_account_key.external_dns_key.private_key)
+  }
+}
+
+# Kubernetes secret with GCP DNS credentials for cert-manager
+# This secret is used by cert-manager for DNS-01 ACME challenges
+# cert-manager pods can only access secrets in their own namespace
+# NOTE: The cert-manager namespace is created by the cert-manager module
+resource "kubernetes_secret" "cert_manager_gcp_secret" {
+  metadata {
+    name      = local.secret_name
+    namespace = local.cert_manager_namespace
   }
   data = {
     "credentials.json" = base64decode(google_service_account_key.external_dns_key.private_key)
