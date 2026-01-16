@@ -1,0 +1,555 @@
+clouds:
+    - aws
+description: |
+    Traefik ingress controller using Kubernetes Gateway API with support for domains, rules,
+    session affinity, CORS, custom error pages, IP whitelisting, and SSL redirection.
+    Uses Gateway and HTTPRoute resources instead of IngressRoute CRDs.
+flavor: traefik
+inputs:
+    kubernetes_cluster:
+        description: Kubernetes cluster where Traefik will be deployed
+        displayName: Kubernetes Cluster
+        optional: false
+        providers:
+            - kubernetes
+            - helm
+        type: '@outputs/kubernetes'
+    traefik_crds:
+        description: Traefik CRDs module (must be deployed before ingress)
+        displayName: Traefik CRDs
+        optional: false
+        type: '@outputs/traefik_crds'
+    gateway_api_crds:
+        description: Kubernetes Gateway API CRDs module (must be deployed before ingress)
+        displayName: Gateway API CRDs
+        optional: false
+        type: '@outputs/gateway_api_crds'
+intent: ingress
+outputs:
+    default:
+        mock:
+            attributes:
+                active_rules: mock-string-value
+                basic_auth_enabled: mock-string-value
+                configured_domains: mock-string-value
+                grpc_enabled: mock-string-value
+                helm_release_name: mock-string-value
+                helm_release_version: mock-string-value
+                ingress_class_name: mock-string-value
+                load_balancer_hostname: mock-string-value
+                load_balancer_ip: mock-string-value
+                namespace: mock-string-value
+                service_name: mock-string-value
+                service_type: mock-string-value
+                ssl_redirect_enabled: mock-string-value
+                total_rules: mock-string-value
+            interfaces:
+                http:
+                    host: mock-string-value
+                    port: mock-string-value
+                    protocol: mock-string-value
+                https:
+                    host: mock-string-value
+                    port: mock-string-value
+                    protocol: mock-string-value
+        title: Traefik Ingress Controller
+        type: '@outputs/ingress'
+sample:
+    disabled: false
+    flavor: traefik
+    kind: ingress
+    spec:
+        basic_auth: false
+        disable_base_domain: false
+        domains:
+            example:
+                domain: example.com
+        force_ssl_redirection: true
+        grpc: false
+        namespace: traefik
+        private: false
+        replicas: 2
+        rules:
+            example-rule:
+                path: /
+                port: "80"
+                service_name: example-service
+        service_type: LoadBalancer
+    version: "1.0"
+spec:
+    description: Configure Traefik ingress with Nginx-compatible schema
+    properties:
+        basic_auth:
+            default: false
+            description: Enable basic authentication
+            title: Enable Basic Auth
+            type: boolean
+        basic_auth_secret:
+            description: Kubernetes secret name containing htpasswd data
+            title: Basic Auth Secret
+            type: string
+            x-ui-visible-if:
+                field: spec.basic_auth
+                values:
+                    - true
+        custom_error_pages:
+            description: Custom HTML error pages
+            patternProperties:
+                ^error-[0-9]+$:
+                    properties:
+                        error_code:
+                            description: Error code (e.g., 404, 503)
+                            title: HTTP Error Code
+                            type: string
+                        page_content:
+                            description: HTML content for error page
+                            title: Page Content
+                            type: string
+                            x-ui-textarea: true
+                    required:
+                        - error_code
+                        - page_content
+                    type: object
+            title: Custom Error Pages
+            type: object
+            x-ui-toggle: true
+        disable_base_domain:
+            default: false
+            description: Disable routing to base domain without prefix
+            title: Disable Base Domain
+            type: boolean
+        certificate:
+            description: Certificate configuration for base domain (uses cert-manager)
+            properties:
+                use_cert_manager:
+                    default: false
+                    description: Enable automatic TLS certificate generation for base domain using cert-manager. Requires cert-manager to be installed in the cluster.
+                    title: Use cert-manager
+                    type: boolean
+                issuer_name:
+                    default: letsencrypt-prod
+                    description: Name of the ClusterIssuer or Issuer to use
+                    title: Issuer Name
+                    type: string
+                    x-ui-visible-if:
+                        field: spec.certificate.use_cert_manager
+                        values:
+                            - true
+                issuer_kind:
+                    default: ClusterIssuer
+                    description: Kind of issuer (ClusterIssuer or Issuer)
+                    enum:
+                        - ClusterIssuer
+                        - Issuer
+                    title: Issuer Kind
+                    type: string
+                    x-ui-visible-if:
+                        field: spec.certificate.use_cert_manager
+                        values:
+                            - true
+            title: Certificate Configuration
+            type: object
+            x-ui-toggle: true
+        domains:
+            description: Domain configurations with TLS settings
+            patternProperties:
+                ^[a-zA-Z0-9_-]+$:
+                    properties:
+                        alias:
+                            description: Domain alias identifier
+                            title: Alias
+                            type: string
+                        custom_tls:
+                            description: Custom TLS certificate configuration
+                            properties:
+                                certificate:
+                                    description: PEM-encoded certificate (supports ${blueprint.self.secrets.X})
+                                    title: TLS Certificate
+                                    type: string
+                                    x-ui-textarea: true
+                                    x-ui-visible-if:
+                                        field: spec.domains.{{this}}.custom_tls.enabled
+                                        values:
+                                            - true
+                                enabled:
+                                    default: false
+                                    title: Enable Custom TLS
+                                    type: boolean
+                                private_key:
+                                    description: PEM-encoded private key (supports ${blueprint.self.secrets.X})
+                                    title: Private Key
+                                    type: string
+                                    x-ui-textarea: true
+                                    x-ui-visible-if:
+                                        field: spec.domains.{{this}}.custom_tls.enabled
+                                        values:
+                                            - true
+                            title: Custom TLS
+                            type: object
+                            x-ui-toggle: true
+                        domain:
+                            description: Base domain name (e.g., workinsync.io)
+                            title: Domain Name
+                            type: string
+                    required:
+                        - domain
+                    type: object
+            title: Domains
+            type: object
+        force_ssl_redirection:
+            default: true
+            description: Automatically redirect HTTP to HTTPS
+            title: Force SSL Redirection
+            type: boolean
+        global_annotations:
+            description: Annotations applied to Traefik service and resources
+            title: Global Annotations
+            type: object
+            x-ui-toggle: true
+            x-ui-yaml-editor: true
+        grpc:
+            default: false
+            description: Enable gRPC protocol support
+            title: Enable gRPC
+            type: boolean
+        ingress_chart_version:
+            default: 38.0.2
+            description: Traefik Helm chart version
+            title: Traefik Chart Version
+            type: string
+        ip_whitelist:
+            description: IP whitelisting for specific paths (actuator, prometheus, metrics)
+            properties:
+                allowed_ips:
+                    description: Allowed IP ranges in CIDR notation
+                    items:
+                        type: string
+                    title: Allowed IP Ranges
+                    type: array
+                    x-ui-visible-if:
+                        field: spec.ip_whitelist.enabled
+                        values:
+                            - true
+                enabled:
+                    default: false
+                    description: Enable IP whitelisting for monitoring endpoints
+                    title: Enable IP Whitelist
+                    type: boolean
+                protected_paths:
+                    default:
+                        - actuator
+                        - prometheus
+                        - /metrics
+                    description: Paths to protect (regex patterns)
+                    items:
+                        type: string
+                    title: Protected Paths
+                    type: array
+                    x-ui-visible-if:
+                        field: spec.ip_whitelist.enabled
+                        values:
+                            - true
+            title: Global IP Whitelist
+            type: object
+            x-ui-toggle: true
+        namespace:
+            default: traefik
+            description: Kubernetes namespace for Traefik
+            title: Namespace
+            type: string
+        create_namespace:
+            default: true
+            description: Create the namespace if it doesn't exist. Set to false when using existing namespaces like 'default'
+            title: Create Namespace
+            type: boolean
+        pdb:
+            description: Pod disruption budget configuration
+            properties:
+                maxUnavailable:
+                    default: "1"
+                    description: Maximum unavailable pods (number or percentage)
+                    title: Max Unavailable
+                    type: string
+                minAvailable:
+                    description: Minimum available pods (number or percentage)
+                    title: Min Available
+                    type: string
+            title: Pod Disruption Budget
+            type: object
+            x-ui-toggle: true
+        private:
+            default: false
+            description: Use internal load balancer
+            title: Private Ingress
+            type: boolean
+        replicas:
+            default: 2
+            description: Number of Traefik replicas
+            maximum: 10
+            minimum: 1
+            title: Replicas
+            type: integer
+        resources:
+            properties:
+                limits:
+                    properties:
+                        cpu:
+                            default: 500m
+                            title: CPU Limit
+                            type: string
+                        memory:
+                            default: 512Mi
+                            title: Memory Limit
+                            type: string
+                    title: Resource Limits
+                    type: object
+                requests:
+                    properties:
+                        cpu:
+                            default: 100m
+                            title: CPU Request
+                            type: string
+                        memory:
+                            default: 128Mi
+                            title: Memory Request
+                            type: string
+                    title: Resource Requests
+                    type: object
+            title: Resource Limits
+            type: object
+            x-ui-toggle: true
+        rules:
+            description: Ingress routing rules with domain prefix and path
+            patternProperties:
+                ^[a-zA-Z0-9_-]+$:
+                    properties:
+                        annotations:
+                            description: Additional annotations for this rule
+                            title: Rule Annotations
+                            type: object
+                            x-ui-toggle: true
+                            x-ui-yaml-editor: true
+                        cors:
+                            description: Cross-Origin Resource Sharing settings
+                            properties:
+                                allowed_methods:
+                                    items:
+                                        enum:
+                                            - GET
+                                            - POST
+                                            - PUT
+                                            - DELETE
+                                            - PATCH
+                                            - OPTIONS
+                                            - HEAD
+                                        type: string
+                                    title: Allowed Methods
+                                    type: array
+                                    x-ui-visible-if:
+                                        field: spec.rules.{{this}}.cors.enable
+                                        values:
+                                            - true
+                                allowed_origins:
+                                    items:
+                                        type: string
+                                    title: Allowed Origins
+                                    type: array
+                                    x-ui-visible-if:
+                                        field: spec.rules.{{this}}.cors.enable
+                                        values:
+                                            - true
+                                enable:
+                                    default: false
+                                    title: Enable CORS
+                                    type: boolean
+                            title: CORS Configuration
+                            type: object
+                            x-ui-toggle: true
+                        disable:
+                            default: false
+                            description: Disable this routing rule
+                            title: Disable Rule
+                            type: boolean
+                        domain_prefix:
+                            default: '*'
+                            description: Subdomain prefix or * for wildcard
+                            title: Domain Prefix
+                            type: string
+                        enable_header_based_routing:
+                            default: false
+                            description: Route based on HTTP headers
+                            title: Enable Header-Based Routing
+                            type: boolean
+                        enable_rewrite_target:
+                            default: false
+                            description: Strip path prefix before forwarding
+                            title: Enable Path Rewrite
+                            type: boolean
+                        header_routing_rules:
+                            description: Header matching rules
+                            patternProperties:
+                                ^[a-zA-Z0-9_-]+$:
+                                    properties:
+                                        header_name:
+                                            title: Header Name
+                                            type: string
+                                        header_value:
+                                            title: Header Value
+                                            type: string
+                                        match_type:
+                                            default: exact
+                                            enum:
+                                                - exact
+                                                - regex
+                                            title: Match Type
+                                            type: string
+                                    type: object
+                            title: Header Routing Rules
+                            type: object
+                            x-ui-toggle: true
+                            x-ui-visible-if:
+                                field: spec.rules.{{this}}.enable_header_based_routing
+                                values:
+                                    - true
+                        namespace:
+                            description: Service namespace (optional, supports ${service.X.out.attributes.namespace})
+                            title: Namespace
+                            type: string
+                        path:
+                            default: /
+                            description: URL path for this rule
+                            title: Path
+                            type: string
+                        port:
+                            default: "80"
+                            description: Service port number or name
+                            title: Service Port
+                            type: string
+                        service_name:
+                            description: Kubernetes service name (supports ${service.X.out.attributes.service_name})
+                            title: Service Name
+                            type: string
+                        session_affinity:
+                            description: Sticky session configuration
+                            properties:
+                                session_cookie_expires:
+                                    default: 3600
+                                    title: Cookie Expires (seconds)
+                                    type: integer
+                                session_cookie_max_age:
+                                    default: 3600
+                                    title: Cookie Max Age (seconds)
+                                    type: integer
+                                session_cookie_name:
+                                    default: route
+                                    title: Cookie Name
+                                    type: string
+                            title: Session Affinity
+                            type: object
+                            x-ui-toggle: true
+                    required:
+                        - service_name
+                        - port
+                        - path
+                    type: object
+            title: Routing Rules
+            type: object
+        security_headers:
+            description: Global security headers applied to all responses
+            properties:
+                content_security_policy:
+                    title: Content-Security-Policy
+                    type: string
+                    x-ui-textarea: true
+                referrer_policy:
+                    title: Referrer-Policy
+                    type: string
+                x_content_type_options:
+                    title: X-Content-Type-Options
+                    type: string
+                x_frame_options:
+                    title: X-Frame-Options
+                    type: string
+                x_xss_protection:
+                    title: X-XSS-Protection
+                    type: string
+            title: Security Headers
+            type: object
+            x-ui-toggle: true
+        global_header_routing:
+            description: Require specific headers for all routes to match
+            properties:
+                enabled:
+                    default: false
+                    description: Enable global header-based routing
+                    title: Enable Global Header Routing
+                    type: boolean
+                rules:
+                    description: Header matching rules applied to all routes
+                    patternProperties:
+                        ^[a-zA-Z0-9_-]+$:
+                            properties:
+                                header_name:
+                                    description: HTTP header name to match
+                                    title: Header Name
+                                    type: string
+                                header_value:
+                                    description: Header value to match
+                                    title: Header Value
+                                    type: string
+                                match_type:
+                                    default: exact
+                                    description: Match type (exact or regex)
+                                    enum:
+                                        - exact
+                                        - regex
+                                    title: Match Type
+                                    type: string
+                            required:
+                                - header_name
+                                - header_value
+                            type: object
+                    title: Header Rules
+                    type: object
+                    x-ui-visible-if:
+                        field: spec.global_header_routing.enabled
+                        values:
+                            - true
+            title: Global Header Routing
+            type: object
+            x-ui-toggle: true
+        service_type:
+            default: LoadBalancer
+            description: Kubernetes service type
+            enum:
+                - LoadBalancer
+                - ClusterIP
+                - NodePort
+            title: Service Type
+            type: string
+    required:
+        - domains
+        - rules
+    title: Traefik Ingress Configuration
+    type: object
+    x-ui-order:
+        - namespace
+        - create_namespace
+        - service_type
+        - replicas
+        - private
+        - basic_auth
+        - grpc
+        - force_ssl_redirection
+        - disable_base_domain
+        - certificate
+        - domains
+        - rules
+        - security_headers
+        - global_header_routing
+        - ip_whitelist
+        - custom_error_pages
+        - pdb
+        - resources
+        - global_annotations
+version: "1.0"
