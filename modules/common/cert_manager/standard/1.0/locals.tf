@@ -130,10 +130,10 @@ locals {
     }
   }
 
-  # Combine HTTP and DNS validations (skip DNS if disabled)
+  # Combine HTTP and DNS validations (skip DNS if disabled or no external-dns available)
   environments = merge(
     local.http_validations,
-    local.disable_dns_validation ? {} : local.dns01_validations
+    (!local.disable_dns_validation && local.has_external_dns) ? local.dns01_validations : {}
   )
 
   # Nodepool configuration from inputs
