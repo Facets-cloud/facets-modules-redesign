@@ -89,37 +89,6 @@ spec:
           title: Memory Request
           description: Memory request for KubeBlocks controller
           default: 512Mi
-    database_addons:
-      type: object
-      title: Database Addons
-      description: Install database addons (ClusterDefinitions and ComponentDefinitions)
-        as Terraform-managed Helm releases
-      properties:
-        postgresql:
-          type: boolean
-          title: PostgreSQL
-          description: Install PostgreSQL addon
-          default: false
-        mysql:
-          type: boolean
-          title: MySQL
-          description: Install MySQL addon
-          default: false
-        mongodb:
-          type: boolean
-          title: MongoDB
-          description: Install MongoDB addon
-          default: false
-        redis:
-          type: boolean
-          title: Redis
-          description: Install Redis addon
-          default: false
-        kafka:
-          type: boolean
-          title: Kafka
-          description: Install Kafka addon
-          default: false
   required:
   - version
 outputs:
@@ -145,9 +114,3 @@ sample:
       memory_limit: 1Gi
       cpu_request: 500m
       memory_request: 512Mi
-    database_addons:
-      postgresql: false
-      mysql: false
-      mongodb: false
-      redis: false
-      kafka: false
