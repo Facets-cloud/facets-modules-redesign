@@ -20,7 +20,6 @@ outputs:
         mock:
             attributes:
                 crds_installed: mock-string-value
-                experimental_installed: mock-string-value
                 gateway_api_version: mock-string-value
         title: Gateway API CRDs
         type: '@outputs/gateway_api_crds'
@@ -30,24 +29,17 @@ sample:
     kind: gateway_api_crds
     spec:
         gateway_api_version: v1.2.0
-        install_experimental: false
     version: "1.0"
 spec:
     description: Configure Kubernetes Gateway API CRDs installation
     properties:
         gateway_api_version:
             default: v1.2.0
-            description: Gateway API version to install (e.g., v1.2.0, v1.1.0)
+            description: Gateway API Helm chart version to install (e.g., v1.2.0, v1.1.0)
             title: Gateway API Version
             type: string
-        install_experimental:
-            default: false
-            description: Install experimental CRDs (TCPRoute, TLSRoute, UDPRoute, etc.)
-            title: Install Experimental CRDs
-            type: boolean
     title: Gateway API CRDs Configuration
     type: object
     x-ui-order:
         - gateway_api_version
-        - install_experimental
 version: "1.0"

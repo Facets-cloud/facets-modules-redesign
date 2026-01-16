@@ -6,37 +6,13 @@ locals {
   crds_url            = "https://github.com/kubernetes-sigs/gateway-api/releases/download/${local.gateway_api_version}/standard-install.yaml"
 }
 
-# Fetch Gateway API CRDs manifest
-data "http" "gateway_api_crds" {
-  url = local.crds_url
-}
-
-# Install Gateway API CRDs using null_resource with kubectl
+# Install Gateway API CRDs using kubectl apply
 resource "null_resource" "gateway_api_crds" {
   triggers = {
     version = local.gateway_api_version
   }
 
   provisioner "local-exec" {
-    command = <<-EOT
-      kubectl apply -f ${local.crds_url}
-    EOT
+    command = "kubectl apply -f ${local.crds_url}"
   }
-}
-
-# Alternative: Use experimental CRDs if needed (includes TCPRoute, TLSRoute, etc.)
-resource "null_resource" "gateway_api_experimental_crds" {
-  count = lookup(var.instance.spec, "install_experimental", false) ? 1 : 0
-
-  triggers = {
-    version = local.gateway_api_version
-  }
-
-  provisioner "local-exec" {
-    command = <<-EOT
-      kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/${local.gateway_api_version}/experimental-install.yaml
-    EOT
-  }
-
-  depends_on = [null_resource.gateway_api_crds]
 }

@@ -4,8 +4,7 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
-      gateway_api_version  = optional(string, "v1.2.0")
-      install_experimental = optional(bool, false)
+      gateway_api_version = optional(string, "v1.2.0")
     })
   })
 }
