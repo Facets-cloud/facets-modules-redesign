@@ -283,10 +283,10 @@ module "gateway" {
     spec = {
       gatewayClassName = local.name
       listeners = [
-        # HTTP listener - always enabled for routing
+        # HTTP listener - port must match Traefik's web entrypoint (8000)
         {
-          name     = "http"
-          port     = 80
+          name     = "web"
+          port     = 8000
           protocol = "HTTP"
           allowedRoutes = {
             namespaces = {
@@ -294,10 +294,10 @@ module "gateway" {
             }
           }
         },
-        # HTTPS listener with TLS
+        # HTTPS listener - port must match Traefik's websecure entrypoint (8443)
         {
-          name     = "https"
-          port     = 443
+          name     = "websecure"
+          port     = 8443
           protocol = "HTTPS"
           tls = {
             mode = "Terminate"
@@ -682,41 +682,32 @@ module "http_routes" {
 
       # Routing rules
       rules = [{
-        # Match conditions
-        matches = concat(
-          # Path matching
-          lookup(each.value.rule, "path", "/") != "/" ? [{
-            path = {
-              type  = "PathPrefix"
-              value = lookup(each.value.rule, "path", "/")
-            }
-          }] : [{
-            path = {
-              type  = "PathPrefix"
-              value = "/"
-            }
-          }],
-          # Header matching - global headers
-          lookup(local.global_header_routing, "enabled", false) ? [
-            for hr_key, hr in lookup(local.global_header_routing, "rules", {}) : {
-              headers = [{
+        # Match conditions - combine path AND headers in single match (AND logic)
+        matches = [{
+          path = {
+            type  = "PathPrefix"
+            value = lookup(each.value.rule, "path", "/")
+          }
+          # Include headers only if header-based routing is enabled (combines with path as AND)
+          headers = concat(
+            # Global header rules
+            lookup(local.global_header_routing, "enabled", false) ? [
+              for hr_key, hr in lookup(local.global_header_routing, "rules", {}) : {
                 name  = hr.header_name
                 value = hr.header_value
                 type  = lookup(hr, "match_type", "exact") == "regex" ? "RegularExpression" : "Exact"
-              }]
-            }
-          ] : [],
-          # Header matching - per-rule headers
-          lookup(each.value.rule, "enable_header_based_routing", false) ? [
-            for hr_key, hr in lookup(each.value.rule, "header_routing_rules", {}) : {
-              headers = [{
+              }
+            ] : [],
+            # Per-rule header rules
+            lookup(each.value.rule, "enable_header_based_routing", false) ? [
+              for hr_key, hr in lookup(each.value.rule, "header_routing_rules", {}) : {
                 name  = hr.header_name
                 value = hr.header_value
                 type  = lookup(hr, "match_type", "exact") == "regex" ? "RegularExpression" : "Exact"
-              }]
-            }
-          ] : []
-        )
+              }
+            ] : []
+          )
+        }]
 
         # Backend service references
         backendRefs = [{
