@@ -3,7 +3,8 @@ clouds:
 description: |
     Traefik ingress controller using Kubernetes Gateway API with support for domains, rules,
     session affinity, CORS, custom error pages, IP whitelisting, and SSL redirection.
-    Uses Gateway and HTTPRoute resources instead of IngressRoute CRDs.
+    Uses Gateway and HTTPRoute resources. Includes optional CRD installation (Traefik CRDs and Gateway API CRDs).
+    Set enable_crds=true for first instance, false for additional instances in the same cluster.
 flavor: traefik
 inputs:
     kubernetes_cluster:
@@ -14,16 +15,6 @@ inputs:
             - kubernetes
             - helm
         type: '@outputs/kubernetes'
-    traefik_crds:
-        description: Traefik CRDs module (must be deployed before ingress)
-        displayName: Traefik CRDs
-        optional: false
-        type: '@outputs/traefik_crds'
-    gateway_api_crds:
-        description: Kubernetes Gateway API CRDs module (must be deployed before ingress)
-        displayName: Gateway API CRDs
-        optional: false
-        type: '@outputs/gateway_api_crds'
 intent: ingress
 outputs:
     default:
@@ -61,19 +52,16 @@ sample:
     spec:
         basic_auth: false
         disable_base_domain: false
-        domains:
-            example:
-                domain: example.com
+        domains: {}
+        enable_crds: true
         force_ssl_redirection: true
+        gateway_api_version: v1.3.0
+        ingress_chart_version: 38.0.2
         grpc: false
         namespace: traefik
         private: false
         replicas: 2
-        rules:
-            example-rule:
-                path: /
-                port: "80"
-                service_name: example-service
+        rules: {}
         service_type: LoadBalancer
     version: "1.0"
 spec:
@@ -118,6 +106,20 @@ spec:
             description: Disable routing to base domain without prefix
             title: Disable Base Domain
             type: boolean
+        enable_crds:
+            default: true
+            description: Install Traefik and Gateway API CRDs. Set to true for first instance, false for additional instances in the same cluster.
+            title: Enable CRDs Installation
+            type: boolean
+        gateway_api_version:
+            default: v1.3.0
+            description: Kubernetes Gateway API version to install (e.g., v1.2.0, v1.1.0)
+            title: Gateway API Version
+            type: string
+            x-ui-visible-if:
+                field: spec.enable_crds
+                values:
+                    - true
         certificate:
             description: Certificate configuration for base domain (uses cert-manager)
             properties:
@@ -151,42 +153,18 @@ spec:
             type: object
             x-ui-toggle: true
         domains:
-            description: Domain configurations with TLS settings
+            description: Domain configurations with optional ACM certificate
             patternProperties:
                 ^[a-zA-Z0-9_-]+$:
                     properties:
+                        acm_certificate_arn:
+                            description: AWS ACM certificate ARN for TLS termination at load balancer
+                            title: ACM Certificate ARN
+                            type: string
                         alias:
                             description: Domain alias identifier
                             title: Alias
                             type: string
-                        custom_tls:
-                            description: Custom TLS certificate configuration
-                            properties:
-                                certificate:
-                                    description: PEM-encoded certificate (supports ${blueprint.self.secrets.X})
-                                    title: TLS Certificate
-                                    type: string
-                                    x-ui-textarea: true
-                                    x-ui-visible-if:
-                                        field: spec.domains.{{this}}.custom_tls.enabled
-                                        values:
-                                            - true
-                                enabled:
-                                    default: false
-                                    title: Enable Custom TLS
-                                    type: boolean
-                                private_key:
-                                    description: PEM-encoded private key (supports ${blueprint.self.secrets.X})
-                                    title: Private Key
-                                    type: string
-                                    x-ui-textarea: true
-                                    x-ui-visible-if:
-                                        field: spec.domains.{{this}}.custom_tls.enabled
-                                        values:
-                                            - true
-                            title: Custom TLS
-                            type: object
-                            x-ui-toggle: true
                         domain:
                             description: Base domain name (e.g., workinsync.io)
                             title: Domain Name
@@ -253,7 +231,7 @@ spec:
             type: object
             x-ui-toggle: true
         namespace:
-            default: traefik
+            default: default
             description: Kubernetes namespace for Traefik
             title: Namespace
             type: string
@@ -447,6 +425,12 @@ spec:
                             title: Session Affinity
                             type: object
                             x-ui-toggle: true
+                        response_headers:
+                            description: Custom response headers for this specific rule (key-value pairs)
+                            title: Response Headers
+                            type: object
+                            x-ui-toggle: true
+                            x-ui-yaml-editor: true
                     required:
                         - service_name
                         - port
@@ -454,28 +438,12 @@ spec:
                     type: object
             title: Routing Rules
             type: object
-        security_headers:
-            description: Global security headers applied to all responses
-            properties:
-                content_security_policy:
-                    title: Content-Security-Policy
-                    type: string
-                    x-ui-textarea: true
-                referrer_policy:
-                    title: Referrer-Policy
-                    type: string
-                x_content_type_options:
-                    title: X-Content-Type-Options
-                    type: string
-                x_frame_options:
-                    title: X-Frame-Options
-                    type: string
-                x_xss_protection:
-                    title: X-XSS-Protection
-                    type: string
-            title: Security Headers
+        global_response_headers:
+            description: Response headers applied to all routes (can include security headers like X-Frame-Options, Content-Security-Policy, etc.)
+            title: Global Response Headers
             type: object
             x-ui-toggle: true
+            x-ui-yaml-editor: true
         global_header_routing:
             description: Require specific headers for all routes to match
             properties:
@@ -535,6 +503,9 @@ spec:
     x-ui-order:
         - namespace
         - create_namespace
+        - enable_crds
+        - gateway_api_version
+        - ingress_chart_version
         - service_type
         - replicas
         - private
@@ -545,7 +516,7 @@ spec:
         - certificate
         - domains
         - rules
-        - security_headers
+        - global_response_headers
         - global_header_routing
         - ip_whitelist
         - custom_error_pages

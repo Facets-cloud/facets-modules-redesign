@@ -13,13 +13,9 @@ variable "instance" {
       grpc              = optional(bool, false)
 
       domains = map(object({
-        domain = string
-        alias  = optional(string)
-        custom_tls = optional(object({
-          enabled     = optional(bool, false)
-          certificate = optional(string)
-          private_key = optional(string)
-        }), {})
+        domain              = string
+        alias               = optional(string)
+        acm_certificate_arn = optional(string)
       }))
 
       rules = map(object({
@@ -50,12 +46,19 @@ variable "instance" {
           allowed_methods = optional(list(string), [])
         }), {})
 
+        # Custom response headers for this rule
+        response_headers = optional(map(string), {})
+
         annotations = optional(map(string), {})
       }))
 
       force_ssl_redirection = optional(bool, true)
       ingress_chart_version = optional(string, "38.0.2")
       disable_base_domain   = optional(bool, false)
+
+      # CRD installation - set to true for first instance, false for others
+      enable_crds         = optional(bool, true)
+      gateway_api_version = optional(string, "v1.4.0")
 
       certificate = optional(object({
         use_cert_manager = optional(bool, false)
@@ -79,13 +82,8 @@ variable "instance" {
         allowed_ips     = optional(list(string), [])
       }), {})
 
-      security_headers = optional(object({
-        x_frame_options         = optional(string, "SAMEORIGIN")
-        content_security_policy = optional(string)
-        referrer_policy         = optional(string, "same-origin")
-        x_content_type_options  = optional(string, "nosniff")
-        x_xss_protection        = optional(string, "1; mode=block")
-      }), {})
+      # Global response headers (applied to all routes) - can include security headers
+      global_response_headers = optional(map(string), {})
 
       global_header_routing = optional(object({
         enabled = optional(bool, false)
@@ -143,17 +141,6 @@ variable "inputs" {
         cluster_endpoint       = string
         cluster_ca_certificate = string
         cluster_name           = optional(string)
-      })
-    })
-    traefik_crds = object({
-      attributes = object({
-        crds_installed = string
-      })
-    })
-    gateway_api_crds = object({
-      attributes = object({
-        crds_installed      = string
-        gateway_api_version = string
       })
     })
   })

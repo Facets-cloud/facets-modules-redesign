@@ -35,13 +35,13 @@ locals {
   }
 
   # Extract configuration sections - merge base domain with user-defined domains
-  domains                = merge(lookup(local.spec, "domains", {}), local.add_base_domain)
-  rules                  = lookup(local.spec, "rules", {})
-  security_headers       = lookup(local.spec, "security_headers", {})
-  global_header_routing = lookup(local.spec, "global_header_routing", {})
-  ip_whitelist           = lookup(local.spec, "ip_whitelist", {})
-  custom_errors          = lookup(local.spec, "custom_error_pages", {})
-  resources_config       = lookup(local.spec, "resources", {})
+  domains                 = merge(lookup(local.spec, "domains", {}), local.add_base_domain)
+  rules                   = lookup(local.spec, "rules", {})
+  global_response_headers = lookup(local.spec, "global_response_headers", {})
+  global_header_routing   = lookup(local.spec, "global_header_routing", {})
+  ip_whitelist            = lookup(local.spec, "ip_whitelist", {})
+  custom_errors           = lookup(local.spec, "custom_error_pages", {})
+  resources_config        = lookup(local.spec, "resources", {})
 
   # Build complete host -> domain mapping
   domain_mappings = merge([
@@ -63,12 +63,12 @@ locals {
     if !lookup(rule, "disable", false)
   }
 
-  # Build TLS secrets map
-  tls_secrets = {
+  # Collect ACM certificate ARNs from domains (for NLB TLS termination)
+  acm_certificate_arns = [
     for domain_key, domain_config in local.domains :
-    domain_key => domain_config
-    if lookup(lookup(domain_config, "custom_tls", {}), "enabled", false)
-  }
+    lookup(domain_config, "acm_certificate_arn", "")
+    if lookup(domain_config, "acm_certificate_arn", "") != ""
+  ]
 
   # Service annotation merging
   service_annotations = merge(
@@ -82,28 +82,13 @@ locals {
     # Enable Proxy Protocol v2 for real client IP when IP whitelist is enabled
     lookup(local.ip_whitelist, "enabled", false) ? {
       "service.beta.kubernetes.io/aws-load-balancer-target-group-attributes" = "proxy_protocol_v2.enabled=true"
+    } : {},
+    # Add ACM certificate ARN for TLS termination at load balancer
+    length(local.acm_certificate_arns) > 0 ? {
+      "service.beta.kubernetes.io/aws-load-balancer-ssl-cert" = join(",", local.acm_certificate_arns)
+      "service.beta.kubernetes.io/aws-load-balancer-ssl-ports" = "443"
     } : {}
   )
-}
-
-# Create TLS secrets from custom certificates
-resource "kubernetes_secret" "tls_certificates" {
-  for_each = local.tls_secrets
-
-  metadata {
-    name      = "${local.name}-tls-${each.key}"
-    namespace = local.namespace
-  }
-
-  depends_on = [helm_release.traefik]
-
-  type = "kubernetes.io/tls"
-
-  data = {
-    # Replace literal \n with actual newlines
-    "tls.crt" = replace(lookup(each.value.custom_tls, "certificate", ""), "\\n", "\n")
-    "tls.key" = replace(lookup(each.value.custom_tls, "private_key", ""), "\\n", "\n")
-  }
 }
 
 # Cert-manager Certificate for base domain (automatic TLS)
@@ -155,9 +140,12 @@ resource "helm_release" "traefik" {
   repository       = "https://traefik.github.io/charts"
   chart            = "traefik"
   version          = lookup(local.spec, "ingress_chart_version", "38.0.2")
-  namespace        = lookup(local.spec, "namespace", "traefik")
+  namespace        = local.namespace
   create_namespace = lookup(local.spec, "create_namespace", true)
   skip_crds        = true
+
+  # Wait for CRDs to be installed first
+  depends_on = [helm_release.traefik_crds, null_resource.gateway_api_crds]
 
   values = [
     yamlencode({
@@ -321,41 +309,25 @@ module "gateway" {
   depends_on = [helm_release.traefik, module.base_domain_certificate]
 }
 
-# Global Security Headers Middleware
-module "security_headers" {
-  count = length(keys(local.security_headers)) > 0 ? 1 : 0
+# Global Response Headers Middleware
+module "global_response_headers" {
+  count = length(keys(local.global_response_headers)) > 0 ? 1 : 0
 
   source          = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
-  name            = "${local.name}-security-headers"
+  name            = "${local.name}-global-headers"
   namespace       = local.namespace
   advanced_config = {}
-  release_name    = "${local.name}-security-headers"
+  release_name    = "${local.name}-global-headers"
   data = {
     apiVersion = "traefik.io/v1alpha1"
     kind       = "Middleware"
     metadata = {
-      name      = "${local.name}-security-headers"
+      name      = "${local.name}-global-headers"
       namespace = local.namespace
     }
     spec = {
       headers = {
-        customResponseHeaders = merge(
-          lookup(local.security_headers, "x_frame_options", null) != null ? {
-            "X-Frame-Options" = local.security_headers.x_frame_options
-          } : {},
-          lookup(local.security_headers, "content_security_policy", null) != null ? {
-            "Content-Security-Policy" = local.security_headers.content_security_policy
-          } : {},
-          lookup(local.security_headers, "referrer_policy", null) != null ? {
-            "Referrer-Policy" = local.security_headers.referrer_policy
-          } : {},
-          lookup(local.security_headers, "x_content_type_options", null) != null ? {
-            "X-Content-Type-Options" = local.security_headers.x_content_type_options
-          } : {},
-          lookup(local.security_headers, "x_xss_protection", null) != null ? {
-            "X-XSS-Protection" = local.security_headers.x_xss_protection
-          } : {}
-        )
+        customResponseHeaders = local.global_response_headers
       }
     }
   }
@@ -473,6 +445,82 @@ module "cors" {
         accessControlAllowCredentials = true
         accessControlMaxAge           = 100
         addVaryHeader                 = true
+      }
+    }
+  }
+
+  depends_on = [helm_release.traefik]
+}
+
+# Rule-level Response Headers Middleware
+module "response_headers" {
+  for_each = {
+    for rule_key, rule in local.active_rules : rule_key => rule
+    if length(lookup(rule, "response_headers", {})) > 0
+  }
+
+  source          = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
+  name            = "${local.name}-resp-headers-${each.key}"
+  namespace       = local.namespace
+  advanced_config = {}
+  release_name    = "${local.name}-resp-headers-${each.key}"
+  data = {
+    apiVersion = "traefik.io/v1alpha1"
+    kind       = "Middleware"
+    metadata = {
+      name      = "${local.name}-resp-headers-${each.key}"
+      namespace = local.namespace
+    }
+    spec = {
+      headers = {
+        customResponseHeaders = lookup(each.value, "response_headers", {})
+      }
+    }
+  }
+
+  depends_on = [helm_release.traefik]
+}
+
+# TraefikService for every rule (with or without sticky session)
+module "traefik_service" {
+  for_each = local.active_rules
+
+  source          = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
+  name            = "${local.name}-svc-${each.key}"
+  namespace       = local.namespace
+  advanced_config = {}
+  release_name    = "${local.name}-svc-${each.key}"
+  data = {
+    apiVersion = "traefik.io/v1alpha1"
+    kind       = "TraefikService"
+    metadata = {
+      name      = "${local.name}-svc-${each.key}"
+      namespace = local.namespace
+      labels = {
+        "app.kubernetes.io/managed-by" = "facets"
+        "rule-name"                    = each.key
+      }
+    }
+    spec = {
+      weighted = {
+        services = [merge(
+          {
+            name   = lookup(each.value, "service_name", "")
+            port   = tonumber(lookup(each.value, "port", "80"))
+            weight = 1
+          },
+          # Add sticky config only if session_affinity is configured
+          lookup(lookup(each.value, "session_affinity", {}), "session_cookie_name", "") != "" ? {
+            sticky = {
+              cookie = {
+                name     = lookup(lookup(each.value, "session_affinity", {}), "session_cookie_name", "route")
+                secure   = true
+                httpOnly = true
+                maxAge   = tonumber(lookup(lookup(each.value, "session_affinity", {}), "session_cookie_max_age", "3600"))
+              }
+            }
+          } : {}
+        )]
       }
     }
   }
@@ -628,11 +676,12 @@ locals {
     }
   }
 
+
   # Build middleware chain for each rule
   rule_middlewares = {
     for rule_key, rule in local.active_rules : rule_key => concat(
-      # Global security headers
-      length(keys(local.security_headers)) > 0 ? ["${local.name}-security-headers"] : [],
+      # Global response headers
+      length(keys(local.global_response_headers)) > 0 ? ["${local.name}-global-headers"] : [],
 
       # Basic auth
       lookup(local.spec, "basic_auth", false) ? ["${local.name}-basic-auth"] : [],
@@ -709,22 +758,22 @@ module "http_routes" {
           )
         }]
 
-        # Backend service references
+        # Backend service references - always use TraefikService
         backendRefs = [{
-          name      = lookup(each.value.rule, "service_name", "")
-          namespace = lookup(each.value.rule, "namespace", local.namespace)
-          port      = tonumber(lookup(each.value.rule, "port", "80"))
+          group = "traefik.io"
+          kind  = "TraefikService"
+          name  = "${local.name}-svc-${each.key}"
         }]
 
         # Filters (middlewares via ExtensionRef)
         filters = concat(
-          # Security headers middleware
-          length(keys(local.security_headers)) > 0 ? [{
+          # Global response headers middleware
+          length(keys(local.global_response_headers)) > 0 ? [{
             type = "ExtensionRef"
             extensionRef = {
               group = "traefik.io"
               kind  = "Middleware"
-              name  = "${local.name}-security-headers"
+              name  = "${local.name}-global-headers"
             }
           }] : [],
 
@@ -758,6 +807,16 @@ module "http_routes" {
             }
           }] : [],
 
+          # Rule-level response headers middleware
+          length(lookup(each.value.rule, "response_headers", {})) > 0 ? [{
+            type = "ExtensionRef"
+            extensionRef = {
+              group = "traefik.io"
+              kind  = "Middleware"
+              name  = "${local.name}-resp-headers-${each.key}"
+            }
+          }] : [],
+
           # Error pages middleware
           length(local.custom_errors) > 0 ? [{
             type = "ExtensionRef"
@@ -775,13 +834,14 @@ module "http_routes" {
   depends_on = [
     helm_release.traefik,
     module.gateway,
-    module.security_headers,
+    module.traefik_service,
+    module.global_response_headers,
     module.ip_whitelist_monitoring,
     module.basic_auth,
     module.strip_prefix,
     module.cors,
+    module.response_headers,
     module.error_pages_middleware,
-    kubernetes_secret.tls_certificates,
     module.base_domain_certificate
   ]
 }
