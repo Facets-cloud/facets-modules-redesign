@@ -1,0 +1,116 @@
+intent: kubeblocks-operator
+flavor: standard
+version: '1.0'
+clouds:
+- kubernetes
+- aws
+- gcp
+- azure
+description: Installs and configures KubeBlocks operator for managing databases on
+  Kubernetes
+inputs:
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Target Kubernetes cluster for KubeBlocks installation
+    providers:
+    - kubernetes
+    - helm
+  kubeblocks_crd:
+    type: '@facets/kubeblocks-crd'
+    optional: false
+    displayName: KubeBlocks CRDs
+    description: KubeBlocks Custom Resource Definitions (must be installed first)
+  node_pool:
+    type: '@facets/kubernetes_nodepool'
+    optional: true
+    displayName: Node Pool
+    description: Node pool for KubeBlocks Operator pods
+spec:
+  title: KubeBlocks Database Operator
+  description: Installs and configures KubeBlocks operator for managing databases
+    on Kubernetes
+  type: object
+  properties:
+    version:
+      type: string
+      title: KubeBlocks Version
+      description: KubeBlocks version to install
+      default: 1.0.1
+    feature_gates:
+      type: object
+      title: Feature Gates
+      description: Enable experimental features
+      properties:
+        in_place_pod_vertical_scaling:
+          type: boolean
+          title: In-Place Pod Vertical Scaling
+          description: Enable in-place pod vertical scaling feature
+          default: false
+    high_availability:
+      type: object
+      title: High Availability Settings
+      description: Configure operator replicas and disruption budget for HA
+      properties:
+        replicas:
+          type: integer
+          title: Operator Replicas
+          description: Number of operator replicas (2 recommended for production to survive node failures)
+          default: 1
+          minimum: 1
+          maximum: 3
+        enable_pdb:
+          type: boolean
+          title: Enable Pod Disruption Budget
+          description: Prevent simultaneous pod eviction during node maintenance (minAvailable=1)
+          default: false
+    resources:
+      type: object
+      title: Resource Allocation
+      properties:
+        cpu_limit:
+          type: string
+          title: CPU Limit
+          description: CPU limit for KubeBlocks controller
+          default: 1000m
+        memory_limit:
+          type: string
+          title: Memory Limit
+          description: Memory limit for KubeBlocks controller
+          default: 1Gi
+        cpu_request:
+          type: string
+          title: CPU Request
+          description: CPU request for KubeBlocks controller
+          default: 500m
+        memory_request:
+          type: string
+          title: Memory Request
+          description: Memory request for KubeBlocks controller
+          default: 512Mi
+  required:
+  - version
+outputs:
+  default:
+    type: '@facets/kubeblocks-operator'
+    title: KubeBlocks Operator
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+sample:
+  kind: kubeblocks-operator
+  flavor: standard
+  version: '1.0'
+  disabled: true
+  spec:
+    version: 1.0.1
+    high_availability:
+      replicas: 1
+      enable_pdb: false
+    resources:
+      cpu_limit: 1000m
+      memory_limit: 1Gi
+      cpu_request: 500m
+      memory_request: 512Mi

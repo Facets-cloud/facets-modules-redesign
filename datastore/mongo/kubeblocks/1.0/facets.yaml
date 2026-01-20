@@ -1,0 +1,261 @@
+intent: mongo
+flavor: kubeblocks
+version: '1.0'
+clouds:
+- kubernetes
+- aws
+- azure
+- gcp
+description: Creates and manages MongoDB database clusters using KubeBlocks operator
+  v1.0.1
+inputs:
+  kubeblocks_operator:
+    type: '@facets/kubeblocks-operator'
+    optional: false
+    displayName: KubeBlocks Operator
+    description: KubeBlocks operator installation (CRDs must be ready)
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Target Kubernetes cluster
+    providers:
+    - kubernetes
+    - helm
+  node_pool:
+    type: '@facets/kubernetes_nodepool'
+    optional: false
+    displayName: Node Pool
+    description: Node pool for MongoDB pods
+spec:
+  title: MongoDB Cluster Configuration
+  description: MongoDB database cluster managed by KubeBlocks
+  type: object
+  properties:
+    namespace_override:
+      type: string
+      title: Namespace Override
+      description: (Optional) Specify a custom namespace for the cluster. If not set,
+        the namespace from the environment will be used.
+      default: ''
+    termination_policy:
+      type: string
+      title: Termination Policy
+      description: Controls cluster deletion behavior
+      enum:
+      - DoNotTerminate
+      - Delete
+      - WipeOut
+      default: Delete
+      x-enum-descriptions:
+        Delete: Delete pods and PVCs
+        DoNotTerminate: Block cluster deletion
+        WipeOut: Delete everything including backups
+    mongodb_version:
+      type: string
+      title: MongoDB Version
+      description: MongoDB version to deploy (Percona Server for MongoDB via KubeBlocks)
+      enum:
+      - 4.4.29
+      - 5.0.29
+      - 6.0.21
+      - 7.0.18
+      - 8.0.8
+      default: 8.0.8
+    mode:
+      type: string
+      title: Cluster Mode
+      description: Deployment mode - standalone for single instance, replication for
+        replica set with automatic failover
+      enum:
+      - standalone
+      - replication
+      default: replication
+    replicas:
+      type: integer
+      title: Number of Replicas
+      description: Number of MongoDB instances (minimum 3 recommended for production
+        HA)
+      default: 3
+      minimum: 1
+      maximum: 7
+      x-ui-visible-if:
+        field: spec.mode
+        values:
+        - replication
+    resources:
+      type: object
+      title: Resource Allocation
+      description: CPU and memory resources for MongoDB pods
+      properties:
+        cpu_request:
+          type: string
+          title: CPU Request
+          description: Minimum CPU allocation
+          default: 500m
+        cpu_limit:
+          type: string
+          title: CPU Limit
+          description: Maximum CPU allocation
+          default: 1000m
+        memory_request:
+          type: string
+          title: Memory Request
+          description: Minimum memory allocation
+          default: 1Gi
+        memory_limit:
+          type: string
+          title: Memory Limit
+          description: Maximum memory allocation
+          default: 2Gi
+    storage:
+      type: object
+      title: Storage Configuration
+      description: Persistent storage settings for MongoDB data
+      properties:
+        size:
+          type: string
+          title: Storage Size
+          description: Size of persistent volume (can be expanded later via volume
+            expansion, cannot be reduced)
+          default: 20Gi
+      required:
+      - size
+    high_availability:
+      type: object
+      title: High Availability Settings
+      description: Configure pod anti-affinity and disruption budget for HA
+      x-ui-visible-if:
+        field: spec.mode
+        values:
+        - replication
+      properties:
+        enable_pod_anti_affinity:
+          type: boolean
+          title: Enable Pod Anti-Affinity
+          description: Spread MongoDB pods across different nodes (soft anti-affinity - prefers different nodes but allows colocation if needed)
+          default: true
+        enable_pdb:
+          type: boolean
+          title: Enable Pod Disruption Budget
+          description: Prevent simultaneous pod eviction during node maintenance/upgrades
+            (maxUnavailable=1)
+          default: false
+    backup:
+      type: object
+      title: Backup Configuration
+      description: Optional backup repository and schedule configuration
+      x-ui-overrides-only: true
+      properties:
+        enabled:
+          type: boolean
+          title: Enable Backup
+          description: Enable backup configuration for this cluster
+          default: false
+        schedule_cron:
+          type: string
+          title: Backup Schedule (Cron)
+          description: Cron expression for backup schedule (e.g., "0 2 * * *" for
+            daily at 2 AM)
+          default: 0 2 * * *
+        retention_period:
+          type: string
+          title: Backup Retention Period
+          description: How long to retain backups (e.g., "7d", "30d", "1y")
+          default: 7d
+    restore:
+      type: object
+      title: Restore Configuration
+      description: Restore cluster from existing backup instead of creating fresh
+        cluster
+      x-ui-overrides-only: true
+      properties:
+        enabled:
+          type: boolean
+          title: Enable Restore
+          description: Restore from backup instead of creating fresh cluster
+          default: false
+        backup_name:
+          type: string
+          title: Backup Name
+          description: Name of the backup to restore from (e.g., 'mongo-cluster-backup-20250125')
+          x-ui-visible-if:
+            field: spec.restore.enabled
+            values:
+            - true
+          x-ui-required-if:
+            field: spec.restore.enabled
+            values:
+            - true
+    external_access:
+      type: object
+      title: External Access Configuration
+      description: Expose MongoDB cluster externally via LoadBalancer services (key
+        names must be short - max 15 chars recommended)
+      patternProperties:
+        ^[a-zA-Z0-9_-]{1,15}$:
+          type: object
+          title: External Access Entry
+          properties:
+            annotations:
+              type: object
+              title: Service Annotations
+              description: Kubernetes service annotations (e.g., for cloud provider
+                load balancer configuration)
+              x-ui-yaml-editor: true
+              default: {}
+            role:
+              type: string
+              title: Component Role
+              description: MongoDB component role to expose
+              enum:
+              - primary
+              - secondary
+              default: primary
+          required:
+          - role
+  required:
+  - mongodb_version
+  - mode
+outputs:
+  default:
+    type: '@facets/mongo'
+    title: MongoDB Cluster Credentials
+  attributes:
+    type: '@facets/mongo_k8s'
+    title: Additional Output Attributes
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+  - locals.tf
+sample:
+  kind: mongo
+  flavor: kubeblocks
+  version: '1.0'
+  disabled: true
+  spec:
+    namespace_override: ''
+    termination_policy: Delete
+    mongodb_version: 8.0.8
+    mode: replication
+    replicas: 3
+    resources:
+      cpu_request: 500m
+      cpu_limit: 1000m
+      memory_request: 1Gi
+      memory_limit: 2Gi
+    storage:
+      size: 20Gi
+    high_availability:
+      enable_pod_anti_affinity: true
+      enable_pdb: false
+    backup:
+      enabled: false
+      schedule_cron: 0 2 * * *
+      retention_period: 7d
+    restore:
+      enabled: false
+      backup_name: ''
+    external_access: {}

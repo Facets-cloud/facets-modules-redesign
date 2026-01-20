@@ -18,12 +18,14 @@ spec:
         redis_version:
           type: string
           title: Redis Version
-          description: Version of the Redis engine
+          description: Version of the Redis engine (Redis 7.0+ recommended for better
+            TLS performance)
           enum:
+          - REDIS_5_0
           - REDIS_6_X
           - REDIS_7_0
           - REDIS_7_2
-          default: REDIS_7_2
+          default: REDIS_7_0
       required:
       - redis_version
     sizing:
@@ -69,6 +71,17 @@ spec:
             - true
       required:
       - restore_from_backup
+    security:
+      type: object
+      title: Security Configuration
+      properties:
+        enable_tls:
+          type: boolean
+          title: Enable TLS (In-Transit Encryption)
+          description: Enable transit encryption (TLS) for Redis connections. When
+            enabled, uses SERVER_AUTHENTICATION mode with TLS 1.2+. Port will be 6378.
+            Cannot be changed after creation.
+          default: true
     imports:
       type: object
       title: Import Existing Resources
@@ -83,6 +96,7 @@ spec:
   - version_config
   - sizing
   - restore_config
+  - security
 inputs:
   gcp_provider:
     type: '@facets/gcp_cloud_account'
@@ -93,7 +107,7 @@ inputs:
     - google
   network:
     type: '@facets/gcp-network-details'
-    optional: true
+    optional: false
     displayName: GCP Network Configuration
     description: VPC and subnet configuration for the Redis instance (must have private
       service access enabled)
@@ -119,9 +133,11 @@ sample:
   disabled: true
   spec:
     version_config:
-      redis_version: REDIS_7_2
+      redis_version: REDIS_7_0
     sizing:
       memory_size_gb: 5
       tier: STANDARD_HA
     restore_config:
       restore_from_backup: false
+    security:
+      enable_tls: true

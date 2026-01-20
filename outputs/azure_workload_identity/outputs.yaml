@@ -1,0 +1,26 @@
+name: '@facets/azure_workload_identity'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        k8s_sa_name:
+          description: Name of the Kubernetes ServiceAccount
+          type: string
+        k8s_sa_namespace:
+          description: Namespace of the Kubernetes ServiceAccount
+          type: string
+        managed_identity_id:
+          description: Azure resource ID of the managed identity
+          type: string
+        managed_identity_client_id:
+          description: Client ID of the managed identity
+          type: string
+        managed_identity_principal_id:
+          description: Principal ID of the managed identity
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

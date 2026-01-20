@@ -1,0 +1,50 @@
+name: '@facets/monitoring-rules'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        exporter_enabled:
+          description: Whether the exporter is enabled
+          type: string
+        exporter_release:
+          description: Helm release name of the exporter
+          type: string
+        exporter_namespace:
+          description: Namespace where the exporter is deployed
+          type: string
+        exporter_chart:
+          description: Helm chart name used for the exporter
+          type: string
+        exporter_chart_version:
+          description: Version of the Helm chart
+          type: string
+        service_monitor_enabled:
+          description: Whether ServiceMonitor is enabled
+          type: string
+        prometheus_rule_name:
+          description: Name of the PrometheusRule resource
+          type: string
+        prometheus_namespace:
+          description: Namespace where Prometheus is deployed
+          type: string
+        alerts_enabled:
+          description: Whether alerting rules are enabled
+          type: string
+        enabled_alert_count:
+          description: Number of enabled alert rules
+          type: string
+        rule_group_name:
+          description: Name of the alert rule group
+          type: string
+        mongodb_host:
+          description: MongoDB host being monitored
+          type: string
+        mongodb_namespace:
+          description: Namespace where MongoDB is deployed
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

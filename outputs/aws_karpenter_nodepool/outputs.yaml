@@ -1,12 +1,19 @@
 name: '@facets/aws_karpenter_nodepool'
 properties:
+  type: object
+  properties:
     attributes:
+      type: object
+      properties:
         node_class_name:
-            type: string
+          type: string
         node_pool_name:
-            type: string
+          type: string
         taints:
-            type: string
+          type: string
         node_selector:
-            type: string
-    interfaces: {}
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

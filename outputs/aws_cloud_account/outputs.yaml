@@ -1,24 +1,26 @@
 name: '@facets/aws_cloud_account'
 properties:
-    properties:
-        attributes:
-            properties:
-                aws_iam_role:
-                    description: AWS IAM role ARN (sensitive)
-                    type: string
-                aws_region:
-                    description: AWS region
-                    type: string
-                external_id:
-                    description: External ID for role assumption (sensitive)
-                    type: string
-                session_name:
-                    description: AWS session name with UUID
-                    type: string
-            type: object
-    type: object
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        aws_iam_role:
+          description: AWS IAM role ARN (sensitive)
+          type: string
+        aws_region:
+          description: AWS region
+          type: string
+        external_id:
+          description: External ID for role assumption (sensitive)
+          type: string
+        session_name:
+          description: AWS session name with UUID
+          type: string
+    interfaces:
+      type: object
+      properties: {}
 providers:
-    - name: aws
-      source: hashicorp/aws
-      version: = 6.3.0
-
+- name: aws
+  source: hashicorp/aws
+  version: "= 6.3.0"

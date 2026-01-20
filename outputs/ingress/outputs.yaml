@@ -1,8 +1,38 @@
 name: '@facets/ingress'
 properties:
+  type: object
+  properties:
     attributes:
-        type: string
+      type: object
+      properties:
+        base_domain:
+          type: string
+        loadbalancer_dns:
+          type: string
+        loadbalancer_hostname:
+          type: string
+        loadbalancer_ip:
+          type: string
+        base_domain_enabled:
+          type: boolean
     interfaces:
-        type: string
+      type: object
+      properties: {}
+      additionalProperties:
+        type: object
+        properties:
+          connection_string:
+            type: string
+          host:
+            type: string
+          port:
+            type: number
+          username:
+            type: string
+          password:
+            type: string
+          secrets:
+            type: array
+            items:
+              type: string
 providers: []
-

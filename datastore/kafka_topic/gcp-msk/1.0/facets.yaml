@@ -1,0 +1,77 @@
+intent: kafka_topic
+flavor: gcp-msk
+version: '1.0'
+clouds:
+- gcp
+description: Creates and manages topics for GCP Managed Service for Apache Kafka with
+  configurable partitions, replication, and retention policies
+spec:
+  title: GCP Managed Kafka Topic
+  description: Configure Kafka topic with partitions, replication, and optional configurations
+  type: object
+  properties:
+    partition_count:
+      type: integer
+      title: Partition Count
+      description: Number of partitions (can be increased but not decreased after
+        creation)
+      minimum: 1
+      maximum: 1000
+      default: 1
+    replication_factor:
+      type: integer
+      title: Replication Factor
+      description: Number of replicas for high availability (3 recommended for production)
+      minimum: 1
+      maximum: 5
+      default: 3
+    configs:
+      type: object
+      title: Topic Configurations
+      description: Kafka topic configuration overrides as key-value pairs (e.g., cleanup.policy=compact,
+        compression.type=producer, retention.ms=604800000)
+      x-ui-yaml-editor: true
+  required:
+  - partition_count
+  - replication_factor
+inputs:
+  gcp_cloud_account:
+    type: '@facets/gcp_cloud_account'
+    optional: false
+    displayName: GCP Cloud Account
+    description: GCP cloud account configuration and credentials
+    providers:
+    - google
+    - google-beta
+  vpc_network:
+    type: '@facets/gcp-network-details'
+    optional: false
+    displayName: VPC Network
+    description: VPC network configuration for Kafka cluster deployment
+  kafka_cluster:
+    type: '@facets/gcp-msk'
+    optional: false
+    displayName: Kafka Cluster
+    description: GCP Managed Kafka cluster where the topic will be created
+outputs:
+  default:
+    type: '@facets/gcp-kafka-topic'
+    title: Kafka Topic Details
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+sample:
+  kind: kafka_topic
+  flavor: gcp-msk
+  version: '1.0'
+  spec:
+    partition_count: 2
+    replication_factor: 3
+    configs:
+      cleanup.policy: compact
+      compression.type: producer
+      retention.ms: '604800000'
+      max.message.bytes: '1048576'
+      min.insync.replicas: '2'

@@ -1,34 +1,42 @@
 name: '@facets/kubernetes-details'
 properties:
-    cluster_ca_certificate:
-        description: Base64 encoded certificate data for cluster CA
-        type: string
-    cluster_endpoint:
-        description: Kubernetes cluster API endpoint
-        type: string
-    kubernetes_provider_exec:
-        description: Kubernetes provider exec configuration for authentication
-        properties:
-            api_version:
-                description: Exec credential plugin API version
-                type: string
-            args:
-                description: Arguments to pass to the command
-                items:
-                    type: string
-                type: array
-            command:
-                description: Command to execute for authentication
-                type: string
-        type: object
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        cloud_provider:
+          description: Cloud provider hosting the Kubernetes cluster (AWS, AZURE, GCP)
+          type: string
+        cluster_id:
+          description: Unique identifier of the Kubernetes cluster
+          type: string
+        cluster_name:
+          description: Name of the Kubernetes cluster
+          type: string
+        cluster_location:
+          description: Region or location where the cluster is deployed
+          type: string
+        cluster_endpoint:
+          description: Kubernetes API server endpoint
+          type: string
+    interfaces:
+      type: object
+      properties:
+        kubernetes:
+          type: object
+          properties:
+            cluster_ca_certificate:
+              type: string
+            host:
+              type: string
 providers:
-    - name: kubernetes
-      source: hashicorp/kubernetes
-      version: 2.38.0
-    - name: kubernetes-alpha
-      source: hashicorp/kubernetes-alpha
-      version: 0.6.0
-    - name: helm
-      source: hashicorp/helm
-      version: 3.0.2
-
+- name: kubernetes
+  source: hashicorp/kubernetes
+  version: 2.38.0
+- name: kubernetes-alpha
+  source: hashicorp/kubernetes-alpha
+  version: 0.6.0
+- name: helm
+  source: hashicorp/helm
+  version: 2.17.0

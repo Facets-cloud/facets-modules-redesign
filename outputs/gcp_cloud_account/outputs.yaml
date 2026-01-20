@@ -1,18 +1,23 @@
 name: '@facets/gcp_cloud_account'
 properties:
-    properties:
-        attributes:
-            properties:
-                credentials:
-                    description: Service account key (sensitive)
-                    type: string
-                project:
-                    description: GCP project ID from external data source
-                    type: string
-            type: object
-    type: object
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        credentials:
+          description: Service account key (sensitive)
+          type: string
+        project_id:
+          description: GCP project ID
+          type: string
+        region:
+          description: GCP region
+          type: string
+    interfaces:
+      type: object
+      properties: {}
 providers:
-    - name: google
-      source: hashicorp/google
-      version: 6.43.0
-
+- name: google
+  source: hashicorp/google
+  version: 6.43.0

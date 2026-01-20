@@ -1,4 +1,19 @@
 name: '@facets/cert_manager'
-properties: null
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        cluster_issuer_dns:
+          type: string
+        cluster_issuer_http:
+          type: string
+        namespace:
+          type: string
+        use_gts:
+          type: string
+    interfaces:
+      type: object
+      properties: {}
 providers: []
-

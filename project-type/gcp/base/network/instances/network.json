@@ -1,0 +1,24 @@
+{
+  "flavor": "gcp_network",
+  "kind": "network",
+  "spec": {
+    "auto_select_zones": true,
+    "enable_flow_logs": false,
+    "firewall_rules": {
+      "allow_http": false,
+      "allow_https": true,
+      "allow_icmp": true,
+      "allow_internal": true,
+      "allow_ssh": true
+    },
+    "vpc_cidr": "10.0.0.0/16"
+  },
+  "version": "1.0",
+  "disabled": true,
+  "inputs": {
+    "cloud_account": {
+      "resource_name": "cloud",
+      "resource_type": "cloud_account"
+    }
+  }
+}

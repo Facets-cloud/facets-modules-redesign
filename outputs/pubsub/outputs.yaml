@@ -1,23 +1,30 @@
 name: '@facets/pubsub'
 properties:
+  type: object
+  properties:
     attributes:
+      type: object
+      properties:
         project_id:
-            type: string
+          type: string
         publisher_role:
-            type: string
+          type: string
         subscriber_role:
-            type: string
+          type: string
     interfaces:
+      type: object
+      properties:
         default:
+          type: object
+          properties:
             project_id:
-                type: string
+              type: string
             subscription_id:
-                type: string
+              type: string
             subscription_name:
-                type: string
+              type: string
             topic_id:
-                type: string
+              type: string
             topic_name:
-                type: string
+              type: string
 providers: []
-

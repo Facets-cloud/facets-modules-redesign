@@ -1,0 +1,21 @@
+{
+  "kind": "mongo",
+  "flavor": "cosmosdb",
+  "version": "1.0",
+  "disabled": false,
+  "spec": {
+    "version_config": {
+      "api_version": "4.2",
+      "consistency_level": "session",
+      "port": 27017
+    },
+    "sizing": {
+      "throughput_mode": "provisioned",
+      "max_throughput": 4000,
+      "enable_multi_region": false
+    },
+    "backup_config": {
+      "enable_continuous_backup": false
+    }
+  }
+}

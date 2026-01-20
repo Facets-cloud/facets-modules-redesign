@@ -1,0 +1,29 @@
+{
+  "kind": "network",
+  "flavor": "azure_network",
+  "version": "1.0",
+  "spec": {
+    "vnet_cidr": "10.0.0.0/16",
+    "region": "centralindia",
+    "availability_zones": [
+      "1",
+      "2",
+      "3"
+    ],
+    "nat_gateway": {
+      "strategy": "single"
+    },
+    "database_config": {
+      "enable_general_database_subnet": false,
+      "enable_postgresql_flexible_subnet": false,
+      "enable_mysql_flexible_subnet": false
+    }
+  },
+  "disabled": true,
+  "inputs": {
+    "cloud_account": {
+      "resource_name": "cloud",
+      "resource_type": "cloud_account"
+    }
+  }
+}

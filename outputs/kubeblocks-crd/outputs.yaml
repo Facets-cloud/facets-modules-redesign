@@ -1,0 +1,20 @@
+name: '@facets/kubeblocks-crd'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        crds_count:
+          type: number
+          description: Number of CRDs installed
+        release_id:
+          type: string
+          description: Release UUID for dependency tracking
+        version:
+          type: string
+          description: KubeBlocks version
+    interfaces:
+      type: object
+      properties: {}
+providers: []

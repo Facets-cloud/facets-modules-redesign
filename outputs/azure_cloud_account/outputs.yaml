@@ -1,27 +1,29 @@
 name: '@facets/azure_cloud_account'
 properties:
-    properties:
-        attributes:
-            properties:
-                client_id:
-                    description: Azure client ID
-                    type: string
-                client_secret:
-                    description: Azure client secret
-                    type: string
-                subscription_id:
-                    description: Azure subscription ID
-                    type: string
-                tenant_id:
-                    description: Azure tenant ID
-                    type: string
-            type: object
-    type: object
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        client_id:
+          description: Azure client ID
+          type: string
+        client_secret:
+          description: Azure client secret
+          type: string
+        subscription_id:
+          description: Azure subscription ID
+          type: string
+        tenant_id:
+          description: Azure tenant ID
+          type: string
+    interfaces:
+      type: object
+      properties: {}
 providers:
-    - name: azapi
-      source: Azure/azapi
-      version: 2.5.0
-    - name: azurerm
-      source: hashicorp/azurerm
-      version: 4.36.0
-
+- name: azapi
+  source: Azure/azapi
+  version: 2.5.0
+- name: azurerm
+  source: hashicorp/azurerm
+  version: 4.36.0
