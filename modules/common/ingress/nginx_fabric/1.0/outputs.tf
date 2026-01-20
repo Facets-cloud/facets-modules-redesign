@@ -33,7 +33,7 @@ locals {
       # Basic auth not supported - username/password removed
       # username          = local.username
       # password          = local.password
-      secrets           = []
+      secrets = []
     }
   }
 }

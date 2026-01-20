@@ -18,18 +18,22 @@ locals {
   base_subdomain             = "*.${local.base_domain}"
   name                       = lower(var.environment.namespace == "default" ? "${var.instance_name}" : "${var.environment.namespace}-${var.instance_name}")
   dns_validation_secret_name = lower("nginx-gateway-fabric-cert-${local.name}")
-  gateway_class_name         = lookup(var.instance.spec, "gateway_class_name", local.name)
+  gateway_class_name         = local.name
 
   # Conditionally append base domain
+  # Note: Not setting certificate_reference - the listener uses dns_validation_secret_name as fallback
+  # This ensures base domain is included in certmanager_managed_domains for DNS-01
   add_base_domain = lookup(var.instance.spec, "disable_base_domain", false) ? {} : {
     "facets" = {
-      "domain"                = "${local.base_domain}"
-      "alias"                 = "base"
-      "certificate_reference" = local.dns_validation_secret_name
+      "domain" = "${local.base_domain}"
+      "alias"  = "base"
     }
   }
 
-  domains = merge(lookup(var.instance.spec, "domains", {}), local.add_base_domain)
+  domains = merge(lookup(var.instance, "domains", {}), local.add_base_domain)
+
+  # List of all domain hostnames for HTTPRoutes
+  all_domain_hostnames = [for domain_key, domain in local.domains : domain.domain]
 
   # Filter rules
   rulesFiltered = {
@@ -94,6 +98,25 @@ locals {
     if !local.disable_endpoint_validation && can(domain.domain)
   }
 
+  # Domains that need cert-manager to issue certificates
+  # - For HTTP-01: all domains (certificate_reference is ignored)
+  # - For DNS-01: only domains WITHOUT certificate_reference
+  # Domains WITH certificate_reference use user-provided certs, cert-manager should NOT manage them
+  certmanager_managed_domains = {
+    for domain_key, domain in local.domains :
+    domain_key => domain
+    if can(domain.domain) && (
+      !local.disable_endpoint_validation ||             # HTTP-01: all domains
+      lookup(domain, "certificate_reference", "") == "" # DNS-01: only if no certificate_reference
+    )
+  }
+
+  # Use gateway-shim only when ALL domains are managed by cert-manager
+  # For HTTP-01: always true (all domains managed)
+  # For DNS-01: true only if no domain has certificate_reference
+  # When false, we create explicit Certificate resources instead
+  use_gateway_shim = !local.disable_endpoint_validation || length(local.certmanager_managed_domains) == length(local.domains)
+
   # Cloud-specific service annotations
   aws_annotations = merge(
     lookup(var.instance.spec, "private", false) ? {
@@ -141,21 +164,13 @@ locals {
     local.disable_endpoint_validation ? local.cluster_issuer_dns : local.cluster_issuer_gateway_http
   )
 
-  # Security headers
-  security_headers = merge(
-    lookup(lookup(lookup(var.instance.spec, "security", {}), "security_headers", {}), "hsts_enabled", true) ? {
-      "Strict-Transport-Security" = "max-age=${lookup(lookup(lookup(var.instance.spec, "security", {}), "security_headers", {}), "hsts_max_age", 31536000)}; includeSubDomains"
-    } : {},
-    lookup(lookup(lookup(var.instance.spec, "security", {}), "security_headers", {}), "x_frame_options", null) != null ? {
-      "X-Frame-Options" = lookup(lookup(lookup(var.instance.spec, "security", {}), "security_headers", {}), "x_frame_options", "DENY")
-    } : {},
-    lookup(lookup(lookup(var.instance.spec, "security", {}), "security_headers", {}), "x_content_type_options", true) ? {
-      "X-Content-Type-Options" = "nosniff"
-    } : {},
-    lookup(lookup(lookup(var.instance.spec, "security", {}), "security_headers", {}), "x_xss_protection", true) ? {
-      "X-XSS-Protection" = "1; mode=block"
-    } : {}
-  )
+  # Security headers (always enabled with sensible defaults)
+  security_headers = {
+    "Strict-Transport-Security" = "max-age=31536000; includeSubDomains"
+    "X-Frame-Options"           = "DENY"
+    "X-Content-Type-Options"    = "nosniff"
+    "X-XSS-Protection"          = "1; mode=block"
+  }
 
   # CORS headers per route
   cors_headers = {
@@ -221,33 +236,58 @@ locals {
         namespace = var.environment.namespace
       }
       spec = {
-        parentRefs = [{
-          name        = local.name
-          namespace   = var.environment.namespace
-          sectionName = lookup(v, "domain_prefix", null) != null ? "https-${v.domain_key}" : "https-facets"
-        }]
+        # Reference all domain listeners so route works for all domains
+        parentRefs = [
+          for domain_key, domain in local.domains : {
+            name        = local.name
+            namespace   = var.environment.namespace
+            sectionName = "https-${domain_key}"
+          }
+        ]
 
-        hostnames = [v.host]
+        # Include all domains in hostnames - Gateway API supports multiple hostnames per route
+        hostnames = distinct([
+          for domain_key, domain in local.domains :
+          lookup(v, "domain_prefix", null) == null || lookup(v, "domain_prefix", null) == "" ?
+            domain.domain :
+            "${lookup(v, "domain_prefix", null)}.${domain.domain}"
+        ])
 
         rules = [{
           matches = concat(
-            # Path matching
-            [{
-              path = {
-                type  = lookup(v, "path_type", "PathPrefix")
-                value = lookup(v, "path", "/")
-              }
-            }],
-            # Header matching
-            lookup(v, "header_matches", null) != null ? [
-              for header in v.header_matches : {
-                headers = [{
-                  name  = header.name
-                  value = header.value
-                  type  = lookup(header, "type", "Exact")
-                }]
-              }
-            ] : []
+            # Path matching (with optional method and query params)
+            [merge(
+              {
+                path = {
+                  type  = lookup(v, "path_type", "PathPrefix")
+                  value = lookup(v, "path", "/")
+                }
+              },
+              # Method matching (ALL or null means match all methods)
+              lookup(v, "method", null) != null && lookup(v, "method", "ALL") != "ALL" ? {
+                method = v.method
+              } : {},
+              # Query parameter matching (map: key=param name, value={value, type})
+              length(lookup(v, "query_param_matches", {})) > 0 ? {
+                queryParams = [
+                  for name, qp in v.query_param_matches : {
+                    name  = tostring(name)
+                    value = qp.value
+                    type  = lookup(qp, "type", "Exact")
+                  }
+                ]
+              } : {},
+              # Header matching (map: key=header name, value={value, type})
+              length(lookup(v, "header_matches", {})) > 0 ? {
+                headers = [
+                  for name, header in v.header_matches : {
+                    name  = tostring(name)
+                    value = header.value
+                    type  = lookup(header, "type", "Exact")
+                  }
+                ]
+              } : {}
+            )]
           )
 
           filters = [
@@ -268,23 +308,17 @@ locals {
                 )
               } : null,
 
-              # Response header modification (CORS + custom headers + security headers)
-              (lookup(v, "response_header_modifier", null) != null ||
-                lookup(lookup(v, "cors", {}), "enabled", false) ||
-                length(local.security_headers) > 0) ? {
+              # Response header modification (security headers + CORS + custom headers)
+              {
                 type = "ResponseHeaderModifier"
                 responseHeaderModifier = merge(
-                  length(merge(
-                    lookup(lookup(v, "response_header_modifier", {}), "add", {}),
-                    local.cors_headers[k],
-                    local.security_headers
-                    )) > 0 ? {
+                  {
                     add = [for name, value in merge(
+                      local.security_headers,
                       lookup(lookup(v, "response_header_modifier", {}), "add", {}),
-                      local.cors_headers[k],
-                      local.security_headers
+                      local.cors_headers[k]
                     ) : { name = name, value = value }]
-                  } : {},
+                  },
                   lookup(lookup(v, "response_header_modifier", {}), "set", null) != null ? {
                     set = [for name, value in v.response_header_modifier.set : { name = name, value = value }]
                   } : {},
@@ -292,20 +326,50 @@ locals {
                     remove = v.response_header_modifier.remove
                   } : {}
                 )
-              } : null,
+              },
 
               # URL rewriting
               lookup(v, "url_rewrite", null) != null ? {
                 type = "URLRewrite"
-                urlRewrite = {
-                  hostname = lookup(v.url_rewrite, "hostname", null)
-                  path     = lookup(v.url_rewrite, "path", null)
+                urlRewrite = merge(
+                  lookup(v.url_rewrite, "hostname", null) != null ? {
+                    hostname = v.url_rewrite.hostname
+                  } : {},
+                  lookup(v.url_rewrite, "path", null) != null ? {
+                    path = merge(
+                      { type = v.url_rewrite.path.type },
+                      v.url_rewrite.path.type == "ReplaceFullPath" ? {
+                        replaceFullPath = v.url_rewrite.path.replaceFullPath
+                      } : {},
+                      v.url_rewrite.path.type == "ReplacePrefixMatch" ? {
+                        replacePrefixMatch = v.url_rewrite.path.replacePrefixMatch
+                      } : {}
+                    )
+                  } : {}
+                )
+              } : null,
+
+              # Request mirroring
+              lookup(v, "request_mirror", null) != null ? {
+                type = "RequestMirror"
+                requestMirror = {
+                  backendRef = {
+                    name      = v.request_mirror.service_name
+                    port      = tonumber(v.request_mirror.port)
+                    namespace = lookup(v.request_mirror, "namespace", v.namespace)
+                  }
                 }
               } : null
               # Note: SSL redirection is handled by separate http_redirect_resources HTTPRoutes
               # RequestRedirect filter cannot be used together with backendRefs in the same rule
             ] : filter if filter != null
           ]
+
+          # Request/backend timeouts
+          timeouts = lookup(v, "timeouts", null) != null ? {
+            request        = lookup(v.timeouts, "request", null)
+            backendRequest = lookup(v.timeouts, "backend_request", null)
+          } : null
 
           backendRefs = concat(
             # Primary backend
@@ -338,13 +402,22 @@ locals {
         namespace = var.environment.namespace
       }
       spec = {
-        parentRefs = [{
-          name        = local.name
-          namespace   = var.environment.namespace
-          sectionName = "https-${v.domain_key}"
-        }]
+        # Reference all domain listeners so route works for all domains
+        parentRefs = [
+          for domain_key, domain in local.domains : {
+            name        = local.name
+            namespace   = var.environment.namespace
+            sectionName = "https-${domain_key}"
+          }
+        ]
 
-        hostnames = [v.host]
+        # Include all domains in hostnames - Gateway API supports multiple hostnames per route
+        hostnames = distinct([
+          for domain_key, domain in local.domains :
+          lookup(v, "domain_prefix", null) == null || lookup(v, "domain_prefix", null) == "" ?
+            domain.domain :
+            "${lookup(v, "domain_prefix", null)}.${domain.domain}"
+        ])
 
         rules = [{
           # If match_all_methods is true (default) or method_match is empty, match all gRPC traffic
@@ -368,87 +441,8 @@ locals {
     } if lookup(lookup(v, "grpc", {}), "enabled", false)
   }
 
-  # Rate Limit Policies
-  ratelimit_resources = {
-    for k, v in local.rulesFiltered : "ratelimit-${lower(var.instance_name)}-${k}" => {
-      apiVersion = "gateway.nginx.org/v1alpha1"
-      kind       = "ClientSettingsPolicy"
-      metadata = {
-        name      = "${lower(var.instance_name)}-${k}-ratelimit"
-        namespace = var.environment.namespace
-      }
-      spec = {
-        targetRef = {
-          group = "gateway.networking.k8s.io"
-          kind  = "HTTPRoute"
-          name  = "${lower(var.instance_name)}-${k}"
-        }
-        rateLimit = {
-          rate  = "${lookup(lookup(v, "rate_limiting", {}), "requests_per_second", 100)}r/s"
-          burst = lookup(lookup(v, "rate_limiting", {}), "burst", 20)
-        }
-      }
-    } if lookup(lookup(v, "rate_limiting", {}), "enabled", false)
-  }
-
-  # IP Whitelist Policies
-  ipwhitelist_resources = {
-    for k, v in local.rulesFiltered : "ipwhitelist-${lower(var.instance_name)}-${k}" => {
-      apiVersion = "gateway.nginx.org/v1alpha1"
-      kind       = "ClientSettingsPolicy"
-      metadata = {
-        name      = "${lower(var.instance_name)}-${k}-ipwhitelist"
-        namespace = var.environment.namespace
-      }
-      spec = {
-        targetRef = {
-          group = "gateway.networking.k8s.io"
-          kind  = "HTTPRoute"
-          name  = "${lower(var.instance_name)}-${k}"
-        }
-        allow = lookup(lookup(v, "ip_whitelist", {}), "allowed_ips", [])
-      }
-    } if lookup(lookup(v, "ip_whitelist", {}), "enabled", false)
-  }
-
-  # Upstream Settings Policies (targets Services, not HTTPRoutes)
-  # Supports: keepAlive, zoneSize
-  # Reference: https://docs.nginx.com/nginx-gateway-fabric/reference/api/#gateway.nginx.org%2fv1alpha1.UpstreamSettingsPolicy
-  upstream_settings_resources = {
-    for k, v in local.rulesFiltered : "upstream-${lower(var.instance_name)}-${k}" => {
-      apiVersion = "gateway.nginx.org/v1alpha1"
-      kind       = "UpstreamSettingsPolicy"
-      metadata = {
-        name      = "${lower(var.instance_name)}-${k}-lb"
-        namespace = var.environment.namespace
-      }
-      spec = merge(
-        {
-          targetRefs = [{
-            group = ""
-            kind  = "Service"
-            name  = v.service_name
-          }]
-        },
-        # Zone size configuration
-        lookup(lookup(v, "upstream_settings", {}), "zone_size", null) != null ? {
-          zoneSize = lookup(v.upstream_settings, "zone_size", "512k")
-        } : {},
-        # Keep-alive configuration
-        lookup(lookup(v, "upstream_settings", {}), "keep_alive", null) != null ? {
-          keepAlive = {
-            connections = lookup(lookup(v.upstream_settings, "keep_alive", {}), "connections", 32)
-            requests    = lookup(lookup(v.upstream_settings, "keep_alive", {}), "requests", 100)
-            time        = lookup(lookup(v.upstream_settings, "keep_alive", {}), "time", "1h")
-            timeout     = lookup(lookup(v.upstream_settings, "keep_alive", {}), "timeout", "60s")
-          }
-        } : {}
-      )
-    } if lookup(v, "upstream_settings", null) != null
-  }
-
-  # ServiceMonitor
-  servicemonitor_resources = lookup(lookup(lookup(var.instance.spec, "observability", {}), "metrics", {}), "enabled", true) ? {
+  # ServiceMonitor (always enabled with defaults)
+  servicemonitor_resources = {
     "servicemonitor-${local.name}" = {
       apiVersion = "monitoring.coreos.com/v1"
       kind       = "ServiceMonitor"
@@ -473,17 +467,45 @@ locals {
         }]
       }
     }
-  } : {}
+  }
+
+  # Collect unique namespaces that need ReferenceGrants (for cross-namespace backends)
+  cross_namespace_backends = {
+    for k, v in local.rulesFiltered : v.namespace => v.namespace
+    if v.namespace != var.environment.namespace
+  }
+
+  # ReferenceGrant resources for cross-namespace backends
+  # Allows HTTPRoutes in Gateway namespace to reference Services in other namespaces
+  referencegrant_resources = {
+    for ns in local.cross_namespace_backends : "referencegrant-${ns}" => {
+      apiVersion = "gateway.networking.k8s.io/v1beta1"
+      kind       = "ReferenceGrant"
+      metadata = {
+        name      = "${local.name}-allow-routes"
+        namespace = ns
+      }
+      spec = {
+        from = [{
+          group     = "gateway.networking.k8s.io"
+          kind      = "HTTPRoute"
+          namespace = var.environment.namespace
+        }]
+        to = [{
+          group = ""
+          kind  = "Service"
+        }]
+      }
+    }
+  }
 
   # Merge all Gateway API resources
   gateway_api_resources = merge(
     local.http_redirect_resources,
     local.httproute_resources,
     local.grpcroute_resources,
-    local.ratelimit_resources,
-    local.ipwhitelist_resources,
-    local.upstream_settings_resources,
-    local.servicemonitor_resources
+    local.servicemonitor_resources,
+    local.referencegrant_resources
   )
 }
 
@@ -536,6 +558,42 @@ resource "kubernetes_secret" "bootstrap_tls" {
   lifecycle {
     ignore_changes = [data, metadata[0].annotations, metadata[0].labels]
   }
+}
+
+# Explicit Certificate resource for DNS-01 managed domains
+# Created when NOT using gateway-shim (i.e., when some domains have certificate_reference)
+# This ensures cert-manager only manages domains that need it, leaving custom certs alone
+# For DNS-01, all managed domains share the same wildcard certificate (dns_validation_secret_name)
+module "dns01_certificate" {
+  count = (!local.use_gateway_shim && local.disable_endpoint_validation && length(local.certmanager_managed_domains) > 0) ? 1 : 0
+
+  source          = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
+  name            = "${local.name}-dns01-certificate"
+  namespace       = var.environment.namespace
+  advanced_config = {}
+
+  data = {
+    apiVersion = "cert-manager.io/v1"
+    kind       = "Certificate"
+    metadata = {
+      name      = "${local.name}-dns01-cert"
+      namespace = var.environment.namespace
+    }
+    spec = {
+      secretName = local.dns_validation_secret_name
+      issuerRef = {
+        name = local.effective_cluster_issuer
+        kind = "ClusterIssuer"
+      }
+      # Include all managed domains (no wildcards - wildcards cause issues with cnameStrategy: Follow)
+      dnsNames = [
+        for domain in values(local.certmanager_managed_domains) : domain.domain
+      ]
+      renewBefore = lookup(var.instance.spec, "renew_cert_before", "720h")
+    }
+  }
+
+  depends_on = [helm_release.nginx_gateway_fabric]
 }
 
 # ServiceAccount for Gateway API CRD installer Job
@@ -629,9 +687,7 @@ resource "kubernetes_job_v1" "gateway_api_crd_installer" {
 resource "helm_release" "nginx_gateway_fabric" {
   name             = local.name
   wait             = lookup(var.instance.spec, "helm_wait", true)
-  repository       = lookup(var.instance.spec, "helm_chart_version", null) != null ? "oci://ghcr.io/nginx/charts" : null
-  chart            = lookup(var.instance.spec, "helm_chart_version", null) != null ? "nginx-gateway-fabric" : "${path.module}/charts/nginx-gateway-fabric-2.3.0.tgz"
-  version          = lookup(var.instance.spec, "helm_chart_version", null)
+  chart            = "${path.module}/charts/nginx-gateway-fabric-2.3.0.tgz"
   namespace        = var.environment.namespace
   max_history      = 10
   skip_crds        = false
@@ -678,11 +734,6 @@ resource "helm_release" "nginx_gateway_fabric" {
         # Labels for control plane service
         service = {
           labels = local.common_labels
-        }
-
-        metrics = {
-          enabled = lookup(lookup(lookup(var.instance.spec, "observability", {}), "metrics", {}), "enabled", true)
-          port    = lookup(lookup(lookup(var.instance.spec, "observability", {}), "metrics", {}), "port", 9113)
         }
       }
 
@@ -747,10 +798,12 @@ resource "helm_release" "nginx_gateway_fabric" {
         labels = merge(local.common_labels, {
           "gateway.networking.k8s.io/gateway-name" = local.name
         })
-        annotations = {
+        # Only add cert-manager annotations when using gateway-shim
+        # When not using gateway-shim (custom certs present), we create explicit Certificate resources
+        annotations = local.use_gateway_shim ? {
           "cert-manager.io/cluster-issuer" = local.effective_cluster_issuer
           "cert-manager.io/renew-before"   = lookup(var.instance.spec, "renew_cert_before", "720h")
-        }
+        } : {}
         spec = {
           gatewayClassName = local.gateway_class_name
           listeners = concat(
@@ -761,7 +814,7 @@ resource "helm_release" "nginx_gateway_fabric" {
               port     = 80
               allowedRoutes = {
                 namespaces = {
-                  from = "Same"
+                  from = "All"
                 }
               }
             }],
@@ -782,7 +835,7 @@ resource "helm_release" "nginx_gateway_fabric" {
               }
               allowedRoutes = {
                 namespaces = {
-                  from = "Same"
+                  from = "All"
                 }
               }
             } if can(domain.domain)]
