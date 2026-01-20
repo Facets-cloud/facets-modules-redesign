@@ -3,7 +3,7 @@
 
 locals {
   enable_crds         = lookup(local.spec, "enable_crds", true)
-  gateway_api_version = lookup(local.spec, "gateway_api_version", "v1.2.0")
+  gateway_api_version = lookup(local.spec, "gateway_api_version", "v1.3.0")
   # Use experimental channel to include BackendTLSPolicy CRD that Traefik requires
   gateway_api_crds_url = "https://github.com/kubernetes-sigs/gateway-api/releases/download/${local.gateway_api_version}/experimental-install.yaml"
 }

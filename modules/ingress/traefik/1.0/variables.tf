@@ -7,6 +7,16 @@ variable "instance" {
       namespace         = optional(string, "traefik")
       service_type      = optional(string, "LoadBalancer")
       replicas          = optional(number, 2)
+
+      # Autoscaling configuration (HPA)
+      autoscaling = optional(object({
+        enabled                        = optional(bool, false)
+        min_replicas                   = optional(number, 2)
+        max_replicas                   = optional(number, 10)
+        target_cpu_utilization_percent = optional(number, 80)
+        target_memory_utilization_percent = optional(number)
+      }), {})
+
       private           = optional(bool, false)
       basic_auth        = optional(bool, false)
       basic_auth_secret = optional(string)
@@ -44,6 +54,7 @@ variable "instance" {
           enable          = optional(bool, false)
           allowed_origins = optional(list(string), [])
           allowed_methods = optional(list(string), [])
+          allowed_headers = optional(list(string), [])
         }), {})
 
         # Custom response headers for this rule
@@ -147,8 +158,3 @@ variable "inputs" {
   description = "Input dependencies from other modules"
 }
 
-variable "cc_metadata" {
-  type        = any
-  description = "Tenant metadata including Route53 zone ID (tenant_base_domain_id)"
-  default     = {}
-}

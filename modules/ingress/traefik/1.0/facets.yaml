@@ -120,38 +120,6 @@ spec:
                 field: spec.enable_crds
                 values:
                     - true
-        certificate:
-            description: Certificate configuration for base domain (uses cert-manager)
-            properties:
-                use_cert_manager:
-                    default: false
-                    description: Enable automatic TLS certificate generation for base domain using cert-manager. Requires cert-manager to be installed in the cluster.
-                    title: Use cert-manager
-                    type: boolean
-                issuer_name:
-                    default: letsencrypt-prod
-                    description: Name of the ClusterIssuer or Issuer to use
-                    title: Issuer Name
-                    type: string
-                    x-ui-visible-if:
-                        field: spec.certificate.use_cert_manager
-                        values:
-                            - true
-                issuer_kind:
-                    default: ClusterIssuer
-                    description: Kind of issuer (ClusterIssuer or Issuer)
-                    enum:
-                        - ClusterIssuer
-                        - Issuer
-                    title: Issuer Kind
-                    type: string
-                    x-ui-visible-if:
-                        field: spec.certificate.use_cert_manager
-                        values:
-                            - true
-            title: Certificate Configuration
-            type: object
-            x-ui-toggle: true
         domains:
             description: Domain configurations with optional ACM certificate
             patternProperties:
@@ -235,11 +203,6 @@ spec:
             description: Kubernetes namespace for Traefik
             title: Namespace
             type: string
-        create_namespace:
-            default: true
-            description: Create the namespace if it doesn't exist. Set to false when using existing namespaces like 'default'
-            title: Create Namespace
-            type: boolean
         pdb:
             description: Pod disruption budget configuration
             properties:
@@ -262,11 +225,67 @@ spec:
             type: boolean
         replicas:
             default: 2
-            description: Number of Traefik replicas
+            description: Number of Traefik replicas (used when autoscaling is disabled)
             maximum: 10
             minimum: 1
             title: Replicas
             type: integer
+            x-ui-visible-if:
+                field: spec.autoscaling.enabled
+                values:
+                    - false
+        autoscaling:
+            description: Horizontal Pod Autoscaler configuration for Traefik
+            properties:
+                enabled:
+                    default: false
+                    description: Enable autoscaling (HPA) for Traefik pods
+                    title: Enable Autoscaling
+                    type: boolean
+                min_replicas:
+                    default: 2
+                    description: Minimum number of replicas
+                    minimum: 1
+                    title: Min Replicas
+                    type: integer
+                    x-ui-visible-if:
+                        field: spec.autoscaling.enabled
+                        values:
+                            - true
+                max_replicas:
+                    default: 10
+                    description: Maximum number of replicas
+                    minimum: 1
+                    title: Max Replicas
+                    type: integer
+                    x-ui-visible-if:
+                        field: spec.autoscaling.enabled
+                        values:
+                            - true
+                target_cpu_utilization_percent:
+                    default: 80
+                    description: Target CPU utilization percentage for scaling
+                    maximum: 100
+                    minimum: 1
+                    title: Target CPU %
+                    type: integer
+                    x-ui-visible-if:
+                        field: spec.autoscaling.enabled
+                        values:
+                            - true
+                target_memory_utilization_percent:
+                    description: Target memory utilization percentage for scaling (optional)
+                    maximum: 100
+                    minimum: 1
+                    title: Target Memory %
+                    type: integer
+                    x-ui-visible-if:
+                        field: spec.autoscaling.enabled
+                        values:
+                            - true
+            title: Autoscaling (HPA)
+            type: object
+            x-ui-toggle: true
         resources:
             properties:
                 limits:
@@ -336,6 +355,16 @@ spec:
                                         field: spec.rules.{{this}}.cors.enable
                                         values:
                                             - true
+                                allowed_headers:
+                                    description: Allowed request headers (e.g., Content-Type, Authorization). Leave empty for all headers.
+                                    items:
+                                        type: string
+                                    title: Allowed Headers
+                                    type: array
+                                    x-ui-visible-if:
+                                        field: spec.rules.{{this}}.cors.enable
+                                        values:
+                                            - true
                                 enable:
                                     default: false
                                     title: Enable CORS
@@ -353,15 +382,15 @@ spec:
                             description: Subdomain prefix or * for wildcard
                             title: Domain Prefix
                             type: string
-                        enable_header_based_routing:
-                            default: false
-                            description: Route based on HTTP headers
-                            title: Enable Header-Based Routing
-                            type: boolean
                         enable_rewrite_target:
                             default: false
                             description: Strip path prefix before forwarding
                             title: Enable Path Rewrite
+                            type: boolean
+                        enable_header_based_routing:
+                            default: false
+                            description: Route based on HTTP headers
+                            title: Enable Header-Based Routing
                             type: boolean
                         header_routing_rules:
                             description: Header matching rules
@@ -393,6 +422,17 @@ spec:
                             description: Service namespace (optional, supports ${service.X.out.attributes.namespace})
                             title: Namespace
                             type: string
+                            x-ui-api-source:
+                            endpoint: "/cc-ui/v1/dropdown/stack/{{stackName}}/resources-info"
+                            method: GET
+                            params:
+                                includeContent: false
+                            labelKey: resourceName
+                            valueKey: resourceName
+                            valueTemplate: "${service.{{value}}.out.attributes.namespace}"
+                            filterConditions:
+                                - field: resourceType
+                                  value: service
                         path:
                             default: /
                             description: URL path for this rule
@@ -403,10 +443,35 @@ spec:
                             description: Service port number or name
                             title: Service Port
                             type: string
+                            x-ui-api-source:
+                                endpoint: "/cc-ui/v1/dropdown/stack/{{stackName}}/service/{{serviceName}}/overview"
+                                dynamicProperties:
+                                    serviceName:
+                                        key: service_name
+                                        lookup: regex
+                                        x-ui-lookup-regex: '\${[^.]+\.([^.]+).*}'
+                                method: GET
+                                labelKey: port
+                                valueKey: port
+                                path: ports
+                            x-ui-disable-tooltip: "No Ports Found or Service not selected"
+                            x-ui-typeable: true
                         service_name:
                             description: Kubernetes service name (supports ${service.X.out.attributes.service_name})
                             title: Service Name
                             type: string
+                            x-ui-api-source:
+                                endpoint: "/cc-ui/v1/dropdown/stack/{{stackName}}/resources-info"
+                                method: GET
+                                params:
+                                    includeContent: false
+                                labelKey: resourceName
+                                valueKey: resourceName
+                                valueTemplate: "${service.{{value}}.out.attributes.service_name}"
+                                filterConditions:
+                                    - field: resourceType
+                                      value: service
+                                x-ui-typeable: true
                         session_affinity:
                             description: Sticky session configuration
                             properties:
@@ -486,15 +551,6 @@ spec:
             title: Global Header Routing
             type: object
             x-ui-toggle: true
-        service_type:
-            default: LoadBalancer
-            description: Kubernetes service type
-            enum:
-                - LoadBalancer
-                - ClusterIP
-                - NodePort
-            title: Service Type
-            type: string
     required:
         - domains
         - rules
@@ -508,6 +564,7 @@ spec:
         - ingress_chart_version
         - service_type
         - replicas
+        - autoscaling
         - private
         - basic_auth
         - grpc

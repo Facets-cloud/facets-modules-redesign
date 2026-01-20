@@ -1,162 +1,278 @@
-# Traefik Ingress Module (Nginx-Compatible Schema)
+# Traefik Ingress Module (Gateway API)
 
-A Traefik ingress controller module for Facets platform with **Nginx-compatible schema**. This module provides a drop-in replacement for Nginx ingress while using Traefik as the underlying controller.
+Traefik ingress controller using Kubernetes Gateway API with support for domains, rules, session affinity, CORS, custom error pages, IP whitelisting, and SSL redirection.
 
-## Overview
+## Architecture Overview
 
-- **Intent**: `ingress`
-- **Flavor**: `traefik`
-- **Version**: `1.0`
-- **Platform**: AWS / Kubernetes
-- **Schema**: Compatible with existing Nginx ingress configurations
+```
+                                    ┌─────────────────────────────────────────────────────┐
+                                    │                   Kubernetes Cluster                 │
+                                    │                                                      │
+┌──────────┐    ┌─────────────┐    │  ┌─────────────┐    ┌─────────────┐    ┌──────────┐ │
+│  Client  │───▶│  AWS NLB    │───▶│  │   Traefik   │───▶│ TraefikSvc  │───▶│   App    │ │
+│ (Browser)│    │  (Port 443) │    │  │   (Pods)    │    │  (Routing)  │    │ (Service)│ │
+└──────────┘    └─────────────┘    │  └─────────────┘    └─────────────┘    └──────────┘ │
+                                    │        │                                            │
+                                    │        ▼                                            │
+                                    │  Reads: GatewayClass, Gateway, HTTPRoute,           │
+                                    │         Middleware, TraefikService                  │
+                                    └─────────────────────────────────────────────────────┘
+```
 
-## Key Features
+## How It Works
 
-### ✅ Nginx Schema Compatibility
-- **domains** - Domain configurations with custom TLS certificates
-- **rules** - Routing rules with domain_prefix + path combinations
-- **session_affinity** - Sticky sessions with cookie configuration
-- **cors** - Per-rule CORS settings
-- **annotations** - Global and per-rule annotations
-- **force_ssl_redirection** - Automatic HTTP to HTTPS redirect
-- **custom_error_pages** - Custom 404/503 HTML pages
-- **pdb** - Pod Disruption Budget configuration
+### Components
 
-### ✅ Security Features
-- **Global Security Headers** - X-Frame-Options, CSP, Referrer-Policy, etc.
-- **IP Whitelisting** - Protect monitoring endpoints (actuator, prometheus, metrics)
-- **Basic Authentication** - Optional basic auth per ingress
-- **Custom TLS Certificates** - Per-domain TLS with secret references
+| Resource | Purpose |
+|----------|---------|
+| **GatewayClass** | Registers Traefik as the Gateway controller |
+| **Gateway** | Defines listeners (ports 8000/8443) and TLS configuration |
+| **HTTPRoute** | Routing rules - matches host/path/headers to backend |
+| **TraefikService** | Backend routing with sticky session support |
+| **Middleware** | Request/response processing (headers, auth, CORS, etc.) |
 
-### ✅ Advanced Routing
-- **Domain Prefixes** - Subdomain routing with wildcard support
-- **Path-Based Routing** - Route different paths to different services
-- **Header-Based Routing** - Route based on HTTP headers (exact or regex)
-- **Path Rewriting** - Strip prefix before forwarding
-- **Session Affinity** - Sticky sessions with configurable cookies
-- **CORS** - Per-rule CORS with custom origins and methods
+### Traffic Flow
 
-### ✅ Operational Features
-- **Custom Error Pages** - Branded 404/503 error pages
-- **Pod Disruption Budget** - High availability configuration
-- **Resource Limits** - CPU and memory limits
-- **Private Load Balancer** - Internal-only load balancer option
-- **gRPC Support** - Enable gRPC protocol routing
+When a user hits a URL (e.g., `https://app.example.com/api`):
 
-## Module Files
+1. **DNS Resolution**: Browser resolves domain to AWS NLB IP (Route53 record created by module)
 
-- `facets.yaml` - Module definition with Nginx-compatible schema
-- `variables.tf` - Terraform variable definitions
-- `main.tf` - Traefik Helm deployment and routing implementation
-- `outputs.tf` - Output attributes and interfaces
-- `versions.tf` - Terraform version constraints
-- `output-type-schema.json` - Output type schema
+2. **NLB Receives Request**: AWS Network Load Balancer receives request on port 443 (HTTPS) or 80 (HTTP)
 
-## Schema Structure
+3. **Forward to Traefik**: NLB forwards to Traefik pods (port 8443 for HTTPS, 8000 for HTTP)
 
-### Domains Configuration
+4. **TLS Termination**:
+   - With cert-manager: Traefik terminates TLS using certificate from Kubernetes secret
+   - With ACM: NLB terminates TLS, forwards plain HTTP to Traefik
+
+5. **Traefik Processes Request**:
+   - Checks Gateway for listener configuration
+   - Finds matching HTTPRoute (by hostname, path, headers)
+   - Applies Middlewares (headers, auth, CORS, etc.)
+   - Forwards to TraefikService
+
+6. **TraefikService Routes to Backend**: Forwards to your Kubernetes Service with optional sticky sessions
+
+7. **Response Returns**: Response travels back through middlewares (headers added) to client
+
+### Component Relationships
+
+```
+GatewayClass (mis-traefik)
+       │
+       │  "Traefik is the controller"
+       ▼
+Gateway (mis-traefik)
+       │
+       │  Listeners: port 8000 (HTTP), port 8443 (HTTPS + TLS)
+       ▼
+HTTPRoute (one per rule)
+       │
+       │  Matches: hostname + path + headers
+       │  Filters: Middlewares
+       ▼
+TraefikService (one per rule)
+       │
+       │  Backend + sticky sessions
+       ▼
+Kubernetes Service (your app)
+```
+
+## Configuration
+
+### Basic Example
 
 ```yaml
 spec:
+  namespace: default
+  enable_crds: true                    # Install CRDs (true for first instance)
+  gateway_api_version: v1.4.0
+  replicas: 2
+  service_type: LoadBalancer
+
+  # TLS via cert-manager
+  certificate:
+    use_cert_manager: true
+    issuer_name: letsencrypt-prod
+    issuer_kind: ClusterIssuer
+
+  # Domain configuration
   domains:
-    prod-wis-sg:
-      domain: "workinsync.io"
-      alias: "prod-wis-sg"
-      custom_tls:
-        enabled: true
-        certificate: "${blueprint.self.secrets.WIS_SG_CERT}"
-        private_key: "${blueprint.self.secrets.WIS_SG_KEY}"
-```
+    my-domain:
+      domain: example.com
+      # Optional: ACM certificate for NLB TLS termination
+      # acm_certificate_arn: arn:aws:acm:us-east-1:123456789:certificate/xxx
 
-### Rules Configuration
-
-```yaml
-spec:
+  # Routing rules
   rules:
-    stratus-authorization:
-      disable: false
-      domain_prefix: "*"  # Wildcard applies to all subdomains
-      service_name: "${service.stratus-auth-blue.out.attributes.service_name}"
-      namespace: "${service.stratus-auth-blue.out.attributes.namespace}"
-      port: "8081"
-      path: "/authorization"
-      enable_rewrite_target: false
-      enable_header_based_routing: false
-
-      session_affinity:
-        session_cookie_name: "stratus-blue"
-        session_cookie_expires: 3600
-        session_cookie_max_age: 3600
-
-      cors:
-        enable: false
-
-      annotations:
-        nginx.ingress.kubernetes.io/affinity-mode: "persistent"
+    my-app:
+      domain_prefix: app              # app.example.com
+      path: /api
+      service_name: my-service
+      port: "8080"
 ```
 
-### Global Security Headers
+### Spec Properties
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `namespace` | string | `default` | Kubernetes namespace for Traefik |
+| `create_namespace` | bool | `true` | Create namespace if it doesn't exist |
+| `enable_crds` | bool | `true` | Install Traefik and Gateway API CRDs |
+| `gateway_api_version` | string | `v1.4.0` | Gateway API version to install |
+| `ingress_chart_version` | string | `38.0.2` | Traefik Helm chart version |
+| `replicas` | number | `2` | Number of Traefik replicas |
+| `service_type` | string | `LoadBalancer` | Service type (LoadBalancer, ClusterIP, NodePort) |
+| `private` | bool | `false` | Use internal load balancer |
+| `force_ssl_redirection` | bool | `true` | Redirect HTTP to HTTPS |
+| `grpc` | bool | `false` | Enable gRPC support |
+| `basic_auth` | bool | `false` | Enable basic authentication |
+| `basic_auth_secret` | string | - | Secret name containing htpasswd data |
+
+### Domain Configuration
 
 ```yaml
-spec:
-  security_headers:
-    x_frame_options: "SAMEORIGIN"
-    content_security_policy: "frame-ancestors 'self' *.moveinsync.com *.workinsync.io"
-    referrer_policy: "same-origin"
-    x_content_type_options: "nosniff"
-    x_xss_protection: "1; mode=block"
+domains:
+  my-domain:
+    domain: example.com               # Base domain name
+    alias: my-alias                   # Optional alias identifier
+    acm_certificate_arn: arn:aws:...  # Optional ACM cert for NLB TLS
 ```
 
-### IP Whitelisting for Monitoring Endpoints
+### Rule Configuration
 
 ```yaml
-spec:
-  ip_whitelist:
-    enabled: true
-    protected_paths:
-      - "actuator"
-      - "prometheus"
-      - "/metrics"
-    allowed_ips:
-      - "10.0.0.0/8"
-      - "10.101.0.0/16"
-      - "172.31.0.0/16"
-      - "54.251.0.116/32"
-      # ... add all your whitelisted IPs
+rules:
+  my-rule:
+    domain_prefix: app                # Subdomain (app.example.com) or * for wildcard
+    path: /api                        # URL path prefix
+    service_name: my-service          # Kubernetes service name
+    port: "8080"                      # Service port
+    namespace: default                # Service namespace (optional)
+    disable: false                    # Disable this rule
+
+    # Path rewriting
+    enable_rewrite_target: false      # Strip path prefix before forwarding
+
+    # Header-based routing (AND with path)
+    enable_header_based_routing: true
+    header_routing_rules:
+      my-header:
+        header_name: x-environment
+        header_value: production
+        match_type: exact             # exact or regex
+
+    # Session affinity (sticky sessions)
+    session_affinity:
+      session_cookie_name: route
+      session_cookie_expires: 3600
+      session_cookie_max_age: 3600
+
+    # CORS configuration
+    cors:
+      enable: true
+      allowed_origins:
+        - https://example.com
+      allowed_methods:
+        - GET
+        - POST
+
+    # Rule-specific response headers
+    response_headers:
+      x-app-version: "1.0.0"
+
+    # Custom annotations
+    annotations:
+      custom-annotation: value
 ```
 
-### Custom Error Pages
+### Global Response Headers
+
+Applied to all routes:
 
 ```yaml
-spec:
-  custom_error_pages:
-    error-404:
-      error_code: "404"
-      page_content: |
-        <!doctype html>
-        <html>
-          <body>
-            <h1>Page Not Found</h1>
-          </body>
-        </html>
+global_response_headers:
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Content-Security-Policy: "default-src 'self'"
+  Referrer-Policy: same-origin
+  X-XSS-Protection: "1; mode=block"
+```
 
-    error-503:
-      error_code: "503"
-      page_content: |
-        <!doctype html>
-        <html>
-          <body>
-            <h1>Service Unavailable</h1>
-          </body>
-        </html>
+### Global Header Routing
+
+Require specific headers for all routes:
+
+```yaml
+global_header_routing:
+  enabled: true
+  rules:
+    provider-header:
+      header_name: x-provider
+      header_value: aws
+      match_type: exact
+```
+
+### IP Whitelist
+
+Protect specific paths by IP:
+
+```yaml
+ip_whitelist:
+  enabled: true
+  allowed_ips:
+    - 10.0.0.0/8
+    - 192.168.1.0/24
+  protected_paths:
+    - /actuator
+    - /metrics
+    - /prometheus
+```
+
+### Certificate Configuration (cert-manager)
+
+```yaml
+certificate:
+  use_cert_manager: true
+  issuer_name: letsencrypt-prod
+  issuer_kind: ClusterIssuer          # or Issuer
+```
+
+### Resource Limits
+
+```yaml
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
 ```
 
 ### Pod Disruption Budget
 
 ```yaml
+pdb:
+  maxUnavailable: "1"
+  # or
+  minAvailable: "1"
+```
+
+## Multiple Instances
+
+When deploying multiple Traefik instances in the same cluster:
+
+```yaml
+# First instance - install CRDs
 spec:
-  pdb:
-    maxUnavailable: "1"
+  enable_crds: true
+  namespace: traefik-public
+
+# Second instance - skip CRDs (already installed)
+spec:
+  enable_crds: false
+  namespace: traefik-internal
 ```
 
 ## Complete Example
@@ -166,105 +282,84 @@ kind: ingress
 flavor: traefik
 version: "1.0"
 disabled: false
-metadata:
-  name: main-ingress
 
-depends_on:
-  - kubernetes_cluster.my-cluster
+inputs:
+  kubernetes_cluster:
+    resource_name: default
+    resource_type: kubernetes_cluster
 
 spec:
-  namespace: "traefik"
+  namespace: default
+  create_namespace: false
+  enable_crds: true
+  gateway_api_version: v1.4.0
   service_type: LoadBalancer
   replicas: 2
   private: false
-  basic_auth: false
-  grpc: false
   force_ssl_redirection: true
-  disable_base_domain: true
 
-  # Global annotations
-  global_annotations:
-    service.beta.kubernetes.io/aws-load-balancer-ssl-negotiation-policy: "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  # TLS via cert-manager
+  certificate:
+    use_cert_manager: true
+    issuer_name: letsencrypt-prod
+    issuer_kind: ClusterIssuer
 
-  # Security headers (applied globally)
-  security_headers:
-    x_frame_options: "SAMEORIGIN"
-    content_security_policy: "frame-ancestors 'self' *.moveinsync.com *.workinsync.io teams.microsoft.com"
-    referrer_policy: "same-origin"
-    x_content_type_options: "nosniff"
-    x_xss_protection: "1; mode=block"
+  # Global response headers (security headers)
+  global_response_headers:
+    X-Frame-Options: SAMEORIGIN
+    X-Content-Type-Options: nosniff
+    Referrer-Policy: same-origin
+    X-XSS-Protection: "1; mode=block"
+
+  # Global header routing (require x-provider header)
+  global_header_routing:
+    enabled: true
+    rules:
+      provider:
+        header_name: x-provider
+        header_value: aws
+        match_type: exact
 
   # IP whitelist for monitoring endpoints
   ip_whitelist:
     enabled: true
-    protected_paths:
-      - "actuator"
-      - "prometheus"
-      - "/metrics"
     allowed_ips:
-      - "10.0.0.0/8"
-      - "10.101.0.0/16"
-      - "172.31.0.0/16"
+      - 10.0.0.0/8
+      - 172.16.0.0/12
+    protected_paths:
+      - /actuator
+      - /metrics
 
   # Domains
-  domains:
-    prod-wis-sg:
-      domain: "workinsync.io"
-      alias: "prod-wis-sg"
-      custom_tls:
-        enabled: true
-        certificate: "${blueprint.self.secrets.WIS_SG_CERT}"
-        private_key: "${blueprint.self.secrets.WIS_SG_KEY}"
+  domains: {}
 
   # Routing rules
   rules:
-    # Authorization service with sticky sessions
-    stratus-authorization:
-      disable: false
-      domain_prefix: "*"
-      service_name: "${service.stratus-auth-blue.out.attributes.service_name}"
-      namespace: "${service.stratus-auth-blue.out.attributes.namespace}"
-      port: "8081"
-      path: "/authorization"
-      enable_rewrite_target: false
-
+    petclinic:
+      domain_prefix: petclinic
+      path: /
+      service_name: petclinic
+      port: "8080"
+      namespace: default
+      enable_header_based_routing: true
+      header_routing_rules:
+        env:
+          header_name: x-environment
+          header_value: dev
+          match_type: exact
       session_affinity:
-        session_cookie_name: "stratus-blue"
-        session_cookie_expires: 3600
-        session_cookie_max_age: 3600
+        session_cookie_name: route
+        session_cookie_expires: 300
+        session_cookie_max_age: 300
 
-      cors:
-        enable: false
-
-    # Onboarding service
-    stratus-onboarding:
-      disable: false
-      domain_prefix: "*"
-      service_name: "${service.stratus-self-onboarding.out.attributes.service_name}"
-      namespace: "${service.stratus-self-onboarding.out.attributes.namespace}"
-      port: "8081"
-      path: "/onboarding"
-      enable_rewrite_target: false
-
-    # UI service (root path)
-    default-stratus-ui:
-      disable: false
-      domain_prefix: "*"
-      service_name: "${service.stratus-ui.out.attributes.service_name}"
-      namespace: "${service.stratus-ui.out.attributes.namespace}"
-      port: "80"
-      path: "/"
-      enable_rewrite_target: false
-
-  # Custom error pages
-  custom_error_pages:
-    error-404:
-      error_code: "404"
-      page_content: "<!doctype html>..."
-
-    error-503:
-      error_code: "503"
-      page_content: "<!doctype html>..."
+    test-deployment:
+      domain_prefix: test
+      path: /admin
+      service_name: test-deployment
+      port: "8080"
+      namespace: default
+      response_headers:
+        x-app-version: "1.0.0"
 
   # Pod disruption budget
   pdb:
@@ -273,192 +368,76 @@ spec:
   # Resource limits
   resources:
     requests:
-      cpu: "200m"
-      memory: "256Mi"
+      cpu: 100m
+      memory: 128Mi
     limits:
-      cpu: "1000m"
-      memory: "1Gi"
+      cpu: 500m
+      memory: 512Mi
 ```
 
-## Migration from Nginx Ingress
+## Inputs
 
-### Direct Schema Compatibility
+| Input | Type | Required | Description |
+|-------|------|----------|-------------|
+| `kubernetes_cluster` | @outputs/kubernetes | Yes | Kubernetes cluster connection |
 
-This module uses the **exact same schema** as your existing Nginx ingress, so migration is straightforward:
+## Outputs
 
-1. **Keep your existing spec** - No schema changes required
-2. **Change flavor** - Update `flavor: nginx` to `flavor: traefik`
-3. **Update version** - Set `version: "1.0"`
-4. **Test** - Deploy and verify routing works
-
-### Supported Nginx Features
-
-| Nginx Feature | Traefik Equivalent | Supported |
-|---------------|-------------------|-----------|
-| `domains` | IngressRoute hosts | ✅ Yes |
-| `rules` | IngressRoute routes | ✅ Yes |
-| `domain_prefix` | Host matching | ✅ Yes (including wildcard `*`) |
-| `session_affinity` | Sticky middleware | ✅ Yes |
-| `cors` | Headers middleware | ✅ Yes |
-| `enable_rewrite_target` | StripPrefix middleware | ✅ Yes |
-| `force_ssl_redirection` | HTTPS redirect | ✅ Yes |
-| `custom_error_pages` | Errors middleware + nginx pod | ✅ Yes |
-| `annotations` (global) | Service annotations | ✅ Yes |
-| `annotations` (per-rule) | IngressRoute annotations | ✅ Yes |
-| `pdb` | PodDisruptionBudget | ✅ Yes |
-| Global security headers | Headers middleware | ✅ Yes |
-| IP whitelist (server-snippet) | IPWhiteList middleware | ✅ Yes |
-| `basic_auth` | BasicAuth middleware | ✅ Yes |
-| `grpc` | gRPC protocol | ✅ Yes |
-| `enable_header_based_routing` | Header matchers | ✅ Yes |
-
-### Annotation Mapping
-
-Nginx annotations are handled differently:
-
-| Nginx Annotation | Traefik Implementation |
-|------------------|------------------------|
-| `nginx.ingress.kubernetes.io/configuration-snippet` | Replaced by `security_headers` config |
-| `nginx.ingress.kubernetes.io/server-snippet` | Replaced by `ip_whitelist` config |
-| `nginx.ingress.kubernetes.io/affinity-mode` | Sticky sessions middleware (automatic) |
-| `nginx.ingress.kubernetes.io/session-cookie-*` | Session affinity configuration |
-| Service annotations | Passed through to Traefik service |
-
-## Deployment
-
-### 1. Create Output Type
-
-```bash
-raptor create output-type @outputs/ingress -f output-type-schema.json
-```
-
-### 2. Upload Module
-
-```bash
-# Validate
-raptor create iac-module -f . --dry-run
-
-# Upload
-raptor create iac-module -f . --auto-create
-
-# Publish
-raptor publish iac-module ingress/traefik/1.0
-```
-
-### 3. Add to Project Type
-
-```bash
-raptor create resource-type-mapping <project-type> --resource-type ingress/traefik
-```
-
-### 4. Update Your Blueprint
-
-Simply change the flavor:
-
-```yaml
-# Before (Nginx)
-kind: ingress
-flavor: nginx
-version: "0.1"
-
-# After (Traefik)
-kind: ingress
-flavor: traefik
-version: "1.0"
-
-# Everything else stays the same!
-```
-
-## Verification
-
-### Check Traefik Pods
-
-```bash
-kubectl get pods -n traefik
-kubectl logs -n traefik -l app.kubernetes.io/name=traefik
-```
-
-### Check IngressRoutes
-
-```bash
-kubectl get ingressroute -n traefik
-kubectl describe ingressroute <name> -n traefik
-```
-
-### Check Middlewares
-
-```bash
-kubectl get middleware -n traefik
-```
-
-### Test Routing
-
-```bash
-# Get load balancer
-LB=$(kubectl get svc -n traefik -o jsonpath='{.items[0].status.loadBalancer.ingress[0].hostname}')
-
-# Test endpoint
-curl -H "Host: workinsync.io" https://$LB/authorization
-```
+| Output | Description |
+|--------|-------------|
+| `namespace` | Namespace where Traefik is deployed |
+| `service_name` | Traefik service name |
+| `load_balancer_hostname` | NLB hostname |
+| `helm_release_name` | Helm release name |
 
 ## Troubleshooting
 
-### Issue: Routes not working
+### Check Gateway Status
+```bash
+kubectl get gateway -n <namespace>
+kubectl describe gateway <name> -n <namespace>
+```
 
-**Check:**
-- IngressRoute created: `kubectl get ingressroute -n traefik`
-- Service exists: `kubectl get svc <service-name>`
-- Traefik logs: `kubectl logs -n traefik -l app.kubernetes.io/name=traefik`
+### Check HTTPRoute Status
+```bash
+kubectl get httproute -n <namespace>
+kubectl describe httproute <name> -n <namespace>
+```
 
-### Issue: SSL redirect not working
+### Check Traefik Logs
+```bash
+kubectl logs -l app.kubernetes.io/name=traefik -n <namespace> --tail=100
+```
 
-**Check:**
-- `force_ssl_redirection: true` in spec
-- IngressRoute has `websecure` entrypoint
-- Ports configured correctly in Helm values
+### Check Certificate Status
+```bash
+kubectl get certificate -n <namespace>
+kubectl describe certificate <name> -n <namespace>
+```
 
-### Issue: Sticky sessions not working
+### Check Middlewares
+```bash
+kubectl get middleware -n <namespace>
+kubectl describe middleware <name> -n <namespace>
+```
 
-**Check:**
-- `session_affinity` configured in rule
-- Cookie middleware created: `kubectl get middleware -n traefik`
-- Cookie present in response headers
+### Common Issues
 
-### Issue: Custom error pages not showing
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| BackendTLSPolicy CRD missing | Gateway API version too old | Use v1.4.0+ |
+| Certificate not ready | cert-manager issue | Check ClusterIssuer and cert-manager logs |
+| 404 errors | HTTPRoute not matching | Verify hostname, path, and headers |
+| SSL errors | Certificate secret missing | Check if cert-manager created the secret |
+| CRD conflict on apply | CRDs from different helm release | Set `enable_crds: false` or uninstall old release |
 
-**Check:**
-- Error pages ConfigMap: `kubectl get cm -n traefik`
-- Error pages pod running: `kubectl get pods -n traefik | grep error`
-- Errors middleware applied to routes
+## Module Files
 
-## Best Practices
-
-1. **Use wildcard (`*`) for shared services** - Services used across all subdomains
-2. **Use specific domain_prefix for tenant-specific services** - Isolate tenant traffic
-3. **Enable sticky sessions for stateful apps** - Maintain session consistency
-4. **Use custom error pages** - Better user experience
-5. **Configure PDB** - Ensure high availability during deployments
-6. **Set appropriate resource limits** - Based on your traffic volume
-7. **Use IP whitelist for monitoring** - Protect sensitive endpoints
-
-## Performance Considerations
-
-- **Replicas**: Start with 2, scale based on traffic
-- **Resources**: Adjust based on number of rules and traffic volume
-- **PDB**: Set `maxUnavailable: 1` for smooth rolling updates
-- **Load Balancer**: Use NLB for better performance on AWS
-
-## Security Recommendations
-
-1. **Always enable `force_ssl_redirection: true`**
-2. **Configure security headers** globally
-3. **Use IP whitelist** for actuator/prometheus/metrics
-4. **Use custom TLS certificates** for production domains
-5. **Enable basic auth** for sensitive ingresses if needed
-
-## Support
-
-For issues or questions:
-- Check Traefik logs: `kubectl logs -n traefik -l app.kubernetes.io/name=traefik`
-- Review IngressRoute: `kubectl describe ingressroute <name> -n traefik`
-- Check middleware: `kubectl describe middleware <name> -n traefik`
+| File | Description |
+|------|-------------|
+| `facets.yaml` | Module definition with schema |
+| `variables.tf` | Terraform variable definitions |
+| `main.tf` | Traefik Helm deployment, Gateway, HTTPRoutes |
+| `crds.tf` | CRD installation (Traefik + Gateway API) |
+| `outputs.tf` | Output attributes and interfaces |
+| `versions.tf` | Terraform version constraints |

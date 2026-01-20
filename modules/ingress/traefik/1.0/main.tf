@@ -11,9 +11,9 @@ locals {
   namespace = var.instance.spec.namespace
   spec      = var.instance.spec
 
-  # Base domain from environment variable, zone_id from cc_metadata
+  # Base domain from environment variable
   tenant_base_domain_value  = coalesce(lookup(data.external.env_vars.result, "tenant_base_domain", ""), "")
-  tenant_base_domain_id     = lookup(var.cc_metadata, "tenant_base_domain_id", "")
+  tenant_base_domain_id     = "" # Route53 zone ID not available without cc_metadata
   tenant_provider           = lookup(data.external.env_vars.result, "cc_tenant_provider", "aws")
   has_tenant_base_domain    = local.tenant_base_domain_value != ""
   has_tenant_base_domain_id = local.tenant_base_domain_id != ""
@@ -42,6 +42,7 @@ locals {
   ip_whitelist            = lookup(local.spec, "ip_whitelist", {})
   custom_errors           = lookup(local.spec, "custom_error_pages", {})
   resources_config        = lookup(local.spec, "resources", {})
+  autoscaling             = lookup(local.spec, "autoscaling", {})
 
   # Build complete host -> domain mapping
   domain_mappings = merge([
@@ -85,7 +86,7 @@ locals {
     } : {},
     # Add ACM certificate ARN for TLS termination at load balancer
     length(local.acm_certificate_arns) > 0 ? {
-      "service.beta.kubernetes.io/aws-load-balancer-ssl-cert" = join(",", local.acm_certificate_arns)
+      "service.beta.kubernetes.io/aws-load-balancer-ssl-cert"  = join(",", local.acm_certificate_arns)
       "service.beta.kubernetes.io/aws-load-balancer-ssl-ports" = "443"
     } : {}
   )
@@ -150,7 +151,39 @@ resource "helm_release" "traefik" {
   values = [
     yamlencode({
       deployment = {
-        replicas = lookup(local.spec, "replicas", 2)
+        # When autoscaling is enabled, use min_replicas as initial; otherwise use replicas
+        replicas = lookup(local.autoscaling, "enabled", false) ? lookup(local.autoscaling, "min_replicas", 2) : lookup(local.spec, "replicas", 2)
+      }
+
+      # Autoscaling (HPA) configuration
+      autoscaling = lookup(local.autoscaling, "enabled", false) ? {
+        enabled     = true
+        minReplicas = lookup(local.autoscaling, "min_replicas", 2)
+        maxReplicas = lookup(local.autoscaling, "max_replicas", 10)
+        metrics = concat(
+          [{
+            type = "Resource"
+            resource = {
+              name = "cpu"
+              target = {
+                type               = "Utilization"
+                averageUtilization = lookup(local.autoscaling, "target_cpu_utilization_percent", 80)
+              }
+            }
+          }],
+          lookup(local.autoscaling, "target_memory_utilization_percent", null) != null ? [{
+            type = "Resource"
+            resource = {
+              name = "memory"
+              target = {
+                type               = "Utilization"
+                averageUtilization = lookup(local.autoscaling, "target_memory_utilization_percent", 80)
+              }
+            }
+          }] : []
+        )
+      } : {
+        enabled = false
       }
 
       # Disable default ingressClass - we use Gateway API
@@ -440,7 +473,7 @@ module "cors" {
       headers = {
         accessControlAllowOriginList  = lookup(each.value.cors, "allowed_origins", ["*"])
         accessControlAllowMethods     = lookup(each.value.cors, "allowed_methods", ["GET", "POST", "PUT", "DELETE", "OPTIONS"])
-        accessControlAllowHeaders     = ["*"]
+        accessControlAllowHeaders     = length(lookup(each.value.cors, "allowed_headers", [])) > 0 ? lookup(each.value.cors, "allowed_headers", []) : ["*"]
         accessControlExposeHeaders    = ["*"]
         accessControlAllowCredentials = true
         accessControlMaxAge           = 100
@@ -669,7 +702,7 @@ locals {
       domain_data = local.first_domain != null ? {
         domain_key = local.first_domain_key
         config     = local.first_domain
-      } : {
+        } : {
         domain_key = ""
         config     = null
       }
@@ -975,8 +1008,8 @@ resource "aws_route53_record" "base_domain" {
 
   records = [
     local.record_type == "CNAME" ?
-      data.kubernetes_service.traefik.status[0].load_balancer[0].ingress[0].hostname :
-      data.kubernetes_service.traefik.status[0].load_balancer[0].ingress[0].ip
+    data.kubernetes_service.traefik.status[0].load_balancer[0].ingress[0].hostname :
+    data.kubernetes_service.traefik.status[0].load_balancer[0].ingress[0].ip
   ]
 
   depends_on = [helm_release.traefik]
@@ -998,8 +1031,8 @@ resource "aws_route53_record" "wildcard_subdomain" {
 
   records = [
     local.record_type == "CNAME" ?
-      data.kubernetes_service.traefik.status[0].load_balancer[0].ingress[0].hostname :
-      data.kubernetes_service.traefik.status[0].load_balancer[0].ingress[0].ip
+    data.kubernetes_service.traefik.status[0].load_balancer[0].ingress[0].hostname :
+    data.kubernetes_service.traefik.status[0].load_balancer[0].ingress[0].ip
   ]
 
   depends_on = [helm_release.traefik]
