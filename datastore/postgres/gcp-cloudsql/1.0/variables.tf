@@ -20,6 +20,13 @@ variable "instance" {
         master_username     = optional(string)
         master_password     = optional(string)
       })
+      network_config = optional(object({
+        ipv4_enabled = optional(bool, false)
+        require_ssl  = optional(bool, true)
+        authorized_networks = optional(map(object({
+          value = string
+        })), {})
+      }))
       imports = optional(object({
         instance_id   = optional(string)
         database_name = optional(string)
