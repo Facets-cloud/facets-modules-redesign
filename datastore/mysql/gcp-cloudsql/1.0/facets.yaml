@@ -10,10 +10,18 @@ spec:
   description: Managed MySQL database using Google Cloud SQL with automated backups
     and high availability
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - restore_config
+  - imports
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
+      x-ui-order:
+      - version
+      - database_name
       properties:
         version:
           type: string
@@ -38,6 +46,10 @@ spec:
     sizing:
       type: object
       title: Sizing & Performance
+      x-ui-order:
+      - tier
+      - disk_size
+      - read_replica_count
       properties:
         tier:
           type: string
@@ -73,6 +85,11 @@ spec:
       type: object
       title: Restore Operations
       x-ui-overrides-only: true
+      x-ui-order:
+      - restore_from_backup
+      - source_instance_id
+      - master_username
+      - master_password
       properties:
         restore_from_backup:
           type: boolean
@@ -113,6 +130,15 @@ spec:
       type: object
       title: Import Existing Resources
       x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - instance_name
+      - database_name
+      - root_user
+      - read_replica_0
+      - read_replica_1
+      - read_replica_2
+      - master_password
       properties:
         import_existing:
           type: boolean

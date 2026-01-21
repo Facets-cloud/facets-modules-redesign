@@ -10,11 +10,19 @@ spec:
   description: A managed PostgreSQL Aurora cluster with high availability, automated
     backups, and read replicas
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - restore_config
+  - imports
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
       x-ui-toggle: true
+      x-ui-order:
+      - engine_version
+      - database_name
       properties:
         engine_version:
           type: string
@@ -42,6 +50,11 @@ spec:
       type: object
       title: Sizing & Performance
       x-ui-toggle: true
+      x-ui-order:
+      - instance_class
+      - min_capacity
+      - max_capacity
+      - read_replica_count
       properties:
         instance_class:
           type: string
@@ -86,6 +99,11 @@ spec:
       title: Restore Operations
       x-ui-overrides-only: true
       x-ui-toggle: true
+      x-ui-order:
+      - restore_from_backup
+      - source_snapshot_identifier
+      - master_username
+      - master_password
       properties:
         restore_from_backup:
           type: boolean
@@ -129,6 +147,10 @@ spec:
       type: object
       title: Import Existing Resources
       x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - cluster_identifier
+      - writer_instance_identifier
       properties:
         import_existing:
           type: boolean

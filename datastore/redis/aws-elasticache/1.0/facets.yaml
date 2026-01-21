@@ -10,10 +10,18 @@ spec:
   description: Managed Redis cache using AWS ElastiCache with security and high availability
     defaults
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - restore_config
+  - imports
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
+      x-ui-order:
+      - redis_version
+      - node_type
       properties:
         redis_version:
           type: string
@@ -36,6 +44,10 @@ spec:
     sizing:
       type: object
       title: Sizing & Performance
+      x-ui-order:
+      - num_cache_nodes
+      - parameter_group_name
+      - snapshot_retention_limit
       properties:
         num_cache_nodes:
           type: number
@@ -62,6 +74,10 @@ spec:
       type: object
       title: Restore Operations
       x-ui-overrides-only: true
+      x-ui-order:
+      - restore_from_snapshot
+      - snapshot_name
+      - auth_token
       properties:
         restore_from_snapshot:
           type: boolean
@@ -87,6 +103,12 @@ spec:
       type: object
       title: Import Existing Resources
       x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - cluster_id
+      - subnet_group_name
+      - security_group_id
+      - auth_token
       properties:
         import_existing:
           type: boolean

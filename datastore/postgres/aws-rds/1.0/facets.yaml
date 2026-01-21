@@ -10,10 +10,19 @@ spec:
   description: Managed PostgreSQL database using Amazon RDS with secure defaults and
     backup support
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - security_config
+  - restore_config
+  - imports
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
+      x-ui-order:
+      - engine_version
+      - database_name
       properties:
         engine_version:
           type: string
@@ -38,6 +47,10 @@ spec:
     sizing:
       type: object
       title: Sizing & Performance
+      x-ui-order:
+      - instance_class
+      - allocated_storage
+      - read_replica_count
       properties:
         instance_class:
           type: string
@@ -71,6 +84,8 @@ spec:
     security_config:
       type: object
       title: Security & Protection
+      x-ui-order:
+      - deletion_protection
       properties:
         deletion_protection:
           type: boolean
@@ -84,6 +99,11 @@ spec:
       type: object
       title: Restore Operations
       x-ui-overrides-only: true
+      x-ui-order:
+      - restore_from_backup
+      - source_db_instance_identifier
+      - master_username
+      - master_password
       properties:
         restore_from_backup:
           type: boolean
@@ -125,6 +145,10 @@ spec:
       type: object
       title: Import Existing Resources
       x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - db_instance_identifier
+      - subnet_group_name
       properties:
         import_existing:
           type: boolean

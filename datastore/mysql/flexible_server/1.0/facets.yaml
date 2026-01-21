@@ -11,10 +11,20 @@ spec:
   description: Azure Database for MySQL - Flexible Server with high availability and
     automated backup. Network module must have MySQL flexible server subnet enabled.
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - restore_config
+  - imports
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
+      x-ui-order:
+      - version
+      - database_name
+      - charset
+      - collation
       properties:
         version:
           type: string
@@ -52,6 +62,12 @@ spec:
     sizing:
       type: object
       title: Sizing & Performance
+      x-ui-order:
+      - sku_name
+      - storage_gb
+      - iops
+      - storage_tier
+      - read_replica_count
       properties:
         sku_name:
           type: string
@@ -118,6 +134,12 @@ spec:
       type: object
       title: Restore Operations
       x-ui-overrides-only: true
+      x-ui-order:
+      - restore_from_backup
+      - source_server_id
+      - restore_point_in_time
+      - administrator_login
+      - administrator_password
       properties:
         restore_from_backup:
           type: boolean
@@ -168,6 +190,10 @@ spec:
       type: object
       title: Import Existing Resources
       x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - server_id
+      - database_id
       properties:
         import_existing:
           type: boolean

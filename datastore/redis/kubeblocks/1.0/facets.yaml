@@ -30,6 +30,16 @@ spec:
   title: Redis Cluster Configuration
   description: Redis in-memory database cluster managed by KubeBlocks
   type: object
+  x-ui-order:
+  - namespace_override
+  - termination_policy
+  - redis_version
+  - mode
+  - replicas
+  - shards
+  - resources
+  - storage
+  - backup
   properties:
     namespace_override:
       type: string
@@ -99,6 +109,11 @@ spec:
       type: object
       title: Resource Allocation
       description: CPU and memory resources for Redis pods
+      x-ui-order:
+      - cpu_request
+      - cpu_limit
+      - memory_request
+      - memory_limit
       properties:
         cpu_request:
           type: string
@@ -124,6 +139,8 @@ spec:
       type: object
       title: Storage Configuration
       description: Persistent storage settings for Redis data
+      x-ui-order:
+      - size
       properties:
         size:
           type: string
@@ -138,6 +155,9 @@ spec:
       title: Backup Configuration
       description: Optional backup schedule configuration
       x-ui-overrides-only: true
+      x-ui-order:
+      - enabled
+      - schedule_cron
       properties:
         enabled:
           type: boolean

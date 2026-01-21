@@ -8,10 +8,20 @@ spec:
   title: MongoDB with Azure Cosmos DB
   description: MongoDB-compatible database using Azure Cosmos DB service
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - backup_config
+  - restore_config
+  - imports
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
+      x-ui-order:
+      - api_version
+      - consistency_level
+      - port
       properties:
         api_version:
           type: string
@@ -44,6 +54,10 @@ spec:
     sizing:
       type: object
       title: Sizing & Performance
+      x-ui-order:
+      - throughput_mode
+      - max_throughput
+      - enable_multi_region
       properties:
         throughput_mode:
           type: string
@@ -69,6 +83,8 @@ spec:
     backup_config:
       type: object
       title: Backup Configuration
+      x-ui-order:
+      - enable_continuous_backup
       properties:
         enable_continuous_backup:
           type: boolean
@@ -80,6 +96,10 @@ spec:
       type: object
       title: Restore Operations
       x-ui-overrides-only: true
+      x-ui-order:
+      - restore_from_backup
+      - source_account_name
+      - restore_timestamp
       properties:
         restore_from_backup:
           type: boolean
@@ -108,6 +128,10 @@ spec:
       type: object
       title: Import Existing Resources
       x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - account_name
+      - database_name
       properties:
         import_existing:
           type: boolean

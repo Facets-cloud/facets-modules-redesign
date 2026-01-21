@@ -10,10 +10,18 @@ spec:
   description: Managed Redis instance using Google Cloud Memorystore with high availability
     and security
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - restore_config
+  - security
+  - imports
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
+      x-ui-order:
+      - redis_version
       properties:
         redis_version:
           type: string
@@ -31,6 +39,9 @@ spec:
     sizing:
       type: object
       title: Sizing & Performance
+      x-ui-order:
+      - memory_size_gb
+      - tier
       properties:
         memory_size_gb:
           type: number
@@ -55,6 +66,9 @@ spec:
       type: object
       title: Restore Operations
       x-ui-overrides-only: true
+      x-ui-order:
+      - restore_from_backup
+      - source_instance_id
       properties:
         restore_from_backup:
           type: boolean
@@ -74,6 +88,8 @@ spec:
     security:
       type: object
       title: Security Configuration
+      x-ui-order:
+      - enable_tls
       properties:
         enable_tls:
           type: boolean
@@ -86,6 +102,9 @@ spec:
       type: object
       title: Import Existing Resources
       x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - instance_id
       properties:
         import_existing:
           type: boolean

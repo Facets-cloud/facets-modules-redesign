@@ -10,10 +10,18 @@ spec:
   description: Managed MySQL database instance on AWS RDS with high availability,
     automated backups, and read replicas
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - restore_config
+  - imports
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
+      x-ui-order:
+      - version
+      - database_name
       properties:
         version:
           type: string
@@ -35,6 +43,12 @@ spec:
     sizing:
       type: object
       title: Sizing & Performance
+      x-ui-order:
+      - instance_class
+      - allocated_storage
+      - max_allocated_storage
+      - storage_type
+      - read_replica_count
       properties:
         instance_class:
           type: string
@@ -84,6 +98,11 @@ spec:
       type: object
       title: Restore Operations
       x-ui-overrides-only: true
+      x-ui-order:
+      - restore_from_backup
+      - source_db_instance_identifier
+      - restore_master_username
+      - restore_master_password
       properties:
         restore_from_backup:
           type: boolean
@@ -127,6 +146,10 @@ spec:
       type: object
       title: Import Existing Resources
       x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - db_instance_identifier
+      - db_subnet_group_name
       properties:
         import_existing:
           type: boolean

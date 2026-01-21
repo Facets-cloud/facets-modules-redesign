@@ -10,10 +10,17 @@ spec:
   description: AWS Managed Streaming for Apache Kafka cluster with secure defaults
     and automatic scaling
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - imports
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
+      x-ui-order:
+      - kafka_version
+      - instance_type
       properties:
         kafka_version:
           type: string
@@ -50,6 +57,10 @@ spec:
     sizing:
       type: object
       title: Sizing & Performance
+      x-ui-order:
+      - number_of_broker_nodes
+      - volume_size
+      - client_subnets_count
       properties:
         number_of_broker_nodes:
           type: number
@@ -76,6 +87,10 @@ spec:
       type: object
       title: Import Existing Resources
       x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - cluster_arn
+      - security_group_id
       properties:
         import_existing:
           type: boolean

@@ -8,10 +8,18 @@ spec:
   title: MongoDB with AWS DocumentDB
   description: MongoDB-compatible database using AWS DocumentDB service
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - restore_config
+  - imports
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
+      x-ui-order:
+      - engine_version
+      - port
       properties:
         engine_version:
           type: string
@@ -32,6 +40,9 @@ spec:
     sizing:
       type: object
       title: Sizing & Performance
+      x-ui-order:
+      - instance_class
+      - instance_count
       properties:
         instance_class:
           type: string
@@ -56,6 +67,11 @@ spec:
       type: object
       title: Restore Operations
       x-ui-overrides-only: true
+      x-ui-order:
+      - restore_from_snapshot
+      - snapshot_identifier
+      - master_username
+      - master_password
       properties:
         restore_from_snapshot:
           type: boolean
@@ -94,6 +110,12 @@ spec:
       type: object
       title: Import Existing Resources
       x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - cluster_identifier
+      - security_group_id
+      - subnet_group_name
+      - master_password
       properties:
         import_existing:
           type: boolean
