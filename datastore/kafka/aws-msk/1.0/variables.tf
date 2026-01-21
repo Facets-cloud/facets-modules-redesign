@@ -15,6 +15,7 @@ variable "instance" {
         client_subnets_count   = number
       })
       imports = optional(object({
+        import_existing   = optional(bool, false)
         cluster_arn       = optional(string)
         security_group_id = optional(string)
       }), {})

@@ -117,6 +117,8 @@ spec:
           description: Master password (required when restoring from snapshot)
           minLength: 8
           maxLength: 128
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,128}$
+          x-ui-error-message: "Password must be 8-128 chars with valid characters."
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
             values:
@@ -127,25 +129,47 @@ spec:
       type: object
       title: Import Existing Resources
       x-ui-overrides-only: true
-      x-ui-toggle: true
       properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing Aurora cluster resources
+          default: false
         cluster_identifier:
           type: string
           title: Aurora Cluster Identifier
           description: Existing Aurora cluster identifier to import
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         writer_instance_identifier:
           type: string
           title: Writer Instance Identifier
           description: Existing writer instance identifier to import
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         reader_instance_identifiers:
           type: string
           title: Reader Instance Identifiers
           description: Existing reader instance identifiers to import (comma-separated)
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         master_password:
           type: string
           title: Master Password
           description: Master password for the imported cluster (8+ characters)
           minLength: 8
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,}$
+          x-ui-error-message: "Password must be 8+ chars with valid characters."
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
   required:
   - version_config
   - sizing

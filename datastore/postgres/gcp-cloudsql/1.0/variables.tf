@@ -21,9 +21,10 @@ variable "instance" {
         master_password     = optional(string)
       })
       imports = optional(object({
-        instance_id   = optional(string)
-        database_name = optional(string)
-        user_name     = optional(string)
+        import_existing = optional(bool, false)
+        instance_id     = optional(string)
+        database_name   = optional(string)
+        user_name       = optional(string)
         master_password = optional(string)
       }))
     })

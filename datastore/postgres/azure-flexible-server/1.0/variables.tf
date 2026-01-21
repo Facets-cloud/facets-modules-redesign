@@ -22,6 +22,7 @@ variable "instance" {
         admin_password        = optional(string)
       }), {})
       imports = optional(object({
+        import_existing      = optional(bool, false)
         flexible_server_id   = optional(string)
         postgres_database_id = optional(string)
         admin_password       = optional(string)

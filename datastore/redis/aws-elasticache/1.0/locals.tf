@@ -19,8 +19,12 @@ locals {
   # Port number
   redis_port = aws_elasticache_replication_group.redis.port
 
+  # Import detection
+  import_enabled    = lookup(var.instance.spec, "imports", null) != null ? lookup(var.instance.spec.imports, "import_existing", false) : false
+  is_cluster_import = local.import_enabled && lookup(var.instance.spec.imports, "cluster_id", null) != null
+
   # Auth token for secure connections
   # For imported clusters, we can't access the actual auth token (it's managed by AWS)
   # For new clusters, use the generated token
-  auth_token = var.instance.spec.imports.cluster_id != null && var.instance.spec.imports.cluster_id != "" ? var.instance.spec.imports.auth_token : random_password.redis_auth_token[0].result
+  auth_token = local.is_cluster_import ? var.instance.spec.imports.auth_token : random_password.redis_auth_token[0].result
 }

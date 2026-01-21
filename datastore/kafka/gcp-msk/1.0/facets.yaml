@@ -87,11 +87,20 @@ spec:
       title: Import Existing Resources
       x-ui-overrides-only: true
       properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing GCP Managed Kafka cluster resources
+          default: false
         cluster_id:
           type: string
           title: Kafka Cluster ID
           description: 'ID of existing GCP Managed Kafka cluster to import (format:
             projects/{project}/locations/{location}/clusters/{cluster})'
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
   required:
   - version_config
   - sizing

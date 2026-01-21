@@ -6,7 +6,7 @@ locals {
       port              = tostring(aws_rds_cluster.aurora.port)
       password          = local.is_import ? var.instance.spec.imports.master_password : (local.restore_from_backup ? var.instance.spec.restore_config.master_password : local.master_password)
       username          = aws_rds_cluster.aurora.master_username
-      connection_string = format("postgresql://%s:%s@%s:%d/%s",aws_rds_cluster.aurora.master_username,local.restore_from_backup ? var.instance.spec.restore_config.master_password : (local.is_import ? var.instance.spec.imports.master_password : local.master_password),aws_rds_cluster.aurora.reader_endpoint,aws_rds_cluster.aurora.port,aws_rds_cluster.aurora.database_name)
+      connection_string = format("postgresql://%s:%s@%s:%d/%s", aws_rds_cluster.aurora.master_username, local.restore_from_backup ? var.instance.spec.restore_config.master_password : (local.is_import ? var.instance.spec.imports.master_password : local.master_password), aws_rds_cluster.aurora.reader_endpoint, aws_rds_cluster.aurora.port, aws_rds_cluster.aurora.database_name)
       secrets           = ["password", "connection_string"]
     }
     writer = {
@@ -14,7 +14,7 @@ locals {
       port              = tostring(aws_rds_cluster.aurora.port)
       password          = local.is_import ? var.instance.spec.imports.master_password : (local.restore_from_backup ? var.instance.spec.restore_config.master_password : local.master_password)
       username          = aws_rds_cluster.aurora.master_username
-      connection_string = format("postgresql://%s:%s@%s:%d/%s",aws_rds_cluster.aurora.master_username,local.restore_from_backup ? var.instance.spec.restore_config.master_password : (local.is_import ? var.instance.spec.imports.master_password : local.master_password),aws_rds_cluster.aurora.endpoint,aws_rds_cluster.aurora.port,aws_rds_cluster.aurora.database_name)
+      connection_string = format("postgresql://%s:%s@%s:%d/%s", aws_rds_cluster.aurora.master_username, local.restore_from_backup ? var.instance.spec.restore_config.master_password : (local.is_import ? var.instance.spec.imports.master_password : local.master_password), aws_rds_cluster.aurora.endpoint, aws_rds_cluster.aurora.port, aws_rds_cluster.aurora.database_name)
       secrets           = ["password", "connection_string"]
     }
   }

@@ -100,14 +100,27 @@ spec:
       description: Import an existing Azure Redis Cache into Terraform state management
       x-ui-overrides-only: true
       properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing Azure Redis Cache resources
+          default: false
         cache_resource_id:
           type: string
           title: Redis Cache Resource ID
           description: Full Azure resource ID of existing cache (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Cache/redis/{name})
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         firewall_rule_resource_id:
           type: string
           title: Firewall Rule Resource ID (Optional)
           description: Full Azure resource ID of firewall rule (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Cache/Redis/{cacheName}/firewallRules/{ruleName})
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
   required:
   - version_config
   - sizing

@@ -1,9 +1,10 @@
 # Local values for computed attributes and password management
 locals {
   # Import detection flags
-  is_db_instance_import    = lookup(var.instance.spec, "imports", null) != null ? lookup(var.instance.spec.imports, "db_instance_identifier", null) != null : false
-  is_subnet_group_import   = lookup(var.instance.spec, "imports", null) != null ? lookup(var.instance.spec.imports, "db_subnet_group_name", null) != null : false
-  is_security_group_import = lookup(var.instance.spec, "imports", null) != null ? lookup(var.instance.spec.imports, "security_group_id", null) != null : false
+  import_enabled           = lookup(var.instance.spec, "imports", null) != null ? lookup(var.instance.spec.imports, "import_existing", false) : false
+  is_db_instance_import    = local.import_enabled && lookup(var.instance.spec.imports, "db_instance_identifier", null) != null
+  is_subnet_group_import   = local.import_enabled && lookup(var.instance.spec.imports, "db_subnet_group_name", null) != null
+  is_security_group_import = local.import_enabled && lookup(var.instance.spec.imports, "security_group_id", null) != null
 
   # Resource identifiers - use imported values if available, otherwise generate new names
   db_identifier       = local.is_db_instance_import ? var.instance.spec.imports.db_instance_identifier : "${var.instance_name}-${var.environment.unique_name}"

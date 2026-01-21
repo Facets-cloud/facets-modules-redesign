@@ -87,11 +87,20 @@ spec:
       title: Import Existing Resources
       x-ui-overrides-only: true
       properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing Memorystore Redis resources
+          default: false
         instance_id:
           type: string
           title: Instance ID
           description: Existing Memorystore Redis instance ID to import
           pattern: ^projects/[^/]+/locations/[^/]+/instances/[^/]+$
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
   required:
   - version_config
   - sizing

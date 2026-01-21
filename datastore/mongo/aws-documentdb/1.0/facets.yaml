@@ -84,6 +84,8 @@ spec:
           title: Master Password
           description: Master password for restored cluster (8+ characters)
           minLength: 8
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,}$
+          x-ui-error-message: "Password must be 8+ chars with valid characters."
           x-ui-visible-if:
             field: spec.restore_config.restore_from_snapshot
             values:
@@ -93,23 +95,46 @@ spec:
       title: Import Existing Resources
       x-ui-overrides-only: true
       properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing DocumentDB resources
+          default: false
         cluster_identifier:
           type: string
           title: Cluster Identifier
           description: Existing DocumentDB cluster identifier to import
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         security_group_id:
           type: string
           title: Security Group ID
           description: ID of existing security group to import (e.g., sg-1234567890abcdef0)
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         subnet_group_name:
           type: string
           title: Subnet Group Name
           description: Name of existing DocumentDB subnet group to import
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         master_password:
           type: string
           title: Master Password
           description: Master password for the imported cluster (8+ characters)
           minLength: 8
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,}$
+          x-ui-error-message: "Password must be 8+ chars with valid characters."
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
   required:
   - version_config
   - sizing

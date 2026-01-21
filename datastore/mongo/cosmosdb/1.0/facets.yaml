@@ -109,14 +109,27 @@ spec:
       title: Import Existing Resources
       x-ui-overrides-only: true
       properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing Cosmos DB resources
+          default: false
         account_name:
           type: string
           title: Cosmos DB Account Resource ID
           description: Full Azure resource ID of existing Cosmos DB account (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DocumentDB/databaseAccounts/{name})
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         database_name:
           type: string
           title: MongoDB Database Resource ID
           description: Full Azure resource ID of existing MongoDB database (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DocumentDB/databaseAccounts/{account}/mongodbDatabases/{name})
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
   required:
   - version_config
   - sizing

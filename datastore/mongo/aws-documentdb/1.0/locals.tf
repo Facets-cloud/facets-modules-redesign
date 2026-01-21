@@ -1,8 +1,11 @@
 # locals.tf - Local computations
 
 locals {
+  # Import flag
+  import_enabled = lookup(var.instance.spec, "imports", null) != null ? lookup(var.instance.spec.imports, "import_existing", false) : false
+
   # Check if this is an import operation
-  is_import = var.instance.spec.imports.cluster_identifier != null && var.instance.spec.imports.cluster_identifier != ""
+  is_import = local.import_enabled && var.instance.spec.imports.cluster_identifier != null && var.instance.spec.imports.cluster_identifier != ""
 
 
   # Security group ID - use imported one if importing, otherwise use created one

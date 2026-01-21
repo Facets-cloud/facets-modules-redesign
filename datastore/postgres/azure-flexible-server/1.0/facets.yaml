@@ -124,6 +124,9 @@ spec:
           description: Admin password for the restored server (required for restore
             operations)
           minLength: 8
+          maxLength: 128
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,128}$
+          x-ui-error-message: "Password must be 8-128 chars with valid characters."
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
             values:
@@ -133,23 +136,42 @@ spec:
       type: object
       title: Import Existing Resources
       x-ui-overrides-only: true
-      x-ui-toggle: true
       properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing Azure PostgreSQL Flexible Server resources
+          default: false
         flexible_server_id:
           type: string
           title: Flexible Server ID
           description: Full Azure resource ID of existing PostgreSQL Flexible Server
             (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DBforPostgreSQL/flexibleServers/{name})
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         postgres_database_id:
           type: string
           title: Custom Database ID (Optional)
           description: Full Azure resource ID of custom database for import - NOT
             for "postgres" system database (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DBforPostgreSQL/flexibleServers/{server}/databases/{name})
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         admin_password:
           type: string
           title: Admin Password
-          description: Admin password for the imported server (8+ characters)
+          description: Admin password for the imported server (8-128 characters)
           minLength: 8
+          maxLength: 128
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,128}$
+          x-ui-error-message: "Password must be 8-128 chars with valid characters."
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
       required: []
   required:
   - version_config

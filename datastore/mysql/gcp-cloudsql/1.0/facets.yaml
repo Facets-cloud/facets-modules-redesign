@@ -103,6 +103,8 @@ spec:
           title: Master Password
           description: Password for the master user (required for restore operations)
           minLength: 8
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,}$
+          x-ui-error-message: "Password must be 8+ chars with valid characters."
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
             values:
@@ -111,8 +113,12 @@ spec:
       type: object
       title: Import Existing Resources
       x-ui-overrides-only: true
-      x-ui-toggle: true
       properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing CloudSQL resources
+          default: false
         instance_name:
           type: string
           title: CloudSQL Instance Name
@@ -120,6 +126,10 @@ spec:
           pattern: ^[a-z0-9/_-]+$
           minLength: 1
           maxLength: 200
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         database_name:
           type: string
           title: Database Name (Optional)
@@ -128,6 +138,10 @@ spec:
           pattern: ^[a-z0-9/_-]*$
           minLength: 0
           maxLength: 250
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         root_user:
           type: string
           title: Root User Name (Optional)
@@ -136,6 +150,10 @@ spec:
           pattern: ^[a-z0-9/_-]*$
           minLength: 0
           maxLength: 250
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         read_replica_0:
           type: string
           title: Read Replica 1 Name
@@ -143,6 +161,10 @@ spec:
           pattern: ^[a-z0-9/_-]+$
           minLength: 1
           maxLength: 200
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         read_replica_1:
           type: string
           title: Read Replica 2 Name
@@ -150,6 +172,10 @@ spec:
           pattern: ^[a-z0-9/_-]+$
           minLength: 1
           maxLength: 200
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         read_replica_2:
           type: string
           title: Read Replica 3 Name
@@ -157,11 +183,21 @@ spec:
           pattern: ^[a-z0-9/_-]+$
           minLength: 1
           maxLength: 200
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         master_password:
           type: string
           title: Master Password
           description: Master password for the imported resource (8+ characters)
           minLength: 8
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,}$
+          x-ui-error-message: "Password must be 8+ chars with valid characters."
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
   required:
   - version_config
   - sizing

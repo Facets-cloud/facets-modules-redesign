@@ -1,7 +1,10 @@
 # Local computations for CloudSQL PostgreSQL module
 locals {
+  # Import flag
+  import_enabled = lookup(var.instance.spec, "imports", null) != null ? lookup(var.instance.spec.imports, "import_existing", false) : false
+
   # Check if we're importing existing resources
-  is_import = var.instance.spec.imports != null && var.instance.spec.imports.instance_id != null
+  is_import = local.import_enabled && var.instance.spec.imports != null && var.instance.spec.imports.instance_id != null
 
   # Primary instance details - use import ID if provided, otherwise generate new name
   instance_identifier = local.is_import ? var.instance.spec.imports.instance_id : "${var.instance_name}-${var.environment.unique_name}"

@@ -24,6 +24,7 @@ variable "instance" {
         auth_token            = null
       })
       imports = optional(object({
+        import_existing   = optional(bool, false)
         cluster_id        = optional(string)
         subnet_group_name = optional(string)
         security_group_id = optional(string)

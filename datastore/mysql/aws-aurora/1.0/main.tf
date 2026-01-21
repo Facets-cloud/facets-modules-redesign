@@ -16,23 +16,26 @@ resource "random_password" "master_password" {
 
 # Generate unique cluster identifier
 locals {
+  # Import flag
+  import_enabled = lookup(var.instance.spec, "imports", null) != null ? lookup(var.instance.spec.imports, "import_existing", false) : false
+
   # Use imported identifier if provided, otherwise generate new one
-  cluster_identifier  = try(var.instance.spec.imports.cluster_identifier, null) != null ? var.instance.spec.imports.cluster_identifier : "${var.instance_name}-${var.environment.unique_name}"
+  cluster_identifier  = local.import_enabled && try(var.instance.spec.imports.cluster_identifier, null) != null ? var.instance.spec.imports.cluster_identifier : "${var.instance_name}-${var.environment.unique_name}"
   restore_from_backup = var.instance.spec.restore_config.restore_from_backup
   source_snapshot_id  = var.instance.spec.restore_config.source_snapshot_identifier
 
   # Check if we're importing existing resources
-  is_import = try(var.instance.spec.imports.cluster_identifier, null) != null
+  is_import = local.import_enabled && try(var.instance.spec.imports.cluster_identifier, null) != null
 
   # Get writer instance identifier for import
-  imported_writer_id = try(var.instance.spec.imports.writer_instance_identifier, null)
+  imported_writer_id = local.import_enabled ? try(var.instance.spec.imports.writer_instance_identifier, null) : null
 
   # Handle password - don't create for restore or import
   master_password = local.restore_from_backup ? var.instance.spec.restore_config.master_password : random_password.master_password[0].result
   master_username = local.restore_from_backup ? var.instance.spec.restore_config.master_username : "admin"
 
   # Split reader instance identifiers if provided for import
-  reader_instance_ids = try(var.instance.spec.imports.reader_instance_identifiers, null) != null && var.instance.spec.imports.reader_instance_identifiers != "" ? split(",", trimspace(var.instance.spec.imports.reader_instance_identifiers)) : []
+  reader_instance_ids = local.import_enabled && try(var.instance.spec.imports.reader_instance_identifiers, null) != null && var.instance.spec.imports.reader_instance_identifiers != "" ? split(",", trimspace(var.instance.spec.imports.reader_instance_identifiers)) : []
 }
 
 # Create DB subnet group (skip if importing)

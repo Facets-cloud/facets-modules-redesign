@@ -75,15 +75,29 @@ spec:
     imports:
       type: object
       title: Import Existing Resources
+      x-ui-overrides-only: true
       properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing MSK cluster resources
+          default: false
         cluster_arn:
           type: string
           title: MSK Cluster ARN
           description: 'ARN of existing MSK cluster to import (format: arn:aws:kafka:region:account:cluster/name/uuid)'
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+            - true
         security_group_id:
           type: string
           title: Security Group ID
           description: ID of existing security group to import (e.g., sg-1234567890abcdef0)
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+            - true
   required:
   - version_config
   - sizing
