@@ -53,11 +53,20 @@ resource "google_sql_database_instance" "postgres_instance" {
 
     # IP configuration for private networking using existing network module resources
     ip_configuration {
-      ipv4_enabled                                  = false
+      ipv4_enabled                                  = try(var.instance.spec.network_config.ipv4_enabled, false)
       private_network                               = var.inputs.network.attributes.vpc_self_link
       enable_private_path_for_google_cloud_services = true
       # Let CloudSQL use the existing private services range managed by network module
       allocated_ip_range = null
+      ssl_mode           = try(var.instance.spec.network_config.require_ssl, true) ? "ENCRYPTED_ONLY" : "ALLOW_UNENCRYPTED_AND_ENCRYPTED"
+
+      dynamic "authorized_networks" {
+        for_each = try(var.instance.spec.network_config.authorized_networks, {})
+        content {
+          name  = authorized_networks.key
+          value = authorized_networks.value.value
+        }
+      }
     }
 
     # Database flags for security and performance
@@ -157,11 +166,20 @@ resource "google_sql_database_instance" "read_replica" {
 
     # IP configuration matching master - using existing network module resources
     ip_configuration {
-      ipv4_enabled                                  = false
+      ipv4_enabled                                  = try(var.instance.spec.network_config.ipv4_enabled, false)
       private_network                               = var.inputs.network.attributes.vpc_self_link
       enable_private_path_for_google_cloud_services = true
       # Let CloudSQL use the existing private services range managed by network module
       allocated_ip_range = null
+      ssl_mode           = try(var.instance.spec.network_config.require_ssl, true) ? "ENCRYPTED_ONLY" : "ALLOW_UNENCRYPTED_AND_ENCRYPTED"
+
+      dynamic "authorized_networks" {
+        for_each = try(var.instance.spec.network_config.authorized_networks, {})
+        content {
+          name  = authorized_networks.key
+          value = authorized_networks.value.value
+        }
+      }
     }
 
     # User labels
@@ -176,13 +194,31 @@ resource "google_sql_database_instance" "read_replica" {
     )
   }
 
+  # Ensure primary instance is fully created before replicas
+  depends_on = [
+    google_sql_database_instance.postgres_instance,
+    google_sql_database.initial_database,
+    google_sql_user.postgres_user
+  ]
+
   # Lifecycle management for replicas optimized for import compatibility
   lifecycle {
     prevent_destroy = false
     ignore_changes = [
-      settings[0].disk_size,   # Allow auto-resize to work
-      settings[0].user_labels, # Ignore label changes from imported resources
-      deletion_protection,     # Ignore deletion protection changes
+      name,                                                # Ignore name changes
+      deletion_protection,                                 # Ignore deletion protection changes
+      settings[0].disk_size,                               # Allow auto-resize to work
+      settings[0].disk_autoresize_limit,                   # Ignore autoresize limit changes
+      settings[0].database_flags,                          # Ignore database flag changes
+      settings[0].user_labels,                             # Ignore label changes
+      settings[0].ip_configuration[0].private_network,     # Ignore VPC self-link format differences
+      settings[0].ip_configuration[0].server_ca_mode,      # Ignore server CA mode changes
+      settings[0].ip_configuration[0].ssl_mode,            # Ignore SSL mode changes
+      settings[0].ip_configuration[0].ipv4_enabled,        # Ignore public IP changes
+      settings[0].ip_configuration[0].authorized_networks, # Ignore authorized networks changes
+      settings[0].location_preference,                     # Ignore location preference changes
+      settings[0].connector_enforcement,                   # Ignore connector enforcement changes
+      settings[0].edition,                                 # Ignore edition changes
     ]
   }
 }
