@@ -11,10 +11,11 @@ spec:
     and high availability
   type: object
   x-ui-order:
-  - version_config
-  - sizing
-  - restore_config
-  - imports
+    - version_config
+    - sizing
+    - network_config
+    - restore_config
+    - imports
   properties:
     version_config:
       type: object
@@ -49,14 +50,15 @@ spec:
         tier:
           type: string
           title: Instance Tier
-          description: Cloud SQL instance tier
+          description: Cloud SQL instance tier. PostgreSQL supports only shared-core or custom machine types.
           enum:
           - db-f1-micro
           - db-g1-small
-          - db-n1-standard-1
-          - db-n1-standard-2
-          - db-n1-standard-4
-          default: db-g1-small
+          - db-custom-2-7680
+          - db-custom-4-16384
+          - db-custom-8-32768
+          - db-custom-16-65536
+          default: db-custom-2-7680
         disk_size:
           type: number
           title: Disk Size (GB)
@@ -71,6 +73,44 @@ spec:
           minimum: 0
           maximum: 5
           default: 0
+    network_config:
+      type: object
+      title: Network Configuration
+      x-ui-toggle: true
+      x-ui-order:
+        - ipv4_enabled
+        - require_ssl
+        - authorized_networks
+      properties:
+        ipv4_enabled:
+          type: boolean
+          title: Enable Public IP
+          description: Enable public IP address for the instance
+          default: false
+        require_ssl:
+          type: boolean
+          title: Require SSL
+          description: Require SSL for connections
+          default: true
+        authorized_networks:
+          type: object
+          title: Authorized Networks
+          description: Map of authorized networks that can connect to the instance
+          default: {}
+          x-ui-visible-if:
+            field: spec.network_config.ipv4_enabled
+            values:
+            - true
+          patternProperties:
+            ^[a-zA-Z0-9_-]+$:
+              type: object
+              properties:
+                value:
+                  type: string
+                  title: CIDR Range
+                  description: CIDR notation (e.g., 0.0.0.0/0 for all, or specific IP/range)
+              required:
+              - value
     restore_config:
       type: object
       title: Restore Operations
@@ -212,8 +252,11 @@ sample:
       version: '15'
       database_name: app_db
     sizing:
-      tier: db-g1-small
+      tier: db-custom-2-7680
       disk_size: 100
       read_replica_count: 0
+    network_config:
+      ipv4_enabled: false
+      require_ssl: true
     restore_config:
       restore_from_backup: false
