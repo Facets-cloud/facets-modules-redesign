@@ -78,7 +78,10 @@ resource "helm_release" "kubeblocks" {
         }
         featureGates = {
           inPlacePodVerticalScaling = {
-            enabled = lookup(lookup(var.instance.spec, "feature_gates", {}), "in_place_pod_vertical_scaling", false)
+            # ENABLED by default - feature is GA in Kubernetes 1.35, Beta (default enabled) since 1.33
+            # Allows zero-downtime resource updates without pod restarts
+            # Ref: https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/
+            enabled = true
           }
         }
         resources = {

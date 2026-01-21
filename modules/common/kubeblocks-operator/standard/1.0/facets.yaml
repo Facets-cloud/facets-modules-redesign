@@ -38,16 +38,6 @@ spec:
       title: KubeBlocks Version
       description: KubeBlocks version to install
       default: 1.0.1
-    feature_gates:
-      type: object
-      title: Feature Gates
-      description: Enable experimental features
-      properties:
-        in_place_pod_vertical_scaling:
-          type: boolean
-          title: In-Place Pod Vertical Scaling
-          description: Enable in-place pod vertical scaling feature
-          default: false
     high_availability:
       type: object
       title: High Availability Settings

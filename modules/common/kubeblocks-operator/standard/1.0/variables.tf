@@ -6,9 +6,6 @@ variable "instance" {
     version = string
     spec = object({
       version = string
-      feature_gates = optional(object({
-        in_place_pod_vertical_scaling = optional(bool)
-      }))
       high_availability = optional(object({
         replicas   = optional(number, 1)
         enable_pdb = optional(bool, false)
