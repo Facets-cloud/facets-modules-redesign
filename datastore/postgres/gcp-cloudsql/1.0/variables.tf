@@ -20,6 +20,13 @@ variable "instance" {
         master_username     = optional(string)
         master_password     = optional(string)
       })
+      network_config = optional(object({
+        ipv4_enabled = optional(bool, false)
+        require_ssl  = optional(bool, true)
+        authorized_networks = optional(map(object({
+          value = string
+        })), {})
+      }))
       imports = optional(object({
         instance_id   = optional(string)
         database_name = optional(string)
@@ -34,11 +41,8 @@ variable "instance" {
   }
 
   validation {
-    condition = contains([
-      "db-f1-micro", "db-g1-small", "db-n1-standard-1",
-      "db-n1-standard-2", "db-n1-standard-4"
-    ], var.instance.spec.sizing.tier)
-    error_message = "Instance tier must be one of: db-f1-micro, db-g1-small, db-n1-standard-1, db-n1-standard-2, db-n1-standard-4"
+    condition     = can(regex("^(db-f1-micro|db-g1-small|db-custom-[0-9]+-[0-9]+)$", var.instance.spec.sizing.tier))
+    error_message = "Instance tier must be either shared-core (db-f1-micro, db-g1-small) or custom tier (db-custom-CPUS-MEMORY_MB format, e.g., db-custom-2-7680)"
   }
 
   validation {

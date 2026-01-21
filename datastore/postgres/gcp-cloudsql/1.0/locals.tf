@@ -23,17 +23,20 @@ locals {
     var.instance.spec.imports.user_name
   ) : (var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_username : "postgres")
 
-  # Connection details
-  master_endpoint = google_sql_database_instance.postgres_instance.private_ip_address
+  # Check if public IP is enabled
+  public_ip = try(var.instance.spec.network_config.ipv4_enabled, false)
+
+  # Connection details - use public IP if enabled, otherwise private IP
+  master_endpoint = local.public_ip ? google_sql_database_instance.postgres_instance.public_ip_address : google_sql_database_instance.postgres_instance.private_ip_address
   postgres_port   = 5432
   master_username = google_sql_user.postgres_user.name
   master_password = google_sql_user.postgres_user.password
   database_name   = google_sql_database.initial_database.name
 
-  # Read replica endpoints (if any)
+  # Read replica endpoints (if any) - use public or private based on configuration
   replica_endpoints = var.instance.spec.sizing.read_replica_count > 0 ? [
     for replica in google_sql_database_instance.read_replica :
-    replica.private_ip_address
+    local.public_ip ? replica.public_ip_address : replica.private_ip_address
   ] : []
 
   # Choose read endpoint (prefer replica if available, otherwise master)
