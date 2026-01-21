@@ -1,0 +1,167 @@
+intent: monitoring
+flavor: postgres
+version: '1.0'
+description: Complete PostgreSQL monitoring stack for CloudSQL - PostgreSQL Exporter with CloudSQL Proxy for metrics, ServiceMonitor for Prometheus, PrometheusRules for alerting, and Grafana dashboard
+clouds:
+- kubernetes
+- gcp
+inputs:
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Kubernetes cluster for deploying monitoring resources
+    providers:
+    - kubernetes
+    - kubernetes-alpha
+    - helm
+  postgres:
+    type: '@facets/postgres'
+    optional: false
+    displayName: PostgreSQL Instance
+    description: PostgreSQL CloudSQL instance to monitor (connection credentials will be used by exporter via CloudSQL proxy)
+  prometheus:
+    type: '@facets/prometheus'
+    optional: false
+    displayName: Prometheus Instance
+    description: Prometheus instance for metrics collection and alerting (also provides Grafana namespace)
+  gcp_provider:
+    type: '@facets/gcp_cloud_account'
+    optional: false
+    displayName: GCP Provider
+    description: GCP cloud account for CloudSQL proxy authentication via Workload Identity
+    providers:
+    - google
+  node_pool:
+    type: '@facets/kubernetes_nodepool'
+    optional: true
+    displayName: Node Pool
+    description: Node pool for PostgreSQL exporter pods
+outputs:
+  default:
+    type: '@facets/monitoring-rules'
+    title: PostgreSQL Monitoring Stack
+spec:
+  title: PostgreSQL Monitoring Configuration
+  description: Configure PostgreSQL Exporter with CloudSQL Proxy, ServiceMonitor, PrometheusRules, and Grafana Dashboard
+  type: object
+  properties:
+    resources:
+      type: object
+      title: Resource Allocation
+      description: CPU and memory resource requests and limits for the PostgreSQL exporter pod
+      properties:
+        requests:
+          type: object
+          title: Resource Requests
+          description: Minimum guaranteed resources
+          properties:
+            cpu:
+              type: string
+              title: CPU Request
+              description: Minimum CPU allocation (e.g., 100m, 0.5)
+              default: 100m
+              pattern: ^[0-9]+m?$|^[0-9]+\.[0-9]+$
+            memory:
+              type: string
+              title: Memory Request
+              description: Minimum memory allocation (e.g., 128Mi, 1Gi)
+              default: 128Mi
+              pattern: ^[0-9]+(Mi|Gi|M|G)$
+        limits:
+          type: object
+          title: Resource Limits
+          description: Maximum resource usage
+          properties:
+            cpu:
+              type: string
+              title: CPU Limit
+              description: Maximum CPU usage (e.g., 200m, 1)
+              default: 200m
+              pattern: ^[0-9]+m?$|^[0-9]+\.[0-9]+$
+            memory:
+              type: string
+              title: Memory Limit
+              description: Maximum memory usage (e.g., 256Mi, 2Gi)
+              default: 256Mi
+              pattern: ^[0-9]+(Mi|Gi|M|G)$
+    cloudsql_proxy:
+      type: object
+      title: CloudSQL Proxy Configuration
+      description: Configuration for CloudSQL Proxy sidecar container
+      properties:
+        image_tag:
+          type: string
+          title: Proxy Image Tag
+          description: CloudSQL Proxy image version
+          default: '2.8.0'
+        resources:
+          type: object
+          title: Proxy Resource Allocation
+          description: CPU and memory resource requests and limits for CloudSQL Proxy sidecar
+          properties:
+            requests:
+              type: object
+              title: Resource Requests
+              properties:
+                cpu:
+                  type: string
+                  title: CPU Request
+                  default: 50m
+                  pattern: ^[0-9]+m?$|^[0-9]+\.[0-9]+$
+                memory:
+                  type: string
+                  title: Memory Request
+                  default: 64Mi
+                  pattern: ^[0-9]+(Mi|Gi|M|G)$
+            limits:
+              type: object
+              title: Resource Limits
+              properties:
+                cpu:
+                  type: string
+                  title: CPU Limit
+                  default: 100m
+                  pattern: ^[0-9]+m?$|^[0-9]+\.[0-9]+$
+                memory:
+                  type: string
+                  title: Memory Limit
+                  default: 128Mi
+                  pattern: ^[0-9]+(Mi|Gi|M|G)$
+    additional_helm_values:
+      type: object
+      title: Additional Helm Values
+      description: Additional Helm chart values to pass to the PostgreSQL exporter. These values will be deep-merged with the default configuration.
+      x-ui-yaml-editor: true
+  x-ui-order:
+  - resources
+  - cloudsql_proxy
+  - additional_helm_values
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+sample:
+  kind: monitoring
+  flavor: postgres
+  version: '1.0'
+  disabled: false
+  spec:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+    cloudsql_proxy:
+      image_tag: '2.8.0'
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
+    additional_helm_values: {}
