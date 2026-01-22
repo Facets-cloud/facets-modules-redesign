@@ -14,7 +14,7 @@ resource "kubernetes_secret_v1" "registry_secret" {
   metadata {
     name      = module.name_dockerhub[each.key].name
     namespace = local.namespace
-    labels    = lookup(local.metadata, "labels", {})
+    labels    = local.labels
   }
   data = {
     ".dockerconfigjson" : each.value.dockerconfigjson
