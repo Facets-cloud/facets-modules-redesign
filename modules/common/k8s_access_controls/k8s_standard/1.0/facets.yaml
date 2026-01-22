@@ -1,15 +1,16 @@
 intent: k8s_access_controls
 flavor: k8s_standard
-version: "1.0"
-description: |
-  Creates Kubernetes RBAC Roles and ClusterRoles for access control.
-  Includes default read and debug roles for Facets platform integration.
-clouds:
-  - kubernetes
+version: '1.0'
+description: 'Creates Kubernetes RBAC Roles and ClusterRoles for access control.
 
+  Includes default read and debug roles for Facets platform integration.
+
+  '
+clouds:
+- kubernetes
 inputs:
   kubernetes_details:
-    type: "@facets/kubernetes-details"
+    type: '@facets/kubernetes-details'
     optional: false
     displayName: Kubernetes Cluster
     description: Kubernetes cluster for deploying RBAC resources
@@ -17,13 +18,11 @@ inputs:
       resource_type: kubernetes_cluster
       resource_name: default
     providers:
-      - kubernetes
-
+    - kubernetes
 outputs:
   default:
-    type: "@outputs/k8s_access_controls"
+    type: '@outputs/k8s_access_controls'
     title: Kubernetes Access Controls
-
 spec:
   title: Kubernetes Access Controls Configuration
   description: Configure RBAC Roles and ClusterRoles
@@ -32,9 +31,10 @@ spec:
     roles:
       type: object
       title: Namespace Roles
-      description: Custom Kubernetes Roles (namespaced). Default roles (cc-read-role, cc-debug-role) are created automatically.
+      description: Custom Kubernetes Roles (namespaced). Default roles (cc-read-role,
+        cc-debug-role) are created automatically.
       patternProperties:
-        "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$":
+        ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$:
           type: object
           title: Role Definition
           properties:
@@ -59,7 +59,7 @@ spec:
               title: Rules
               description: RBAC rules for this role
               patternProperties:
-                "^[a-zA-Z0-9_-]+$":
+                ^[a-zA-Z0-9_-]+$:
                   type: object
                   title: Rule
                   properties:
@@ -92,26 +92,27 @@ spec:
                       items:
                         type: string
                         enum:
-                          - get
-                          - list
-                          - watch
-                          - create
-                          - update
-                          - patch
-                          - delete
-                          - deletecollection
+                        - get
+                        - list
+                        - watch
+                        - create
+                        - update
+                        - patch
+                        - delete
+                        - deletecollection
                   required:
-                    - api_groups
-                    - resources
-                    - verbs
+                  - api_groups
+                  - resources
+                  - verbs
           required:
-            - rules
+          - rules
     cluster_roles:
       type: object
       title: Cluster Roles
-      description: Custom ClusterRoles (cluster-wide). Default cluster roles are created automatically in base environments.
+      description: Custom ClusterRoles (cluster-wide). Default cluster roles are created
+        automatically in base environments.
       patternProperties:
-        "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$":
+        ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$:
           type: object
           title: ClusterRole Definition
           properties:
@@ -132,7 +133,7 @@ spec:
               title: Rules
               description: RBAC rules for this cluster role
               patternProperties:
-                "^[a-zA-Z0-9_-]+$":
+                ^[a-zA-Z0-9_-]+$:
                   type: object
                   title: Rule
                   properties:
@@ -172,25 +173,26 @@ spec:
                       items:
                         type: string
                         enum:
-                          - get
-                          - list
-                          - watch
-                          - create
-                          - update
-                          - patch
-                          - delete
-                          - deletecollection
+                        - get
+                        - list
+                        - watch
+                        - create
+                        - update
+                        - patch
+                        - delete
+                        - deletecollection
                   required:
-                    - verbs
+                  - verbs
           required:
-            - rules
+          - rules
   x-ui-order:
-    - roles
-    - cluster_roles
-
+  - roles
+  - cluster_roles
 sample:
   kind: k8s_access_controls
   flavor: k8s_standard
-  version: "1.0"
+  version: '1.0'
   disabled: false
   spec: {}
+  advanced:
+    inherit_from_base: true
