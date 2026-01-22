@@ -1,3 +1,5 @@
+controlPlaneUISettings:
+  enableKubernetesExplorer: true
 intent: service
 flavor: gcp
 version: '1.0'

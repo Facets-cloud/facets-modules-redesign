@@ -35,8 +35,8 @@ resource "google_container_node_pool" "node_pool" {
   project  = var.inputs.cloud_account.attributes.project_id
   provider = google-beta
   name     = "${var.instance_name}-${random_string.name_suffix.result}"
-  cluster  = lookup(local.kubernetes_attributes, "cluster_name", "")
-  location = var.inputs.cloud_account.attributes.region
+  cluster  = lookup(local.kubernetes_attributes, "cluster_id", "")
+  location = local.kubernetes_attributes.cluster_location
 
   autoscaling {
     total_min_node_count = local.autoscaling_per_zone ? null : lookup(local.spec, "min_node_count", null)
