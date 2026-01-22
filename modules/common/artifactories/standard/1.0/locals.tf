@@ -79,5 +79,7 @@ locals {
   registry_secret_objects = merge(local.ecr_secret_objects, local.dockerhub_secret_objects)
   registry_secrets_list   = flatten([for k, v in merge(local.registry_secret_objects) : v])
 
-  labels = join(",", [for k, v in lookup(local.metadata, "labels", {}) : "${k}=${v}"])
+  labels = merge(lookup(local.metadata, "labels", {}), { "secret-copier" = "yes" })
+
+  labels_ecr = join(",", [for k, v in local.labels : "${k}=${v}"])
 }

@@ -41,6 +41,8 @@ modules:
       flavor: nginx_k8s
     - intent: k8s_callback
       flavor: k8s_standard
+    - intent: k8s_access_controls
+      flavor: k8s_standard
     - intent: k8s_resource
       flavor: k8s_standard
     - intent: kubernetes_secret

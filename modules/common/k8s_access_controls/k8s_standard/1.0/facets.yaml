@@ -1,0 +1,671 @@
+intent: k8s_access_controls
+flavor: k8s_standard
+version: '1.0'
+description: 'Creates Kubernetes RBAC Roles and ClusterRoles for access control.
+
+  Includes default read and debug roles for Facets platform integration.
+
+  '
+clouds:
+- kubernetes
+inputs:
+  kubernetes_details:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Kubernetes cluster for deploying RBAC resources
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+    - kubernetes
+outputs:
+  default:
+    type: '@outputs/k8s_access_controls'
+    title: Kubernetes Access Controls
+spec:
+  title: Kubernetes Access Controls Configuration
+  description: Configure RBAC Roles and ClusterRoles
+  type: object
+  properties:
+    roles:
+      type: object
+      title: Namespace Roles
+      description: Custom Kubernetes Roles (namespaced). Default roles (cc-read-role,
+        cc-debug-role) are created automatically.
+      patternProperties:
+        ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$:
+          type: object
+          title: Role Definition
+          properties:
+            metadata:
+              type: object
+              title: Metadata
+              properties:
+                namespace:
+                  type: string
+                  title: Namespace
+                  description: Namespace for the role (defaults to environment namespace)
+                annotations:
+                  type: object
+                  title: Annotations
+                  x-ui-yaml-editor: true
+                labels:
+                  type: object
+                  title: Labels
+                  x-ui-yaml-editor: true
+            rules:
+              type: object
+              title: Rules
+              description: RBAC rules for this role
+              patternProperties:
+                ^[a-zA-Z0-9_-]+$:
+                  type: object
+                  title: Rule
+                  properties:
+                    api_groups:
+                      x-ui-override-disable: true
+                      type: array
+                      title: API Groups
+                      description: API groups (use empty string for core group)
+                      items:
+                        type: string
+                    resources:
+                      x-ui-override-disable: true
+                      type: array
+                      title: Resources
+                      description: Kubernetes resources
+                      items:
+                        type: string
+                    resource_names:
+                      x-ui-override-disable: true
+                      type: array
+                      title: Resource Names
+                      description: Specific resource names (optional)
+                      items:
+                        type: string
+                    verbs:
+                      x-ui-override-disable: true
+                      type: array
+                      title: Verbs
+                      description: Allowed actions
+                      items:
+                        type: string
+                        enum:
+                        - get
+                        - list
+                        - watch
+                        - create
+                        - update
+                        - patch
+                        - delete
+                        - deletecollection
+                  required:
+                  - api_groups
+                  - resources
+                  - verbs
+          required:
+          - rules
+    cluster_roles:
+      type: object
+      title: Cluster Roles
+      description: Custom ClusterRoles (cluster-wide). Default cluster roles are created
+        automatically in base environments.
+      patternProperties:
+        ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$:
+          type: object
+          title: ClusterRole Definition
+          properties:
+            metadata:
+              type: object
+              title: Metadata
+              properties:
+                annotations:
+                  type: object
+                  title: Annotations
+                  x-ui-yaml-editor: true
+                labels:
+                  type: object
+                  title: Labels
+                  x-ui-yaml-editor: true
+            rules:
+              type: object
+              title: Rules
+              description: RBAC rules for this cluster role
+              patternProperties:
+                ^[a-zA-Z0-9_-]+$:
+                  type: object
+                  title: Rule
+                  properties:
+                    api_groups:
+                      x-ui-override-disable: true
+                      type: array
+                      title: API Groups
+                      description: API groups (use empty string for core group)
+                      items:
+                        type: string
+                    resources:
+                      x-ui-override-disable: true
+                      type: array
+                      title: Resources
+                      description: Kubernetes resources
+                      items:
+                        type: string
+                    resource_names:
+                      x-ui-override-disable: true
+                      type: array
+                      title: Resource Names
+                      description: Specific resource names (optional)
+                      items:
+                        type: string
+                    non_resource_urls:
+                      x-ui-override-disable: true
+                      type: array
+                      title: Non-Resource URLs
+                      description: Non-resource URLs (optional)
+                      items:
+                        type: string
+                    verbs:
+                      x-ui-override-disable: true
+                      type: array
+                      title: Verbs
+                      description: Allowed actions
+                      items:
+                        type: string
+                        enum:
+                        - get
+                        - list
+                        - watch
+                        - create
+                        - update
+                        - patch
+                        - delete
+                        - deletecollection
+                  required:
+                  - verbs
+          required:
+          - rules
+  x-ui-order:
+  - roles
+  - cluster_roles
+sample:
+  kind: k8s_access_controls
+  flavor: k8s_standard
+  version: '1.0'
+  disabled: false
+  spec:
+    roles:
+      cc-read-role:
+        rules:
+          rule1:
+            api_groups:
+            - ''
+            resources:
+            - pods
+            - pods/log
+            verbs:
+            - get
+            - list
+          rule2:
+            api_groups:
+            - ''
+            resources:
+            - services
+            - persistentvolumeclaims
+            verbs:
+            - get
+            - list
+          rule3:
+            api_groups:
+            - apps
+            resources:
+            - deployments
+            - replicasets
+            - statefulsets
+            - daemonsets
+            verbs:
+            - get
+            - list
+          rule4:
+            api_groups:
+            - batch
+            resources:
+            - cronjobs
+            - jobs
+            verbs:
+            - get
+            - list
+          rule5:
+            api_groups:
+            - extensions
+            - networking.k8s.io
+            resources:
+            - ingresses
+            verbs:
+            - get
+            - list
+          rule6:
+            api_groups:
+            - extensions
+            resources:
+            - ingresses
+            verbs:
+            - get
+            - list
+          rule7:
+            api_groups:
+            - events.k8s.io
+            - ''
+            resources:
+            - events
+            verbs:
+            - get
+            - list
+          rule8:
+            api_groups:
+            - metrics.k8s.io
+            resources:
+            - pods
+            verbs:
+            - get
+            - list
+      cc-debug-role:
+        rules:
+          rule1:
+            api_groups:
+            - ''
+            resources:
+            - pods
+            - pods/log
+            - pods/exec
+            - pods/portforward
+            verbs:
+            - get
+            - list
+            - delete
+            - create
+            - patch
+            - update
+          rule2:
+            api_groups:
+            - ''
+            resources:
+            - services
+            - namespaces
+            verbs:
+            - get
+            - list
+          rule3:
+            api_groups:
+            - apps
+            - extensions
+            resources:
+            - deployments
+            - replicasets
+            - statefulsets
+            - daemonsets
+            - deployments/scale
+            verbs:
+            - get
+            - list
+            - delete
+            - create
+            - patch
+            - update
+          rule4:
+            api_groups:
+            - autoscaling
+            resources:
+            - horizontalpodautoscalers
+            verbs:
+            - get
+            - list
+            - patch
+            - update
+          rule5:
+            api_groups:
+            - extensions
+            - networking.k8s.io
+            resources:
+            - ingresses
+            verbs:
+            - get
+            - list
+          rule6:
+            api_groups:
+            - ''
+            resources:
+            - persistentvolumeclaims
+            verbs:
+            - get
+            - list
+            - patch
+            - update
+          rule7:
+            api_groups:
+            - batch
+            resources:
+            - cronjobs
+            verbs:
+            - get
+            - list
+          rule8:
+            api_groups:
+            - batch
+            resources:
+            - jobs
+            verbs:
+            - get
+            - list
+            - create
+            - delete
+            - patch
+            - update
+          rule9:
+            api_groups:
+            - events.k8s.io
+            - ''
+            resources:
+            - events
+            verbs:
+            - get
+            - list
+          rule10:
+            api_groups:
+            - metrics.k8s.io
+            resources:
+            - pods
+            verbs:
+            - get
+            - list
+    cluster_roles:
+      facets-reader-cluster-role:
+        rules:
+          rule1:
+            api_groups:
+            - ''
+            resources:
+            - pods
+            - pods/log
+            verbs:
+            - get
+            - list
+          rule2:
+            api_groups:
+            - ''
+            resources:
+            - services
+            - persistentvolumeclaims
+            verbs:
+            - get
+            - list
+          rule3:
+            api_groups:
+            - apps
+            resources:
+            - deployments
+            - replicasets
+            - statefulsets
+            - daemonsets
+            verbs:
+            - get
+            - list
+          rule4:
+            api_groups:
+            - batch
+            resources:
+            - cronjobs
+            - jobs
+            verbs:
+            - get
+            - list
+          rule5:
+            api_groups:
+            - extensions
+            - networking.k8s.io
+            resources:
+            - ingresses
+            verbs:
+            - get
+            - list
+          rule6:
+            api_groups:
+            - extensions
+            resources:
+            - ingresses
+            verbs:
+            - get
+            - list
+          rule7:
+            api_groups:
+            - events.k8s.io
+            - ''
+            resources:
+            - events
+            verbs:
+            - get
+            - list
+          rule8:
+            api_groups:
+            - metrics.k8s.io
+            resources:
+            - pods
+            verbs:
+            - get
+            - list
+          rule9:
+            api_groups:
+            - ''
+            resources:
+            - nodes
+            - persistentvolumes
+            verbs:
+            - get
+            - list
+          rule10:
+            api_groups:
+            - metrics.k8s.io
+            resources:
+            - nodes
+            verbs:
+            - get
+            - list
+      facets-reader-cluster-role-v2:
+        rules:
+          rule1:
+            api_groups:
+            - ''
+            resources:
+            - nodes
+            - persistentvolumes
+            - namespaces
+            - endpoints
+            verbs:
+            - get
+            - list
+            - watch
+          rule2:
+            api_groups:
+            - metrics.k8s.io
+            resources:
+            - nodes
+            verbs:
+            - get
+            - list
+          rule3:
+            api_groups:
+            - ''
+            resources:
+            - pods
+            - pods/log
+            verbs:
+            - get
+            - list
+          rule4:
+            api_groups:
+            - ''
+            resources:
+            - services
+            - persistentvolumeclaims
+            verbs:
+            - get
+            - list
+          rule5:
+            api_groups:
+            - apps
+            resources:
+            - deployments
+            - replicasets
+            - statefulsets
+            - daemonsets
+            verbs:
+            - get
+            - list
+          rule6:
+            api_groups:
+            - batch
+            resources:
+            - cronjobs
+            - jobs
+            verbs:
+            - get
+            - list
+          rule7:
+            api_groups:
+            - extensions
+            - networking.k8s.io
+            resources:
+            - ingresses
+            verbs:
+            - get
+            - list
+          rule8:
+            api_groups:
+            - events.k8s.io
+            - ''
+            resources:
+            - events
+            verbs:
+            - get
+            - list
+          rule9:
+            api_groups:
+            - metrics.k8s.io
+            resources:
+            - pods
+            verbs:
+            - get
+            - list
+      facets-debug-cluster-role:
+        rules:
+          rule1:
+            api_groups:
+            - ''
+            resources:
+            - pods
+            - pods/log
+            - pods/exec
+            - pods/portforward
+            verbs:
+            - get
+            - list
+            - delete
+            - create
+            - patch
+            - update
+          rule2:
+            api_groups:
+            - ''
+            resources:
+            - services
+            - namespaces
+            - endpoints
+            verbs:
+            - get
+            - list
+            - watch
+          rule3:
+            api_groups:
+            - apps
+            - extensions
+            resources:
+            - deployments
+            - replicasets
+            - statefulsets
+            - daemonsets
+            - deployments/scale
+            verbs:
+            - get
+            - list
+            - delete
+            - create
+            - patch
+            - update
+          rule4:
+            api_groups:
+            - autoscaling
+            resources:
+            - horizontalpodautoscalers
+            verbs:
+            - get
+            - list
+            - patch
+            - update
+          rule5:
+            api_groups:
+            - extensions
+            - networking.k8s.io
+            resources:
+            - ingresses
+            verbs:
+            - get
+            - list
+          rule6:
+            api_groups:
+            - ''
+            resources:
+            - persistentvolumeclaims
+            verbs:
+            - get
+            - list
+            - patch
+            - update
+          rule7:
+            api_groups:
+            - batch
+            resources:
+            - cronjobs
+            verbs:
+            - get
+            - list
+          rule8:
+            api_groups:
+            - batch
+            resources:
+            - jobs
+            verbs:
+            - get
+            - list
+            - create
+            - delete
+            - patch
+            - update
+          rule9:
+            api_groups:
+            - events.k8s.io
+            - ''
+            resources:
+            - events
+            verbs:
+            - get
+            - list
+          rule10:
+            api_groups:
+            - metrics.k8s.io
+            resources:
+            - pods
+            verbs:
+            - get
+            - list
+  advanced:
+    inherit_from_base: true
