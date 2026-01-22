@@ -10,10 +10,18 @@ spec:
   description: Managed Redis cache using AWS ElastiCache with security and high availability
     defaults
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - restore_config
+  - imports
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
+      x-ui-order:
+      - redis_version
+      - node_type
       properties:
         redis_version:
           type: string
@@ -36,6 +44,10 @@ spec:
     sizing:
       type: object
       title: Sizing & Performance
+      x-ui-order:
+      - num_cache_nodes
+      - parameter_group_name
+      - snapshot_retention_limit
       properties:
         num_cache_nodes:
           type: number
@@ -61,6 +73,11 @@ spec:
     restore_config:
       type: object
       title: Restore Operations
+      x-ui-overrides-only: true
+      x-ui-order:
+      - restore_from_snapshot
+      - snapshot_name
+      - auth_token
       properties:
         restore_from_snapshot:
           type: boolean
@@ -75,23 +92,65 @@ spec:
             field: spec.restore_config.restore_from_snapshot
             values:
             - true
+        auth_token:
+          type: string
+          title: Auth Token
+          description: Auth token for accessing the Redis cluster
+          minLength: 64
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{64,}$
+          x-ui-error-message: "Auth token must be 64+ chars with valid characters."
     imports:
       type: object
       title: Import Existing Resources
+      x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - cluster_id
+      - subnet_group_name
+      - security_group_id
+      - auth_token
       properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing ElastiCache resources
+          default: false
         cluster_id:
           type: string
           title: Cluster ID
           description: ElastiCache cluster identifier for importing existing cluster
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         subnet_group_name:
           type: string
           title: Subnet Group Name
           description: ElastiCache subnet group name for importing existing subnet
             group
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         security_group_id:
           type: string
           title: Security Group ID
           description: Security group ID for importing existing security group
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
+        auth_token:
+          type: string
+          title: Auth Token
+          description: Auth token for accessing the imported Redis cluster
+          minLength: 64
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{64,}$
+          x-ui-error-message: "Auth token must be 64+ chars with valid characters."
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
   required:
   - version_config
 inputs:
@@ -121,6 +180,9 @@ imports:
 - name: security_group_id
   resource_address: aws_security_group.redis
   required: false
+- name: auth_token
+  resource_address: random_password.redis_auth_token[0]
+  required: true
 iac:
   validated_files:
   - main.tf

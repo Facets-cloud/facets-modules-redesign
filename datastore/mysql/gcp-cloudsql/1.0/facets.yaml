@@ -10,10 +10,18 @@ spec:
   description: Managed MySQL database using Google Cloud SQL with automated backups
     and high availability
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - restore_config
+  - imports
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
+      x-ui-order:
+      - version
+      - database_name
       properties:
         version:
           type: string
@@ -38,6 +46,10 @@ spec:
     sizing:
       type: object
       title: Sizing & Performance
+      x-ui-order:
+      - tier
+      - disk_size
+      - read_replica_count
       properties:
         tier:
           type: string
@@ -72,6 +84,12 @@ spec:
     restore_config:
       type: object
       title: Restore Operations
+      x-ui-overrides-only: true
+      x-ui-order:
+      - restore_from_backup
+      - source_instance_id
+      - master_username
+      - master_password
       properties:
         restore_from_backup:
           type: boolean
@@ -102,7 +120,8 @@ spec:
           title: Master Password
           description: Password for the master user (required for restore operations)
           minLength: 8
-          x-ui-secret-ref: true
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,}$
+          x-ui-error-message: "Password must be 8+ chars with valid characters."
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
             values:
@@ -110,8 +129,22 @@ spec:
     imports:
       type: object
       title: Import Existing Resources
-      x-ui-toggle: true
+      x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - instance_name
+      - database_name
+      - root_user
+      - read_replica_0
+      - read_replica_1
+      - read_replica_2
+      - master_password
       properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing CloudSQL resources
+          default: false
         instance_name:
           type: string
           title: CloudSQL Instance Name
@@ -119,6 +152,10 @@ spec:
           pattern: ^[a-z0-9/_-]+$
           minLength: 1
           maxLength: 200
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         database_name:
           type: string
           title: Database Name (Optional)
@@ -127,6 +164,10 @@ spec:
           pattern: ^[a-z0-9/_-]*$
           minLength: 0
           maxLength: 250
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         root_user:
           type: string
           title: Root User Name (Optional)
@@ -135,6 +176,10 @@ spec:
           pattern: ^[a-z0-9/_-]*$
           minLength: 0
           maxLength: 250
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         read_replica_0:
           type: string
           title: Read Replica 1 Name
@@ -142,6 +187,10 @@ spec:
           pattern: ^[a-z0-9/_-]+$
           minLength: 1
           maxLength: 200
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         read_replica_1:
           type: string
           title: Read Replica 2 Name
@@ -149,6 +198,10 @@ spec:
           pattern: ^[a-z0-9/_-]+$
           minLength: 1
           maxLength: 200
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         read_replica_2:
           type: string
           title: Read Replica 3 Name
@@ -156,6 +209,21 @@ spec:
           pattern: ^[a-z0-9/_-]+$
           minLength: 1
           maxLength: 200
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
+        master_password:
+          type: string
+          title: Master Password
+          description: Master password for the imported resource (8+ characters)
+          minLength: 8
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,}$
+          x-ui-error-message: "Password must be 8+ chars with valid characters."
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
   required:
   - version_config
   - sizing
@@ -178,6 +246,9 @@ imports:
 - name: read_replica_2
   resource_address: google_sql_database_instance.read_replica[2]
   required: false
+- name: master_password
+  resource_address: random_password.mysql_password[0]
+  required: true
 inputs:
   gcp_provider:
     type: '@facets/gcp_cloud_account'

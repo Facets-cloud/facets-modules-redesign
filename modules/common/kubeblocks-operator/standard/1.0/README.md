@@ -134,13 +134,40 @@ Terraform handles cleanup automatically:
 
 ### Feature Gates
 
-Enable experimental features:
+#### In-Place Vertical Scaling (Enabled by Default)
 
-```yaml
-spec:
-  feature_gates:
-    in_place_pod_vertical_scaling: true  # Allow CPU/memory changes without pod restart
+The module enables **in-place vertical scaling** by default, allowing zero-downtime resource updates for all database clusters managed by KubeBlocks:
+
+```terraform
+featureGates = {
+  inPlacePodVerticalScaling = {
+    enabled = true  # Default: enabled
+  }
+}
 ```
+
+**Feature Status:**
+- **GA** in Kubernetes 1.35
+- **Beta** (enabled by default) in Kubernetes 1.33-1.34
+- **Alpha** in Kubernetes 1.27-1.32
+
+**How It Works:**
+1. User modifies resource requests/limits in a database Cluster CRD (mongo, mysql, postgres, redis)
+2. KubeBlocks operator detects the change
+3. Operator updates pod resources in-place without restarting pods
+4. If in-place scaling fails, Kubernetes/KubeBlocks automatically falls back to pod restart
+
+**Benefits:**
+- Zero-downtime resource updates for production databases
+- No connection interruptions during scaling operations
+- Improved operational efficiency
+
+**Applies To:**
+- All database addon modules: MongoDB, MySQL, PostgreSQL, Redis
+- Operator pods themselves
+- Any Cluster CRD managed by KubeBlocks
+
+**Note:** This is an operator-level setting that automatically applies to all database clusters. Individual database modules do not require additional configuration.
 
 ### Resource Limits
 

@@ -4,7 +4,7 @@
 
 # Random password for MySQL root user (when not restoring from backup or importing user)
 resource "random_password" "mysql_password" {
-  count   = (var.instance.spec.restore_config.restore_from_backup || try(var.instance.spec.imports.root_user, "") != "") ? 0 : 1
+  count   = var.instance.spec.restore_config.restore_from_backup ? 0 : 1
   length  = 16
   special = true
 
@@ -138,7 +138,7 @@ resource "google_sql_user" "mysql_root_user" {
   name     = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_username : "root"
   instance = google_sql_database_instance.mysql_instance.name
   password = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_password : (
-    try(var.instance.spec.imports.root_user, "") != "" ? "imported-password-unchanged" : random_password.mysql_password[0].result
+    local.import_enabled && try(var.instance.spec.imports.root_user, "") != "" ? var.instance.spec.imports.master_password : random_password.mysql_password[0].result
   )
 
   lifecycle {

@@ -11,10 +11,20 @@ spec:
   description: Azure Database for MySQL - Flexible Server with high availability and
     automated backup. Network module must have MySQL flexible server subnet enabled.
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - restore_config
+  - imports
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
+      x-ui-order:
+      - version
+      - database_name
+      - charset
+      - collation
       properties:
         version:
           type: string
@@ -52,6 +62,12 @@ spec:
     sizing:
       type: object
       title: Sizing & Performance
+      x-ui-order:
+      - sku_name
+      - storage_gb
+      - iops
+      - storage_tier
+      - read_replica_count
       properties:
         sku_name:
           type: string
@@ -117,6 +133,13 @@ spec:
     restore_config:
       type: object
       title: Restore Operations
+      x-ui-overrides-only: true
+      x-ui-order:
+      - restore_from_backup
+      - source_server_id
+      - restore_point_in_time
+      - administrator_login
+      - administrator_password
       properties:
         restore_from_backup:
           type: boolean
@@ -157,6 +180,8 @@ spec:
             actual credentials from source)
           minLength: 8
           maxLength: 128
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,128}$
+          x-ui-error-message: "Password must be 8-128 chars with valid characters."
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
             values:
@@ -164,15 +189,33 @@ spec:
     imports:
       type: object
       title: Import Existing Resources
+      x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - server_id
+      - database_id
       properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing Azure MySQL Flexible Server resources
+          default: false
         server_id:
           type: string
           title: MySQL Server Resource ID
           description: Full Azure resource ID of existing MySQL Flexible Server (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DBforMySQL/flexibleServers/{name})
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         database_id:
           type: string
           title: Database Resource ID
           description: Full Azure resource ID of existing database (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DBforMySQL/flexibleServers/{server}/databases/{name})
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
   required:
   - version_config
   - sizing

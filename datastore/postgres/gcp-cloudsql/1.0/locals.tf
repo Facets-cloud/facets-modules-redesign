@@ -1,7 +1,10 @@
 # Local computations for CloudSQL PostgreSQL module
 locals {
+  # Import flag
+  import_enabled = lookup(var.instance.spec, "imports", null) != null ? lookup(var.instance.spec.imports, "import_existing", false) : false
+
   # Check if we're importing existing resources
-  is_import = var.instance.spec.imports != null && var.instance.spec.imports.instance_id != null
+  is_import = local.import_enabled && var.instance.spec.imports != null && var.instance.spec.imports.instance_id != null
 
   # Primary instance details - use import ID if provided, otherwise generate new name
   instance_identifier = local.is_import ? var.instance.spec.imports.instance_id : "${var.instance_name}-${var.environment.unique_name}"
@@ -16,12 +19,7 @@ locals {
     var.instance.spec.imports.database_name
   ) : var.instance.spec.version_config.database_name
 
-  user_name = local.is_import && var.instance.spec.imports.user_name != null ? (
-    # Extract user name from terraform import address
-    length(split("/", var.instance.spec.imports.user_name)) > 1 ?
-    element(split("/", var.instance.spec.imports.user_name), length(split("/", var.instance.spec.imports.user_name)) - 1) :
-    var.instance.spec.imports.user_name
-  ) : (var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_username : "postgres")
+  user_name = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_username : "postgres"
 
   # Check if public IP is enabled
   public_ip = try(var.instance.spec.network_config.ipv4_enabled, false)

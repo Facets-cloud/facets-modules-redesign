@@ -10,11 +10,19 @@ spec:
   description: A managed PostgreSQL Aurora cluster with high availability, automated
     backups, and read replicas
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - restore_config
+  - imports
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
       x-ui-toggle: true
+      x-ui-order:
+      - engine_version
+      - database_name
       properties:
         engine_version:
           type: string
@@ -42,6 +50,11 @@ spec:
       type: object
       title: Sizing & Performance
       x-ui-toggle: true
+      x-ui-order:
+      - instance_class
+      - min_capacity
+      - max_capacity
+      - read_replica_count
       properties:
         instance_class:
           type: string
@@ -84,7 +97,13 @@ spec:
     restore_config:
       type: object
       title: Restore Operations
+      x-ui-overrides-only: true
       x-ui-toggle: true
+      x-ui-order:
+      - restore_from_backup
+      - source_snapshot_identifier
+      - master_username
+      - master_password
       properties:
         restore_from_backup:
           type: boolean
@@ -116,6 +135,8 @@ spec:
           description: Master password (required when restoring from snapshot)
           minLength: 8
           maxLength: 128
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,128}$
+          x-ui-error-message: "Password must be 8-128 chars with valid characters."
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
             values:
@@ -125,20 +146,52 @@ spec:
     imports:
       type: object
       title: Import Existing Resources
-      x-ui-toggle: true
+      x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - cluster_identifier
+      - writer_instance_identifier
       properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing Aurora cluster resources
+          default: false
         cluster_identifier:
           type: string
           title: Aurora Cluster Identifier
           description: Existing Aurora cluster identifier to import
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         writer_instance_identifier:
           type: string
           title: Writer Instance Identifier
           description: Existing writer instance identifier to import
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         reader_instance_identifiers:
           type: string
           title: Reader Instance Identifiers
           description: Existing reader instance identifiers to import (comma-separated)
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
+        master_password:
+          type: string
+          title: Master Password
+          description: Master password for the imported cluster (8+ characters)
+          minLength: 8
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,}$
+          x-ui-error-message: "Password must be 8+ chars with valid characters."
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
   required:
   - version_config
   - sizing
@@ -170,6 +223,9 @@ imports:
 - name: reader_instance_identifiers
   resource_address: aws_rds_cluster_instance.aurora_readers[0]
   required: false
+- name: master_password
+  resource_address: random_password.master_password[0]
+  required: true
 iac:
   validated_files:
   - main.tf

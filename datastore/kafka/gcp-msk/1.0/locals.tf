@@ -2,6 +2,10 @@
 # Output locals are handled in outputs.tf by the Facets framework
 
 locals {
+  # Import detection
+  import_enabled    = lookup(var.instance.spec, "imports", null) != null ? lookup(var.instance.spec.imports, "import_existing", false) : false
+  is_cluster_import = local.import_enabled && lookup(var.instance.spec.imports, "cluster_id", null) != null
+
   cluster_name = "${var.instance_name}-${var.environment.unique_name}"
 
   # Kafka configuration

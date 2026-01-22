@@ -22,9 +22,11 @@ variable "instance" {
         master_password            = optional(string)
       }), {})
       imports = optional(object({
+        import_existing             = optional(bool, false)
         cluster_identifier          = optional(string)
         writer_instance_identifier  = optional(string)
         reader_instance_identifiers = optional(string)
+        master_password             = optional(string)
       }), {})
     })
   })

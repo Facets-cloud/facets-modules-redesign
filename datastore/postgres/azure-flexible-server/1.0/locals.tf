@@ -1,15 +1,18 @@
 # Local computations - Simplified after network module refactoring
 locals {
+  # Import flag
+  import_enabled = lookup(var.instance.spec, "imports", null) != null ? lookup(var.instance.spec.imports, "import_existing", false) : false
+
   # Import configuration - expects full Azure resource IDs
-  import_server_id   = try(var.instance.spec.imports.flexible_server_id, null)
-  import_database_id = try(var.instance.spec.imports.postgres_database_id, null)
+  import_server_id   = local.import_enabled ? try(var.instance.spec.imports.flexible_server_id, null) : null
+  import_database_id = local.import_enabled ? try(var.instance.spec.imports.postgres_database_id, null) : null
 
   # Extract server name from resource ID for use in Terraform configs
   # Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DBforPostgreSQL/flexibleServers/{name}
   import_server_name = local.import_server_id != null ? element(split("/", local.import_server_id), length(split("/", local.import_server_id)) - 1) : null
 
   # Mode detection
-  is_import = local.import_server_id != null
+  is_import = local.import_enabled && local.import_server_id != null
 
   # Resource naming
   # Azure PostgreSQL server names have a 63 character limit
@@ -60,8 +63,8 @@ locals {
   high_availability_mode    = null
 
   # Generate admin password (skip during restore or import)
-  admin_username = "psqladmin"
-  admin_password = local.is_restore || local.is_import ? null : random_password.admin_password[0].result
+  admin_username = local.is_restore ? var.instance.spec.restore_config.admin_username : "psqladmin"
+  admin_password = local.is_restore ? var.instance.spec.restore_config.admin_password : random_password.admin_password[0].result
 
   # Tags
   common_tags = merge(

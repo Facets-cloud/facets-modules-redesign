@@ -16,9 +16,10 @@ variable "instance" {
         replicas_per_primary = optional(number)
         shard_count          = optional(number)
       })
-      terraform_import = optional(object({
-        cache_name          = optional(string)
-        resource_group_name = optional(string)
+      imports = optional(object({
+        import_existing           = optional(bool, false)
+        cache_resource_id         = optional(string)
+        firewall_rule_resource_id = optional(string)
       }))
     })
   })

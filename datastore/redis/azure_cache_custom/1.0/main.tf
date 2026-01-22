@@ -1,16 +1,19 @@
 # Local computations for Azure Redis Cache configuration
 locals {
+  # Import detection
+  import_enabled = lookup(var.instance.spec, "imports", null) != null ? lookup(var.instance.spec.imports, "import_existing", false) : false
+
   # Import configuration - expects full Azure resource ID
   # Normalize case: Azure returns Microsoft.Cache/Redis but Terraform expects Microsoft.Cache/redis
-  import_cache_id_raw = try(var.instance.spec.imports.cache_resource_id, null)
-  import_cache_id     = try(var.instance.spec.imports.cache_resource_id, null)
+  import_cache_id_raw = local.import_enabled && lookup(var.instance.spec.imports, "cache_resource_id", null) != null ? var.instance.spec.imports.cache_resource_id : null
+  import_cache_id     = local.import_cache_id_raw
 
   # Extract cache name from resource ID for use in Terraform configs
   # Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Cache/redis/{name}
   import_cache_name = local.import_cache_id != null ? element(split("/", local.import_cache_id), length(split("/", local.import_cache_id)) - 1) : null
 
   # Mode detection
-  is_import = local.import_cache_id != null
+  is_import = local.import_enabled && local.import_cache_id != null
 
   # Basic naming and identification
   cache_name = local.is_import ? local.import_cache_name : "${var.instance_name}-${var.environment.unique_name}"
