@@ -35,7 +35,7 @@ resource "google_container_node_pool" "node_pool" {
   project  = var.inputs.cloud_account.attributes.project_id
   provider = google-beta
   name     = "${var.instance_name}-${random_string.name_suffix.result}"
-  cluster  = lookup(local.kubernetes_attributes, "cluster_name", "")
+  cluster  = lookup(local.kubernetes_attributes, "cluster_id", "")
   location = var.inputs.cloud_account.attributes.region
 
   autoscaling {
