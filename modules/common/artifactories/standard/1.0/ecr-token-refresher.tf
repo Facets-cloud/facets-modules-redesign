@@ -67,6 +67,7 @@ resource "kubernetes_cron_job_v1" "ecr-token-refresher-cron" {
             service_account_name            = kubernetes_service_account.ecr-token-refresher-sa[each.key].metadata.0.name
             automount_service_account_token = true
             node_selector                   = local.node_selector
+            priority_class_name             = kubernetes_priority_class_v1.ecr_token_refresher.metadata[0].name
             container {
               name              = "kubectl"
               image             = "xynova/aws-kubectl"
@@ -221,6 +222,7 @@ resource "kubernetes_job_v1" "ecr-token-refresher-initial" {
         service_account_name            = kubernetes_service_account.ecr-token-refresher-sa[each.key].metadata.0.name
         automount_service_account_token = true
         node_selector                   = local.node_selector
+        priority_class_name             = kubernetes_priority_class_v1.ecr_token_refresher.metadata[0].name
         container {
           name              = "kubectl"
           image             = "xynova/aws-kubectl"
