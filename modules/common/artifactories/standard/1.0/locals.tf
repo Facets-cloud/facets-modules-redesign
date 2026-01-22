@@ -81,5 +81,5 @@ locals {
 
   labels = merge(lookup(local.metadata, "labels", {}), { "secret-copier" = "yes" })
 
-  labels_ecr = join(",", [for k, v in merge(lookup(local.metadata, "labels", {}), { "secret-copier" = "yes" }) : "${k}=${v}"])
+  labels_ecr = join(",", [for k, v in local.labels : "${k}=${v}"])
 }
