@@ -4,8 +4,11 @@
 locals {
   cluster_name = "${var.instance_name}-${var.environment.unique_name}"
 
+  # Import flag
+  import_enabled = lookup(var.instance.spec, "imports", null) != null ? lookup(var.instance.spec.imports, "import_existing", false) : false
+
   # Check if this is an import operation
-  is_import = var.instance.spec.imports.cluster_arn != null && var.instance.spec.imports.cluster_arn != ""
+  is_import = local.import_enabled && var.instance.spec.imports.cluster_arn != null && var.instance.spec.imports.cluster_arn != ""
 
   # Security group ID - use imported one if importing, otherwise use created one
   security_group_id = local.is_import ? var.instance.spec.imports.security_group_id : aws_security_group.msk_cluster[0].id

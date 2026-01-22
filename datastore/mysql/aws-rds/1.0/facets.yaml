@@ -10,10 +10,18 @@ spec:
   description: Managed MySQL database instance on AWS RDS with high availability,
     automated backups, and read replicas
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - restore_config
+  - imports
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
+      x-ui-order:
+      - version
+      - database_name
       properties:
         version:
           type: string
@@ -32,17 +40,15 @@ spec:
           minLength: 1
           maxLength: 64
           default: myapp
-        master_username:
-          type: string
-          title: Master Username
-          description: Master username for database access
-          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
-          minLength: 1
-          maxLength: 16
-          default: admin
     sizing:
       type: object
       title: Sizing & Performance
+      x-ui-order:
+      - instance_class
+      - allocated_storage
+      - max_allocated_storage
+      - storage_type
+      - read_replica_count
       properties:
         instance_class:
           type: string
@@ -91,6 +97,12 @@ spec:
     restore_config:
       type: object
       title: Restore Operations
+      x-ui-overrides-only: true
+      x-ui-order:
+      - restore_from_backup
+      - source_db_instance_identifier
+      - restore_master_username
+      - restore_master_password
       properties:
         restore_from_backup:
           type: boolean
@@ -124,6 +136,8 @@ spec:
             operations)
           minLength: 8
           maxLength: 128
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,128}$
+          x-ui-error-message: "Password must be 8-128 chars with valid characters."
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
             values:
@@ -131,19 +145,52 @@ spec:
     imports:
       type: object
       title: Import Existing Resources
+      x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - db_instance_identifier
+      - db_subnet_group_name
       properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing AWS RDS resources
+          default: false
         db_instance_identifier:
           type: string
           title: DB Instance Identifier
           description: Identifier of existing RDS instance to import
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         db_subnet_group_name:
           type: string
           title: DB Subnet Group Name
           description: Name of existing DB subnet group to import
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         security_group_id:
           type: string
           title: Security Group ID
           description: ID of existing security group to import
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
+        master_password:
+          type: string
+          title: Master Password
+          description: Master password for the imported resource (8+ characters)
+          minLength: 8
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,}$
+          x-ui-error-message: "Password must be 8+ chars with valid characters."
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
   required:
   - version_config
 imports:
@@ -156,6 +203,9 @@ imports:
 - name: security_group_id
   resource_address: aws_security_group.mysql
   required: false
+- name: master_password
+  resource_address: random_password.master_password[0]
+  required: true
 inputs:
   aws_cloud_account:
     type: '@facets/aws_cloud_account'
@@ -187,7 +237,6 @@ sample:
     version_config:
       version: '8.4'
       database_name: myapp
-      master_username: admin
     sizing:
       instance_class: db.t3.small
       allocated_storage: 100

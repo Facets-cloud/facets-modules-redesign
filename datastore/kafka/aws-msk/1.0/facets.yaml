@@ -10,10 +10,17 @@ spec:
   description: AWS Managed Streaming for Apache Kafka cluster with secure defaults
     and automatic scaling
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - imports
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
+      x-ui-order:
+      - kafka_version
+      - instance_type
       properties:
         kafka_version:
           type: string
@@ -50,6 +57,10 @@ spec:
     sizing:
       type: object
       title: Sizing & Performance
+      x-ui-order:
+      - number_of_broker_nodes
+      - volume_size
+      - client_subnets_count
       properties:
         number_of_broker_nodes:
           type: number
@@ -75,15 +86,33 @@ spec:
     imports:
       type: object
       title: Import Existing Resources
+      x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - cluster_arn
+      - security_group_id
       properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing MSK cluster resources
+          default: false
         cluster_arn:
           type: string
           title: MSK Cluster ARN
           description: 'ARN of existing MSK cluster to import (format: arn:aws:kafka:region:account:cluster/name/uuid)'
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+            - true
         security_group_id:
           type: string
           title: Security Group ID
           description: ID of existing security group to import (e.g., sg-1234567890abcdef0)
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+            - true
   required:
   - version_config
   - sizing

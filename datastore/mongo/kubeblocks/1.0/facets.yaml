@@ -31,6 +31,18 @@ spec:
   title: MongoDB Cluster Configuration
   description: MongoDB database cluster managed by KubeBlocks
   type: object
+  x-ui-order:
+  - namespace_override
+  - termination_policy
+  - mongodb_version
+  - mode
+  - replicas
+  - resources
+  - storage
+  - high_availability
+  - backup
+  - restore
+  - external_access
   properties:
     namespace_override:
       type: string
@@ -87,6 +99,11 @@ spec:
       type: object
       title: Resource Allocation
       description: CPU and memory resources for MongoDB pods
+      x-ui-order:
+      - cpu_request
+      - cpu_limit
+      - memory_request
+      - memory_limit
       properties:
         cpu_request:
           type: string
@@ -112,6 +129,8 @@ spec:
       type: object
       title: Storage Configuration
       description: Persistent storage settings for MongoDB data
+      x-ui-order:
+      - size
       properties:
         size:
           type: string
@@ -129,6 +148,9 @@ spec:
         field: spec.mode
         values:
         - replication
+      x-ui-order:
+      - enable_pod_anti_affinity
+      - enable_pdb
       properties:
         enable_pod_anti_affinity:
           type: boolean
@@ -146,6 +168,10 @@ spec:
       title: Backup Configuration
       description: Optional backup repository and schedule configuration
       x-ui-overrides-only: true
+      x-ui-order:
+      - enabled
+      - schedule_cron
+      - retention_period
       properties:
         enabled:
           type: boolean
@@ -169,6 +195,9 @@ spec:
       description: Restore cluster from existing backup instead of creating fresh
         cluster
       x-ui-overrides-only: true
+      x-ui-order:
+      - enabled
+      - backup_name
       properties:
         enabled:
           type: boolean

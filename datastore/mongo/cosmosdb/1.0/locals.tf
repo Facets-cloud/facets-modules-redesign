@@ -1,7 +1,10 @@
 locals {
+  # Import flag
+  import_enabled = lookup(var.instance.spec, "imports", null) != null ? lookup(var.instance.spec.imports, "import_existing", false) : false
+
   # Import configuration - now expects full Azure resource IDs
-  import_account_id  = try(var.instance.spec.imports.account_name, null)
-  import_database_id = try(var.instance.spec.imports.database_name, null)
+  import_account_id  = local.import_enabled ? try(var.instance.spec.imports.account_name, null) : null
+  import_database_id = local.import_enabled ? try(var.instance.spec.imports.database_name, null) : null
 
   # Extract account name from resource ID for use in Terraform configs
   # Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DocumentDB/databaseAccounts/{name}
@@ -10,7 +13,7 @@ locals {
 
   # Mode detection flags
   is_restore = try(var.instance.spec.restore_config.restore_from_backup, false) == true
-  is_import  = local.import_account_id != null
+  is_import  = local.import_enabled && local.import_account_id != null
 
   # Database should exist for both import and create modes (not restore)
   database_count = local.is_restore ? 0 : 1

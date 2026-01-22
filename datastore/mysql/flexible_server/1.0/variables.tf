@@ -26,6 +26,7 @@ variable "instance" {
         administrator_password = optional(string)
       })
       imports = optional(object({
+        import_existing  = optional(bool, false)
         server_id        = optional(string)
         database_id      = optional(string)
         firewall_rule_id = optional(string)

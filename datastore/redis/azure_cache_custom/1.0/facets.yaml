@@ -10,10 +10,17 @@ spec:
   title: Custom Azure Cache for Redis
   description: Configure Azure Cache for Redis with developer-friendly settings
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - imports
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
+      x-ui-order:
+      - redis_version
+      - family
       properties:
         redis_version:
           type: string
@@ -38,6 +45,12 @@ spec:
     sizing:
       type: object
       title: Sizing & Performance
+      x-ui-order:
+      - sku_name
+      - capacity
+      - replicas_per_master
+      - replicas_per_primary
+      - shard_count
       properties:
         sku_name:
           type: string
@@ -98,15 +111,33 @@ spec:
       type: object
       title: Import Existing Cache (Terraform State Only)
       description: Import an existing Azure Redis Cache into Terraform state management
+      x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - cache_resource_id
+      - firewall_rule_resource_id
       properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing Azure Redis Cache resources
+          default: false
         cache_resource_id:
           type: string
           title: Redis Cache Resource ID
           description: Full Azure resource ID of existing cache (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Cache/redis/{name})
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         firewall_rule_resource_id:
           type: string
           title: Firewall Rule Resource ID (Optional)
           description: Full Azure resource ID of firewall rule (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Cache/Redis/{cacheName}/firewallRules/{ruleName})
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
   required:
   - version_config
   - sizing
