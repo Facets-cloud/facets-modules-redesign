@@ -24,8 +24,9 @@ variable "instance" {
         restore_timestamp   = optional(string)
       }))
       imports = optional(object({
-        account_name  = optional(string)
-        database_name = optional(string)
+        import_existing = optional(bool, false)
+        account_name    = optional(string)
+        database_name   = optional(string)
       }))
     })
   })

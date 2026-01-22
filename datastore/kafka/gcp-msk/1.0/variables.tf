@@ -21,6 +21,7 @@ variable "instance" {
       }), {})
 
       imports = optional(object({
+        import_existing       = optional(bool, false)
         cluster_id            = optional(string)
         network_attachment_id = optional(string)
       }), {})

@@ -17,14 +17,18 @@ variable "instance" {
       restore_config = optional(object({
         restore_from_snapshot = bool
         snapshot_name         = optional(string)
+        auth_token            = optional(string)
         }), {
         restore_from_snapshot = false
         snapshot_name         = null
+        auth_token            = null
       })
       imports = optional(object({
+        import_existing   = optional(bool, false)
         cluster_id        = optional(string)
         subnet_group_name = optional(string)
         security_group_id = optional(string)
+        auth_token        = optional(string)
       }), {})
     })
   })

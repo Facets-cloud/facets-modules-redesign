@@ -9,6 +9,10 @@ spec:
   title: GCP Managed Kafka Topic
   description: Configure Kafka topic with partitions, replication, and optional configurations
   type: object
+  x-ui-order:
+  - partition_count
+  - replication_factor
+  - configs
   properties:
     partition_count:
       type: integer

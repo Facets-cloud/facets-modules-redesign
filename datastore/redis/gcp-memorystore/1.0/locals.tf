@@ -1,4 +1,8 @@
 locals {
+  # Import detection
+  import_enabled     = lookup(var.instance.spec, "imports", null) != null ? lookup(var.instance.spec.imports, "import_existing", false) : false
+  is_instance_import = local.import_enabled && lookup(var.instance.spec.imports, "instance_id", null) != null
+
   # GCP provider configuration
   project_id = var.inputs.gcp_provider.attributes.project_id
   region     = var.inputs.network.attributes.region

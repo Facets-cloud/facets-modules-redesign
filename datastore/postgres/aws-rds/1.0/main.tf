@@ -1,7 +1,7 @@
 # PostgreSQL RDS Instance Implementation
 
 resource "random_password" "master_password" {
-  count   = (var.instance.spec.restore_config.restore_from_backup || lookup(var.instance.spec, "imports", null) != null && lookup(var.instance.spec.imports, "db_instance_identifier", null) != null) ? 0 : 1
+  count   = var.instance.spec.restore_config.restore_from_backup ? 0 : 1
   length  = 16
   special = true
   upper   = true
@@ -9,18 +9,22 @@ resource "random_password" "master_password" {
   numeric = true
   # Exclude RDS-forbidden characters: /, @, ", space
   override_special = "!#$%&*()-_=+[]{}<>:?"
-}
 
-# Random username generation (when not restoring from backup or importing)
-resource "random_id" "master_username" {
-  count       = (var.instance.spec.restore_config.restore_from_backup || lookup(var.instance.spec, "imports", null) != null && lookup(var.instance.spec.imports, "db_instance_identifier", null) != null) ? 0 : 1
-  byte_length = 4
+  lifecycle {
+    ignore_changes = [
+      length,
+      override_special,
+    ]
+  }
 }
 
 # Locals for computed values
 locals {
+  # Import flag
+  import_enabled = lookup(var.instance.spec, "imports", null) != null ? lookup(var.instance.spec.imports, "import_existing", false) : false
+
   # Check if we're importing
-  is_importing = lookup(var.instance.spec, "imports", null) != null && lookup(var.instance.spec.imports, "db_instance_identifier", null) != null
+  is_importing = local.import_enabled && lookup(var.instance.spec.imports, "db_instance_identifier", null) != null
 
   # Resource naming with length constraints
   db_instance_identifier = substr("${var.instance_name}-${var.environment.unique_name}", 0, 63)
@@ -28,10 +32,10 @@ locals {
   security_group_name    = substr("${var.instance_name}-${var.environment.unique_name}-sg", 0, 63)
 
   # Use imported or created subnet group
-  actual_subnet_group_name = lookup(var.instance.spec, "imports", null) != null && lookup(var.instance.spec.imports, "subnet_group_name", null) != null ? var.instance.spec.imports.subnet_group_name : (length(aws_db_subnet_group.postgres) > 0 ? aws_db_subnet_group.postgres[0].name : null)
+  actual_subnet_group_name = local.import_enabled && lookup(var.instance.spec.imports, "subnet_group_name", null) != null ? var.instance.spec.imports.subnet_group_name : (length(aws_db_subnet_group.postgres) > 0 ? aws_db_subnet_group.postgres[0].name : null)
 
   # Use imported or created security group
-  actual_security_group_id = lookup(var.instance.spec, "imports", null) != null && lookup(var.instance.spec.imports, "security_group_id", null) != null ? var.instance.spec.imports.security_group_id : (length(aws_security_group.postgres) > 0 ? aws_security_group.postgres[0].id : null)
+  actual_security_group_id = local.import_enabled && lookup(var.instance.spec.imports, "security_group_id", null) != null ? var.instance.spec.imports.security_group_id : (length(aws_security_group.postgres) > 0 ? aws_security_group.postgres[0].id : null)
 
   # Determine the correct source DB identifier for replicas
   # Use imported identifier if importing, otherwise use the generated identifier
@@ -51,9 +55,9 @@ locals {
 
   replica_identifier_base = local.is_importing ? substr("${local.base_cleaned}imp", 0, 47) : substr(local.db_instance_identifier, 0, 52)
 
-  # Master credentials - don't set when importing
-  master_username = local.is_importing ? null : (var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_username : "pgadmin${random_id.master_username[0].hex}")
-  master_password = local.is_importing ? null : (var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_password : random_password.master_password[0].result)
+  # Master credentials
+  master_username = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_username : "pgadmin"
+  master_password = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_password : random_password.master_password[0].result
 
   # Database configuration
   database_name = var.instance.spec.version_config.database_name
@@ -79,7 +83,7 @@ locals {
 
 # DB Subnet Group - only create if not importing
 resource "aws_db_subnet_group" "postgres" {
-  count = lookup(var.instance.spec, "imports", null) != null && lookup(var.instance.spec.imports, "subnet_group_name", null) != null ? 0 : 1
+  count = local.import_enabled && lookup(var.instance.spec.imports, "subnet_group_name", null) != null ? 0 : 1
 
   name       = local.subnet_group_name
   subnet_ids = var.inputs.vpc_details.attributes.private_subnet_ids
@@ -99,7 +103,7 @@ resource "aws_db_subnet_group" "postgres" {
 
 # Security Group for RDS - only create if not importing
 resource "aws_security_group" "postgres" {
-  count = lookup(var.instance.spec, "imports", null) != null && lookup(var.instance.spec.imports, "security_group_id", null) != null ? 0 : 1
+  count = local.import_enabled && lookup(var.instance.spec.imports, "security_group_id", null) != null ? 0 : 1
 
   name_prefix = "${local.security_group_name}-"
   vpc_id      = var.inputs.vpc_details.attributes.vpc_id
@@ -141,7 +145,7 @@ resource "aws_db_instance" "postgres" {
   instance_class = var.instance.spec.sizing.instance_class
 
   # Database configuration
-  db_name = local.is_importing ? null : local.database_name
+  db_name = local.database_name
   # Conditional credentials - only set when not restoring from snapshot or importing
   username = local.master_username
   password = local.master_password

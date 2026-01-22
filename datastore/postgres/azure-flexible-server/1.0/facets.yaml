@@ -10,11 +10,20 @@ spec:
   description: A developer-friendly PostgreSQL flexible server with secure defaults
     and restore capabilities
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - restore_config
+  - imports
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
       x-ui-toggle: false
+      x-ui-order:
+      - version
+      - tier
+      - database_name
       properties:
         version:
           type: string
@@ -48,6 +57,10 @@ spec:
       type: object
       title: Sizing & Performance
       x-ui-toggle: false
+      x-ui-order:
+      - sku_name
+      - storage_gb
+      - read_replica_count
       properties:
         sku_name:
           type: string
@@ -82,7 +95,14 @@ spec:
     restore_config:
       type: object
       title: Restore Operations
+      x-ui-overrides-only: true
       x-ui-toggle: true
+      x-ui-order:
+      - restore_from_backup
+      - source_server_id
+      - restore_point_in_time
+      - admin_username
+      - admin_password
       properties:
         restore_from_backup:
           type: boolean
@@ -105,22 +125,75 @@ spec:
             field: spec.restore_config.restore_from_backup
             values:
             - true
+        admin_username:
+          type: string
+          title: Admin Username
+          description: Admin username for the restored server (required for restore
+            operations)
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+          minLength: 1
+          maxLength: 63
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+        admin_password:
+          type: string
+          title: Admin Password
+          description: Admin password for the restored server (required for restore
+            operations)
+          minLength: 8
+          maxLength: 128
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,128}$
+          x-ui-error-message: "Password must be 8-128 chars with valid characters."
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
       required: []
     imports:
       type: object
       title: Import Existing Resources
-      x-ui-toggle: true
+      x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - flexible_server_id
       properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing Azure PostgreSQL Flexible Server resources
+          default: false
         flexible_server_id:
           type: string
           title: Flexible Server ID
           description: Full Azure resource ID of existing PostgreSQL Flexible Server
             (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DBforPostgreSQL/flexibleServers/{name})
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         postgres_database_id:
           type: string
           title: Custom Database ID (Optional)
           description: Full Azure resource ID of custom database for import - NOT
             for "postgres" system database (format:/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.DBforPostgreSQL/flexibleServers/{server}/databases/{name})
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
+        admin_password:
+          type: string
+          title: Admin Password
+          description: Admin password for the imported server (8-128 characters)
+          minLength: 8
+          maxLength: 128
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,128}$
+          x-ui-error-message: "Password must be 8-128 chars with valid characters."
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
       required: []
   required:
   - version_config
@@ -149,6 +222,9 @@ imports:
 - name: postgres_database_id
   resource_address: azurerm_postgresql_flexible_server_database.databases[0]
   required: false
+- name: admin_password
+  resource_address: random_password.admin_password[0]
+  required: true
 iac:
   validated_files:
   - main.tf

@@ -24,9 +24,11 @@ variable "instance" {
         master_password               = optional(string)
       })
       imports = optional(object({
+        import_existing        = optional(bool, false)
         db_instance_identifier = optional(string)
         subnet_group_name      = optional(string)
         security_group_id      = optional(string)
+        master_password        = optional(string)
       }))
     })
   })

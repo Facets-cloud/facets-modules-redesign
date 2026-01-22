@@ -24,7 +24,7 @@ module "postgresql_cluster" {
 
       annotations = merge(
         {
-          "kubeblocks.io/operator-release-id"    = var.inputs.kubeblocks_operator.attributes.release_id
+          "kubeblocks.io/operator-release-id" = var.inputs.kubeblocks_operator.attributes.release_id
         },
         local.restore_enabled && local.restore_backup_name != "" ? {
           "kubeblocks.io/restore-from-backup" = jsonencode({

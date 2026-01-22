@@ -31,6 +31,16 @@ spec:
   title: PostgreSQL Cluster Configuration
   description: PostgreSQL database cluster managed by KubeBlocks
   type: object
+  x-ui-order:
+  - namespace_override
+  - termination_policy
+  - postgres_version
+  - mode
+  - replicas
+  - resources
+  - storage
+  - backup
+  - restore
   properties:
     namespace_override:
       type: string
@@ -85,6 +95,11 @@ spec:
       type: object
       title: Resource Allocation
       description: CPU and memory resources for PostgreSQL pods
+      x-ui-order:
+      - cpu_request
+      - cpu_limit
+      - memory_request
+      - memory_limit
       properties:
         cpu_request:
           type: string
@@ -110,6 +125,8 @@ spec:
       type: object
       title: Storage Configuration
       description: Persistent storage settings for PostgreSQL data
+      x-ui-order:
+      - size
       properties:
         size:
           type: string
@@ -124,6 +141,10 @@ spec:
       title: Backup Configuration
       description: Optional backup repository and schedule configuration
       x-ui-overrides-only: true
+      x-ui-order:
+      - enabled
+      - schedule_cron
+      - retention_period
       properties:
         enabled:
           type: boolean
@@ -147,6 +168,8 @@ spec:
       description: Restore cluster from existing backup instead of creating fresh
         cluster
       x-ui-overrides-only: true
+      x-ui-order:
+      - enabled
       properties:
         enabled:
           type: boolean

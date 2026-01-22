@@ -10,10 +10,19 @@ spec:
   description: Managed PostgreSQL database using Amazon RDS with secure defaults and
     backup support
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - security_config
+  - restore_config
+  - imports
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
+      x-ui-order:
+      - engine_version
+      - database_name
       properties:
         engine_version:
           type: string
@@ -38,6 +47,10 @@ spec:
     sizing:
       type: object
       title: Sizing & Performance
+      x-ui-order:
+      - instance_class
+      - allocated_storage
+      - read_replica_count
       properties:
         instance_class:
           type: string
@@ -71,6 +84,8 @@ spec:
     security_config:
       type: object
       title: Security & Protection
+      x-ui-order:
+      - deletion_protection
       properties:
         deletion_protection:
           type: boolean
@@ -83,6 +98,12 @@ spec:
     restore_config:
       type: object
       title: Restore Operations
+      x-ui-overrides-only: true
+      x-ui-order:
+      - restore_from_backup
+      - source_db_instance_identifier
+      - master_username
+      - master_password
       properties:
         restore_from_backup:
           type: boolean
@@ -106,24 +127,34 @@ spec:
           maxLength: 63
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
-            values:
-            - true
         master_password:
           type: string
           title: Master Password
           description: Required when restoring from backup
           minLength: 8
           maxLength: 128
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,128}$
+          x-ui-error-message: "Password must be 8-128 chars with valid characters."
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
             values:
             - true
       required:
-      - restore_config
+      - restore_from_backup
     imports:
       type: object
       title: Import Existing Resources
+      x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - db_instance_identifier
+      - subnet_group_name
       properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing RDS resources
+          default: false
         db_instance_identifier:
           type: string
           title: RDS Instance Identifier
@@ -131,6 +162,10 @@ spec:
           pattern: ^[a-zA-Z][a-zA-Z0-9-]*$
           minLength: 1
           maxLength: 63
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         subnet_group_name:
           type: string
           title: DB Subnet Group Name
@@ -138,16 +173,34 @@ spec:
           pattern: ^[a-zA-Z][a-zA-Z0-9-]*$
           minLength: 1
           maxLength: 255
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         security_group_id:
           type: string
           title: Security Group ID
           description: ID of existing security group (required when importing)
           pattern: ^sg-[0-9a-fA-F]{8,17}$
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
+        master_password:
+          type: string
+          title: Master Password
+          description: Master password for the imported cluster (8+ characters)
+          minLength: 8
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,}$
+          x-ui-error-message: "Password must be 8+ chars with valid characters."
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
   required:
   - version_config
   - sizing
   - security_config
-  - restore_config
 imports:
 - name: db_instance_identifier
   resource_address: aws_db_instance.postgres
@@ -158,6 +211,9 @@ imports:
 - name: security_group_id
   resource_address: aws_security_group.postgres
   required: false
+- name: master_password
+  resource_address: random_password.master_password[0]
+  required: true
 inputs:
   aws_provider:
     type: '@facets/aws_cloud_account'

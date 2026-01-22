@@ -8,10 +8,18 @@ spec:
   title: MongoDB with AWS DocumentDB
   description: MongoDB-compatible database using AWS DocumentDB service
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - restore_config
+  - imports
   properties:
     version_config:
       type: object
       title: Version & Basic Configuration
+      x-ui-order:
+      - engine_version
+      - port
       properties:
         engine_version:
           type: string
@@ -32,6 +40,9 @@ spec:
     sizing:
       type: object
       title: Sizing & Performance
+      x-ui-order:
+      - instance_class
+      - instance_count
       properties:
         instance_class:
           type: string
@@ -55,6 +66,12 @@ spec:
     restore_config:
       type: object
       title: Restore Operations
+      x-ui-overrides-only: true
+      x-ui-order:
+      - restore_from_snapshot
+      - snapshot_identifier
+      - master_username
+      - master_password
       properties:
         restore_from_snapshot:
           type: boolean
@@ -83,6 +100,8 @@ spec:
           title: Master Password
           description: Master password for restored cluster (8+ characters)
           minLength: 8
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,}$
+          x-ui-error-message: "Password must be 8+ chars with valid characters."
           x-ui-visible-if:
             field: spec.restore_config.restore_from_snapshot
             values:
@@ -90,19 +109,54 @@ spec:
     imports:
       type: object
       title: Import Existing Resources
+      x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - cluster_identifier
+      - security_group_id
+      - subnet_group_name
+      - master_password
       properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing DocumentDB resources
+          default: false
         cluster_identifier:
           type: string
           title: Cluster Identifier
           description: Existing DocumentDB cluster identifier to import
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         security_group_id:
           type: string
           title: Security Group ID
           description: ID of existing security group to import (e.g., sg-1234567890abcdef0)
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
         subnet_group_name:
           type: string
           title: Subnet Group Name
           description: Name of existing DocumentDB subnet group to import
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
+        master_password:
+          type: string
+          title: Master Password
+          description: Master password for the imported cluster (8+ characters)
+          minLength: 8
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,}$
+          x-ui-error-message: "Password must be 8+ chars with valid characters."
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
   required:
   - version_config
   - sizing
@@ -132,6 +186,9 @@ imports:
   required: true
 - name: subnet_group_name
   resource_address: aws_docdb_subnet_group.main
+  required: true
+- name: master_password
+  resource_address: random_password.master[0]
   required: true
 iac:
   validated_files:

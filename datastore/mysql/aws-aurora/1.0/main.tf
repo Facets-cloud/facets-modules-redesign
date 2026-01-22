@@ -1,31 +1,41 @@
 # Generate a random password only when NOT restoring from backup AND NOT importing
 # Excludes characters not allowed by Aurora MySQL: '/', '@', '"', ' ' (space)
 resource "random_password" "master_password" {
-  count            = (var.instance.spec.restore_config.restore_from_backup || try(var.instance.spec.imports.cluster_identifier, null) != null) ? 0 : 1
+  count            = var.instance.spec.restore_config.restore_from_backup ? 0 : 1
   length           = 16
   special          = true
   override_special = "!#$%&*+-=?^_`{|}~" # Safe special characters for Aurora MySQL
+
+  lifecycle {
+    ignore_changes = [
+      length,
+      override_special,
+    ]
+  }
 }
 
 # Generate unique cluster identifier
 locals {
+  # Import flag
+  import_enabled = lookup(var.instance.spec, "imports", null) != null ? lookup(var.instance.spec.imports, "import_existing", false) : false
+
   # Use imported identifier if provided, otherwise generate new one
-  cluster_identifier  = try(var.instance.spec.imports.cluster_identifier, null) != null ? var.instance.spec.imports.cluster_identifier : "${var.instance_name}-${var.environment.unique_name}"
+  cluster_identifier  = local.import_enabled && try(var.instance.spec.imports.cluster_identifier, null) != null ? var.instance.spec.imports.cluster_identifier : "${var.instance_name}-${var.environment.unique_name}"
   restore_from_backup = var.instance.spec.restore_config.restore_from_backup
   source_snapshot_id  = var.instance.spec.restore_config.source_snapshot_identifier
 
   # Check if we're importing existing resources
-  is_import = try(var.instance.spec.imports.cluster_identifier, null) != null
+  is_import = local.import_enabled && try(var.instance.spec.imports.cluster_identifier, null) != null
 
   # Get writer instance identifier for import
-  imported_writer_id = try(var.instance.spec.imports.writer_instance_identifier, null)
+  imported_writer_id = local.import_enabled ? try(var.instance.spec.imports.writer_instance_identifier, null) : null
 
   # Handle password - don't create for restore or import
-  master_password = local.restore_from_backup ? var.instance.spec.restore_config.master_password : (local.is_import ? null : random_password.master_password[0].result)
-  master_username = local.restore_from_backup ? var.instance.spec.restore_config.master_username : (local.is_import ? null : "admin")
+  master_password = local.restore_from_backup ? var.instance.spec.restore_config.master_password : random_password.master_password[0].result
+  master_username = local.restore_from_backup ? var.instance.spec.restore_config.master_username : "admin"
 
   # Split reader instance identifiers if provided for import
-  reader_instance_ids = try(var.instance.spec.imports.reader_instance_identifiers, null) != null && var.instance.spec.imports.reader_instance_identifiers != "" ? split(",", trimspace(var.instance.spec.imports.reader_instance_identifiers)) : []
+  reader_instance_ids = local.import_enabled && try(var.instance.spec.imports.reader_instance_identifiers, null) != null && var.instance.spec.imports.reader_instance_identifiers != "" ? split(",", trimspace(var.instance.spec.imports.reader_instance_identifiers)) : []
 }
 
 # Create DB subnet group (skip if importing)
@@ -83,10 +93,10 @@ resource "aws_rds_cluster" "aurora" {
   engine             = "aurora-mysql"
 
   # When restoring from snapshot or importing, these fields must be omitted or ignored
-  engine_version  = (local.restore_from_backup || local.is_import) ? null : var.instance.spec.version_config.engine_version
-  database_name   = (local.restore_from_backup || local.is_import) ? null : var.instance.spec.version_config.database_name
-  master_username = (local.restore_from_backup || local.is_import) ? null : local.master_username
-  master_password = (local.restore_from_backup || local.is_import) ? null : local.master_password
+  engine_version  = var.instance.spec.version_config.engine_version
+  database_name   = var.instance.spec.version_config.database_name
+  master_username = local.master_username
+  master_password = local.master_password
 
   # Backup configuration
   backup_retention_period      = 7 # Hardcoded - 7 days retention

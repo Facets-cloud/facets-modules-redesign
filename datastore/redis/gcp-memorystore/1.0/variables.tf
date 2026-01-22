@@ -23,7 +23,8 @@ variable "instance" {
         enable_tls = bool
       })
       imports = optional(object({
-        instance_id = optional(string)
+        import_existing = optional(bool, false)
+        instance_id     = optional(string)
       }))
     })
   })

@@ -10,10 +10,17 @@ spec:
   description: GCP Managed Service for Apache Kafka cluster with secure defaults and
     automatic scaling
   type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - connect_cluster
+  - imports
   properties:
     version_config:
       type: object
       title: Version Configuration
+      x-ui-order:
+      - kafka_version
       properties:
         kafka_version:
           type: string
@@ -28,6 +35,10 @@ spec:
     sizing:
       type: object
       title: Sizing & Performance
+      x-ui-order:
+      - vcpu_count
+      - memory_gb
+      - disk_size_gb
       properties:
         vcpu_count:
           type: number
@@ -54,6 +65,10 @@ spec:
       type: object
       title: Kafka Connect Cluster Configuration
       description: Configure Kafka Connect cluster for running data integration connectors
+      x-ui-order:
+      - enabled
+      - vcpu_count
+      - memory_gb
       properties:
         enabled:
           type: boolean
@@ -86,12 +101,24 @@ spec:
       type: object
       title: Import Existing Resources
       x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - cluster_id
       properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing GCP Managed Kafka cluster resources
+          default: false
         cluster_id:
           type: string
           title: Kafka Cluster ID
           description: 'ID of existing GCP Managed Kafka cluster to import (format:
             projects/{project}/locations/{location}/clusters/{cluster})'
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
   required:
   - version_config
   - sizing
