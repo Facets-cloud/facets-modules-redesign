@@ -1,7 +1,5 @@
 intent: kubernetes_cluster
 flavor: eks_automode
-alias-flavors:
-  - default
 version: '1.0'
 clouds:
   - aws
