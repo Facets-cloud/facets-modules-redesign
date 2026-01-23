@@ -77,7 +77,6 @@ spec:
             description: Version of Karpenter to deploy (should match your Kubernetes version)
             title: Karpenter Version
             type: string
-            x-ui-overrides-only: true
         tags:
             description: Additional AWS tags to apply to Karpenter resources
             title: Resource Tags
