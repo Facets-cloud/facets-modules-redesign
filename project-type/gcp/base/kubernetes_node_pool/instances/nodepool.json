@@ -1,5 +1,5 @@
 {
-  "flavor": "gke_custom_node_pool",
+  "flavor": "gcp",
   "version": "1.0",
   "kind": "kubernetes_node_pool",
   "metadata": {},
