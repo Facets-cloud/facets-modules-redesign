@@ -31,19 +31,6 @@ spec:
   description: Define custom alert groups and rules for Prometheus
   type: object
   properties:
-    resources:
-      type: object
-      title: Resource Configuration
-      description: Resource allocation for alert evaluation
-      x-ui-toggle: true
-      properties:
-        evaluation_interval:
-          type: string
-          title: Evaluation Interval
-          description: How often Prometheus evaluates these rules (default inherits from Prometheus global)
-          pattern: ^[0-9]+(s|m|h)$
-          default: "30s"
-          x-ui-placeholder: e.g., 30s, 1m, 5m
     alert_groups:
       type: object
       title: Alert Groups
@@ -55,13 +42,6 @@ spec:
           title: Alert Group
           description: A group of related alert rules
           properties:
-            interval:
-              type: string
-              title: Group Interval
-              description: Evaluation interval for this specific group (overrides global)
-              pattern: ^[0-9]+(s|m|h)$
-              default: "30s"
-              x-ui-placeholder: e.g., 30s, 1m
             rules:
               type: object
               title: Alert Rules
@@ -76,8 +56,8 @@ spec:
                     expression:
                       type: string
                       title: PromQL Expression
-                      description: 'PromQL expression that triggers the alert (must return boolean). Best practice: filter by facets_resource_type and facets_resource_name labels for precise targeting.'
-                      x-ui-placeholder: 'e.g., up{facets_resource_type="service",facets_resource_name="my-service"} == 0'
+                      description: PromQL expression that triggers the alert (must return boolean)
+                      x-ui-placeholder: 'e.g., up{job="my-service"} == 0'
                     duration:
                       type: string
                       title: For Duration
@@ -94,6 +74,16 @@ spec:
                         - warning
                         - info
                       default: warning
+                    resource_type:
+                      type: string
+                      title: Resource Type
+                      description: Type of resource being monitored (e.g., service, mongo, postgres)
+                      x-ui-placeholder: e.g., service
+                    resource_name:
+                      type: string
+                      title: Resource Name
+                      description: Name of specific resource being monitored
+                      x-ui-placeholder: e.g., my-api-service
                     summary:
                       type: string
                       title: Summary
@@ -105,12 +95,11 @@ spec:
                       description: Detailed alert description with context and resolution steps (supports templating)
                       x-ui-yaml-editor: false
                       x-ui-placeholder: Provide detailed context and troubleshooting steps
-                    runbook_url:
-                      type: string
-                      title: Runbook URL
-                      description: Link to runbook or documentation for this alert
-                      pattern: ^https?://.*$
-                      x-ui-placeholder: https://runbooks.example.com/alert-name
+                    disabled:
+                      type: boolean
+                      title: Disabled
+                      description: Set to true to temporarily disable this alert rule
+                      default: false
                     labels:
                       type: object
                       title: Custom Labels
@@ -131,7 +120,6 @@ spec:
   required:
     - alert_groups
   x-ui-order:
-    - resources
     - alert_groups
 sample:
   kind: alert_rules
@@ -139,25 +127,28 @@ sample:
   version: '1.0'
   disabled: false
   spec:
-    resources:
-      evaluation_interval: "30s"
     alert_groups:
       service_health:
-        interval: "30s"
         rules:
           service_down:
-            expression: 'up{facets_resource_type="service",facets_resource_name="my-service"} == 0'
+            expression: 'up{job="my-service"} == 0'
             duration: "1m"
             severity: critical
-            summary: "Service {{ $labels.facets_resource_name }} is down"
+            resource_type: service
+            resource_name: my-service
+            summary: "Service {{ $labels.job }} is down"
             description: "Service has been unreachable for more than 1 minute. Check pod status and logs."
+            disabled: false
             labels: {}
             annotations: {}
           high_error_rate:
-            expression: 'rate(http_requests_total{status=~"5..",facets_resource_type="service",facets_resource_name="my-service"}[5m]) > 0.05'
+            expression: 'rate(http_requests_total{status=~"5..",job="my-service"}[5m]) > 0.05'
             duration: "5m"
             severity: warning
-            summary: "High error rate on {{ $labels.facets_resource_name }}"
+            resource_type: service
+            resource_name: my-service
+            summary: "High error rate on {{ $labels.job }}"
             description: "Error rate is {{ $value | humanizePercentage }} over the last 5 minutes."
+            disabled: false
             labels: {}
             annotations: {}

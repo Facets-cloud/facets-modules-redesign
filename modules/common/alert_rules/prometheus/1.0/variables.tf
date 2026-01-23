@@ -4,21 +4,18 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
-      resources = optional(object({
-        evaluation_interval = optional(string, "30s")
-      }), {})
-
       alert_groups = map(object({
-        interval = optional(string, "30s")
         rules = map(object({
-          expression  = string
-          duration    = optional(string, "5m")
-          severity    = optional(string, "warning")
-          summary     = string
-          description = optional(string, "")
-          runbook_url = optional(string, "")
-          labels      = optional(map(string), {})
-          annotations = optional(map(string), {})
+          expression    = string
+          duration      = optional(string, "5m")
+          severity      = optional(string, "warning")
+          resource_type = optional(string)
+          resource_name = optional(string)
+          summary       = string
+          description   = optional(string, "")
+          disabled      = optional(bool, false)
+          labels        = optional(map(string), {})
+          annotations   = optional(map(string), {})
         }))
       }))
     })
