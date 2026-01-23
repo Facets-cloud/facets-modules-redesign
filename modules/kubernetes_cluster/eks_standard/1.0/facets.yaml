@@ -4,6 +4,8 @@ description: |
     Creates an AWS EKS cluster with managed node groups using the official terraform-aws-eks module.
     This flavor does NOT support EKS Auto Mode - for Auto Mode support, use the eks_auto flavor.
 flavor: eks_standard
+alias-flavors:
+  - default
 inputs:
     cloud_account:
         description: The AWS Cloud Account where the EKS cluster will be created
