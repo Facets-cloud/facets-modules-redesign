@@ -90,32 +90,26 @@ locals {
 
   # Domains that need bootstrap TLS certificates for HTTP-01 validation
   # Bootstrap cert is needed when HTTP-01 validation is used (disable_endpoint_validation = false)
-  # For HTTP-01, certificate_reference is ignored (same as nginx_k8s_native) - always auto-generate
+  # AND domain doesn't have certificate_reference (custom certs don't need bootstrap)
   # Bootstrap cert is NOT needed for DNS-01 (uses dns_validation_secret_name)
   bootstrap_tls_domains = {
     for domain_key, domain in local.domains :
     domain_key => domain
-    if !local.disable_endpoint_validation && can(domain.domain)
+    if !local.disable_endpoint_validation && can(domain.domain) && lookup(domain, "certificate_reference", "") == ""
   }
 
   # Domains that need cert-manager to issue certificates
-  # - For HTTP-01: all domains (certificate_reference is ignored)
-  # - For DNS-01: only domains WITHOUT certificate_reference
-  # Domains WITH certificate_reference use user-provided certs, cert-manager should NOT manage them
+  # Only domains WITHOUT certificate_reference - cert-manager should NOT manage domains with custom certs
+  # Applies to both HTTP-01 and DNS-01 validation
   certmanager_managed_domains = {
     for domain_key, domain in local.domains :
     domain_key => domain
-    if can(domain.domain) && (
-      !local.disable_endpoint_validation ||             # HTTP-01: all domains
-      lookup(domain, "certificate_reference", "") == "" # DNS-01: only if no certificate_reference
-    )
+    if can(domain.domain) && lookup(domain, "certificate_reference", "") == ""
   }
 
   # Use gateway-shim only when ALL domains are managed by cert-manager
-  # For HTTP-01: always true (all domains managed)
-  # For DNS-01: true only if no domain has certificate_reference
-  # When false, we create explicit Certificate resources instead
-  use_gateway_shim = !local.disable_endpoint_validation || length(local.certmanager_managed_domains) == length(local.domains)
+  # When false (some domains have certificate_reference), we create explicit Certificate resources
+  use_gateway_shim = length(local.certmanager_managed_domains) == length(local.domains)
 
   # Cloud-specific service annotations
   aws_annotations = merge(
@@ -176,9 +170,18 @@ locals {
   cors_headers = {
     for k, v in local.rulesFiltered : k => merge(
       lookup(lookup(v, "cors", {}), "enabled", false) ? {
-        "Access-Control-Allow-Origin"  = join(", ", lookup(lookup(v, "cors", {}), "allow_origins", ["*"]))
-        "Access-Control-Allow-Methods" = join(", ", lookup(lookup(v, "cors", {}), "allow_methods", ["GET", "POST", "PUT", "DELETE", "OPTIONS"]))
-        "Access-Control-Allow-Headers" = join(", ", lookup(lookup(v, "cors", {}), "allow_headers", ["Content-Type", "Authorization"]))
+        "Access-Control-Allow-Origin" = join(", ", length(lookup(lookup(v, "cors", {}), "allow_origins", {})) > 0 ?
+          [for key, origin in lookup(lookup(v, "cors", {}), "allow_origins", {}) : origin.origin] :
+          ["*"]
+        )
+        "Access-Control-Allow-Methods" = join(", ", length(lookup(lookup(v, "cors", {}), "allow_methods", {})) > 0 ?
+          [for key, m in lookup(lookup(v, "cors", {}), "allow_methods", {}) : m.method] :
+          ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+        )
+        "Access-Control-Allow-Headers" = join(", ", length(lookup(lookup(v, "cors", {}), "allow_headers", {})) > 0 ?
+          [for key, h in lookup(lookup(v, "cors", {}), "allow_headers", {}) : h.header] :
+          ["Content-Type", "Authorization"]
+        )
         "Access-Control-Max-Age"       = tostring(lookup(lookup(v, "cors", {}), "max_age", 86400))
       } : {},
       lookup(lookup(v, "cors", {}), "allow_credentials", false) ? {
@@ -249,8 +252,8 @@ locals {
         hostnames = distinct([
           for domain_key, domain in local.domains :
           lookup(v, "domain_prefix", null) == null || lookup(v, "domain_prefix", null) == "" ?
-            domain.domain :
-            "${lookup(v, "domain_prefix", null)}.${domain.domain}"
+          domain.domain :
+          "${lookup(v, "domain_prefix", null)}.${domain.domain}"
         ])
 
         rules = [{
@@ -267,21 +270,21 @@ locals {
               lookup(v, "method", null) != null && lookup(v, "method", "ALL") != "ALL" ? {
                 method = v.method
               } : {},
-              # Query parameter matching (map: key=param name, value={value, type})
+              # Query parameter matching
               length(lookup(v, "query_param_matches", {})) > 0 ? {
                 queryParams = [
-                  for name, qp in v.query_param_matches : {
-                    name  = tostring(name)
+                  for key, qp in v.query_param_matches : {
+                    name  = qp.name
                     value = qp.value
                     type  = lookup(qp, "type", "Exact")
                   }
                 ]
               } : {},
-              # Header matching (map: key=header name, value={value, type})
+              # Header matching
               length(lookup(v, "header_matches", {})) > 0 ? {
                 headers = [
-                  for name, header in v.header_matches : {
-                    name  = tostring(name)
+                  for key, header in v.header_matches : {
+                    name  = header.name
                     value = header.value
                     type  = lookup(header, "type", "Exact")
                   }
@@ -290,80 +293,84 @@ locals {
             )]
           )
 
-          filters = [
-            for filter in [
-              # Request header modification
-              lookup(v, "request_header_modifier", null) != null ? {
-                type = "RequestHeaderModifier"
-                requestHeaderModifier = merge(
-                  lookup(v.request_header_modifier, "add", null) != null ? {
-                    add = [for name, value in v.request_header_modifier.add : { name = name, value = value }]
-                  } : {},
-                  lookup(v.request_header_modifier, "set", null) != null ? {
-                    set = [for name, value in v.request_header_modifier.set : { name = name, value = value }]
-                  } : {},
-                  lookup(v.request_header_modifier, "remove", null) != null ? {
-                    remove = v.request_header_modifier.remove
-                  } : {}
-                )
-              } : null,
+          filters = concat(
+            # Static filters
+            [
+              for filter in [
+                # Request header modification
+                lookup(v, "request_header_modifier", null) != null ? {
+                  type = "RequestHeaderModifier"
+                  requestHeaderModifier = merge(
+                    lookup(v.request_header_modifier, "add", null) != null ? {
+                      add = [for key, header in v.request_header_modifier.add : { name = header.name, value = header.value }]
+                    } : {},
+                    lookup(v.request_header_modifier, "set", null) != null ? {
+                      set = [for key, header in v.request_header_modifier.set : { name = header.name, value = header.value }]
+                    } : {},
+                    lookup(v.request_header_modifier, "remove", null) != null ? {
+                      remove = [for key, header in v.request_header_modifier.remove : header.name]
+                    } : {}
+                  )
+                } : null,
 
-              # Response header modification (security headers + CORS + custom headers)
-              {
-                type = "ResponseHeaderModifier"
-                responseHeaderModifier = merge(
-                  {
-                    add = [for name, value in merge(
-                      local.security_headers,
-                      lookup(lookup(v, "response_header_modifier", {}), "add", {}),
-                      local.cors_headers[k]
-                    ) : { name = name, value = value }]
-                  },
-                  lookup(lookup(v, "response_header_modifier", {}), "set", null) != null ? {
-                    set = [for name, value in v.response_header_modifier.set : { name = name, value = value }]
-                  } : {},
-                  lookup(lookup(v, "response_header_modifier", {}), "remove", null) != null ? {
-                    remove = v.response_header_modifier.remove
-                  } : {}
-                )
-              },
+                # Response header modification (security headers + CORS + custom headers)
+                {
+                  type = "ResponseHeaderModifier"
+                  responseHeaderModifier = merge(
+                    {
+                      add = [for name, value in merge(
+                        local.security_headers,
+                        { for key, header in lookup(lookup(v, "response_header_modifier", {}), "add", {}) : header.name => header.value },
+                        local.cors_headers[k]
+                      ) : { name = name, value = value }]
+                    },
+                    lookup(lookup(v, "response_header_modifier", {}), "set", null) != null ? {
+                      set = [for key, header in v.response_header_modifier.set : { name = header.name, value = header.value }]
+                    } : {},
+                    lookup(lookup(v, "response_header_modifier", {}), "remove", null) != null ? {
+                      remove = [for key, header in v.response_header_modifier.remove : header.name]
+                    } : {}
+                  )
+                },
 
-              # URL rewriting
-              lookup(v, "url_rewrite", null) != null ? {
+                # Request mirroring
+                lookup(v, "request_mirror", null) != null ? {
+                  type = "RequestMirror"
+                  requestMirror = {
+                    backendRef = {
+                      name      = v.request_mirror.service_name
+                      port      = tonumber(v.request_mirror.port)
+                      namespace = lookup(v.request_mirror, "namespace", v.namespace)
+                    }
+                  }
+                } : null
+                # Note: SSL redirection is handled by separate http_redirect_resources HTTPRoutes
+                # RequestRedirect filter cannot be used together with backendRefs in the same rule
+              ] : filter if filter != null
+            ],
+            # URL rewriting (from patternProperties)
+            [
+              for key, rewrite in lookup(v, "url_rewrite", {}) : {
                 type = "URLRewrite"
                 urlRewrite = merge(
-                  lookup(v.url_rewrite, "hostname", null) != null ? {
-                    hostname = v.url_rewrite.hostname
+                  lookup(rewrite, "hostname", null) != null ? {
+                    hostname = rewrite.hostname
                   } : {},
-                  lookup(v.url_rewrite, "path", null) != null ? {
+                  lookup(rewrite, "path_type", null) != null && lookup(rewrite, "replace_path", null) != null ? {
                     path = merge(
-                      { type = v.url_rewrite.path.type },
-                      v.url_rewrite.path.type == "ReplaceFullPath" ? {
-                        replaceFullPath = v.url_rewrite.path.replaceFullPath
+                      { type = rewrite.path_type },
+                      rewrite.path_type == "ReplaceFullPath" ? {
+                        replaceFullPath = rewrite.replace_path
                       } : {},
-                      v.url_rewrite.path.type == "ReplacePrefixMatch" ? {
-                        replacePrefixMatch = v.url_rewrite.path.replacePrefixMatch
+                      rewrite.path_type == "ReplacePrefixMatch" ? {
+                        replacePrefixMatch = rewrite.replace_path
                       } : {}
                     )
                   } : {}
                 )
-              } : null,
-
-              # Request mirroring
-              lookup(v, "request_mirror", null) != null ? {
-                type = "RequestMirror"
-                requestMirror = {
-                  backendRef = {
-                    name      = v.request_mirror.service_name
-                    port      = tonumber(v.request_mirror.port)
-                    namespace = lookup(v.request_mirror, "namespace", v.namespace)
-                  }
-                }
-              } : null
-              # Note: SSL redirection is handled by separate http_redirect_resources HTTPRoutes
-              # RequestRedirect filter cannot be used together with backendRefs in the same rule
-            ] : filter if filter != null
-          ]
+              }
+            ]
+          )
 
           # Request/backend timeouts
           timeouts = lookup(v, "timeouts", null) != null ? {
@@ -415,8 +422,8 @@ locals {
         hostnames = distinct([
           for domain_key, domain in local.domains :
           lookup(v, "domain_prefix", null) == null || lookup(v, "domain_prefix", null) == "" ?
-            domain.domain :
-            "${lookup(v, "domain_prefix", null)}.${domain.domain}"
+          domain.domain :
+          "${lookup(v, "domain_prefix", null)}.${domain.domain}"
         ])
 
         rules = [{
@@ -594,6 +601,43 @@ module "dns01_certificate" {
   }
 
   depends_on = [helm_release.nginx_gateway_fabric]
+}
+
+# Explicit Certificate resources for HTTP-01 managed domains
+# Created when NOT using gateway-shim (i.e., when some domains have certificate_reference)
+# For HTTP-01, each domain needs its own Certificate (unlike DNS-01 which can share)
+module "http01_certificate" {
+  for_each = !local.use_gateway_shim && !local.disable_endpoint_validation ? local.certmanager_managed_domains : {}
+
+  source          = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
+  name            = "${local.name}-http01-cert-${each.key}"
+  namespace       = var.environment.namespace
+  advanced_config = {}
+
+  data = {
+    apiVersion = "cert-manager.io/v1"
+    kind       = "Certificate"
+    metadata = {
+      name      = "${local.name}-http01-cert-${each.key}"
+      namespace = var.environment.namespace
+    }
+    spec = {
+      secretName = "${each.key}-tls-cert"
+      issuerRef = {
+        name = local.cluster_issuer_gateway_http
+        kind = "ClusterIssuer"
+      }
+      dnsNames = [
+        each.value.domain
+      ]
+      renewBefore = lookup(var.instance.spec, "renew_cert_before", "720h")
+    }
+  }
+
+  depends_on = [
+    helm_release.nginx_gateway_fabric,
+    module.cluster-issuer-gateway-http01
+  ]
 }
 
 # ServiceAccount for Gateway API CRD installer Job
@@ -828,9 +872,11 @@ resource "helm_release" "nginx_gateway_fabric" {
                 mode = "Terminate"
                 certificateRefs = [{
                   kind = "Secret"
-                  # DNS-01: use certificate_reference (fallback to dns_validation_secret_name)
-                  # HTTP-01: always use auto-generated name, ignore certificate_reference (same as nginx_k8s_native)
-                  name = local.disable_endpoint_validation ? lookup(domain, "certificate_reference", local.dns_validation_secret_name) : "${domain_key}-tls-cert"
+                  # If certificate_reference is provided, use it (custom cert)
+                  # Otherwise: DNS-01 uses shared dns_validation_secret_name, HTTP-01 uses per-domain bootstrap cert
+                  name = lookup(domain, "certificate_reference", "") != "" ? domain.certificate_reference : (
+                    local.disable_endpoint_validation ? local.dns_validation_secret_name : "${domain_key}-tls-cert"
+                  )
                 }]
               }
               allowedRoutes = {

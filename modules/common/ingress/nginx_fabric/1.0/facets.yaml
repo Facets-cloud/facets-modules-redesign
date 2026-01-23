@@ -197,48 +197,64 @@ spec:
             header_matches:
               type: object
               title: Header-Based Routing
-              description: Route traffic based on HTTP headers (key is header name)
+              description: Route traffic based on HTTP headers
               x-ui-toggle: true
               patternProperties:
                 ^[a-zA-Z0-9_.-]*$:
                   type: object
                   title: Header Match
                   properties:
+                    name:
+                      type: string
+                      title: Header Name
+                      description: HTTP header name to match
+                      x-ui-placeholder: X-API-Version
                     value:
                       type: string
                       title: Header Value
                       description: Header value to match
+                      x-ui-placeholder: v2
                     type:
                       type: string
                       title: Match Type
+                      description: How to match the header value (Exact or RegularExpression)
                       enum:
                       - Exact
                       - RegularExpression
                       default: Exact
                   required:
+                  - name
                   - value
             query_param_matches:
               type: object
               title: Query Parameter Matching
-              description: Route traffic based on query parameters (key is param name)
+              description: Route traffic based on query parameters
               x-ui-toggle: true
               patternProperties:
                 ^[a-zA-Z0-9_.-]*$:
                   type: object
                   title: Query Param Match
                   properties:
+                    name:
+                      type: string
+                      title: Parameter Name
+                      description: Query parameter name to match
+                      x-ui-placeholder: version
                     value:
                       type: string
                       title: Parameter Value
                       description: Query parameter value to match
+                      x-ui-placeholder: beta
                     type:
                       type: string
                       title: Match Type
+                      description: How to match the parameter value (Exact or RegularExpression)
                       enum:
                       - Exact
                       - RegularExpression
                       default: Exact
                   required:
+                  - name
                   - value
             method:
               type: string
@@ -265,18 +281,62 @@ spec:
                   type: object
                   title: Add Headers
                   description: Headers to add to requests
-                  x-ui-yaml-editor: true
+                  patternProperties:
+                    ^[a-zA-Z0-9_.-]*$:
+                      type: object
+                      title: Header
+                      properties:
+                        name:
+                          type: string
+                          title: Header Name
+                          description: Name of the header to add
+                          x-ui-placeholder: X-Custom-Header
+                        value:
+                          type: string
+                          title: Header Value
+                          description: Value for the header
+                          x-ui-placeholder: custom-value
+                      required:
+                      - name
+                      - value
                 set:
                   type: object
                   title: Set Headers
                   description: Headers to set (override) in requests
-                  x-ui-yaml-editor: true
+                  patternProperties:
+                    ^[a-zA-Z0-9_.-]*$:
+                      type: object
+                      title: Header
+                      properties:
+                        name:
+                          type: string
+                          title: Header Name
+                          description: Name of the header to set
+                          x-ui-placeholder: X-Request-Source
+                        value:
+                          type: string
+                          title: Header Value
+                          description: Value for the header
+                          x-ui-placeholder: gateway
+                      required:
+                      - name
+                      - value
                 remove:
-                  type: array
+                  type: object
                   title: Remove Headers
                   description: Header names to remove from requests
-                  items:
-                    type: string
+                  patternProperties:
+                    ^[a-zA-Z0-9_.-]*$:
+                      type: object
+                      title: Header
+                      properties:
+                        name:
+                          type: string
+                          title: Header Name
+                          description: Name of the header to remove
+                          x-ui-placeholder: X-Sensitive-Header
+                      required:
+                      - name
             response_header_modifier:
               type: object
               title: Response Header Modification
@@ -287,61 +347,100 @@ spec:
                   type: object
                   title: Add Headers
                   description: Headers to add to responses
-                  x-ui-yaml-editor: true
+                  patternProperties:
+                    ^[a-zA-Z0-9_.-]*$:
+                      type: object
+                      title: Header
+                      properties:
+                        name:
+                          type: string
+                          title: Header Name
+                          description: Name of the header to add
+                          x-ui-placeholder: X-Response-ID
+                        value:
+                          type: string
+                          title: Header Value
+                          description: Value for the header
+                          x-ui-placeholder: unique-id
+                      required:
+                      - name
+                      - value
                 set:
                   type: object
                   title: Set Headers
                   description: Headers to set (override) in responses
-                  x-ui-yaml-editor: true
+                  patternProperties:
+                    ^[a-zA-Z0-9_.-]*$:
+                      type: object
+                      title: Header
+                      properties:
+                        name:
+                          type: string
+                          title: Header Name
+                          description: Name of the header to set
+                          x-ui-placeholder: Cache-Control
+                        value:
+                          type: string
+                          title: Header Value
+                          description: Value for the header
+                          x-ui-placeholder: no-store
+                      required:
+                      - name
+                      - value
                 remove:
-                  type: array
+                  type: object
                   title: Remove Headers
                   description: Header names to remove from responses
-                  items:
-                    type: string
+                  patternProperties:
+                    ^[a-zA-Z0-9_.-]*$:
+                      type: object
+                      title: Header
+                      properties:
+                        name:
+                          type: string
+                          title: Header Name
+                          description: Name of the header to remove
+                          x-ui-placeholder: Server
+                      required:
+                      - name
             url_rewrite:
               type: object
               title: URL Rewriting
               description: Rewrite request URLs
               x-ui-toggle: true
-              properties:
-                hostname:
-                  type: string
-                  title: Hostname
-                  description: New hostname for the request
-                path:
+              patternProperties:
+                ^[a-zA-Z0-9_.-]*$:
                   type: object
-                  title: Path Rewrite
+                  title: URL Rewrite Rule
                   properties:
-                    type:
+                    hostname:
                       type: string
-                      title: Rewrite Type
+                      title: Hostname
+                      description: New hostname for the request
+                      x-ui-placeholder: internal-api.svc.cluster.local
+                    path_type:
+                      type: string
+                      title: Path Rewrite Type
+                      description: How to rewrite the path (ReplaceFullPath or ReplacePrefixMatch)
                       enum:
                       - ReplaceFullPath
                       - ReplacePrefixMatch
-                    replaceFullPath:
+                    replace_path:
                       type: string
-                      title: Replace Full Path
-                      x-ui-visible-if:
-                        field: spec.rules.{{this}}.url_rewrite.path.type
-                        values:
-                        - ReplaceFullPath
-                    replacePrefixMatch:
-                      type: string
-                      title: Replace Prefix Match
-                      x-ui-visible-if:
-                        field: spec.rules.{{this}}.url_rewrite.path.type
-                        values:
-                        - ReplacePrefixMatch
+                      title: Replace Path Value
+                      description: New path value (full path or prefix depending on type)
+                      x-ui-placeholder: /v2/api
             canary_deployment:
               type: object
               title: Canary Deployment
               description: Configure traffic splitting for canary deployments
               x-ui-toggle: true
+              x-ui-skip: true
               properties:
                 enabled:
                   type: boolean
                   title: Enable Canary
+                  description: Enable canary deployment with traffic splitting
                   default: false
                 canary_service:
                   type: string
@@ -367,6 +466,7 @@ spec:
               title: Request Mirroring
               description: Mirror traffic to a secondary backend for testing
               x-ui-toggle: true
+              x-ui-skip: true
               properties:
                 service_name:
                   type: string
@@ -407,57 +507,79 @@ spec:
                 enabled:
                   type: boolean
                   title: Enable CORS
+                  description: Enable Cross-Origin Resource Sharing headers
                   default: false
                 allow_origins:
-                  type: array
+                  type: object
                   title: Allowed Origins
                   description: List of allowed origins (* for all)
-                  items:
-                    type: string
-                  default:
-                  - '*'
                   x-ui-visible-if:
                     field: spec.rules.{{this}}.cors.enabled
                     values:
                     - true
+                  patternProperties:
+                    ^[a-zA-Z0-9_.-]*$:
+                      type: object
+                      title: Origin
+                      properties:
+                        origin:
+                          type: string
+                          title: Origin URL
+                          description: Allowed origin URL
+                          x-ui-placeholder: https://example.com
+                      required:
+                      - origin
                 allow_methods:
-                  type: array
+                  type: object
                   title: Allowed Methods
-                  items:
-                    type: string
-                    enum:
-                    - GET
-                    - POST
-                    - PUT
-                    - DELETE
-                    - PATCH
-                    - OPTIONS
-                    - HEAD
-                  default:
-                  - GET
-                  - POST
-                  - PUT
-                  - DELETE
-                  - OPTIONS
+                  description: HTTP methods allowed for CORS requests
                   x-ui-visible-if:
                     field: spec.rules.{{this}}.cors.enabled
                     values:
                     - true
+                  patternProperties:
+                    ^[a-zA-Z0-9_.-]*$:
+                      type: object
+                      title: Method
+                      properties:
+                        method:
+                          type: string
+                          title: HTTP Method
+                          description: HTTP method to allow
+                          enum:
+                          - GET
+                          - POST
+                          - PUT
+                          - DELETE
+                          - PATCH
+                          - OPTIONS
+                          - HEAD
+                      required:
+                      - method
                 allow_headers:
-                  type: array
+                  type: object
                   title: Allowed Headers
-                  items:
-                    type: string
-                  default:
-                  - Content-Type
-                  - Authorization
+                  description: HTTP headers allowed in CORS requests
                   x-ui-visible-if:
                     field: spec.rules.{{this}}.cors.enabled
                     values:
                     - true
+                  patternProperties:
+                    ^[a-zA-Z0-9_.-]*$:
+                      type: object
+                      title: Header
+                      properties:
+                        header:
+                          type: string
+                          title: Header Name
+                          description: Header name to allow
+                          x-ui-placeholder: Content-Type
+                      required:
+                      - header
                 allow_credentials:
                   type: boolean
                   title: Allow Credentials
+                  description: Allow cookies and authentication headers in CORS requests
                   default: false
                   x-ui-visible-if:
                     field: spec.rules.{{this}}.cors.enabled
@@ -481,6 +603,7 @@ spec:
                 enabled:
                   type: boolean
                   title: Enable gRPC
+                  description: Enable gRPC routing for this service
                   default: false
                 match_all_methods:
                   type: boolean
@@ -526,6 +649,26 @@ spec:
           - service_name
           - port
           - namespace
+          x-ui-order:
+          - disable
+          - domain_prefix
+          - service_name
+          - namespace
+          - port
+          - path
+          - path_type
+          - method
+          - timeouts
+          - cors
+          - header_matches
+          - query_param_matches
+          - url_rewrite
+          - request_header_modifier
+          - response_header_modifier
+          - grpc
+# Disabling below things as too advanced for initial release
+          # - canary_deployment
+          # - request_mirror
     force_ssl_redirection:
       type: boolean
       title: Force SSL Redirection
@@ -533,7 +676,7 @@ spec:
     helm_values:
       type: object
       title: Additional Helm Values
-      description: Additional Helm values to merge with the default configuration
+      description: "Additional Helm values to merge with the default configuration. See available values at: https://github.com/nginxinc/nginx-gateway-fabric/blob/main/charts/nginx-gateway-fabric/values.yaml"
       x-ui-toggle: true
       x-ui-yaml-editor: true
     domain_prefix_override:
@@ -567,15 +710,15 @@ spec:
   - force_ssl_redirection
   x-ui-order:
   - private
+  - domain_prefix_override
   - disable_base_domain
-  - rules
+  - force_ssl_redirection
+  - renew_cert_before
+  - disable_endpoint_validation
   - resources
   - helm_values
-  - domain_prefix_override
-  - disable_endpoint_validation
-  - renew_cert_before
   - helm_wait
-  - force_ssl_redirection
+  - rules
 outputs:
   default:
     type: '@facets/ingress'

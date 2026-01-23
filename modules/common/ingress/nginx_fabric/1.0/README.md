@@ -1,570 +1,658 @@
-# NGINX Gateway Fabric - Kubernetes Gateway API
+# NGINX Gateway Fabric
 
-Version: 1.0
+Kubernetes Gateway API implementation for advanced ingress traffic management.
 
 ## Overview
 
-This module deploys the **NGINX Gateway Fabric** implementation of the Kubernetes Gateway API, providing advanced traffic management capabilities for ingress traffic.
+This module deploys **NGINX Gateway Fabric**, NGINX's implementation of the Kubernetes Gateway API specification. It provides a modern, declarative approach to configuring ingress traffic with native support for advanced routing features.
 
-**NGINX Gateway Fabric** is NGINX's implementation of the Kubernetes Gateway API specification, offering a modern, declarative approach to configuring ingress traffic with native support for advanced features like header-based routing, traffic splitting, and request/response transformation.
+### Features
 
-### Key Features
-
-- **Kubernetes Gateway API**: Uses the standard Gateway API resources (GatewayClass, Gateway, HTTPRoute, GRPCRoute)
-- **Advanced Routing**: Native support for header matching, URL rewriting, request mirroring
-- **Multi-cloud Support**: AWS (NLB), Azure (LB), GCP (GCLB)
-- **TLS Management**: Cert-manager integration for automatic SSL certificates
-- **Rate Limiting**: Per-route rate limiting with burst control
-- **IP Whitelisting**: Per-route IP access control
-- **Canary Deployments**: Traffic splitting with percentage-based routing
-- **gRPC Support**: Native GRPCRoute resources for gRPC services
-- **WebSocket Support**: Automatic protocol upgrade handling
-- **CORS**: Native CORS configuration via response headers
-- **Authentication**: Basic auth and external authentication support
-- **Observability**: Prometheus metrics and OpenTelemetry tracing
+- **Gateway API Resources**: GatewayClass, Gateway, HTTPRoute, GRPCRoute
+- **Advanced Routing**: Header matching, query parameter matching, HTTP method matching
+- **URL Rewriting**: Path and hostname rewriting
+- **Traffic Management**: Canary deployments, request mirroring
+- **Multi-Domain Support**: Routes work across all configured domains
+- **TLS Management**: Automatic SSL certificates via cert-manager (HTTP-01 and DNS-01)
+- **Multi-Cloud**: AWS (NLB), Azure (LB), GCP (GCLB)
+- **gRPC Support**: Native GRPCRoute resources
+- **CORS**: Cross-origin resource sharing configuration
+- **Observability**: Prometheus metrics via ServiceMonitor
 
 ---
 
-## Architecture
+## Configuration
 
-### Gateway API vs Ingress API
+### Basic Example
 
-| Feature | Ingress API (nginx_k8s) | Gateway API (nginx_fabric) |
-|---------|-------------------------|----------------------------|
-| **Routing** | Annotation-based | Declarative API resources |
-| **Header Matching** | Annotations | Native HTTPRoute spec |
-| **URL Rewriting** | Annotations | URLRewrite filter |
-| **Request Mirroring** | Not supported | RequestMirror filter |
-| **Multi-tenancy** | Limited | Native Gateway separation |
-| **Traffic Splitting** | Annotation-based canary | Native backendRefs weights |
-| **gRPC** | Annotation-based | Native GRPCRoute resource |
+```json
+{
+  "kind": "ingress",
+  "flavor": "nginx_fabric",
+  "version": "1.0",
+  "spec": {
+    "private": false,
+    "force_ssl_redirection": true,
+    "rules": {
+      "api": {
+        "service_name": "api-service",
+        "namespace": "default",
+        "port": "8080",
+        "path": "/api",
+        "path_type": "PathPrefix"
+      }
+    }
+  }
+}
+```
 
-### Resources Created
+### Required Fields (per rule)
 
-1. **Helm Release**: NGINX Gateway Fabric controller
-2. **GatewayClass**: Defines the Gateway controller class
-3. **Gateway**: Load balancer configuration with HTTP/HTTPS listeners
-4. **HTTPRoute**: Traffic routing rules per service
-5. **GRPCRoute**: gRPC-specific routing (when enabled)
-6. **NginxProxy**: Global NGINX configuration
-7. **ClientSettingsPolicy**: Rate limiting and IP whitelisting (per route)
-8. **UpstreamSettingsPolicy**: Load balancing configuration (per route)
-9. **TLS Secrets**: Custom SSL certificates
-10. **Route53 Records**: DNS entries (AWS only)
-11. **ServiceMonitor**: Prometheus metrics scraping
+| Field | Description |
+|-------|-------------|
+| `service_name` | Kubernetes service name |
+| `namespace` | Service namespace |
+| `port` | Service port number |
+| `path` | URL path (required for HTTP routes) |
+| `path_type` | `Exact` or `PathPrefix` (required for HTTP routes) |
+
+> **Note**: `RegularExpression` path type is NOT supported by NGINX Gateway Fabric.
 
 ---
 
-## Schema Simplification
+## Routing Options
 
-This module uses meaningful naming conventions derived from nginx_k8s:
+### Header-Based Routing
 
-**Gateway naming:**
-- `gateway_class_name`: Defaults to `{namespace}-{instance_name}` (same pattern as nginx_k8s ingress class)
-- Can be overridden if needed
+Route traffic based on HTTP headers:
 
-**Required fields per rule:**
-- `service_name`: Kubernetes service name
-- `port`: Service port number
-- `path`: URL path (e.g., `/`, `/api`)
-- `path_type`: Path matching type (`Exact`, `PathPrefix`, or `RegularExpression`)
-
-**Optional fields with defaults:**
-- `namespace`: Defaults to environment namespace
-
-**Example - minimal configuration:**
-```yaml
-spec:
-  private: false
-  force_ssl_redirection: true
-  rules:
-    api:
-      service_name: api-svc
-      port: "8080"
-      path: /
-      path_type: PathPrefix
+```json
+{
+  "rules": {
+    "api_v2": {
+      "service_name": "api-v2",
+      "namespace": "default",
+      "port": "8080",
+      "path": "/",
+      "path_type": "PathPrefix",
+      "header_matches": {
+        "version_header": {
+          "name": "X-API-Version",
+          "value": "v2",
+          "type": "Exact"
+        },
+        "client_header": {
+          "name": "X-Client-Type",
+          "value": "mobile.*",
+          "type": "RegularExpression"
+        }
+      }
+    }
+  }
+}
 ```
 
-**Example - with custom gateway class:**
-```yaml
-spec:
-  private: false
-  force_ssl_redirection: true
-  gateway_class_name: custom-nginx  # Override default
-  rules:
-    api:
-      service_name: api-svc
-      port: "8080"
-      path: /api
-      path_type: Exact
+### Query Parameter Matching
+
+Route traffic based on query parameters:
+
+```json
+{
+  "rules": {
+    "api_beta": {
+      "service_name": "api-beta",
+      "namespace": "default",
+      "port": "8080",
+      "path": "/api",
+      "path_type": "PathPrefix",
+      "query_param_matches": {
+        "version_param": {
+          "name": "version",
+          "value": "beta",
+          "type": "Exact"
+        }
+      }
+    }
+  }
+}
 ```
 
-**Helm Chart Version:**
-- By default, the module uses a bundled NGINX Gateway Fabric chart version 2.3.0
-- You can override this by specifying `helm_chart_version` in spec
-- When overridden, the module pulls the chart from the OCI registry
+### HTTP Method Matching
 
-**Example - with custom chart version:**
-```yaml
-spec:
-  private: false
-  force_ssl_redirection: true
-  helm_chart_version: "2.4.0"  # Override default 2.3.0
-  rules:
-    api:
-      service_name: api-svc
-      port: "8080"
-      path: /
-      path_type: PathPrefix
+Route traffic based on HTTP method:
+
+```json
+{
+  "rules": {
+    "api_readonly": {
+      "service_name": "api-readonly",
+      "namespace": "default",
+      "port": "8080",
+      "path": "/api",
+      "path_type": "PathPrefix",
+      "method": "GET"
+    }
+  }
+}
 ```
+
+Options: `ALL` (default), `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS`
 
 ---
 
-## Usage Examples
+## URL Rewriting
 
-### Basic Configuration
+Rewrite request URLs before forwarding to backend:
 
-```yaml
-kind: ingress
-flavor: nginx_fabric
-version: '1.0'
-spec:
-  private: false
-  force_ssl_redirection: true
-
-  rules:
-    api:
-      service_name: api-service
-      port: "8080"
-      path: /api
-      path_type: PathPrefix
+```json
+{
+  "rules": {
+    "legacy_api": {
+      "service_name": "new-api-service",
+      "namespace": "default",
+      "port": "8080",
+      "path": "/old-api",
+      "path_type": "PathPrefix",
+      "url_rewrite": {
+        "rewrite_rule": {
+          "hostname": "internal-api.svc.cluster.local",
+          "path_type": "ReplacePrefixMatch",
+          "replace_path": "/new-api"
+        }
+      }
+    }
+  }
+}
 ```
 
-### Advanced Routing with Header Matching
+For full path replacement:
 
-Header-based routing is a native Gateway API feature, no annotations required:
-
-```yaml
-spec:
-  rules:
-    api_v2:
-      service_name: api-v2
-      port: "8080"
-      path: /
-      path_type: PathPrefix
-      header_matches:
-      - name: X-API-Version
-        value: v2
-        type: Exact
-      - name: User-Agent
-        value: ".*Mobile.*"
-        type: RegularExpression
-```
-
-### URL Rewriting
-
-```yaml
-spec:
-  rules:
-    legacy_api:
-      service_name: new-api-service
-      port: "8080"
-      path: /old-api
-      path_type: PathPrefix
-      url_rewrite:
-        path:
-          type: ReplacePrefixMatch
-          replacePrefixMatch: /new-api
-```
-
-### Canary Deployment with Traffic Splitting
-
-```yaml
-spec:
-  rules:
-    api:
-      service_name: api-v1
-      port: "8080"
-      path: /
-      path_type: PathPrefix
-      canary_deployment:
-        enabled: true
-        canary_service: api-v2
-        canary_weight: 20  # 20% traffic to v2, 80% to v1
-```
-
-### Rate Limiting
-
-```yaml
-spec:
-  rules:
-    public_api:
-      service_name: api
-      port: "8080"
-      path: /
-      path_type: PathPrefix
-      rate_limiting:
-        enabled: true
-        requests_per_second: 50
-        burst: 100
-```
-
-### IP Whitelisting
-
-```yaml
-spec:
-  rules:
-    admin:
-      service_name: admin-api
-      port: "8080"
-      path: /admin
-      path_type: PathPrefix
-      ip_whitelist:
-        enabled: true
-        allowed_ips:
-        - 10.0.0.0/8
-        - 192.168.1.100
-```
-
-### CORS Configuration
-
-```yaml
-spec:
-  rules:
-    api:
-      service_name: api
-      port: "8080"
-      path: /
-      path_type: PathPrefix
-      cors:
-        enabled: true
-        allow_origins:
-        - https://example.com
-        - https://app.example.com
-        allow_methods:
-        - GET
-        - POST
-        - PUT
-        - DELETE
-        allow_headers:
-        - Content-Type
-        - Authorization
-        allow_credentials: true
-        max_age: 86400
-```
-
-### Basic Authentication
-
-Enable basic authentication for all routes. Credentials are automatically generated and available in module outputs.
-
-```yaml
-spec:
-  basic_auth: true
-  rules:
-    api:
-      service_name: api
-      port: "8080"
-      path: /
-      path_type: PathPrefix
-```
-
-When `basic_auth: true` is set, the module will:
-- Generate a random password
-- Create a Kubernetes secret with username and password
-- Expose credentials in outputs for use with external auth services
-
-Access credentials via outputs:
-- Username: `${module.nginx_fabric.username}`
-- Password: `${module.nginx_fabric.password}` (sensitive)
-
-### gRPC Support
-
-```yaml
-spec:
-  rules:
-    grpc_service:
-      service_name: grpc-backend
-      port: "50051"
-      path: /
-      path_type: PathPrefix
-      grpc:
-        enabled: true
-        method_match:
-        - service: myapp.v1.UserService
-          method: GetUser
-          type: Exact
-```
-
-### Custom TLS Certificates
-
-```yaml
-spec:
-  domains:
-    custom:
-      domain: api.example.com
-      alias: api
-      custom_tls:
-        enabled: true
-        certificate: |
-          -----BEGIN CERTIFICATE-----
-          ...
-          -----END CERTIFICATE-----
-        private_key: |
-          -----BEGIN PRIVATE KEY-----
-          ...
-          -----END PRIVATE KEY-----
-```
-
-### Request/Response Header Modification
-
-```yaml
-spec:
-  rules:
-    api:
-      service_name: api
-      port: "8080"
-      request_header_modifier:
-        add:
-          X-Custom-Header: custom-value
-        set:
-          X-Request-Source: gateway
-        remove:
-        - X-Sensitive-Header
-      response_header_modifier:
-        add:
-          X-Response-Time: "$request_time"
-        set:
-          X-Frame-Options: DENY
-          Strict-Transport-Security: max-age=31536000
-        remove:
-        - Server
-        - X-Powered-By
-```
-
-### Security Configuration
-
-```yaml
-spec:
-  security:
-    tls_version: TLSv1.3
-    security_headers:
-      hsts_enabled: true
-      hsts_max_age: 31536000
-      x_frame_options: DENY
-      x_content_type_options: true
-      x_xss_protection: true
-```
-
-### Observability Configuration
-
-```yaml
-spec:
-  observability:
-    metrics:
-      enabled: true
-      port: 9113
-    tracing:
-      enabled: true
-      endpoint: http://jaeger-collector:14268/api/traces
-      sampling_rate: 0.1
-    logging:
-      level: info
-      format: json
+```json
+{
+  "url_rewrite": {
+    "rewrite_rule": {
+      "path_type": "ReplaceFullPath",
+      "replace_path": "/v2/api"
+    }
+  }
+}
 ```
 
 ---
 
-## Feature Support Matrix
+## Header Modification
 
-| # | Feature | Implementation | Status |
-|---|---------|----------------|--------|
-| 1 | Header-Based Routing | HTTPRoute.spec.rules.matches.headers | ✅ Native |
-| 2 | Arbitrary Response Headers | ResponseHeaderModifier filter | ✅ Native |
-| 3 | IP Whitelist per Path | ClientSettingsPolicy CRD | ✅ NGINX Policy |
-| 4 | Canary Deployments | HTTPRoute traffic weights | ✅ Native |
-| 5 | SSL/TLS Management | Gateway listeners + cert-manager | ✅ Native |
-| 6 | Rate Limiting | ClientSettingsPolicy CRD | ✅ NGINX Policy |
-| 7 | Authentication & Authorization | HTTPRoute + external auth | ✅ Native + Extension |
-| 8 | Load Balancing Algorithms | UpstreamSettingsPolicy CRD | ✅ NGINX Policy |
-| 9 | gRPC Support | GRPCRoute resource | ✅ Native |
-| 10 | WebSocket Support | HTTPRoute (automatic) | ✅ Native |
-| 11 | CORS Handling | ResponseHeaderModifier filter | ✅ Native |
-| 12 | Request/Response Transformation | Header/URL modifiers | ✅ Native |
-| 13 | Custom Error Pages | NginxProxy globalConfig | ✅ NGINX Config |
-| 14 | Observability & Monitoring | Prometheus metrics + telemetry | ✅ Native |
-| 15 | Multi-Cloud Support | Service annotations | ✅ Native |
-| 16 | Configuration Management | NginxProxy CRD | ✅ NGINX Config |
-| 17 | Security Features | Multiple CRDs + policies | ✅ Combined |
+### Request Headers
 
----
+Modify headers sent to backend:
 
-## Migration from nginx_k8s
+```json
+{
+  "rules": {
+    "api": {
+      "service_name": "api",
+      "namespace": "default",
+      "port": "8080",
+      "path": "/",
+      "path_type": "PathPrefix",
+      "request_header_modifier": {
+        "add": {
+          "custom_header": {
+            "name": "X-Custom-Header",
+            "value": "custom-value"
+          }
+        },
+        "set": {
+          "source_header": {
+            "name": "X-Request-Source",
+            "value": "gateway"
+          }
+        },
+        "remove": {
+          "sensitive_header": {
+            "name": "X-Sensitive-Header"
+          }
+        }
+      }
+    }
+  }
+}
+```
 
-### Key Differences
+### Response Headers
 
-**1. Schema Changes:**
-- `spec.rules` → `spec.rules`
-- Annotation-based features → Native API fields
-- `flavor: nginx_k8s` → `flavor: nginx_fabric`
+Modify headers sent to client:
 
-**2. Feature Mapping:**
+```json
+{
+  "response_header_modifier": {
+    "add": {
+      "response_id": {
+        "name": "X-Response-ID",
+        "value": "unique-id"
+      }
+    },
+    "set": {
+      "cache_header": {
+        "name": "Cache-Control",
+        "value": "no-store"
+      }
+    },
+    "remove": {
+      "server_header": {
+        "name": "Server"
+      }
+    }
+  }
+}
+```
 
-| nginx_k8s | nginx_fabric |
-|-----------|--------------|
-| `enable_header_based_routing` + annotations | `header_matches` array |
-| `enable_rewrite_target` + `rewrite_target` | `url_rewrite` object |
-| `more_set_headers` (annotation) | `response_header_modifier` |
-| `cors.enable` (annotation) | `cors` (ResponseHeaderModifier) |
-| `force_ssl_redirection` (annotation) | `force_ssl_redirection` (RequestRedirect filter) |
-
-**3. Resource Types:**
-- Ingress → HTTPRoute
-- IngressClass → GatewayClass
-- NGINX Ingress Controller → NGINX Gateway Fabric
-
-### Migration Steps
-
-1. **Install Gateway API CRDs** (if not already installed):
-   ```bash
-   kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.1/standard-install.yaml
-   ```
-
-2. **Deploy nginx_fabric module** alongside existing nginx_k8s:
-   - Both can run simultaneously in the same cluster
-   - Use different `instance_name` values
-
-3. **Update route configurations**:
-   - Change `spec.rules` to `spec.rules`
-   - Convert annotation-based features to native API fields
-   - Test routes individually
-
-4. **Update DNS**:
-   - Point DNS to new Gateway load balancer
-   - Verify traffic routing
-
-5. **Decommission nginx_k8s**:
-   - Once nginx_fabric is stable, remove nginx_k8s module
+> **Note**: Security headers (HSTS, X-Frame-Options, X-Content-Type-Options, X-XSS-Protection) are automatically added.
 
 ---
 
-## Requirements
+## Request Timeouts
 
-- **Kubernetes**: 1.25+
-- **Gateway API CRDs**: v1.4.1 (installed automatically)
-- **Helm**: 3.x
-- **Cert-manager**: v1.12+ (optional, for automatic SSL)
-- **Prometheus Operator**: (optional, for ServiceMonitor)
+Configure request and backend timeouts:
+
+```json
+{
+  "rules": {
+    "api": {
+      "service_name": "slow-api",
+      "namespace": "default",
+      "port": "8080",
+      "path": "/api",
+      "path_type": "PathPrefix",
+      "timeouts": {
+        "request": "60s",
+        "backend_request": "30s"
+      }
+    }
+  }
+}
+```
+
+---
+
+## CORS Configuration
+
+Enable Cross-Origin Resource Sharing:
+
+```json
+{
+  "rules": {
+    "api": {
+      "service_name": "api",
+      "namespace": "default",
+      "port": "8080",
+      "path": "/",
+      "path_type": "PathPrefix",
+      "cors": {
+        "enabled": true,
+        "allow_origins": {
+          "origin1": {
+            "origin": "https://example.com"
+          },
+          "origin2": {
+            "origin": "https://app.example.com"
+          }
+        },
+        "allow_methods": {
+          "get": {
+            "method": "GET"
+          },
+          "post": {
+            "method": "POST"
+          }
+        },
+        "allow_headers": {
+          "content_type": {
+            "header": "Content-Type"
+          },
+          "auth": {
+            "header": "Authorization"
+          }
+        },
+        "allow_credentials": true,
+        "max_age": 86400
+      }
+    }
+  }
+}
+```
+
+---
+
+## gRPC Support
+
+### Route All gRPC Traffic
+
+```json
+{
+  "rules": {
+    "grpc_service": {
+      "service_name": "grpc-backend",
+      "namespace": "default",
+      "port": "50051",
+      "grpc": {
+        "enabled": true,
+        "match_all_methods": true
+      }
+    }
+  }
+}
+```
+
+### Specific Method Matching
+
+```json
+{
+  "rules": {
+    "grpc_service": {
+      "service_name": "grpc-backend",
+      "namespace": "default",
+      "port": "50051",
+      "grpc": {
+        "enabled": true,
+        "match_all_methods": false,
+        "method_match": {
+          "get_user": {
+            "service": "myapp.v1.UserService",
+            "method": "GetUser",
+            "type": "Exact"
+          },
+          "list_users": {
+            "service": "myapp.v1.UserService",
+            "method": "ListUsers",
+            "type": "Exact"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+## Canary Deployments
+
+Split traffic between service versions:
+
+```json
+{
+  "rules": {
+    "api": {
+      "service_name": "api-v1",
+      "namespace": "default",
+      "port": "8080",
+      "path": "/",
+      "path_type": "PathPrefix",
+      "canary_deployment": {
+        "enabled": true,
+        "canary_service": "api-v2",
+        "canary_weight": 20
+      }
+    }
+  }
+}
+```
+
+This sends 20% of traffic to `api-v2` and 80% to `api-v1`.
+
+---
+
+## Request Mirroring
+
+Mirror traffic to a secondary service for testing:
+
+```json
+{
+  "rules": {
+    "api": {
+      "service_name": "api-prod",
+      "namespace": "default",
+      "port": "8080",
+      "path": "/api",
+      "path_type": "PathPrefix",
+      "request_mirror": {
+        "service_name": "api-shadow",
+        "port": "8080",
+        "namespace": "testing"
+      }
+    }
+  }
+}
+```
+
+---
+
+## Multi-Domain Configuration
+
+### Custom Domains
+
+Configure custom domains at the root level:
+
+```json
+{
+  "kind": "ingress",
+  "flavor": "nginx_fabric",
+  "version": "1.0",
+  "domains": {
+    "production": {
+      "domain": "api.example.com",
+      "alias": "prod"
+    },
+    "staging": {
+      "domain": "staging-api.example.com",
+      "alias": "staging",
+      "certificate_reference": "staging-tls"
+    }
+  },
+  "spec": {
+    "private": false,
+    "disable_base_domain": true,
+    "force_ssl_redirection": true,
+    "rules": {
+      "api": {
+        "service_name": "api-service",
+        "namespace": "default",
+        "port": "8080",
+        "path": "/",
+        "path_type": "PathPrefix"
+      }
+    }
+  }
+}
+```
+
+All routes are accessible on all domains:
+- `https://api.example.com/`
+- `https://staging-api.example.com/`
+
+### Domain Options
+
+| Field | Description |
+|-------|-------------|
+| `domain` | Full domain name |
+| `alias` | Short identifier |
+| `certificate_reference` | Existing TLS secret name (optional) |
+
+---
+
+## TLS Certificate Management
+
+### HTTP-01 Validation (Default)
+
+Used when `disable_endpoint_validation: false` (default):
+
+- Creates bootstrap self-signed certificates for Gateway startup
+- cert-manager replaces them with valid Let's Encrypt certificates
+- Requires port 80 accessible from internet
+
+### DNS-01 Validation
+
+Used when `disable_endpoint_validation: true` or `private: true`:
+
+- Uses DNS challenges instead of HTTP
+- Required for private/internal load balancers
+- Requires cert-manager DNS provider configuration
+
+### Custom Certificates
+
+Use existing TLS certificates:
+
+```json
+{
+  "domains": {
+    "custom": {
+      "domain": "api.example.com",
+      "alias": "api",
+      "certificate_reference": "my-existing-tls-secret"
+    }
+  }
+}
+```
+
+---
+
+## Private Load Balancer
+
+Deploy with internal/private load balancer:
+
+```json
+{
+  "spec": {
+    "private": true,
+    "disable_endpoint_validation": true,
+    "force_ssl_redirection": true,
+    "rules": {
+      "api": {
+        "service_name": "api-service",
+        "namespace": "default",
+        "port": "8080",
+        "path": "/",
+        "path_type": "PathPrefix"
+      }
+    }
+  }
+}
+```
+
+---
+
+## Custom Helm Values
+
+Override default Helm configuration:
+
+```json
+{
+  "spec": {
+    "helm_values": {
+      "nginxGateway": {
+        "replicaCount": 3
+      },
+      "nginx": {
+        "config": {
+          "logging": {
+            "errorLevel": "debug"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+See available values: https://github.com/nginxinc/nginx-gateway-fabric/blob/main/charts/nginx-gateway-fabric/values.yaml
+
+---
+
+## Spec Options
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `private` | boolean | `false` | Use internal load balancer |
+| `force_ssl_redirection` | boolean | `true` | Redirect HTTP to HTTPS |
+| `disable_base_domain` | boolean | `false` | Disable auto-generated base domain |
+| `disable_endpoint_validation` | boolean | `false` | Use DNS-01 instead of HTTP-01 |
+| `domain_prefix_override` | string | - | Override auto-generated domain prefix |
+| `renew_cert_before` | string | `720h` | Renew certificate before expiry |
+| `helm_wait` | boolean | `true` | Wait for Helm release to be ready |
+| `resources` | object | - | Controller resource limits/requests |
+| `helm_values` | object | - | Additional Helm values |
 
 ---
 
 ## Cloud Provider Support
 
-### AWS
-- **Load Balancer**: Network Load Balancer (NLB)
-- **DNS**: Route53 integration for automatic DNS records
-- **Features**: Private load balancer, cross-zone load balancing
-
-### Azure
-- **Load Balancer**: Azure Load Balancer
-- **Features**: Internal load balancer support
-
-### GCP
-- **Load Balancer**: Google Cloud Load Balancer
-- **Features**: Internal load balancer with global access
+| Provider | Load Balancer | DNS | Features |
+|----------|--------------|-----|----------|
+| AWS | Network Load Balancer (NLB) | Route53 | Proxy Protocol v2, private LB |
+| Azure | Azure Load Balancer | - | Internal LB support |
+| GCP | Google Cloud Load Balancer | - | Internal LB with global access |
 
 ---
 
 ## Outputs
 
-- `domains`: List of all configured domains
-- `nginx_fabric`: Resource metadata
-- `domain`: Base domain (if not disabled)
-- `secure_endpoint`: HTTPS endpoint for base domain
-- `gateway_class`: GatewayClass name
-- `gateway_name`: Gateway resource name
-- `subdomain`: Subdomain mappings
-- `tls_secret`: TLS certificate secret name
-- `load_balancer_hostname`: LB hostname (CNAME)
-- `load_balancer_ip`: LB IP address (A record)
+| Output | Description |
+|--------|-------------|
+| `domains` | Map of all configured domains |
+| `domain` | Base domain (if not disabled) |
+| `secure_endpoint` | HTTPS endpoint for base domain |
+| `gateway_class` | GatewayClass name |
+| `gateway_name` | Gateway resource name |
+| `load_balancer_hostname` | LB hostname (for CNAME records) |
+| `load_balancer_ip` | LB IP address (for A records) |
 
 ---
 
-## Migration Guide
+## Not Supported
 
-### Upgrading from Previous Versions
-
-**Field name changes:**
-- `spec.routes` → `spec.rules` (for consistency with nginx_k8s)
-
-**Naming convention changes:**
-- `gateway_class_name`: Now defaults to `{namespace}-{instance_name}` (consistent with nginx_k8s ingress naming)
-
-**Required fields (previously optional):**
-- `path_type`: Now required per rule (was previously defaulted to "PathPrefix")
-- `path`: Now required per rule (was previously defaulted to "/")
-
-**Migration example:**
-
-**Old configuration:**
-```yaml
-spec:
-  routes:
-    api:
-      service_name: api-svc
-      port: "8080"
-```
-
-**New configuration:**
-```yaml
-spec:
-  rules:
-    api:
-      service_name: api-svc
-      port: "8080"
-      path: /
-      path_type: PathPrefix
-```
-
-**Note:** Backward compatibility for `routes` has been removed. You must use `rules`.
+| Feature | Reason |
+|---------|--------|
+| Rate Limiting | Not natively supported in NGF |
+| IP Whitelisting | Not natively supported in NGF |
+| Basic Auth | Not natively supported in NGF |
+| RegularExpression path_type | Not supported by NGF |
 
 ---
 
 ## Troubleshooting
 
-### Gateway not ready
+### Check Gateway Status
+
 ```bash
 kubectl get gateway -n <namespace>
 kubectl describe gateway <gateway-name> -n <namespace>
 ```
 
-### HTTPRoute not working
+### Check HTTPRoute Status
+
 ```bash
 kubectl get httproute -n <namespace>
 kubectl describe httproute <route-name> -n <namespace>
 ```
 
-### Check NGINX Gateway Fabric logs
+### Controller Logs
+
 ```bash
-kubectl logs -n <namespace> -l app.kubernetes.io/name=nginx-gateway-fabric
+kubectl logs -n <namespace> -l app.kubernetes.io/name=nginx-gateway-fabric -c nginx-gateway
 ```
 
-### Verify GatewayClass
+### Certificate Issues
+
 ```bash
-kubectl get gatewayclass
-kubectl describe gatewayclass nginx
+kubectl get certificate -n <namespace>
+kubectl describe certificate <cert-name> -n <namespace>
 ```
 
 ---
 
-## Additional Resources
+## Resources
 
 - [NGINX Gateway Fabric Documentation](https://docs.nginx.com/nginx-gateway-fabric/)
 - [Kubernetes Gateway API Specification](https://gateway-api.sigs.k8s.io/)
-- [Gateway API Getting Started Guide](https://gateway-api.sigs.k8s.io/guides/)
 - [NGINX Gateway Fabric GitHub](https://github.com/nginxinc/nginx-gateway-fabric)
-
----
-
-## Version History
-
-- **1.0**: Initial release with full Gateway API support and 17 OSS features
