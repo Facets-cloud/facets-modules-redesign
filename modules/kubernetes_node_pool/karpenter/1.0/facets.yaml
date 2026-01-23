@@ -13,37 +13,60 @@ inputs:
         providers:
             - aws
         type: '@facets/aws_cloud_account'
+    karpenter_details:
+        description: Karpenter controller details (from karpenter module)
+        displayName: Karpenter Controller
+        optional: false
+        type: '@facets/karpenter-details'
     kubernetes_details:
-        description: The EKS cluster where NodePool will be created
-        displayName: Kubernetes Cluster
+        description: The EKS cluster where the node pool will be created
+        displayName: EKS Cluster
         optional: false
         providers:
+            - helm
             - kubernetes
-        type: '@facets/kubernetes-details'
+            - kubernetes-alpha
+        type: '@facets/eks'
     network_details:
         default:
             resource_name: default
             resource_type: network
         displayName: Network
         type: '@facets/aws-vpc-details'
-    karpenter_details:
-        description: Karpenter controller details (from karpenter module)
-        displayName: Karpenter Controller
-        optional: false
-        type: '@facets/karpenter-details'
 intent: kubernetes_node_pool
 outputs:
-  default:
-    type: '@facets/kubernetes_nodepool'
-    title: Kubernetes Nodepool
-  attributes:
-    type: '@facets/aws_karpenter_nodepool'
-    title: AWS Karpenter NodePool
+    attributes:
+        mock:
+            attributes:
+                node_class_name: mock-string-value
+                node_pool_name: mock-string-value
+                node_selector: mock-string-value
+                taints: mock-string-value
+            interfaces: {}
+        title: AWS Karpenter NodePool
+        type: '@facets/aws_karpenter_nodepool'
+    default:
+        mock:
+            attributes:
+                node_class_name: mock-string-value
+                node_pool_name: mock-string-value
+                node_selector: mock-string-value
+                taints: mock-string-value
+            interfaces: {}
+        title: Kubernetes Nodepool
+        type: '@facets/kubernetes_nodepool'
 sample:
     disabled: false
     flavor: karpenter
     kind: kubernetes_node_pool
     spec:
+        architecture:
+            - amd64
+        capacity_types:
+            - on-demand
+            - spot
+        cpu_limits: "1000"
+        enable_consolidation: true
         instance_families:
             - t3
             - t3a
@@ -51,18 +74,45 @@ sample:
             - medium
             - large
             - xlarge
-        capacity_types:
-            - on-demand
-            - spot
-        architecture:
-            - amd64
-        cpu_limits: "1000"
         memory_limits: 1000Gi
-        enable_consolidation: true
     version: "1.0"
 spec:
     description: Configure Karpenter NodePool for your EKS cluster
     properties:
+        architecture:
+            default:
+                - amd64
+            description: CPU architecture (amd64, arm64, or both)
+            items:
+                enum:
+                    - amd64
+                    - arm64
+                type: string
+            title: Architecture
+            type: array
+        capacity_types:
+            default:
+                - on-demand
+                - spot
+            description: Capacity types (on-demand, spot, or both)
+            items:
+                enum:
+                    - on-demand
+                    - spot
+                type: string
+            title: Capacity Types
+            type: array
+        cpu_limits:
+            default: "1000"
+            description: Maximum CPU cores across all nodes in this pool
+            title: CPU Limits
+            type: string
+            x-ui-placeholder: "1000"
+        enable_consolidation:
+            default: true
+            description: Enable automatic node consolidation to optimize costs
+            title: Enable Consolidation
+            type: boolean
         instance_families:
             default:
                 - t3
@@ -84,59 +134,25 @@ spec:
             title: Instance Sizes
             type: array
             x-ui-placeholder: medium, large
-        capacity_types:
-            default:
-                - on-demand
-                - spot
-            description: Capacity types (on-demand, spot, or both)
-            items:
-                enum:
-                    - on-demand
-                    - spot
-                type: string
-            title: Capacity Types
-            type: array
-        architecture:
-            default:
-                - amd64
-            description: CPU architecture (amd64, arm64, or both)
-            items:
-                enum:
-                    - amd64
-                    - arm64
-                type: string
-            title: Architecture
-            type: array
-        cpu_limits:
-            default: "1000"
-            description: Maximum CPU cores across all nodes in this pool
-            title: CPU Limits
-            type: string
-            x-ui-placeholder: "1000"
+        labels:
+            description: Kubernetes labels to apply to provisioned nodes
+            title: Node Labels
+            type: object
+            x-ui-yaml-editor: true
         memory_limits:
             default: 1000Gi
             description: Maximum memory across all nodes in this pool
             title: Memory Limits
             type: string
             x-ui-placeholder: 1000Gi
-        enable_consolidation:
-            default: true
-            description: Enable automatic node consolidation to optimize costs
-            title: Enable Consolidation
-            type: boolean
-        labels:
-            description: Kubernetes labels to apply to provisioned nodes
-            title: Node Labels
+        tags:
+            description: Additional AWS tags to apply to provisioned instances
+            title: Instance Tags
             type: object
             x-ui-yaml-editor: true
         taints:
             description: Kubernetes taints to apply to provisioned nodes
             title: Node Taints
-            type: object
-            x-ui-yaml-editor: true
-        tags:
-            description: Additional AWS tags to apply to provisioned instances
-            title: Instance Tags
             type: object
             x-ui-yaml-editor: true
     title: Karpenter NodePool Configuration

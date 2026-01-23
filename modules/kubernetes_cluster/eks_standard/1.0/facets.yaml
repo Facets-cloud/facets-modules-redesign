@@ -20,45 +20,109 @@ inputs:
         type: '@facets/aws-vpc-details'
 intent: kubernetes_cluster
 outputs:
-  default:
-    type: '@facets/kubernetes-details'
-    title: Kubernetes Cluster Output
-    providers:
-      kubernetes:
-        source: hashicorp/kubernetes
-        version: 2.38.0
-        attributes:
-          host: attributes.cluster_endpoint
-          cluster_ca_certificate: attributes.cluster_ca_certificate
-          exec:
-            api_version: attributes.kubernetes_provider_exec.api_version
-            command: attributes.kubernetes_provider_exec.command
-            args: attributes.kubernetes_provider_exec.args
-      helm:
-        source: hashicorp/helm
-        version: 2.17.0
-        attributes:
-          kubernetes:
-            host: attributes.cluster_endpoint
-            cluster_ca_certificate: attributes.cluster_ca_certificate
-            exec:
-              api_version: attributes.kubernetes_provider_exec.api_version
-              command: attributes.kubernetes_provider_exec.command
-              args: attributes.kubernetes_provider_exec.args
-      kubernetes-alpha:
-        source: hashicorp/kubernetes-alpha
-        version: 0.6.0
-        attributes:
-          host: attributes.cluster_endpoint
-          cluster_ca_certificate: attributes.cluster_ca_certificate
-          exec:
-            api_version: attributes.kubernetes_provider_exec.api_version
-            command: attributes.kubernetes_provider_exec.command
-            args: attributes.kubernetes_provider_exec.args
-  attributes:
-    type: '@facets/eks'
-    title: EKS Cluster Attributes
-    description: Additional EKS cluster attributes without provider configuration
+    attributes:
+        mock:
+            attributes:
+                cloud_provider: mock-string-value
+                cluster_arn: mock-string-value
+                cluster_ca_certificate: mock-string-value
+                cluster_endpoint: mock-string-value
+                cluster_iam_role_arn: mock-string-value
+                cluster_id: mock-string-value
+                cluster_name: mock-string-value
+                cluster_primary_security_group_id: mock-string-value
+                cluster_security_group_id: mock-string-value
+                cluster_version: mock-string-value
+                kubernetes_provider_exec:
+                    api_version: mock-string-value
+                    args: []
+                    command: mock-string-value
+                node_iam_role_arn: mock-string-value
+                node_iam_role_name: mock-string-value
+                node_security_group_id: mock-string-value
+                oidc_issuer_url: mock-string-value
+                oidc_provider: mock-string-value
+                oidc_provider_arn: mock-string-value
+                secrets: []
+            interfaces:
+                kubernetes:
+                    cluster_ca_certificate: mock-string-value
+                    host: mock-string-value
+                    kubernetes_provider_exec:
+                        api_version: mock-string-value
+                        args: []
+                        command: mock-string-value
+                    secrets: []
+        providers:
+            helm:
+                attributes:
+                    kubernetes:
+                        cluster_ca_certificate: cluster_ca_certificate
+                        exec:
+                            api_version: kubernetes_provider_exec.api_version
+                            args: kubernetes_provider_exec.args
+                            command: kubernetes_provider_exec.command
+                        host: cluster_endpoint
+                source: hashicorp/helm
+                version: 2.17.0
+            kubernetes:
+                attributes:
+                    cluster_ca_certificate: cluster_ca_certificate
+                    exec:
+                        api_version: kubernetes_provider_exec.api_version
+                        args: kubernetes_provider_exec.args
+                        command: kubernetes_provider_exec.command
+                    host: cluster_endpoint
+                source: hashicorp/kubernetes
+                version: 2.38.0
+            kubernetes-alpha:
+                attributes:
+                    cluster_ca_certificate: cluster_ca_certificate
+                    exec:
+                        api_version: kubernetes_provider_exec.api_version
+                        args: kubernetes_provider_exec.args
+                        command: kubernetes_provider_exec.command
+                    host: cluster_endpoint
+                source: hashicorp/kubernetes-alpha
+                version: 0.6.0
+        title: Kubernetes Cluster Output
+        type: '@facets/kubernetes-details'
+    default:
+        description: Additional EKS cluster attributes without provider configuration
+        mock:
+            attributes:
+                cloud_provider: mock-string-value
+                cluster_arn: mock-string-value
+                cluster_ca_certificate: mock-string-value
+                cluster_endpoint: mock-string-value
+                cluster_iam_role_arn: mock-string-value
+                cluster_id: mock-string-value
+                cluster_name: mock-string-value
+                cluster_primary_security_group_id: mock-string-value
+                cluster_security_group_id: mock-string-value
+                cluster_version: mock-string-value
+                kubernetes_provider_exec:
+                    api_version: mock-string-value
+                    args: []
+                    command: mock-string-value
+                node_iam_role_arn: mock-string-value
+                node_iam_role_name: mock-string-value
+                node_security_group_id: mock-string-value
+                oidc_issuer_url: mock-string-value
+                oidc_provider: mock-string-value
+                oidc_provider_arn: mock-string-value
+                secrets: []
+            interfaces:
+                kubernetes:
+                    cluster_ca_certificate: mock-string-value
+                    host: mock-string-value
+                    kubernetes_provider_exec:
+                        api_version: mock-string-value
+                        args: []
+                        command: mock-string-value
+                    secrets: []
+        title: EKS Cluster Attributes
+        type: '@facets/eks'
 sample:
     disabled: false
     flavor: eks_standard
@@ -68,13 +132,13 @@ sample:
             coredns:
                 enabled: true
                 version: latest
+            ebs_csi:
+                enabled: true
+                version: latest
             kube_proxy:
                 enabled: true
                 version: latest
             vpc_cni:
-                enabled: true
-                version: latest
-            ebs_csi:
                 enabled: true
                 version: latest
         cluster_endpoint_private_access: true
@@ -133,6 +197,22 @@ spec:
                                     - true
                     title: CoreDNS
                     type: object
+                ebs_csi:
+                    properties:
+                        enabled:
+                            default: true
+                            title: Enable EBS CSI Driver
+                            type: boolean
+                        version:
+                            default: latest
+                            title: Version
+                            type: string
+                            x-ui-visible-if:
+                                field: spec.cluster_addons.ebs_csi.enabled
+                                values:
+                                    - true
+                    title: EBS CSI Driver
+                    type: object
                 kube_proxy:
                     properties:
                         enabled:
@@ -164,22 +244,6 @@ spec:
                                 values:
                                     - true
                     title: VPC CNI
-                    type: object
-                ebs_csi:
-                    properties:
-                        enabled:
-                            default: true
-                            title: Enable EBS CSI Driver
-                            type: boolean
-                        version:
-                            default: latest
-                            title: Version
-                            type: string
-                            x-ui-visible-if:
-                                field: spec.cluster_addons.ebs_csi.enabled
-                                values:
-                                    - true
-                    title: EBS CSI Driver
                     type: object
             title: EKS Add-ons
             type: object
