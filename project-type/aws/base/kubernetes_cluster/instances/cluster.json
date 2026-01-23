@@ -19,7 +19,7 @@
   "spec": {
     "cluster_endpoint_private_access": true,
     "cluster_endpoint_public_access": true,
-    "cluster_version": "1.33",
+    "cluster_version": "1.34",
     "enable_cluster_encryption": false,
     "cluster_addons": {
       "additional_addons": {},
