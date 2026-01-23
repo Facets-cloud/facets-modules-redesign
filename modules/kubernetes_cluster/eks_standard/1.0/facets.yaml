@@ -143,7 +143,7 @@ sample:
                 version: latest
         cluster_endpoint_private_access: true
         cluster_endpoint_public_access: true
-        cluster_version: "1.33"
+        cluster_version: "1.34"
         enable_cluster_encryption: false
     version: "1.0"
 spec:
@@ -264,7 +264,7 @@ spec:
             type: object
             x-ui-yaml-editor: true
         cluster_version:
-            default: "1.30"
+            default: "1.34"
             description: EKS Kubernetes version
             enum:
                 - "1.28"
@@ -275,8 +275,6 @@ spec:
                 - "1.33"
                 - "1.34"
                 - "1.35"
-                - "1.36"
-                - "1.37"
             title: Kubernetes Version
             type: string
         default_node_pool:
