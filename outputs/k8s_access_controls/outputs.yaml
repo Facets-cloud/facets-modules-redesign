@@ -1,0 +1,9 @@
+name: '@facets/k8s_access_controls'
+properties:
+    attributes:
+        type: object
+        properties: {}
+    interfaces:
+        type: object
+        properties: {}
+providers: []

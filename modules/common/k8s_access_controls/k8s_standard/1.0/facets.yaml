@@ -21,7 +21,7 @@ inputs:
     - kubernetes
 outputs:
   default:
-    type: '@outputs/k8s_access_controls'
+    type: '@facets/k8s_access_controls'
     title: Kubernetes Access Controls
 spec:
   title: Kubernetes Access Controls Configuration
