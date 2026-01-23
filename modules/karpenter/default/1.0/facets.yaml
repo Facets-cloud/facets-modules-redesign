@@ -1,0 +1,94 @@
+clouds:
+    - aws
+description: |
+    Deploys Karpenter controller and necessary infrastructure for EKS clusters.
+    This module installs the Karpenter controller, IAM roles, and sets up interruption handling.
+    Use this module once per cluster, then use kubernetes_node_pool/karpenter for creating NodePools.
+flavor: default
+inputs:
+    cloud_account:
+        description: The AWS Cloud Account for EC2 instance provisioning
+        displayName: Cloud Account
+        optional: false
+        providers:
+            - aws
+        type: '@facets/aws_cloud_account'
+    eks_details:
+        description: The EKS cluster where the crds be created
+        displayName: EKS Cluster
+        optional: false
+        type: '@facets/eks'
+    kubernetes_details:
+        description: The providers to be used
+        displayName: Kubernetes Details
+        optional: false
+        providers:
+            - helm
+            - kubernetes
+            - kubernetes-alpha
+        type: '@facets/kubernetes-details'
+    network_details:
+        default:
+            resource_name: default
+            resource_type: network
+        displayName: Network
+        type: '@facets/aws-vpc-details'
+intent: karpenter
+outputs:
+    default:
+        mock:
+            attributes:
+                controller_role_arn: mock-string-value
+                interruption_queue_name: mock-string-value
+                karpenter_namespace: mock-string-value
+                karpenter_service_account: mock-string-value
+                karpenter_version: mock-string-value
+                node_instance_profile_name: mock-string-value
+                node_role_arn: mock-string-value
+                secrets: []
+            interfaces: {}
+        title: Karpenter Details
+        type: '@facets/karpenter-details'
+sample:
+    disabled: false
+    flavor: default
+    kind: karpenter
+    spec:
+        karpenter_replicas: 1
+        karpenter_version: 1.0.1
+    version: "1.0"
+spec:
+    description: Configure Karpenter controller for your EKS cluster
+    properties:
+        interruption_handling:
+            default: false
+            description: Enable interruption handling for Spot instances
+            title: Enable Interruption Handling
+            type: boolean
+        karpenter_replicas:
+            default: 1
+            description: Number of Karpenter controller replicas for high availability
+            maximum: 5
+            minimum: 1
+            title: Controller Replicas
+            type: integer
+        karpenter_version:
+            default: 1.0.1
+            description: Version of Karpenter to deploy (should match your Kubernetes version)
+            title: Karpenter Version
+            type: string
+        tags:
+            description: Additional AWS tags to apply to Karpenter resources
+            title: Resource Tags
+            type: object
+            x-ui-yaml-editor: true
+    required:
+        - karpenter_version
+    title: Karpenter Controller Configuration
+    type: object
+    x-ui-order:
+        - karpenter_version
+        - karpenter_replicas
+        - interruption_handling
+        - tags
+version: "1.0"

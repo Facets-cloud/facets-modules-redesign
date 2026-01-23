@@ -1,5 +1,5 @@
 {
-  "flavor": "eks",
+  "flavor": "eks_standard",
   "metadata": {
     "name": "eks-cluster"
   },
@@ -14,32 +14,39 @@
       "resource_type": "network"
     }
   },
-  "alias-flavors": [
-    "default"
-  ],
   "disabled": true,
   "version": "1.0",
   "spec": {
-    "cluster": {
-      "cluster_endpoint_public_access": true,
-      "cluster_endpoint_public_access_cidrs": [
-        "0.0.0.0/0"
-      ],
-      "cluster_addons": {
-        "eks-cluster-addons1": {
-          "name": "snapshot-controller",
-          "enabled": true,
-          "preserve": false
-        },
-        "eks-cluster-addons2": {
-          "name": "metrics-server",
-          "enabled": true
-        }
+    "cluster_endpoint_private_access": true,
+    "cluster_endpoint_public_access": true,
+    "cluster_version": "1.34",
+    "enable_cluster_encryption": false,
+    "cluster_addons": {
+      "additional_addons": {},
+      "coredns": {
+        "enabled": false,
+        "version": "latest"
       },
-      "cloudwatch": {
-        "log_group_retention_in_days": 90
+      "kube_proxy": {
+        "enabled": false,
+        "version": "latest"
+      },
+      "vpc_cni": {
+        "enabled": false,
+        "version": "latest"
       }
-    }
+    },
+    "default_node_pool": {
+      "capacity_type": "SPOT",
+      "desired_size": 1,
+      "disk_size": 50,
+      "instance_types": [
+        "t3.medium"
+      ],
+      "max_size": 1,
+      "min_size": 1
+    },
+    "cluster_tags": {}
   },
   "uiProps": {}
 }

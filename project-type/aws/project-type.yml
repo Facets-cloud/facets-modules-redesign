@@ -12,9 +12,9 @@ modules:
     - intent: cloud_account
       flavor: aws_provider
     - intent: kubernetes_cluster
-      flavor: eks
+      flavor: eks_standard
     - intent: kubernetes_node_pool
-      flavor: aws
+      flavor: karpenter
     - intent: network
       flavor: aws_network
     - intent: service

@@ -1,0 +1,406 @@
+clouds:
+    - aws
+description: |
+    Creates an AWS EKS cluster with managed node groups using the official terraform-aws-eks module.
+    This flavor does NOT support EKS Auto Mode - for Auto Mode support, use the eks_auto flavor.
+flavor: eks_standard
+alias-flavors:
+  - default
+inputs:
+    cloud_account:
+        description: The AWS Cloud Account where the EKS cluster will be created
+        displayName: Cloud Account
+        optional: false
+        providers:
+            - aws
+        type: '@facets/aws_cloud_account'
+    network_details:
+        default:
+            resource_name: default
+            resource_type: network
+        displayName: Network
+        type: '@facets/aws-vpc-details'
+intent: kubernetes_cluster
+outputs:
+    attributes:
+        mock:
+            attributes:
+                cloud_provider: mock-string-value
+                cluster_arn: mock-string-value
+                cluster_ca_certificate: mock-string-value
+                cluster_endpoint: mock-string-value
+                cluster_iam_role_arn: mock-string-value
+                cluster_id: mock-string-value
+                cluster_name: mock-string-value
+                cluster_primary_security_group_id: mock-string-value
+                cluster_security_group_id: mock-string-value
+                cluster_version: mock-string-value
+                kubernetes_provider_exec:
+                    api_version: mock-string-value
+                    args: []
+                    command: mock-string-value
+                node_iam_role_arn: mock-string-value
+                node_iam_role_name: mock-string-value
+                node_security_group_id: mock-string-value
+                oidc_issuer_url: mock-string-value
+                oidc_provider: mock-string-value
+                oidc_provider_arn: mock-string-value
+                secrets: []
+            interfaces:
+                kubernetes:
+                    cluster_ca_certificate: mock-string-value
+                    host: mock-string-value
+                    kubernetes_provider_exec:
+                        api_version: mock-string-value
+                        args: []
+                        command: mock-string-value
+                    secrets: []
+        providers:
+            helm:
+                attributes:
+                    kubernetes:
+                        cluster_ca_certificate: cluster_ca_certificate
+                        exec:
+                            api_version: kubernetes_provider_exec.api_version
+                            args: kubernetes_provider_exec.args
+                            command: kubernetes_provider_exec.command
+                        host: cluster_endpoint
+                source: hashicorp/helm
+                version: 2.17.0
+            kubernetes:
+                attributes:
+                    cluster_ca_certificate: cluster_ca_certificate
+                    exec:
+                        api_version: kubernetes_provider_exec.api_version
+                        args: kubernetes_provider_exec.args
+                        command: kubernetes_provider_exec.command
+                    host: cluster_endpoint
+                source: hashicorp/kubernetes
+                version: 2.38.0
+            kubernetes-alpha:
+                attributes:
+                    cluster_ca_certificate: cluster_ca_certificate
+                    exec:
+                        api_version: kubernetes_provider_exec.api_version
+                        args: kubernetes_provider_exec.args
+                        command: kubernetes_provider_exec.command
+                    host: cluster_endpoint
+                source: hashicorp/kubernetes-alpha
+                version: 0.6.0
+        title: Kubernetes Cluster Output
+        type: '@facets/kubernetes-details'
+    default:
+        description: Additional EKS cluster attributes without provider configuration
+        mock:
+            attributes:
+                cloud_provider: mock-string-value
+                cluster_arn: mock-string-value
+                cluster_ca_certificate: mock-string-value
+                cluster_endpoint: mock-string-value
+                cluster_iam_role_arn: mock-string-value
+                cluster_id: mock-string-value
+                cluster_name: mock-string-value
+                cluster_primary_security_group_id: mock-string-value
+                cluster_security_group_id: mock-string-value
+                cluster_version: mock-string-value
+                kubernetes_provider_exec:
+                    api_version: mock-string-value
+                    args: []
+                    command: mock-string-value
+                node_iam_role_arn: mock-string-value
+                node_iam_role_name: mock-string-value
+                node_security_group_id: mock-string-value
+                oidc_issuer_url: mock-string-value
+                oidc_provider: mock-string-value
+                oidc_provider_arn: mock-string-value
+                secrets: []
+            interfaces:
+                kubernetes:
+                    cluster_ca_certificate: mock-string-value
+                    host: mock-string-value
+                    kubernetes_provider_exec:
+                        api_version: mock-string-value
+                        args: []
+                        command: mock-string-value
+                    secrets: []
+        title: EKS Cluster Attributes
+        type: '@facets/eks'
+sample:
+    disabled: false
+    flavor: eks_standard
+    kind: kubernetes_cluster
+    spec:
+        cluster_addons:
+            coredns:
+                enabled: true
+                version: latest
+            ebs_csi:
+                enabled: true
+                version: latest
+            kube_proxy:
+                enabled: true
+                version: latest
+            vpc_cni:
+                enabled: true
+                version: latest
+        cluster_endpoint_private_access: true
+        cluster_endpoint_public_access: true
+        cluster_version: "1.34"
+        enable_cluster_encryption: false
+    version: "1.0"
+spec:
+    description: Configure your Amazon EKS cluster with managed node groups
+    properties:
+        cluster_addons:
+            description: Managed EKS add-ons configuration
+            properties:
+                additional_addons:
+                    description: Additional custom EKS add-ons (e.g., aws-ebs-csi-driver, aws-efs-csi-driver, snapshot-controller)
+                    patternProperties:
+                        ^[a-zA-Z0-9_-]+$:
+                            properties:
+                                configuration_values:
+                                    description: Optional JSON configuration values for the add-on
+                                    title: Configuration Values (JSON)
+                                    type: string
+                                    x-ui-yaml-editor: true
+                                enabled:
+                                    default: true
+                                    description: Enable this add-on
+                                    title: Enabled
+                                    type: boolean
+                                service_account_role_arn:
+                                    description: Optional IAM role ARN for the add-on's service account (IRSA)
+                                    title: Service Account Role ARN
+                                    type: string
+                                    x-ui-placeholder: arn:aws:iam::123456789012:role/addon-role
+                                version:
+                                    description: Version of the add-on (use 'latest' for latest version)
+                                    title: Version
+                                    type: string
+                                    x-ui-placeholder: latest
+                            type: object
+                    title: Additional Add-ons
+                    type: object
+                    x-ui-yaml-editor: true
+                coredns:
+                    properties:
+                        enabled:
+                            default: true
+                            title: Enable CoreDNS
+                            type: boolean
+                        version:
+                            default: latest
+                            title: Version
+                            type: string
+                            x-ui-visible-if:
+                                field: spec.cluster_addons.coredns.enabled
+                                values:
+                                    - true
+                    title: CoreDNS
+                    type: object
+                ebs_csi:
+                    properties:
+                        enabled:
+                            default: true
+                            title: Enable EBS CSI Driver
+                            type: boolean
+                        version:
+                            default: latest
+                            title: Version
+                            type: string
+                            x-ui-visible-if:
+                                field: spec.cluster_addons.ebs_csi.enabled
+                                values:
+                                    - true
+                    title: EBS CSI Driver
+                    type: object
+                kube_proxy:
+                    properties:
+                        enabled:
+                            default: true
+                            title: Enable Kube Proxy
+                            type: boolean
+                        version:
+                            default: latest
+                            title: Version
+                            type: string
+                            x-ui-visible-if:
+                                field: spec.cluster_addons.kube_proxy.enabled
+                                values:
+                                    - true
+                    title: Kube Proxy
+                    type: object
+                vpc_cni:
+                    properties:
+                        enabled:
+                            default: true
+                            title: Enable VPC CNI
+                            type: boolean
+                        version:
+                            default: latest
+                            title: Version
+                            type: string
+                            x-ui-visible-if:
+                                field: spec.cluster_addons.vpc_cni.enabled
+                                values:
+                                    - true
+                    title: VPC CNI
+                    type: object
+            title: EKS Add-ons
+            type: object
+            x-ui-toggle: true
+        cluster_endpoint_private_access:
+            default: true
+            description: Whether the cluster API server endpoint is accessible from within the VPC
+            title: Enable Private Endpoint Access
+            type: boolean
+        cluster_endpoint_public_access:
+            default: true
+            description: Whether the cluster API server endpoint is accessible from the internet
+            title: Enable Public Endpoint Access
+            type: boolean
+        cluster_tags:
+            description: Additional tags for the EKS cluster
+            title: Cluster Tags
+            type: object
+            x-ui-yaml-editor: true
+        cluster_version:
+            default: "1.34"
+            description: EKS Kubernetes version
+            enum:
+                - "1.28"
+                - "1.29"
+                - "1.30"
+                - "1.31"
+                - "1.32"
+                - "1.33"
+                - "1.34"
+                - "1.35"
+            title: Kubernetes Version
+            type: string
+        default_node_pool:
+            description: Default system node pool configuration for running system workloads (CoreDNS, Karpenter, etc.)
+            properties:
+                capacity_type:
+                    default: ON_DEMAND
+                    description: Type of capacity for the default system node pool
+                    enum:
+                        - ON_DEMAND
+                        - SPOT
+                    title: Capacity Type
+                    type: string
+                desired_size:
+                    default: 2
+                    description: Desired number of nodes in the default system pool
+                    minimum: 1
+                    title: Desired Size
+                    type: integer
+                disk_size:
+                    default: 50
+                    description: Disk size in GB for default system nodes
+                    maximum: 1000
+                    minimum: 20
+                    title: Disk Size (GB)
+                    type: integer
+                instance_types:
+                    default:
+                        - t3.medium
+                    description: List of EC2 instance types for the default system node pool
+                    items:
+                        type: string
+                    title: Instance Types
+                    type: array
+                max_size:
+                    default: 3
+                    description: Maximum number of nodes in the default system pool
+                    minimum: 1
+                    title: Maximum Size
+                    type: integer
+                min_size:
+                    default: 1
+                    description: Minimum number of nodes in the default system pool
+                    minimum: 1
+                    title: Minimum Size
+                    type: integer
+            title: Default System Node Pool
+            type: object
+            x-ui-toggle: true
+        enable_cluster_encryption:
+            default: false
+            description: Enable encryption of Kubernetes secrets using AWS KMS
+            title: Enable Secrets Encryption
+            type: boolean
+        managed_node_groups:
+            description: Configure managed node groups for the EKS cluster
+            patternProperties:
+                ^[a-zA-Z0-9_-]+$:
+                    properties:
+                        capacity_type:
+                            default: ON_DEMAND
+                            description: Type of capacity for the node group
+                            enum:
+                                - ON_DEMAND
+                                - SPOT
+                            title: Capacity Type
+                            type: string
+                        desired_size:
+                            default: 2
+                            description: Desired number of nodes
+                            minimum: 1
+                            title: Desired Size
+                            type: integer
+                        disk_size:
+                            default: 50
+                            description: Disk size in GB for worker nodes
+                            maximum: 1000
+                            minimum: 20
+                            title: Disk Size (GB)
+                            type: integer
+                        instance_types:
+                            default:
+                                - t3.medium
+                            description: List of EC2 instance types for the node group
+                            items:
+                                type: string
+                            title: Instance Types
+                            type: array
+                        labels:
+                            description: Kubernetes labels to apply to nodes
+                            title: Node Labels
+                            type: object
+                            x-ui-yaml-editor: true
+                        max_size:
+                            default: 10
+                            description: Maximum number of nodes
+                            minimum: 1
+                            title: Maximum Size
+                            type: integer
+                        min_size:
+                            default: 1
+                            description: Minimum number of nodes
+                            minimum: 0
+                            title: Minimum Size
+                            type: integer
+                        taints:
+                            description: Kubernetes taints to apply to nodes
+                            title: Node Taints
+                            type: object
+                            x-ui-yaml-editor: true
+                    type: object
+            title: Managed Node Groups
+            type: object
+    required:
+        - cluster_version
+    title: EKS Cluster Configuration
+    type: object
+    x-ui-order:
+        - cluster_version
+        - cluster_endpoint_public_access
+        - cluster_endpoint_private_access
+        - enable_cluster_encryption
+        - cluster_addons
+        - default_node_pool
+        - managed_node_groups
+        - cluster_tags
+version: "1.0"
