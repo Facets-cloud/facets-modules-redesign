@@ -1,11 +1,11 @@
 locals {
   karpenter_namespace       = "kube-system"
   karpenter_service_account = "karpenter"
-  cluster_name              = var.inputs.kubernetes_details.attributes.cluster_name
-  oidc_provider_arn         = var.inputs.kubernetes_details.attributes.oidc_provider_arn
-  oidc_provider             = var.inputs.kubernetes_details.attributes.oidc_provider
+  cluster_name              = var.inputs.eks_details.attributes.cluster_name
+  oidc_provider_arn         = var.inputs.eks_details.attributes.oidc_provider_arn
+  oidc_provider             = var.inputs.eks_details.attributes.oidc_provider
   aws_region                = var.inputs.cloud_account.attributes.aws_region
-  node_security_group_id    = var.inputs.kubernetes_details.attributes.node_security_group_id
+  node_security_group_id    = var.inputs.eks_details.attributes.node_security_group_id
 
   # Merge environment tags with instance tags
   instance_tags = merge(
@@ -99,7 +99,7 @@ resource "aws_iam_policy" "karpenter_controller" {
         Sid      = "EKSClusterEndpointLookup"
         Effect   = "Allow"
         Action   = "eks:DescribeCluster"
-        Resource = var.inputs.kubernetes_details.attributes.cluster_arn
+        Resource = var.inputs.eks_details.attributes.cluster_arn
       },
       {
         Sid    = "AllowScopedInstanceProfileCreationActions"
@@ -229,7 +229,7 @@ resource "helm_release" "karpenter" {
       }
       settings = {
         clusterName       = local.cluster_name
-        clusterEndpoint   = var.inputs.kubernetes_details.attributes.cluster_endpoint
+        clusterEndpoint   = var.inputs.eks_details.attributes.cluster_endpoint
         interruptionQueue = var.instance.spec.interruption_handling ? aws_sqs_queue.karpenter_interruption[0].name : ""
       }
       replicas = lookup(var.instance.spec, "karpenter_replicas", 2)

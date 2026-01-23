@@ -13,13 +13,19 @@ inputs:
         providers:
             - aws
         type: '@facets/aws_cloud_account'
+    eks_details:
+        description: The EKS cluster where the crds be created
+        displayName: EKS Cluster
+        optional: false
+        type: '@facets/eks'
     kubernetes_details:
-        description: The EKS cluster where Karpenter will be deployed
-        displayName: Kubernetes Cluster
+        description: The providers to be used
+        displayName: Kubernetes Details
         optional: false
         providers:
-            - kubernetes
             - helm
+            - kubernetes
+            - kubernetes-alpha
         type: '@facets/kubernetes-details'
     network_details:
         default:
@@ -41,37 +47,37 @@ outputs:
                 node_role_arn: mock-string-value
                 secrets: []
             interfaces: {}
+        title: Karpenter Details
         type: '@facets/karpenter-details'
 sample:
     disabled: false
     flavor: default
     kind: karpenter
     spec:
+        karpenter_replicas: 1
         karpenter_version: 1.0.1
-        karpenter_replicas: 2
-        interruption_handling: true
     version: "1.0"
 spec:
     description: Configure Karpenter controller for your EKS cluster
     properties:
+        interruption_handling:
+            default: false
+            description: Enable interruption handling for Spot instances
+            title: Enable Interruption Handling
+            type: boolean
+        karpenter_replicas:
+            default: 1
+            description: Number of Karpenter controller replicas for high availability
+            maximum: 5
+            minimum: 1
+            title: Controller Replicas
+            type: integer
         karpenter_version:
             default: 1.0.1
             description: Version of Karpenter to deploy (should match your Kubernetes version)
             title: Karpenter Version
             type: string
             x-ui-overrides-only: true
-        karpenter_replicas:
-            default: 2
-            description: Number of Karpenter controller replicas for high availability
-            maximum: 5
-            minimum: 1
-            title: Controller Replicas
-            type: integer
-        interruption_handling:
-            default: true
-            description: Enable interruption handling for Spot instances
-            title: Enable Interruption Handling
-            type: boolean
         tags:
             description: Additional AWS tags to apply to Karpenter resources
             title: Resource Tags

@@ -1,5 +1,5 @@
 intent: kubernetes_cluster
-flavor: eks
+flavor: eks_automode
 alias-flavors:
   - default
 version: '1.0'
@@ -179,7 +179,7 @@ spec:
     - cluster
 sample:
   kind: kubernetes_cluster
-  flavor: eks
+  flavor: eks_automode
   alias-flavors:
     - default
   version: '1.0'
