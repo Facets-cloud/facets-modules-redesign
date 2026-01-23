@@ -14,7 +14,7 @@ modules:
     - intent: kubernetes_cluster
       flavor: gke
     - intent: kubernetes_node_pool
-      flavor: gke_custom_node_pool
+      flavor: gcp
     - intent: kubernetes_node_pool
       flavor: gcp_node_fleet
     - intent: network
