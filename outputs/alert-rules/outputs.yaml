@@ -1,35 +1,19 @@
 name: '@facets/alert-rules'
 properties:
-  type: object
-  properties:
     attributes:
-      type: object
-      properties:
-        prometheus_rule_name:
-          description: Name of the PrometheusRule resource
-          type: string
-        namespace:
-          description: Namespace where alert rules are deployed
-          type: string
-        alerts_enabled:
-          description: Whether alert rules are enabled
-          type: string
-        total_alert_count:
-          description: Total number of alert rules across all groups
-          type: string
         alert_group_count:
-          description: Number of alert groups defined
-          type: string
+            type: string
         alert_group_names:
-          description: Comma-separated list of alert group names
-          type: string
-        evaluation_interval:
-          description: Default evaluation interval for rules
-          type: string
+            type: string
+        alerts_enabled:
+            type: string
+        namespace:
+            type: string
         prometheus_release:
-          description: Prometheus release that evaluates these rules
-          type: string
-    interfaces:
-      type: object
-      properties: {}
+            type: string
+        prometheus_rule_name:
+            type: string
+        total_alert_count:
+            type: string
+    interfaces: {}
 providers: []

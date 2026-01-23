@@ -4,14 +4,12 @@ locals {
   # Always use prometheus namespace for PrometheusRule deployment
   namespace = lookup(var.inputs.prometheus.attributes, "namespace", var.environment.namespace)
 
-  evaluation_interval = lookup(var.instance.spec.resources, "evaluation_interval", "30s")
-  prometheus_release  = lookup(var.inputs.prometheus.attributes, "prometheus_release", "prometheus")
+  prometheus_release = lookup(var.inputs.prometheus.attributes, "prometheus_release", "prometheus")
 
   # Transform alert_groups from spec into PrometheusRule groups
   alert_groups = [
     for group_name, group_config in var.instance.spec.alert_groups : {
-      name     = group_name
-      interval = lookup(group_config, "interval", local.evaluation_interval)
+      name = group_name
 
       rules = [
         for rule_name, rule_config in group_config.rules : {
@@ -20,17 +18,20 @@ locals {
           for   = rule_config.duration
 
           # Standardized alert labels following Facets conventions
+          # User labels merged first, then system labels (matching alert_group_helm pattern)
           labels = merge(
+            rule_config.labels,
             local.common_labels,
             {
-              severity             = rule_config.severity
-              alert_type           = rule_name
-              facets_resource_type = "alert_rules"
-              facets_resource_name = var.instance_name
-              namespace            = local.namespace
-              alert_group          = group_name
-            },
-            rule_config.labels
+              severity      = rule_config.severity
+              alert_type    = rule_name
+              namespace     = local.namespace
+              alert_group   = group_name
+              resource_type = rule_config.resource_type
+              resource_name = rule_config.resource_name
+              resourceType  = rule_config.resource_type
+              resourceName  = rule_config.resource_name
+            }
           )
 
           annotations = merge(
@@ -38,10 +39,9 @@ locals {
               summary     = rule_config.summary
               description = rule_config.description
             },
-            rule_config.runbook_url != "" ? { runbook_url = rule_config.runbook_url } : {},
             rule_config.annotations
           )
-        }
+        } if !rule_config.disabled  # Filter out disabled rules
       ]
     }
   ]
