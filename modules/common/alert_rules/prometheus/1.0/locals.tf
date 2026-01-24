@@ -15,33 +15,33 @@ locals {
         for rule_name, rule_config in group_config.rules : {
           alert = rule_name
           expr  = rule_config.expression
-          for   = rule_config.duration
+          for   = lookup(rule_config, "duration", "5m")
 
           # Standardized alert labels following Facets conventions
           # User labels merged first, then system labels (matching alert_group_helm pattern)
           labels = merge(
-            rule_config.labels,
+            lookup(rule_config, "labels", {}),
             local.common_labels,
             {
-              severity      = rule_config.severity
+              severity      = lookup(rule_config, "severity", "warning")
               alert_type    = rule_name
               namespace     = local.namespace
               alert_group   = group_name
-              resource_type = rule_config.resource_type
-              resource_name = rule_config.resource_name
-              resourceType  = rule_config.resource_type
-              resourceName  = rule_config.resource_name
+              resource_type = lookup(rule_config, "resource_type", null)
+              resource_name = lookup(rule_config, "resource_name", null)
+              resourceType  = lookup(rule_config, "resource_type", null)
+              resourceName  = lookup(rule_config, "resource_name", null)
             }
           )
 
           annotations = merge(
             {
               summary     = rule_config.summary
-              description = rule_config.description
+              description = lookup(rule_config, "description", "")
             },
-            rule_config.annotations
+            lookup(rule_config, "annotations", {})
           )
-        } if !rule_config.disabled  # Filter out disabled rules
+        } if !lookup(rule_config, "disabled", false) # Filter out disabled rules
       ]
     }
   ]
