@@ -6,7 +6,7 @@ module "prometheus_rule" {
 
   name         = local.name
   namespace    = local.namespace
-  release_name = "alert-rules-${substr(var.environment.unique_name, 0, 8)}"
+  release_name = "${local.name}-alerts"
 
   data = {
     apiVersion = "monitoring.coreos.com/v1"
