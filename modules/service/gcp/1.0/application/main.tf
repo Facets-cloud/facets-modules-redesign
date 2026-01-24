@@ -1,18 +1,14 @@
 locals {
-  deploy_context               = jsondecode(file("../deploymentcontext.json"))
-  dep_cluster                  = lookup(local.deploy_context, "cluster", {})
-  all_artifactories            = lookup(local.deploy_context, "artifacts", {})
-  all_artifacts                = merge(values(local.all_artifactories)...)
-  artifactory                  = lookup(lookup(var.values.spec.release, "build", {}), "artifactory", "NOT_FOUND")
-  artifact_name                = lookup(lookup(var.values.spec.release, "build", {}), "name", "NOT_FOUND")
-  _artifact_name               = lookup(var.values, "_artifact_name", "NOT_FOUND")
-  artifactUri                  = lookup(lookup(lookup(local.all_artifactories, local.artifactory, {}), local.artifact_name, {}), "artifactUri", "NOT_FOUND")
-  build_id_lookup              = lookup(lookup(lookup(local.all_artifactories, local.artifactory, {}), local.artifact_name, {}), "buildId", lookup(lookup(local.all_artifacts, local._artifact_name, {}), "buildId", "NOT_FOUND"))
-  image_lookup                 = lookup(var.values.spec.release, "image", "NOT_FOUND")
+  # Use spec.release.image as the single source of truth (matches artifact_inputs declaration)
+  image_id = lookup(var.values.spec.release, "image", "NOT_FOUND")
+
+  # Extract build_id from image tag if available (format: registry/image:tag)
+  # Otherwise default to "NA" - build tracking should come through proper artifact metadata
+  image_tag = can(regex("^.*:(.+)$", local.image_id)) ? regex("^.*:(.+)$", local.image_id)[0] : "NA"
+  build_id  = local.image_tag
+
   advanced_config_values       = lookup(local.advanced_config, "values", {})
   kubernetes_node_pool_details = lookup(var.inputs, "kubernetes_node_pool_details", {})
-  image_id                     = local.artifactUri == "NOT_FOUND" ? local.image_lookup : local.artifactUri
-  build_id                     = local.build_id_lookup == "NOT_FOUND" ? (local.image_lookup != "NOT_FOUND" ? "NA" : "NOT_FOUND") : local.build_id_lookup
   common_advanced              = lookup(lookup(var.values, "advanced", {}), "common", {})
   all_secrets                  = lookup(local.common_advanced, "include_common_env_secrets", false) ? var.environment.secrets : {}
   advanced_config              = lookup(local.common_advanced, "app_chart", {})
@@ -124,7 +120,7 @@ resource "helm_release" "app-chart" {
           var.labels,
           {
             artifact_external_id = can(regex("^(([a-za-z0-9][-a-za-z0-9_.]*)?[a-za-z0-9])?$", lower(local.build_id))) ? lower(local.build_id) : "INVALID"
-            artifact_name        = can(regex("^(([a-za-z0-9][-a-za-z0-9_.]*)?[a-za-z0-9])?$", lower(local.artifact_name))) ? lower(local.artifact_name) : "INVALID"
+            artifact_name        = can(regex("^([^/]+/)?([^:]+)", local.image_id)) ? regex("^([^/]+/)?([^:]+)", local.image_id)[1] : "INVALID"
           }
         )
       }
@@ -143,7 +139,6 @@ resource "helm_release" "app-chart" {
     yamlencode({
       spec = {
         env = merge(
-          lookup(local.dep_cluster, "globalVariables", {}),
           local.filtered_env_vars,
           local.build_id_env,
           local.filtered_all_secrets,

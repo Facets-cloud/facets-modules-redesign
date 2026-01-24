@@ -5,6 +5,18 @@ variable "instance" {
       artifactories = map(object({
         name = string
       }))
+      artifactory_credentials = optional(list(object({
+        name            = string
+        uri             = string
+        artifactoryType = string
+        awsKey          = optional(string)
+        awsSecret       = optional(string)
+        awsAccountId    = optional(string)
+        awsRegion       = optional(string)
+        username        = optional(string)
+        password        = optional(string)
+        email           = optional(string)
+      })), [])
     })
     metadata = object({
       name      = optional(string)
@@ -14,8 +26,9 @@ variable "instance" {
   })
   default = {
     spec = {
-      include_all   = false
-      artifactories = {}
+      include_all             = false
+      artifactories           = {}
+      artifactory_credentials = []
     }
     metadata = {}
   }

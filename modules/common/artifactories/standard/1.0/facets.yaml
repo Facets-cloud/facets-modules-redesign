@@ -60,6 +60,48 @@ spec:
                   includeContent: false
                 labelKey: name
                 valueKey: name
+    artifactory_credentials:
+      title: Artifactory Credentials
+      type: array
+      description: Credentials for container registries (provided by control plane)
+      x-ui-skip: true
+      items:
+        type: object
+        required:
+          - name
+          - uri
+          - artifactoryType
+        properties:
+          name:
+            type: string
+            description: Artifactory identifier
+          uri:
+            type: string
+            description: Registry URI
+          artifactoryType:
+            type: string
+            enum: [ECR, DockerHub, GCR, ACR]
+          awsKey:
+            type: string
+            description: AWS access key (ECR only)
+          awsSecret:
+            type: string
+            description: AWS secret key (ECR only)
+          awsAccountId:
+            type: string
+            description: AWS account ID (ECR only)
+          awsRegion:
+            type: string
+            description: AWS region (ECR only)
+          username:
+            type: string
+            description: Registry username (DockerHub/GCR/ACR)
+          password:
+            type: string
+            description: Registry password (DockerHub/GCR/ACR)
+          email:
+            type: string
+            description: Registry email (DockerHub/GCR/ACR)
 outputs:
   default:
     type: '@facets/artifactories'

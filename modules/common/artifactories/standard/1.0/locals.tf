@@ -29,7 +29,7 @@ locals {
     },
     local.node_pool_labels
   )
-  artifactory_list = jsondecode(file("../deploymentcontext.json"))["artifactoryDetails"]
+  artifactory_list = lookup(local.spec, "artifactory_credentials", [])
   artifactories_ecr = {
     for artifactory in local.artifactory_list :
     artifactory["name"] => artifactory if lookup(artifactory, "artifactoryType", "ECR") == "ECR" && (local.include_all || contains([for key, value in local.artifactories : value["name"]], artifactory["name"]))

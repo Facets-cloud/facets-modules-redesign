@@ -16,16 +16,12 @@ locals {
   enable_deployment_actions  = local.enable_actions && local.spec_type == "application" ? 1 : 0
   enable_statefulset_actions = local.enable_actions && local.spec_type == "statefulset" ? 1 : 0
 
-  release_metadata_labels = {
-    "facets.cloud/blueprint_version" = tostring(lookup(local.release_metadata.metadata, "blueprint_version", "NA")) == null ? "NA" : tostring(lookup(local.release_metadata.metadata, "blueprint_version", "NA"))
-    "facets.cloud/override_version"  = tostring(lookup(local.release_metadata.metadata, "override_version", "NA")) == null ? "NA" : tostring(lookup(local.release_metadata.metadata, "override_version", "NA"))
-  }
   namespace = lookup(var.instance.metadata, "namespace", null) == null ? var.environment.namespace : var.instance.metadata.namespace
   annotations = merge(
     local.enable_irsa ? { "eks.amazonaws.com/role-arn" = module.irsa.0.iam_role_arn } : { "iam.amazonaws.com/role" = aws_iam_role.application-role.0.arn },
     lookup(var.instance.metadata, "annotations", {})
   )
-  labels        = merge(lookup(var.instance.metadata, "labels", {}), local.release_metadata_labels)
+  labels        = lookup(var.instance.metadata, "labels", {})
   name          = "${module.sr-name.name}-ar"
   resource_type = "service"
   resource_name = var.instance_name

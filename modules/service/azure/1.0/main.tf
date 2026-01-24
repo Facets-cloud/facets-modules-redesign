@@ -11,16 +11,11 @@ locals {
   enable_deployment_actions  = local.enable_actions && local.spec_type == "application" ? 1 : 0
   enable_statefulset_actions = local.enable_actions && local.spec_type == "statefulset" ? 1 : 0
 
-  release_metadata_labels = {
-    "facets.cloud/blueprint_version" = tostring(lookup(local.release_metadata.metadata, "blueprint_version", "NA")) == null ? "NA" : tostring(lookup(local.release_metadata.metadata, "blueprint_version", "NA"))
-    "facets.cloud/override_version"  = tostring(lookup(local.release_metadata.metadata, "override_version", "NA")) == null ? "NA" : tostring(lookup(local.release_metadata.metadata, "override_version", "NA"))
-  }
   namespace   = lookup(var.instance.metadata, "namespace", null) == null ? var.environment.namespace : var.instance.metadata.namespace
   annotations = lookup(var.instance.metadata, "annotations", {})
   labels = merge(
     lookup(var.instance.metadata, "labels", {}),
-    length(local.iam_arns) > 0 ? { aadpodidbinding = azurerm_user_assigned_identity.service_user_iam.0.name } : {},
-    local.release_metadata_labels
+    length(local.iam_arns) > 0 ? { aadpodidbinding = azurerm_user_assigned_identity.service_user_iam.0.name } : {}
   )
   name          = lower(var.instance_name)
   resource_type = "service"
