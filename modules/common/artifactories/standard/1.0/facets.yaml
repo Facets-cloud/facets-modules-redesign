@@ -80,28 +80,58 @@ spec:
             description: Registry URI
           artifactoryType:
             type: string
+            title: Registry Type
+            description: Type of container registry
             enum: [ECR, DockerHub, GCR, ACR]
           awsKey:
             type: string
+            title: AWS Access Key
             description: AWS access key (ECR only)
+            x-ui-visible-if:
+              field: artifactoryType
+              values: [ECR]
           awsSecret:
             type: string
+            title: AWS Secret Key
             description: AWS secret key (ECR only)
+            x-ui-visible-if:
+              field: artifactoryType
+              values: [ECR]
           awsAccountId:
             type: string
+            title: AWS Account ID
             description: AWS account ID (ECR only)
+            x-ui-visible-if:
+              field: artifactoryType
+              values: [ECR]
           awsRegion:
             type: string
+            title: AWS Region
             description: AWS region (ECR only)
+            x-ui-visible-if:
+              field: artifactoryType
+              values: [ECR]
           username:
             type: string
+            title: Username
             description: Registry username (DockerHub/GCR/ACR)
+            x-ui-visible-if:
+              field: artifactoryType
+              values: [DockerHub, GCR, ACR]
           password:
             type: string
+            title: Password
             description: Registry password (DockerHub/GCR/ACR)
+            x-ui-visible-if:
+              field: artifactoryType
+              values: [DockerHub, GCR, ACR]
           email:
             type: string
+            title: Email
             description: Registry email (DockerHub/GCR/ACR)
+            x-ui-visible-if:
+              field: artifactoryType
+              values: [DockerHub, GCR, ACR]
 outputs:
   default:
     type: '@facets/artifactories'
