@@ -2,10 +2,9 @@ locals {
   # Use spec.release.image as the single source of truth (matches artifact_inputs declaration)
   image_id = lookup(var.values.spec.release, "image", "NOT_FOUND")
 
-  # Extract build_id from image tag if available (format: registry/image:tag)
-  # Otherwise default to "NA" - build tracking should come through proper artifact metadata
-  image_tag = can(regex("^.*:(.+)$", local.image_id)) ? regex("^.*:(.+)$", local.image_id)[0] : "NA"
-  build_id  = local.image_tag
+  # Use full image string as build_id - uniquely identifies the deployment
+  # Falls back to "NA" if image is not found (matches old behavior)
+  build_id = local.image_id != "NOT_FOUND" ? local.image_id : "NA"
 
   advanced_config_values       = lookup(local.advanced_config, "values", {})
   kubernetes_node_pool_details = lookup(var.inputs, "kubernetes_node_pool_details", {})

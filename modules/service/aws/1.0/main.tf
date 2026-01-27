@@ -26,7 +26,7 @@ locals {
   resource_type = "service"
   resource_name = var.instance_name
 
-  from_artifactories      = lookup(lookup(lookup(var.inputs, "artifactories", {}), "attributes", {}), "registry_secrets_list", [])
+  image_pull_secrets      = lookup(lookup(lookup(var.inputs, "artifactories", {}), "attributes", {}), "registry_secrets_list", [])
   from_kubernetes_cluster = []
 
   # Transform taints from object format to string format for utility module compatibility
@@ -137,7 +137,7 @@ module "app-helm-chart" {
   chart_name              = lower(var.instance_name)
   values                  = local.instance_with_vpa_config
   annotations             = local.annotations
-  registry_secret_objects = length(local.from_artifactories) > 0 ? local.from_artifactories : local.from_kubernetes_cluster
+  registry_secret_objects = length(local.image_pull_secrets) > 0 ? local.image_pull_secrets : local.from_kubernetes_cluster
   cc_metadata             = var.cc_metadata
   baseinfra               = var.baseinfra
   labels                  = local.labels
