@@ -48,7 +48,7 @@ locals {
       (lookup(v, "namespace", null) != null && lookup(v, "namespace", "") != "") &&
       (
         # gRPC routes don't need path/path_type - they use method matching
-        lookup(lookup(v, "grpc", {}), "enabled", false) ||
+        lookup(lookup(v, "grpc_config", {}), "enabled", false) ||
         # HTTP routes require path and path_type
         (
           (lookup(v, "path", null) != null && lookup(v, "path", "") != "") &&
@@ -387,7 +387,7 @@ locals {
           )
         }]
       }
-    } if !lookup(lookup(v, "grpc", {}), "enabled", false)
+    } if !lookup(lookup(v, "grpc_config", {}), "enabled", false)
   }
 
   # GRPCRoute Resources
@@ -419,8 +419,8 @@ locals {
 
         rules = [{
           # If match_all_methods is true (default) or method_match is empty, match all gRPC traffic
-          matches = !lookup(lookup(v, "grpc", {}), "match_all_methods", true) && lookup(lookup(v, "grpc", {}), "method_match", null) != null ? [
-            for key, method in lookup(v.grpc, "method_match", {}) : {
+          matches = !lookup(lookup(v, "grpc_config", {}), "match_all_methods", true) && lookup(lookup(v, "grpc_config", {}), "method_match", null) != null ? [
+            for key, method in lookup(v.grpc_config, "method_match", {}) : {
               method = {
                 type    = lookup(method, "type", "Exact")
                 service = lookup(method, "service", "")
@@ -436,7 +436,7 @@ locals {
           }]
         }]
       }
-    } if lookup(lookup(v, "grpc", {}), "enabled", false)
+    } if lookup(lookup(v, "grpc_config", {}), "enabled", false)
   }
 
   # ServiceMonitor (always enabled with defaults)

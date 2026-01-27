@@ -583,7 +583,7 @@ spec:
                     field: spec.rules.{{this}}.cors.enabled
                     values:
                     - true
-            grpc:
+            grpc_config:
               type: object
               title: gRPC Configuration
               description: Configure gRPC routing
