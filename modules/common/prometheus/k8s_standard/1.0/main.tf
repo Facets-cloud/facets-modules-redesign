@@ -75,7 +75,9 @@ resource "helm_release" "prometheus-operator" {
       },
       # Add service account config for IRSA if enabled
       # Add user-provided values from spec.values
-      local.valuesSpec
+      local.valuesSpec,
+      # CRITICAL: Apply Facets alertmanager webhook config LAST - must never be overridden
+      local.alertmanager_config
     ))
   ]
 }
