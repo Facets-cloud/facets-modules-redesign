@@ -713,7 +713,6 @@ spec:
   - domain_prefix_override
   - disable_base_domain
   - force_ssl_redirection
-  - renew_cert_before
   - disable_endpoint_validation
   - resources
   - helm_values
