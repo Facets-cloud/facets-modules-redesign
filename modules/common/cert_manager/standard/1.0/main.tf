@@ -100,7 +100,7 @@ resource "helm_release" "cert_manager" {
   recreate_pods    = lookup(local.cert_manager, "recreate_pods", false)
 
   values = [
-    yamlencode({
+    yamlencode(merge({
       crds = {
         enabled = true
       }
@@ -108,11 +108,11 @@ resource "helm_release" "cert_manager" {
       tolerations  = local.tolerations
       replicaCount = 2
 
-      # Enable Gateway API support
+      # Enable Gateway API support via config
       config = {
         apiVersion       = "controller.config.cert-manager.io/v1alpha1"
         kind             = "ControllerConfiguration"
-        enableGatewayAPI = true
+        enableGatewayAPI = local.enable_gateway_api
       }
 
       webhook = {
@@ -137,7 +137,12 @@ resource "helm_release" "cert_manager" {
           }
         }
       }
-    }),
+    },
+    # Add featureGates for Gateway API support when enabled
+    local.enable_gateway_api ? {
+      featureGates = "ExperimentalGatewayAPISupport=true"
+    } : {}
+    )),
     yamlencode(local.user_supplied_helm_values),
   ]
 

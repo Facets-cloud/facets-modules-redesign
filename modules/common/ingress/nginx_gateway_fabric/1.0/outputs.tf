@@ -46,7 +46,7 @@ output "domains" {
   )
 }
 
-output "nginx_fabric" {
+output "nginx_gateway_fabric" {
   value = {
     resource_type = "ingress"
     resource_name = var.instance_name

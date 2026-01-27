@@ -28,7 +28,7 @@ This module deploys **NGINX Gateway Fabric**, NGINX's implementation of the Kube
 ```json
 {
   "kind": "ingress",
-  "flavor": "nginx_fabric",
+  "flavor": "nginx_gateway_fabric",
   "version": "1.0",
   "spec": {
     "private": false,
@@ -437,7 +437,7 @@ Configure custom domains at the root level:
 ```json
 {
   "kind": "ingress",
-  "flavor": "nginx_fabric",
+  "flavor": "nginx_gateway_fabric",
   "version": "1.0",
   "domains": {
     "production": {

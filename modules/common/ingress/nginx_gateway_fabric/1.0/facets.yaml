@@ -1,5 +1,5 @@
 intent: ingress
-flavor: nginx_fabric
+flavor: nginx_gateway_fabric
 version: '1.0'
 description: NGINX Gateway Fabric - Kubernetes Gateway API implementation
 clouds:
@@ -38,6 +38,14 @@ inputs:
       resource_name: default
     displayName: Certificate Manager
     description: Certificate Manager configuration for TLS certificate management
+  gateway_api_crd_details:
+    type: '@facets/gateway_api_crd'
+    optional: false
+    default:
+      resource_type: gateway_api_crd
+      resource_name: default
+    displayName: Gateway API CRDs
+    description: Gateway API CRD installation (required for NGINX Gateway Fabric)
 spec:
   title: NGINX Gateway Fabric
   type: object
@@ -725,7 +733,7 @@ outputs:
     title: Ingress Details
 sample:
   kind: ingress
-  flavor: nginx_fabric
+  flavor: nginx_gateway_fabric
   version: '1.0'
   disabled: true
   metadata:

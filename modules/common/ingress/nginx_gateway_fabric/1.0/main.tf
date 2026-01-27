@@ -84,7 +84,7 @@ locals {
     "app.kubernetes.io/name"       = "nginx-gateway-fabric"
     "app.kubernetes.io/instance"   = local.name
     "app.kubernetes.io/managed-by" = "facets"
-    "facets.cloud/module"          = "nginx_fabric"
+    "facets.cloud/module"          = "nginx_gateway_fabric"
     "facets.cloud/instance"        = var.instance_name
   }
 
@@ -640,94 +640,8 @@ module "http01_certificate" {
   ]
 }
 
-# ServiceAccount for Gateway API CRD installer Job
-resource "kubernetes_service_account_v1" "gateway_api_crd_installer" {
-  metadata {
-    name      = "${local.name}-gateway-api-crd-installer"
-    namespace = var.environment.namespace
-  }
-}
-
-# ClusterRole for Gateway API CRD installer
-resource "kubernetes_cluster_role_v1" "gateway_api_crd_installer" {
-  metadata {
-    name = "${local.name}-gateway-api-crd-installer"
-  }
-
-  rule {
-    api_groups = ["apiextensions.k8s.io"]
-    resources  = ["customresourcedefinitions"]
-    verbs      = ["get", "list", "create", "update", "patch"]
-  }
-}
-
-# ClusterRoleBinding for Gateway API CRD installer
-resource "kubernetes_cluster_role_binding_v1" "gateway_api_crd_installer" {
-  metadata {
-    name = "${local.name}-gateway-api-crd-installer"
-  }
-
-  role_ref {
-    api_group = "rbac.authorization.k8s.io"
-    kind      = "ClusterRole"
-    name      = kubernetes_cluster_role_v1.gateway_api_crd_installer.metadata[0].name
-  }
-
-  subject {
-    kind      = "ServiceAccount"
-    name      = kubernetes_service_account_v1.gateway_api_crd_installer.metadata[0].name
-    namespace = var.environment.namespace
-  }
-}
-
-# Job to install Gateway API CRDs
-resource "kubernetes_job_v1" "gateway_api_crd_installer" {
-  metadata {
-    name      = "${local.name}-gateway-api-crd-installer"
-    namespace = var.environment.namespace
-  }
-
-  spec {
-    template {
-      metadata {
-        labels = {
-          app = "gateway-api-crd-installer"
-        }
-      }
-
-      spec {
-        service_account_name = kubernetes_service_account_v1.gateway_api_crd_installer.metadata[0].name
-        restart_policy       = "OnFailure"
-
-        container {
-          name    = "kubectl"
-          image   = "bitnami/kubectl:latest"
-          command = ["/bin/sh", "-c"]
-          args = [
-            # Using experimental channel to include GRPCRoute CRD
-            # Using --server-side to avoid annotation size limit (262KB)
-            "kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.1/experimental-install.yaml"
-          ]
-        }
-      }
-    }
-
-    backoff_limit = 3
-  }
-
-  wait_for_completion = true
-
-  timeouts {
-    create = "5m"
-    update = "5m"
-  }
-
-  depends_on = [
-    kubernetes_cluster_role_binding_v1.gateway_api_crd_installer
-  ]
-}
-
 # NGINX Gateway Fabric Helm Chart
+# Note: Gateway API CRDs are installed by the gateway_api_crd module (dependency)
 resource "helm_release" "nginx_gateway_fabric" {
   name             = local.name
   wait             = lookup(var.instance.spec, "helm_wait", true)
@@ -893,7 +807,6 @@ resource "helm_release" "nginx_gateway_fabric" {
   ]
 
   depends_on = [
-    kubernetes_job_v1.gateway_api_crd_installer,
     kubernetes_secret.bootstrap_tls
   ]
 }
