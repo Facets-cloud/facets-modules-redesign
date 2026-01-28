@@ -22,7 +22,7 @@ inputs:
             resource_name: general-purpose
             resource_type: kubernetes_node_pool
         displayName: Node Pool
-        optional: true
+        optional: false
         type: '@facets/kubernetes_nodepool'
 intent: artifactories
 outputs:
