@@ -185,7 +185,7 @@ spec:
               x-ui-placeholder: Enter path (e.g., / or /api)
               x-ui-error-message: 'Value doesn''t match pattern, eg: / or /api'
               x-ui-visible-if:
-                field: spec.rules.{{this}}.grpc.enabled
+                field: spec.rules.{{this}}.grpc_config.enabled
                 values:
                 - false
                 - null
@@ -198,7 +198,7 @@ spec:
               - PathPrefix
               default: PathPrefix
               x-ui-visible-if:
-                field: spec.rules.{{this}}.grpc.enabled
+                field: spec.rules.{{this}}.grpc_config.enabled
                 values:
                 - false
                 - null
@@ -619,7 +619,7 @@ spec:
                   description: Route all gRPC traffic (no method filtering)
                   default: true
                   x-ui-visible-if:
-                    field: spec.rules.{{this}}.grpc.enabled
+                    field: spec.rules.{{this}}.grpc_config.enabled
                     values:
                     - true
                 method_match:
@@ -627,7 +627,7 @@ spec:
                   title: gRPC Method Matching
                   description: Whitelist specific gRPC services/methods
                   x-ui-visible-if:
-                    field: spec.rules.{{this}}.grpc.match_all_methods
+                    field: spec.rules.{{this}}.grpc_config.match_all_methods
                     values:
                     - false
                   patternProperties:
@@ -673,7 +673,7 @@ spec:
           - url_rewrite
           - request_header_modifier
           - response_header_modifier
-          - grpc
+          - grpc_config
 # Disabling below things as too advanced for initial release
           # - canary_deployment
           # - request_mirror
