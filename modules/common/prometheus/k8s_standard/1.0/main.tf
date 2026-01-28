@@ -20,10 +20,8 @@ resource "helm_release" "prometheus-operator" {
   cleanup_on_fail = true
 
   values = [
-    # Merge default values with user-provided values and EC2 scrape config if needed
     yamlencode(merge(
       local.default_values,
-      # Add storage configuration using the PVC utility module
       {
         prometheus = {
           prometheusSpec = {
@@ -71,13 +69,10 @@ resource "helm_release" "prometheus-operator" {
         },
         kube-state-metrics = {
           enabled = true
-        },
+        }
       },
-      # Add service account config for IRSA if enabled
-      # Add user-provided values from spec.values
-      local.valuesSpec,
-      # CRITICAL: Apply Facets alertmanager webhook config LAST - must never be overridden
-      local.alertmanager_config
+      local.valuesSpec,         # User's custom values (other than alertmanager.config)
+      local.alertmanager_config # Alertmanager config with concatenated receivers
     ))
   ]
 }
