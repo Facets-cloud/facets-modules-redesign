@@ -4,6 +4,7 @@ locals {
     cluster_issuer_http = local.use_gts ? "gts-production-http01" : "letsencrypt-prod-http01"
     use_gts             = local.use_gts
     namespace           = local.cert_mgr_namespace
+    acme_email          = local.acme_email
   }
   output_interfaces = {
   }

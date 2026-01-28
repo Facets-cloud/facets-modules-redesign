@@ -88,28 +88,32 @@ resource "kubernetes_secret" "cert_manager_r53_secret" {
 }
 
 resource "helm_release" "cert_manager" {
-  depends_on = [kubernetes_namespace.namespace]
-  name       = "cert-manager"
-  # repository       = "https://charts.jetstack.io"
-  chart            = "${path.module}/cert-manager-v1.17.1.tgz"
+  depends_on       = [kubernetes_namespace.namespace]
+  name             = "cert-manager"
+  chart            = "${path.module}/cert-manager-v1.19.2.tgz"
   namespace        = local.cert_mgr_namespace
   create_namespace = false
-  # version          = lookup(local.cert_manager, "version", "1.13.3")
-  cleanup_on_fail = lookup(local.cert_manager, "cleanup_on_fail", true)
-  wait            = lookup(local.cert_manager, "wait", true)
-  atomic          = lookup(local.cert_manager, "atomic", false)
-  timeout         = lookup(local.cert_manager, "timeout", 600)
-  recreate_pods   = lookup(local.cert_manager, "recreate_pods", false)
+  cleanup_on_fail  = lookup(local.cert_manager, "cleanup_on_fail", true)
+  wait             = lookup(local.cert_manager, "wait", true)
+  atomic           = lookup(local.cert_manager, "atomic", false)
+  timeout          = lookup(local.cert_manager, "timeout", 600)
+  recreate_pods    = lookup(local.cert_manager, "recreate_pods", false)
 
   values = [
-    <<EOF
-prometheus_id: ${try(var.inputs.prometheus_details.attributes.helm_release_id, "")}
-EOF
-    , yamlencode({
-      installCRDs  = true
+    yamlencode(merge({
+      crds = {
+        enabled = true
+      }
       nodeSelector = local.nodeSelector
       tolerations  = local.tolerations
       replicaCount = 2
+
+      # Enable Gateway API support via config
+      config = {
+        apiVersion       = "controller.config.cert-manager.io/v1alpha1"
+        kind             = "ControllerConfiguration"
+        enableGatewayAPI = local.enable_gateway_api
+      }
 
       webhook = {
         nodeSelector = local.nodeSelector
@@ -128,9 +132,17 @@ EOF
         enabled = true
         servicemonitor = {
           enabled = true
+          labels = {
+            prometheus_id = try(var.inputs.prometheus_details.attributes.helm_release_id, "")
+          }
         }
       }
-    }),
+    },
+    # Add featureGates for Gateway API support when enabled
+    local.enable_gateway_api ? {
+      featureGates = "ExperimentalGatewayAPISupport=true"
+    } : {}
+    )),
     yamlencode(local.user_supplied_helm_values),
   ]
 
@@ -255,3 +267,4 @@ module "cluster-issuer-gts-prod-http01" {
   }
 
 }
+

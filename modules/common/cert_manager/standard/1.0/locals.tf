@@ -111,6 +111,9 @@ locals {
   use_gts         = lookup(local.spec, "use_gts", false)
   gts_private_key = lookup(local.spec, "gts_private_key", "")
   acme_email      = lookup(local.spec, "acme_email", "") != "" ? lookup(local.spec, "acme_email", "") : try(var.cluster.createdBy, null)
+
+  # Gateway API support - enable when gateway_api_crd_details input is provided
+  enable_gateway_api = lookup(var.inputs, "gateway_api_crd_details", null) != null
 }
 
 data "kubernetes_secret_v1" "dns" {
