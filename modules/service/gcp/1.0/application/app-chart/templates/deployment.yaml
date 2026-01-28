@@ -182,7 +182,7 @@ spec:
     {{ end }}
       containers:
       - name: {{ include "app-chart.fullname" . }}
-        imagePullPolicy: {{ if .Values.spec.release.image_pull_policy }}{{ .Values.spec.release.image_pull_policy }}{{ else }}{{ .Values.spec.release.build.pull_policy | default "IfNotPresent" }}{{ end }}
+        imagePullPolicy: {{ .Values.spec.release.image_pull_policy | default "IfNotPresent" }}
         {{- include "app-chart.lifecycle" . | nindent 8 -}}
     {{- if  hasKey .Values.spec.runtime  "command" }}
     {{- if gt (len .Values.spec.runtime.command) 0 }}

@@ -133,12 +133,6 @@ variable "instance" {
         image             = optional(string)
         image_pull_policy = optional(string, "IfNotPresent")
 
-        build = optional(object({
-          artifactory = string
-          name        = string
-          pull_policy = optional(string)
-        }))
-
         strategy = optional(object({
           type            = string
           max_available   = optional(string)
@@ -238,13 +232,15 @@ variable "inputs" {
 
     # Optional: Container registry access
     artifactories = optional(object({
-      attributes = object({
-        registry_secrets_list = list(any)
-        registry_secret_objects = map(list(object({
+      attributes = optional(object({
+        registry_secrets_list = optional(list(object({
           name = string
-        })))
-      })
-      interfaces = optional(any, {})
+        })), [])
+        registry_secret_objects = optional(map(list(object({
+          name = string
+        }))), {})
+      }), {})
+      interfaces = optional(object({}), {})
     }))
 
     # Optional: Vertical Pod Autoscaler
