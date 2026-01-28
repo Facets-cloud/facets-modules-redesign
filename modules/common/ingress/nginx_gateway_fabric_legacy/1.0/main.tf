@@ -40,23 +40,45 @@ locals {
     for k, v in local.rulesRaw : length(k) < 175 ? k : md5(k) => merge(v, {
       host       = lookup(v, "domain_prefix", null) == null || lookup(v, "domain_prefix", null) == "" ? "${local.base_domain}" : "${lookup(v, "domain_prefix", null)}.${local.base_domain}"
       domain_key = "facets"
-      namespace  = v.namespace
+      namespace  = lookup(v, "namespace", var.environment.namespace)
     })
     if(
       (lookup(v, "port", null) != null && lookup(v, "port", null) != "") &&
       (lookup(v, "service_name", null) != null && lookup(v, "service_name", "") != "") &&
-      (lookup(v, "namespace", null) != null && lookup(v, "namespace", "") != "") &&
       (
         # gRPC routes don't need path/path_type - they use method matching
         lookup(lookup(v, "grpc_config", {}), "enabled", false) ||
-        # HTTP routes require path and path_type
-        (
-          (lookup(v, "path", null) != null && lookup(v, "path", "") != "") &&
-          (lookup(v, "path_type", null) != null && lookup(v, "path_type", "") != "")
-        )
+        # HTTP routes require path (path_type defaults to Prefix if not specified)
+        (lookup(v, "path", null) != null && lookup(v, "path", "") != "")
       ) &&
       (lookup(v, "disable", false) == false)
     )
+  }
+
+  # Generate all unique hostnames from rules (domain_prefix + domain combinations)
+  # This is needed to create listeners for each hostname
+  all_route_hostnames = distinct(flatten([
+    for rule_key, rule in local.rulesFiltered : [
+      for domain_key, domain in local.domains :
+      lookup(rule, "domain_prefix", null) == null || lookup(rule, "domain_prefix", null) == "" ?
+      domain.domain :
+      "${lookup(rule, "domain_prefix", null)}.${domain.domain}"
+    ]
+  ]))
+
+  # Hostnames that need additional listeners (not already covered by base domain listeners)
+  additional_hostnames = [
+    for hostname in local.all_route_hostnames :
+    hostname if !contains(local.all_domain_hostnames, hostname)
+  ]
+
+  # Map of additional hostnames to their config for listeners and certs
+  additional_hostname_configs = {
+    for hostname in local.additional_hostnames :
+    replace(replace(hostname, ".", "-"), "*", "wildcard") => {
+      hostname    = hostname
+      secret_name = "${replace(replace(hostname, ".", "-"), "*", "wildcard")}-tls-cert"
+    }
   }
 
   # Tolerations: merge environment defaults with facets dedicated tolerations
@@ -173,7 +195,7 @@ locals {
           [for key, h in lookup(lookup(v, "cors", {}), "allow_headers", {}) : h.header] :
           ["Content-Type", "Authorization"]
         )
-        "Access-Control-Max-Age"       = tostring(lookup(lookup(v, "cors", {}), "max_age", 86400))
+        "Access-Control-Max-Age" = tostring(lookup(lookup(v, "cors", {}), "max_age", 86400))
       } : {},
       lookup(lookup(v, "cors", {}), "allow_credentials", false) ? {
         "Access-Control-Allow-Credentials" = "true"
@@ -230,12 +252,22 @@ locals {
         namespace = var.environment.namespace
       }
       spec = {
-        # Reference all domain listeners so route works for all domains
-        parentRefs = [
+        # Reference the correct listener(s) for this route's hostnames
+        # If route has domain_prefix, reference the additional hostname listeners
+        # If route has no domain_prefix, reference the base domain listeners
+        parentRefs = lookup(v, "domain_prefix", null) == null || lookup(v, "domain_prefix", null) == "" ? [
+          # No domain_prefix - use base domain listeners
           for domain_key, domain in local.domains : {
             name        = local.name
             namespace   = var.environment.namespace
             sectionName = "https-${domain_key}"
+          }
+          ] : [
+          # Has domain_prefix - use additional hostname listeners
+          for domain_key, domain in local.domains : {
+            name        = local.name
+            namespace   = var.environment.namespace
+            sectionName = "https-${replace(replace("${lookup(v, "domain_prefix", null)}.${domain.domain}", ".", "-"), "*", "wildcard")}"
           }
         ]
 
@@ -400,12 +432,22 @@ locals {
         namespace = var.environment.namespace
       }
       spec = {
-        # Reference all domain listeners so route works for all domains
-        parentRefs = [
+        # Reference the correct listener(s) for this route's hostnames
+        # If route has domain_prefix, reference the additional hostname listeners
+        # If route has no domain_prefix, reference the base domain listeners
+        parentRefs = lookup(v, "domain_prefix", null) == null || lookup(v, "domain_prefix", null) == "" ? [
+          # No domain_prefix - use base domain listeners
           for domain_key, domain in local.domains : {
             name        = local.name
             namespace   = var.environment.namespace
             sectionName = "https-${domain_key}"
+          }
+          ] : [
+          # Has domain_prefix - use additional hostname listeners
+          for domain_key, domain in local.domains : {
+            name        = local.name
+            namespace   = var.environment.namespace
+            sectionName = "https-${replace(replace("${lookup(v, "domain_prefix", null)}.${domain.domain}", ".", "-"), "*", "wildcard")}"
           }
         ]
 
@@ -558,6 +600,53 @@ resource "kubernetes_secret" "bootstrap_tls" {
   }
 }
 
+# Bootstrap TLS for additional hostnames (from domain_prefix in rules)
+# Only created for HTTP-01 validation (when disable_endpoint_validation is false)
+resource "tls_private_key" "bootstrap_additional" {
+  for_each  = local.disable_endpoint_validation ? {} : local.additional_hostname_configs
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
+resource "tls_self_signed_cert" "bootstrap_additional" {
+  for_each        = local.disable_endpoint_validation ? {} : local.additional_hostname_configs
+  private_key_pem = tls_private_key.bootstrap_additional[each.key].private_key_pem
+
+  subject {
+    common_name = each.value.hostname
+  }
+
+  validity_period_hours = 8760 # 1 year
+
+  dns_names = [each.value.hostname]
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth"
+  ]
+}
+
+resource "kubernetes_secret" "bootstrap_tls_additional" {
+  for_each = local.disable_endpoint_validation ? {} : local.additional_hostname_configs
+
+  metadata {
+    name      = each.value.secret_name
+    namespace = var.environment.namespace
+  }
+
+  data = {
+    "tls.crt" = tls_self_signed_cert.bootstrap_additional[each.key].cert_pem
+    "tls.key" = tls_private_key.bootstrap_additional[each.key].private_key_pem
+  }
+
+  type = "kubernetes.io/tls"
+
+  lifecycle {
+    ignore_changes = [data, metadata[0].annotations, metadata[0].labels]
+  }
+}
+
 # Explicit Certificate resource for DNS-01 managed domains
 # Created when NOT using gateway-shim (i.e., when some domains have certificate_reference)
 # This ensures cert-manager only manages domains that need it, leaving custom certs alone
@@ -620,6 +709,56 @@ module "http01_certificate" {
       }
       dnsNames = [
         each.value.domain
+      ]
+      renewBefore = lookup(var.instance.spec, "renew_cert_before", "720h")
+    }
+  }
+
+  depends_on = [
+    helm_release.nginx_gateway_fabric,
+    module.cluster-issuer-gateway-http01
+  ]
+}
+
+# Name module for additional hostname certificates (keeps helm release names under 53 chars)
+# Only created when NOT using gateway-shim (same as http01_certificate for base domains)
+module "http01_certificate_additional_name" {
+  for_each = !local.use_gateway_shim && !local.disable_endpoint_validation ? local.additional_hostname_configs : {}
+
+  source          = "github.com/Facets-cloud/facets-utility-modules//name"
+  environment     = var.environment
+  limit           = 53
+  globally_unique = true
+  resource_name   = "${local.name}-cert-${each.key}"
+  resource_type   = "certificate"
+  is_k8s          = true
+}
+
+# Explicit Certificate resources for additional hostnames (domain_prefix + domain)
+# Created when NOT using gateway-shim (gateway-shim handles certs automatically when enabled)
+module "http01_certificate_additional" {
+  for_each = !local.use_gateway_shim && !local.disable_endpoint_validation ? local.additional_hostname_configs : {}
+
+  source          = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
+  name            = module.http01_certificate_additional_name[each.key].name
+  namespace       = var.environment.namespace
+  advanced_config = {}
+
+  data = {
+    apiVersion = "cert-manager.io/v1"
+    kind       = "Certificate"
+    metadata = {
+      name      = module.http01_certificate_additional_name[each.key].name
+      namespace = var.environment.namespace
+    }
+    spec = {
+      secretName = each.value.secret_name
+      issuerRef = {
+        name = local.cluster_issuer_gateway_http
+        kind = "ClusterIssuer"
+      }
+      dnsNames = [
+        each.value.hostname
       ]
       renewBefore = lookup(var.instance.spec, "renew_cert_before", "720h")
     }
@@ -789,7 +928,26 @@ resource "helm_release" "nginx_gateway_fabric" {
                   from = "All"
                 }
               }
-            } if can(domain.domain)]
+            } if can(domain.domain)],
+            # HTTPS Listeners for additional hostnames from rules (domain_prefix + domain)
+            [for hostname_key, config in local.additional_hostname_configs : {
+              name     = "https-${hostname_key}"
+              protocol = "HTTPS"
+              port     = 443
+              hostname = config.hostname
+              tls = {
+                mode = "Terminate"
+                certificateRefs = [{
+                  kind = "Secret"
+                  name = local.disable_endpoint_validation ? local.dns_validation_secret_name : config.secret_name
+                }]
+              }
+              allowedRoutes = {
+                namespaces = {
+                  from = "All"
+                }
+              }
+            }]
           )
         }
       }]
@@ -798,7 +956,8 @@ resource "helm_release" "nginx_gateway_fabric" {
   ]
 
   depends_on = [
-    kubernetes_secret.bootstrap_tls
+    kubernetes_secret.bootstrap_tls,
+    kubernetes_secret.bootstrap_tls_additional
   ]
 }
 
@@ -831,9 +990,10 @@ module "cluster-issuer-gateway-http01" {
               gatewayHTTPRoute = {
                 parentRefs = [
                   {
-                    name      = local.name
-                    namespace = var.environment.namespace
-                    kind      = "Gateway"
+                    name        = local.name
+                    namespace   = var.environment.namespace
+                    kind        = "Gateway"
+                    sectionName = "http" # Must target HTTP listener for HTTP-01 challenges
                   }
                 ]
               }

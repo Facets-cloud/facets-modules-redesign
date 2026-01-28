@@ -9,7 +9,7 @@ variable "baseinfra" {
 }
 
 variable "cc_metadata" {
-  type    = any
+  type = any
   default = {
     tenant_base_domain = "tenant.facets.cloud"
   }
@@ -32,6 +32,6 @@ variable "environment" {
 }
 
 variable "inputs" {
-  type = any
+  type    = any
   default = {}
 }
