@@ -1,4 +1,4 @@
-name: GCP
+name: gcp
 description: GCP project type with GKE and common services
 
 # Git repository details

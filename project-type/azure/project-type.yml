@@ -1,4 +1,4 @@
-name: Azure
+name: azure
 description: Azure project type with AKS and common services
 
 # Git repository details
