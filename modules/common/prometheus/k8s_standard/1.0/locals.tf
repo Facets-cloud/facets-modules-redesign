@@ -87,6 +87,66 @@ locals {
 
   prometheus_retention = lookup(local.spec, "retention", "100d")
 
+  # Extract user's alertmanager config from spec.values (if provided)
+  user_alertmanager_config = lookup(lookup(local.valuesSpec, "alertmanager", {}), "config", {})
+  user_receivers           = lookup(local.user_alertmanager_config, "receivers", [])
+  user_global              = lookup(local.user_alertmanager_config, "global", {})
+  user_route               = lookup(local.user_alertmanager_config, "route", {})
+
+  # Facets default receiver with platform webhooks - MUST ALWAYS BE PRESENT
+  facets_default_receiver = {
+    name = "default"
+    webhook_configs = [
+      {
+        url           = "http://alertmanager-webhook.default/alerts"
+        send_resolved = true
+      },
+      {
+        url           = "https://${var.cc_metadata.cc_host}/cc/v1/clusters/${var.environment.cloud_tags.facetsclusterid}/alerts"
+        send_resolved = true
+        http_config = {
+          bearer_token = var.cc_metadata.cc_auth_token
+        }
+      }
+    ]
+  }
+
+  # Concatenate user receivers (if any) with Facets default receiver
+  # User receivers come first, then Facets default receiver
+  all_receivers = concat(local.user_receivers, [local.facets_default_receiver])
+
+  # Facets default global and route config
+  facets_global = {
+    resolve_timeout = "60m"
+  }
+
+  facets_route = {
+    receiver        = "default"
+    group_by        = ["alertname", "entity"]
+    routes          = []
+    group_wait      = "30s"
+    group_interval  = "5m"
+    repeat_interval = "6h"
+  }
+
+  # Merge user's global/route config with Facets defaults (user values take precedence)
+  final_global = merge(local.facets_global, local.user_global)
+  final_route  = merge(local.facets_route, local.user_route)
+
+  # Final alertmanager config with all receivers
+  alertmanager_config = {
+    alertmanager = {
+      config = merge(
+        local.user_alertmanager_config, # Include any other user config fields
+        {
+          global    = local.final_global
+          route     = local.final_route
+          receivers = local.all_receivers # User receivers + Facets default
+        }
+      )
+    }
+  }
+
   # Nodepool configuration from inputs (encode/decode pattern)
   # Decode back into object
   nodepool_config      = lookup(var.inputs, "kubernetes_node_pool_details", null)
@@ -219,37 +279,6 @@ locals {
         nodeSelector = local.nodeSelector
         tolerations  = local.tolerations
         # priorityClassName = "facets-critical"
-      }
-      config = {
-        global = {
-          resolve_timeout = "60m"
-        }
-        route = {
-          receiver        = "default"
-          group_by        = ["alertname", "entity"]
-          routes          = []
-          group_wait      = "30s"
-          group_interval  = "5m"
-          repeat_interval = "6h"
-        }
-        receivers = [
-          {
-            name = "default"
-            webhook_configs = [
-              {
-                url           = "http://alertmanager-webhook.default/alerts"
-                send_resolved = true
-              },
-              {
-                url           = "https://${var.cc_metadata.cc_host}/cc/v1/clusters/${var.environment.cloud_tags.facetsclusterid}/alerts"
-                send_resolved = true
-                http_config = {
-                  bearer_token = var.cc_metadata.cc_auth_token
-                }
-              }
-            ]
-          }
-        ]
       }
     }
     grafana = {
