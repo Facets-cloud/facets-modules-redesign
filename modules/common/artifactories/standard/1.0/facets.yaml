@@ -1,73 +1,67 @@
-intent: artifactories
-flavor: standard
-version: '1.0'
-description: Adds artifactories - default flavor
 clouds:
-- gcp
-- kubernetes
-- azure
-- aws
-inputs:
-  kubernetes_details:
-    optional: false
-    type: '@facets/kubernetes-details'
-    displayName: Kubernetes Cluster
-    default:
-      resource_type: kubernetes_cluster
-      resource_name: default
-    providers:
+    - gcp
     - kubernetes
-    - kubernetes-alpha
-    - helm
-  kubernetes_node_pool_details:
-    type: '@facets/kubernetes_nodepool'
-    displayName: Node Pool
-    optional: true
-    default:
-      resource_type: kubernetes_node_pool
-      resource_name: general-purpose
-spec:
-  title: Artifactories
-  type: object
-  description: Specification of the Artifactories resource intent
-  properties:
-    include_all:
-      type: boolean
-      title: Include All
-      description: Include all container registries mapped to this project.
-    artifactories:
-      title: Artifactories
-      type: object
-      description: A map of Container Registries.
-      x-ui-visible-if:
-        field: spec.include_all
-        values:
-        - false
-      patternProperties:
-        ^[a-zA-Z0-9_.-]*$:
-          title: Artifactories Object Block
-          description: The Name of the Container Registry for creating a secret.
-          type: object
-          properties:
-            name:
-              title: Name
-              type: string
-              description: Container Registry Name
-              x-ui-api-source:
-                endpoint: /cc-ui/v1/artifactories
-                method: GET
-                params:
-                  includeContent: false
-                labelKey: name
-                valueKey: name
+    - azure
+    - aws
+description: Adds artifactories - default flavor
+flavor: standard
+inputs:
+    kubernetes_details:
+        displayName: Kubernetes Cluster
+        optional: false
+        providers:
+            - kubernetes
+            - kubernetes-alpha
+            - helm
+        type: '@facets/kubernetes-details'
+    kubernetes_node_pool_details:
+        displayName: Node Pool
+        optional: false
+        type: '@facets/kubernetes_nodepool'
+intent: artifactories
 outputs:
-  default:
-    type: '@facets/artifactories'
-    title: Artifactories Details
+    default:
+        title: Artifactories Details
+        type: '@facets/artifactories'
 sample:
-  version: '1.0'
-  flavor: standard
-  kind: artifactories
-  disabled: true
-  spec:
-    include_all: false
+    disabled: true
+    flavor: standard
+    kind: artifactories
+    spec:
+        include_all: false
+    version: "1.0"
+spec:
+    description: Specification of the Artifactories resource intent
+    properties:
+        artifactories:
+            description: A map of Container Registries.
+            patternProperties:
+                ^[a-zA-Z0-9_.-]*$:
+                    description: The Name of the Container Registry for creating a secret.
+                    properties:
+                        name:
+                            description: Container Registry Name
+                            title: Name
+                            type: string
+                            x-ui-api-source:
+                                endpoint: /cc-ui/v1/artifactories
+                                labelKey: name
+                                method: GET
+                                params:
+                                    includeContent: false
+                                valueKey: name
+                    title: Artifactories Object Block
+                    type: object
+            title: Artifactories
+            type: object
+            x-ui-visible-if:
+                field: spec.include_all
+                values:
+                    - false
+        include_all:
+            description: Include all container registries mapped to this project.
+            title: Include All
+            type: boolean
+    title: Artifactories
+    type: object
+version: "1.0"

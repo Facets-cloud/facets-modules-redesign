@@ -1,10 +1,28 @@
+# First locals block - values needed for the external data source
 locals {
-  spec               = lookup(var.instance, "spec", {})
-  metadata           = lookup(var.instance, "metadata", {})
+  spec          = lookup(var.instance, "spec", {})
+  metadata      = lookup(var.instance, "metadata", {})
+  artifactories = lookup(local.spec, "artifactories", {})
+  include_all   = lookup(local.spec, "include_all", length(local.artifactories) > 0 ? false : true)
+
+  # Get artifactory names list for filtering
+  artifactory_names = jsonencode([for key, value in local.artifactories : value["name"]])
+}
+
+# Fetch artifactories from deployment context via external script
+data "external" "artifactory_fetcher" {
+  program = [
+    "python3",
+    "/sources/primary/capillary-cloud-tf/tfmain/scripts/artifactory-fetch-secret/artifactory-fetcher.py",
+    local.include_all,
+    local.artifactory_names
+  ]
+}
+
+# Second locals block - values that depend on the external data source
+locals {
   name               = lookup(local.metadata, "name", var.instance_name)
   namespace          = lookup(local.metadata, "namespace", lookup(var.environment, "namespace", "default"))
-  artifactories      = lookup(local.spec, "artifactories", {})
-  include_all        = lookup(local.spec, "include_all", length(local.artifactories) > 0 ? "false" : "true")
   kubernetes_details = var.inputs.kubernetes_details.attributes
 
   # Node pool configuration
@@ -29,15 +47,11 @@ locals {
     },
     local.node_pool_labels
   )
-  artifactory_list = jsondecode(file("../deploymentcontext.json"))["artifactoryDetails"]
-  artifactories_ecr = {
-    for artifactory in local.artifactory_list :
-    artifactory["name"] => artifactory if lookup(artifactory, "artifactoryType", "ECR") == "ECR" && (local.include_all || contains([for key, value in local.artifactories : value["name"]], artifactory["name"]))
-  }
-  artifactories_dockerhub = {
-    for artifactory in local.artifactory_list :
-    artifactory["name"] => artifactory if lookup(artifactory, "artifactoryType", "ECR") != "ECR" && (local.include_all || contains([for key, value in local.artifactories : value["name"]], artifactory["name"]))
-  }
+
+  # Parse artifactories from external script output
+  artifactories_ecr       = jsondecode(data.external.artifactory_fetcher.result["artifactories_ecr"])
+  artifactories_dockerhub = jsondecode(data.external.artifactory_fetcher.result["artifactories_dockerhub"])
+
   ecr_secret_objects = {
     for artifactory in local.artifactories_ecr : artifactory["name"] => [{ name : "${local.name}-${artifactory["name"]}" }]
   }
