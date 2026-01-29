@@ -7,9 +7,6 @@ description: Adds artifactories - default flavor
 flavor: standard
 inputs:
     kubernetes_details:
-        default:
-            resource_name: default
-            resource_type: kubernetes_cluster
         displayName: Kubernetes Cluster
         optional: false
         providers:
@@ -18,20 +15,12 @@ inputs:
             - helm
         type: '@facets/kubernetes-details'
     kubernetes_node_pool_details:
-        default:
-            resource_name: general-purpose
-            resource_type: kubernetes_node_pool
         displayName: Node Pool
         optional: false
         type: '@facets/kubernetes_nodepool'
 intent: artifactories
 outputs:
     default:
-        mock:
-            attributes:
-                registry_secret_objects: mock-string-value
-                registry_secrets_list: mock-string-value
-            interfaces: {}
         title: Artifactories Details
         type: '@facets/artifactories'
 sample:
