@@ -48,7 +48,7 @@ locals {
       (
         # gRPC routes don't need path/path_type - they use method matching
         lookup(lookup(v, "grpc_config", {}), "enabled", false) ||
-        # HTTP routes require path (path_type defaults to Prefix if not specified)
+        # HTTP routes require path (path_type defaults to RegularExpression, with .* suffix auto-added)
         (lookup(v, "path", null) != null && lookup(v, "path", "") != "")
       ) &&
       (lookup(v, "disable", false) == false)
@@ -77,7 +77,7 @@ locals {
     for hostname in local.additional_hostnames :
     replace(replace(hostname, ".", "-"), "*", "wildcard") => {
       hostname    = hostname
-      secret_name = "${replace(replace(hostname, ".", "-"), "*", "wildcard")}-tls-cert"
+      secret_name = "${local.name}-${replace(replace(hostname, ".", "-"), "*", "wildcard")}-tls-cert"
     }
   }
 
@@ -93,9 +93,10 @@ locals {
   disable_endpoint_validation = lookup(var.instance.spec, "disable_endpoint_validation", false) || lookup(var.instance.spec, "private", false)
 
   # Common labels for all resources
+  # Note: app.kubernetes.io/instance must match the Helm release name for selector compatibility
   common_labels = {
     "app.kubernetes.io/name"       = "nginx-gateway-fabric"
-    "app.kubernetes.io/instance"   = local.name
+    "app.kubernetes.io/instance"   = "${local.name}-nginx-fabric"
     "app.kubernetes.io/managed-by" = "facets"
     "facets.cloud/module"          = "nginx_gateway_fabric"
     "facets.cloud/instance"        = var.instance_name
@@ -282,11 +283,13 @@ locals {
         rules = [{
           matches = concat(
             # Path matching (with optional method and query params)
+            # Default: RegularExpression with .* suffix (e.g., /path becomes /path.*)
+            # This ensures proper regex ordering in NGINX (longer patterns match first)
             [merge(
               {
                 path = {
-                  type  = lookup(v, "path_type", "PathPrefix")
-                  value = lookup(v, "path", "/")
+                  type  = lookup(v, "path_type", "RegularExpression")
+                  value = lookup(v, "path_type", "RegularExpression") == "RegularExpression" ? "${lookup(v, "path", "/")}.*" : lookup(v, "path", "/")
                 }
               },
               # Method matching (ALL or null means match all methods)
@@ -395,11 +398,11 @@ locals {
             ]
           )
 
-          # Request/backend timeouts
-          timeouts = lookup(v, "timeouts", null) != null ? {
-            request        = lookup(v.timeouts, "request", null)
-            backendRequest = lookup(v.timeouts, "backend_request", null)
-          } : null
+          # Request/backend timeouts - default 300s (equivalent to proxy-read-timeout/proxy-send-timeout)
+          timeouts = {
+            request        = lookup(lookup(v, "timeouts", {}), "request", "300s")
+            backendRequest = lookup(lookup(v, "timeouts", {}), "backend_request", "300s")
+          }
 
           backendRefs = concat(
             # Primary backend
@@ -497,7 +500,7 @@ locals {
         selector = {
           matchLabels = {
             "app.kubernetes.io/name"     = "nginx-gateway-fabric"
-            "app.kubernetes.io/instance" = local.name
+            "app.kubernetes.io/instance" = "${local.name}-nginx-fabric"
           }
         }
         endpoints = [{
@@ -539,13 +542,37 @@ locals {
     }
   }
 
+  # ClientSettingsPolicy - applies body size limit to all traffic through the Gateway
+  # Equivalent to nginx.ingress.kubernetes.io/proxy-body-size
+  clientsettingspolicy_resources = {
+    "clientsettingspolicy-${local.name}" = {
+      apiVersion = "gateway.nginx.org/v1alpha1"
+      kind       = "ClientSettingsPolicy"
+      metadata = {
+        name      = "${local.name}-client-settings"
+        namespace = var.environment.namespace
+      }
+      spec = {
+        targetRef = {
+          group = "gateway.networking.k8s.io"
+          kind  = "Gateway"
+          name  = local.name
+        }
+        body = {
+          maxSize = lookup(var.instance.spec, "body_size", "150m")
+        }
+      }
+    }
+  }
+
   # Merge all Gateway API resources
   gateway_api_resources = merge(
     local.http_redirect_resources,
     local.httproute_resources,
     local.grpcroute_resources,
     local.servicemonitor_resources,
-    local.referencegrant_resources
+    local.referencegrant_resources,
+    local.clientsettingspolicy_resources
   )
 }
 
@@ -584,7 +611,7 @@ resource "kubernetes_secret" "bootstrap_tls" {
   for_each = local.bootstrap_tls_domains
 
   metadata {
-    name      = "${each.key}-tls-cert"
+    name      = "${local.name}-${each.key}-tls-cert"
     namespace = var.environment.namespace
   }
 
@@ -702,7 +729,7 @@ module "http01_certificate" {
       namespace = var.environment.namespace
     }
     spec = {
-      secretName = "${each.key}-tls-cert"
+      secretName = "${local.name}-${each.key}-tls-cert"
       issuerRef = {
         name = local.cluster_issuer_gateway_http
         kind = "ClusterIssuer"
@@ -773,7 +800,7 @@ module "http01_certificate_additional" {
 # NGINX Gateway Fabric Helm Chart
 # Note: Gateway API CRDs are installed by the gateway_api_crd module (dependency)
 resource "helm_release" "nginx_gateway_fabric" {
-  name             = local.name
+  name             = "${local.name}-nginx-fabric"
   wait             = lookup(var.instance.spec, "helm_wait", true)
   chart            = "${path.module}/charts/nginx-gateway-fabric-2.3.0.tgz"
   namespace        = var.environment.namespace
@@ -805,15 +832,25 @@ resource "helm_release" "nginx_gateway_fabric" {
         }
         imagePullSecrets = lookup(var.inputs, "artifactories", null) != null ? var.inputs.artifactories.attributes.registry_secrets_list : []
 
+        # Control plane resources
         resources = {
           requests = {
-            cpu    = lookup(lookup(lookup(var.instance.spec, "resources", {}), "requests", {}), "cpu", "100m")
-            memory = lookup(lookup(lookup(var.instance.spec, "resources", {}), "requests", {}), "memory", "200Mi")
+            cpu    = lookup(lookup(lookup(lookup(var.instance.spec, "control_plane", {}), "resources", {}), "requests", {}), "cpu", "200m")
+            memory = lookup(lookup(lookup(lookup(var.instance.spec, "control_plane", {}), "resources", {}), "requests", {}), "memory", "256Mi")
           }
-          limits = lookup(lookup(var.instance.spec, "resources", {}), "limits", null) != null ? {
-            cpu    = lookup(lookup(var.instance.spec, "resources", {}).limits, "cpu", null)
-            memory = lookup(lookup(var.instance.spec, "resources", {}).limits, "memory", null)
-          } : null
+          limits = {
+            cpu    = lookup(lookup(lookup(lookup(var.instance.spec, "control_plane", {}), "resources", {}), "limits", {}), "cpu", "500m")
+            memory = lookup(lookup(lookup(lookup(var.instance.spec, "control_plane", {}), "resources", {}), "limits", {}), "memory", "512Mi")
+          }
+        }
+
+        # Control plane autoscaling - always enabled
+        autoscaling = {
+          enable                            = true
+          minReplicas                       = lookup(lookup(lookup(var.instance.spec, "control_plane", {}), "scaling", {}), "min_replicas", 2)
+          maxReplicas                       = lookup(lookup(lookup(var.instance.spec, "control_plane", {}), "scaling", {}), "max_replicas", 3)
+          targetCPUUtilizationPercentage    = lookup(lookup(lookup(var.instance.spec, "control_plane", {}), "scaling", {}), "target_cpu_utilization_percentage", 70)
+          targetMemoryUtilizationPercentage = lookup(lookup(lookup(var.instance.spec, "control_plane", {}), "scaling", {}), "target_memory_utilization_percentage", 80)
         }
 
         tolerations  = local.ingress_tolerations
@@ -841,6 +878,29 @@ resource "helm_release" "nginx_gateway_fabric" {
               }
             ]
           } : null
+        }
+
+        # Data plane autoscaling - always enabled
+        autoscaling = {
+          enable                            = true
+          minReplicas                       = lookup(lookup(lookup(var.instance.spec, "data_plane", {}), "scaling", {}), "min_replicas", 2)
+          maxReplicas                       = lookup(lookup(lookup(var.instance.spec, "data_plane", {}), "scaling", {}), "max_replicas", 10)
+          targetCPUUtilizationPercentage    = lookup(lookup(lookup(var.instance.spec, "data_plane", {}), "scaling", {}), "target_cpu_utilization_percentage", 70)
+          targetMemoryUtilizationPercentage = lookup(lookup(lookup(var.instance.spec, "data_plane", {}), "scaling", {}), "target_memory_utilization_percentage", 80)
+        }
+
+        # Data plane container resources
+        container = {
+          resources = {
+            requests = {
+              cpu    = lookup(lookup(lookup(lookup(var.instance.spec, "data_plane", {}), "resources", {}), "requests", {}), "cpu", "250m")
+              memory = lookup(lookup(lookup(lookup(var.instance.spec, "data_plane", {}), "resources", {}), "requests", {}), "memory", "256Mi")
+            }
+            limits = {
+              cpu    = lookup(lookup(lookup(lookup(var.instance.spec, "data_plane", {}), "resources", {}), "limits", {}), "cpu", "1")
+              memory = lookup(lookup(lookup(lookup(var.instance.spec, "data_plane", {}), "resources", {}), "limits", {}), "memory", "512Mi")
+            }
+          }
         }
 
         # Data plane pod configuration
@@ -919,7 +979,7 @@ resource "helm_release" "nginx_gateway_fabric" {
                   # If certificate_reference is provided, use it (custom cert)
                   # Otherwise: DNS-01 uses shared dns_validation_secret_name, HTTP-01 uses per-domain bootstrap cert
                   name = lookup(domain, "certificate_reference", "") != "" ? domain.certificate_reference : (
-                    local.disable_endpoint_validation ? local.dns_validation_secret_name : "${domain_key}-tls-cert"
+                    local.disable_endpoint_validation ? local.dns_validation_secret_name : "${local.name}-${domain_key}-tls-cert"
                   )
                 }]
               }

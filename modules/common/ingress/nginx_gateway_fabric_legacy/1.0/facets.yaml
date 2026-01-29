@@ -40,54 +40,153 @@ spec:
       title: Disable Base Domain
       description: Disable automatic creation of base domain for this gateway
       default: false
-    resources:
+    data_plane:
       type: object
-      title: Controller Resources
-      description: Configure resource limits and requests for the gateway controller
+      title: Data Plane (NGINX)
+      description: Configuration for NGINX pods that handle actual traffic
+      properties:
+        scaling:
+          type: object
+          title: Autoscaling
+          description: Horizontal Pod Autoscaler configuration
+          properties:
+            min_replicas:
+              type: integer
+              title: Minimum Replicas
+              description: Minimum number of NGINX pods (HPA lower bound)
+              default: 2
+            max_replicas:
+              type: integer
+              title: Maximum Replicas
+              description: Maximum number of NGINX pods (HPA upper bound)
+              default: 10
+            target_cpu_utilization_percentage:
+              type: integer
+              title: Target CPU Utilization (%)
+              description: Target CPU utilization percentage for HPA scaling
+              default: 70
+            target_memory_utilization_percentage:
+              type: integer
+              title: Target Memory Utilization (%)
+              description: Target memory utilization percentage for HPA scaling
+              default: 80
+        resources:
+          type: object
+          title: Resources
+          description: CPU and memory resources per NGINX pod
+          properties:
+            requests:
+              type: object
+              title: Resource Requests
+              description: Minimum resource requirements
+              properties:
+                cpu:
+                  type: string
+                  title: CPU Request
+                  description: Minimum CPU requirement (e.g., 250m, 500m, 1)
+                  pattern: ^([0-9]*\.?[0-9]+m?|[0-9]+)$
+                  default: 250m
+                  x-ui-placeholder: 250m
+                memory:
+                  type: string
+                  title: Memory Request
+                  description: Minimum memory requirement (e.g., 256Mi, 512Mi, 1Gi)
+                  pattern: ^[0-9]+(\.[0-9]+)?(Ki|Mi|Gi|Ti|Pi|Ei|k|M|G|T|P|E)?$
+                  default: 256Mi
+                  x-ui-placeholder: 256Mi
+            limits:
+              type: object
+              title: Resource Limits
+              description: Maximum resource limits
+              properties:
+                cpu:
+                  type: string
+                  title: CPU Limit
+                  description: Maximum CPU allowed (e.g., 1, 2, 500m)
+                  pattern: ^([0-9]*\.?[0-9]+m?|[0-9]+)$
+                  default: "1"
+                  x-ui-placeholder: "1"
+                memory:
+                  type: string
+                  title: Memory Limit
+                  description: Maximum memory allowed (e.g., 512Mi, 1Gi, 2Gi)
+                  pattern: ^[0-9]+(\.[0-9]+)?(Ki|Mi|Gi|Ti|Pi|Ei|k|M|G|T|P|E)?$
+                  default: 512Mi
+                  x-ui-placeholder: 512Mi
+    control_plane:
+      type: object
+      title: Control Plane (Gateway Controller)
+      description: Configuration for the NGINX Gateway Fabric controller that manages configuration
       x-ui-toggle: true
       properties:
-        requests:
+        scaling:
           type: object
-          title: Resource Requests
-          description: Minimum resource requirements for the controller
+          title: Autoscaling
+          description: Horizontal Pod Autoscaler configuration
           properties:
-            cpu:
-              type: string
-              title: CPU Request
-              description: Minimum CPU requirement (e.g., 100m, 1, 500m)
-              pattern: ^([0-9]*\.?[0-9]+m?|[0-9]+)$
-              x-ui-error-message: Value must be a valid CPU specification (e.g., 100m,
-                1, 500m)
-              x-ui-placeholder: 100m
-            memory:
-              type: string
-              title: Memory Request
-              description: Minimum memory requirement (e.g., 200Mi, 1Gi, 512Mi)
-              pattern: ^[0-9]+(\.[0-9]+)?(Ki|Mi|Gi|Ti|Pi|Ei|k|M|G|T|P|E)?$
-              x-ui-error-message: Value must be a valid memory specification (e.g.,
-                200Mi, 1Gi)
-              x-ui-placeholder: 200Mi
-        limits:
+            min_replicas:
+              type: integer
+              title: Minimum Replicas
+              description: Minimum number of controller pods (HPA lower bound)
+              default: 2
+            max_replicas:
+              type: integer
+              title: Maximum Replicas
+              description: Maximum number of controller pods (HPA upper bound)
+              default: 3
+            target_cpu_utilization_percentage:
+              type: integer
+              title: Target CPU Utilization (%)
+              description: Target CPU utilization percentage for HPA scaling
+              default: 70
+            target_memory_utilization_percentage:
+              type: integer
+              title: Target Memory Utilization (%)
+              description: Target memory utilization percentage for HPA scaling
+              default: 80
+        resources:
           type: object
-          title: Resource Limits
-          description: Maximum resource limits for the controller
+          title: Resources
+          description: CPU and memory resources per controller pod
           properties:
-            cpu:
-              type: string
-              title: CPU Limit
-              description: Maximum CPU allowed (e.g., 1, 2, 500m)
-              pattern: ^([0-9]*\.?[0-9]+m?|[0-9]+)$
-              x-ui-error-message: Value must be a valid CPU specification (e.g., 1,
-                2, 500m)
-              x-ui-placeholder: '1'
-            memory:
-              type: string
-              title: Memory Limit
-              description: Maximum memory allowed (e.g., 1Gi, 2Gi, 512Mi)
-              pattern: ^[0-9]+(\.[0-9]+)?(Ki|Mi|Gi|Ti|Pi|Ei|k|M|G|T|P|E)?$
-              x-ui-error-message: Value must be a valid memory specification (e.g.,
-                1Gi, 2Gi)
-              x-ui-placeholder: 1Gi
+            requests:
+              type: object
+              title: Resource Requests
+              description: Minimum resource requirements
+              properties:
+                cpu:
+                  type: string
+                  title: CPU Request
+                  description: Minimum CPU requirement (e.g., 100m, 250m, 500m)
+                  pattern: ^([0-9]*\.?[0-9]+m?|[0-9]+)$
+                  default: 200m
+                  x-ui-placeholder: 200m
+                memory:
+                  type: string
+                  title: Memory Request
+                  description: Minimum memory requirement (e.g., 256Mi, 512Mi)
+                  pattern: ^[0-9]+(\.[0-9]+)?(Ki|Mi|Gi|Ti|Pi|Ei|k|M|G|T|P|E)?$
+                  default: 256Mi
+                  x-ui-placeholder: 256Mi
+            limits:
+              type: object
+              title: Resource Limits
+              description: Maximum resource limits
+              properties:
+                cpu:
+                  type: string
+                  title: CPU Limit
+                  description: Maximum CPU allowed (e.g., 500m, 1, 2)
+                  pattern: ^([0-9]*\.?[0-9]+m?|[0-9]+)$
+                  default: 500m
+                  x-ui-placeholder: 500m
+                memory:
+                  type: string
+                  title: Memory Limit
+                  description: Maximum memory allowed (e.g., 512Mi, 1Gi)
+                  pattern: ^[0-9]+(\.[0-9]+)?(Ki|Mi|Gi|Ti|Pi|Ei|k|M|G|T|P|E)?$
+                  default: 512Mi
+                  x-ui-placeholder: 512Mi
     rules:
       title: Routing Rules
       description: Gateway API routing configurations (HTTP and gRPC)
@@ -173,11 +272,12 @@ spec:
             path_type:
               type: string
               title: Path Type
-              description: Path matching type (required for HTTP routes). Note - RegularExpression is NOT supported by NGF.
+              description: Path matching type. RegularExpression (default) auto-appends .* to paths for proper NGINX regex ordering. Use PathPrefix or Exact for literal matching.
               enum:
               - Exact
               - PathPrefix
-              default: PathPrefix
+              - RegularExpression
+              default: RegularExpression
               x-ui-visible-if:
                 field: spec.rules.{{this}}.grpc_config.enabled
                 values:
@@ -480,11 +580,13 @@ spec:
                   title: Request Timeout
                   description: Total request timeout (e.g., 30s, 1m, 5m)
                   pattern: ^\d+[smh]$
-                  x-ui-placeholder: '30s'
+                  default: 300s
+                  x-ui-placeholder: '300s'
                 backend_request:
                   type: string
                   title: Backend Request Timeout
                   description: Backend response timeout (e.g., 30s, 1m, 5m)
+                  default: 300s
                   pattern: ^\d+[smh]$
                   x-ui-placeholder: '30s'
             cors:
@@ -662,6 +764,14 @@ spec:
       type: boolean
       title: Force SSL Redirection
       description: Force HTTP to HTTPS redirection
+    body_size:
+      type: string
+      title: Max Body Size
+      description: Maximum allowed size of the client request body (e.g., 150m, 1g)
+      pattern: ^\d{1,4}(k|m|g)?$
+      default: 150m
+      x-ui-placeholder: 150m
+      x-ui-toggle: true
     helm_values:
       type: object
       title: Additional Helm Values
@@ -702,9 +812,11 @@ spec:
   - domain_prefix_override
   - disable_base_domain
   - force_ssl_redirection
+  - body_size
   - renew_cert_before
   - disable_endpoint_validation
-  - resources
+  - data_plane
+  - control_plane
   - helm_values
   - helm_wait
   - rules
@@ -718,5 +830,32 @@ sample:
   spec:
     private: false
     disable_base_domain: false
-    rules: {}
     force_ssl_redirection: true
+    body_size: 150m
+    data_plane:
+      scaling:
+        min_replicas: 2
+        max_replicas: 5
+        target_cpu_utilization_percentage: 70
+        target_memory_utilization_percentage: 80
+      resources:
+        requests:
+          cpu: 250m
+          memory: 256Mi
+        limits:
+          cpu: "1"
+          memory: 512Mi
+    control_plane:
+      scaling:
+        min_replicas: 2
+        max_replicas: 3
+        target_cpu_utilization_percentage: 70
+        target_memory_utilization_percentage: 80
+      resources:
+        requests:
+          cpu: 200m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+    rules: {}
