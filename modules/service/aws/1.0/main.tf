@@ -26,8 +26,7 @@ locals {
   resource_type = "service"
   resource_name = var.instance_name
 
-  image_pull_secrets      = lookup(lookup(lookup(var.inputs, "artifactories", {}), "attributes", {}), "registry_secrets_list", [])
-  from_kubernetes_cluster = []
+  image_pull_secrets = lookup(lookup(lookup(var.inputs, "artifactories", {}), "attributes", {}), "registry_secrets_list", [])
 
   # Transform taints from object format to string format for utility module compatibility
   kubernetes_node_pool_details = lookup(var.inputs, "kubernetes_node_pool_details", {})
@@ -96,6 +95,9 @@ locals {
                     # Configure pod distribution for the application chart
                     pod_distribution_enabled = local.pod_distribution_enabled
                     pod_distribution         = local.pod_distribution
+                  },
+                  {
+                    image_pull_secrets = local.image_pull_secrets
                   }
                 )
               }
@@ -132,19 +134,16 @@ module "app-helm-chart" {
     module.irsa, aws_iam_role.application-role,
     aws_iam_role_policy_attachment.policy-attach
   ]
-  source                  = "github.com/Facets-cloud/facets-utility-modules//application"
-  namespace               = local.namespace
-  chart_name              = lower(var.instance_name)
-  values                  = local.instance_with_vpa_config
-  annotations             = local.annotations
-  registry_secret_objects = length(local.image_pull_secrets) > 0 ? local.image_pull_secrets : local.from_kubernetes_cluster
-  cc_metadata             = var.cc_metadata
-  baseinfra               = var.baseinfra
-  labels                  = local.labels
-  cluster                 = var.cluster
-  environment             = var.environment
-  inputs                  = local.modified_inputs
-  vpa_release_id          = lookup(lookup(lookup(var.inputs, "vpa_details", {}), "attributes", {}), "helm_release_id", "")
+  source         = "./application"
+  namespace      = local.namespace
+  chart_name     = lower(var.instance_name)
+  values         = local.instance_with_vpa_config
+  annotations    = local.annotations
+  labels         = local.labels
+  cluster        = var.cluster
+  environment    = var.environment
+  inputs         = local.modified_inputs
+  vpa_release_id = lookup(lookup(lookup(var.inputs, "vpa_details", {}), "attributes", {}), "helm_release_id", "")
 }
 
 ####### kube2iam policies ######
