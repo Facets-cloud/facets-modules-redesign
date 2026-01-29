@@ -1,10 +1,14 @@
 locals {
-  # Use spec.release.image as the single source of truth (matches artifact_inputs declaration)
-  image_id = lookup(var.values.spec.release, "image", "NOT_FOUND")
+  # spec.release.image can be either:
+  # 1. A simple string: "gcr.io/project/app:v1.0"
+  # 2. An object: { url = "gcr.io/project/app:v1.0", build_id = "abc123" }
+  release_image = lookup(var.values.spec.release, "image", "NOT_FOUND")
 
-  # Use full image string as build_id - uniquely identifies the deployment
-  # Falls back to "NA" if image is not found (matches old behavior)
-  build_id = local.image_id != "NOT_FOUND" ? local.image_id : "NA"
+  # Detect if image is an object (has "url" key) or a simple string
+  image_id = try(local.release_image.url, local.release_image)
+
+  # If object schema, use build_id from object; otherwise empty string
+  build_id = try(local.release_image.build_id, "")
 
   advanced_config_values       = lookup(local.advanced_config, "values", {})
   kubernetes_node_pool_details = lookup(var.inputs, "kubernetes_node_pool_details", {})
