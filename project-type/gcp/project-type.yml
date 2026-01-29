@@ -6,6 +6,8 @@ gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
 gitRef: main
 baseTemplatePath: project-type/gcp/base
 
+iacTool: TERRAFORM
+iacToolVersion: "1.5.4"
 # IaC modules to include
 modules:
     # GCP Core Modules
