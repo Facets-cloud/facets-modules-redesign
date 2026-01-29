@@ -142,6 +142,7 @@ resource "helm_release" "app-chart" {
     yamlencode({
       spec = {
         env = merge(
+          var.environment.global_variables,
           local.filtered_env_vars,
           local.build_id_env,
           local.filtered_all_secrets,
