@@ -58,17 +58,11 @@ locals {
   memory       = lookup(local.size, "memory", "1000Mi")
   memory_limit = lookup(local.size, "memory_limit", local.memory)
 
-  # We need to split cpu/memory limit as it may contain unit
-  split_cpu_limit          = regex("([0-9.]+)([a-zA-Z]+)?", local.cpu_limit)
-  processed_cpu_request    = "${local.split_cpu_limit[0] * var.cluster.k8sRequestsToLimitsRatio}${local.split_cpu_limit[1] != null ? local.split_cpu_limit[1] : ""}"
-  split_memory_limit       = regex("([0-9.]+)([a-zA-Z]+)?", local.memory_limit)
-  processed_memory_request = "${local.split_memory_limit[0] * var.cluster.k8sRequestsToLimitsRatio}${local.split_memory_limit[1] != null ? local.split_memory_limit[1] : ""}"
-
   processed_size = {
-    cpu_limit    = lookup(local.size, "cpu_limit", local.cpu_limit)
-    cpu          = lookup(local.size, "cpu", local.processed_cpu_request)
-    memory_limit = lookup(local.size, "memory_limit", local.memory_limit)
-    memory       = lookup(local.size, "memory", local.processed_memory_request)
+    cpu          = local.cpu
+    cpu_limit    = local.cpu_limit
+    memory       = local.memory
+    memory_limit = local.memory_limit
   }
 
   type           = lookup(var.values.spec, "type", "application")
@@ -78,10 +72,10 @@ locals {
     for idx in range(local.instance_count) : {
       for pvc_name, pvc_spec in local.pvcs : "${pvc_name}-vol-${var.chart_name}-${idx}" => merge(pvc_spec, { index = idx })
   }]), 0, local.instance_count)...) : {}
-  
+
   pod_distribution = lookup(local.advanced_config_values, "pod_distribution", {})
-  sidecars        = lookup(var.values.spec, "sidecars", lookup(local.advanced_config_values, "sidecars", {}))
-  init_containers = lookup(var.values.spec, "init_containers", lookup(local.advanced_config_values, "init_containers", {}))
+  sidecars         = lookup(var.values.spec, "sidecars", lookup(local.advanced_config_values, "sidecars", {}))
+  init_containers  = lookup(var.values.spec, "init_containers", lookup(local.advanced_config_values, "init_containers", {}))
   exclude_env_and_secret_values = try(
     var.values.advanced.common.app_chart.values.exclude_env_and_secret_values,
     []
@@ -155,11 +149,11 @@ resource "helm_release" "app-chart" {
         common = {
           app_chart = {
             values = {
-              tolerations        = local.all_tolerations
-              node_selector      = local.node_selector
-              pod_distribution   = local.pod_distribution
-              init_containers    = local.init_containers
-              sidecars           = local.sidecars
+              tolerations      = local.all_tolerations
+              node_selector    = local.node_selector
+              pod_distribution = local.pod_distribution
+              init_containers  = local.init_containers
+              sidecars         = local.sidecars
             }
           }
         }
