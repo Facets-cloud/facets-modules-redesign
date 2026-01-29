@@ -20,6 +20,7 @@ variable "environment" {
     unique_name = string
     namespace   = optional(string)
     cloud       = optional(string)
+    cluster_id  = optional(string)
   })
 }
 

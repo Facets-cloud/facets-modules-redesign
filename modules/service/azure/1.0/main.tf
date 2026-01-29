@@ -165,9 +165,9 @@ module "app-helm-chart" {
   annotations             = local.annotations
   labels                  = local.labels
   registry_secret_objects = length(local.from_artifactories) > 0 ? local.from_artifactories : local.from_kubernetes_cluster
-  cc_metadata             = var.cc_metadata
-  baseinfra               = var.baseinfra
-  cluster                 = var.cluster
+  cc_metadata             = local.cc_metadata
+  baseinfra               = local.baseinfra
+  cluster                 = local.cluster
   environment             = var.environment
   inputs                  = var.inputs
   vpa_release_id          = lookup(lookup(lookup(var.inputs, "vpa_details", {}), "attributes", {}), "helm_release_id", "")
