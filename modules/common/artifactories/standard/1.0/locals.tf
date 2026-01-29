@@ -3,7 +3,7 @@ locals {
   spec          = lookup(var.instance, "spec", {})
   metadata      = lookup(var.instance, "metadata", {})
   artifactories = lookup(local.spec, "artifactories", {})
-  include_all   = lookup(local.spec, "include_all", length(local.artifactories) > 0 ? "false" : "true")
+  include_all   = lookup(local.spec, "include_all", length(local.artifactories) > 0 ? false : true)
 
   # Get artifactory names list for filtering
   artifactory_names = jsonencode([for key, value in local.artifactories : value["name"]])
