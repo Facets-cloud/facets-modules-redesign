@@ -6,6 +6,9 @@ gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
 gitRef: main
 baseTemplatePath: project-type/azure/base
 
+iacTool: TERRAFORM
+iacToolVersion: "1.5.4"
+
 # IaC modules to include
 modules:
     # Azure Core Modules
