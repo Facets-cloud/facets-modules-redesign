@@ -1,0 +1,116 @@
+{
+  "properties": {
+    "attributes": {
+      "type": "object",
+      "properties": {
+        "ingress_class_name": {
+          "type": "string",
+          "description": "Kubernetes ingress class name"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace where ingress is deployed"
+        },
+        "service_name": {
+          "type": "string",
+          "description": "Ingress controller service name"
+        },
+        "service_type": {
+          "type": "string",
+          "description": "Kubernetes service type"
+        },
+        "load_balancer_hostname": {
+          "type": "string",
+          "description": "Load balancer DNS hostname"
+        },
+        "load_balancer_ip": {
+          "type": "string",
+          "description": "Load balancer IP address"
+        },
+        "helm_release_name": {
+          "type": "string",
+          "description": "Helm release name"
+        },
+        "helm_release_version": {
+          "type": "string",
+          "description": "Helm chart version"
+        },
+        "configured_domains": {
+          "type": "array",
+          "description": "List of configured domains",
+          "items": {
+            "type": "string"
+          }
+        },
+        "total_rules": {
+          "type": "number",
+          "description": "Total number of routing rules"
+        },
+        "active_rules": {
+          "type": "number",
+          "description": "Number of active (non-disabled) rules"
+        },
+        "ssl_redirect_enabled": {
+          "type": "boolean",
+          "description": "Whether SSL redirect is enabled"
+        },
+        "basic_auth_enabled": {
+          "type": "boolean",
+          "description": "Whether basic auth is enabled"
+        },
+        "grpc_enabled": {
+          "type": "boolean",
+          "description": "Whether gRPC is enabled"
+        }
+      },
+      "required": [
+        "ingress_class_name",
+        "namespace",
+        "service_name",
+        "service_type"
+      ]
+    },
+    "interfaces": {
+      "type": "object",
+      "properties": {
+        "http": {
+          "type": "object",
+          "properties": {
+            "host": {
+              "type": "string",
+              "description": "HTTP endpoint host"
+            },
+            "port": {
+              "type": "string",
+              "description": "HTTP port"
+            },
+            "protocol": {
+              "type": "string",
+              "description": "Protocol (http)"
+            }
+          },
+          "required": ["host", "port"]
+        },
+        "https": {
+          "type": "object",
+          "properties": {
+            "host": {
+              "type": "string",
+              "description": "HTTPS endpoint host"
+            },
+            "port": {
+              "type": "string",
+              "description": "HTTPS port"
+            },
+            "protocol": {
+              "type": "string",
+              "description": "Protocol (https)"
+            }
+          },
+          "required": ["host", "port"]
+        }
+      }
+    }
+  },
+  "providers": []
+}
