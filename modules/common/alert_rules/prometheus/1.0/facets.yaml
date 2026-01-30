@@ -112,32 +112,6 @@ spec:
                       description: Additional annotations for the alert (key-value pairs)
                       x-ui-yaml-editor: true
                       x-ui-placeholder: "dashboard: https://grafana.example.com/d/xyz"
-                    notification_channels:
-                      type: object
-                      title: Notification Channels
-                      description: Specific notification channels for this alert
-                      x-ui-toggle: true
-                      properties:
-                        slack:
-                          type: boolean
-                          title: Slack Notifications
-                          description: Send notifications to Slack
-                          default: false
-                        email:
-                          type: boolean
-                          title: Email Notifications
-                          description: Send notifications via email
-                          default: false
-                        pagerduty:
-                          type: boolean
-                          title: PagerDuty Integration
-                          description: Create incidents in PagerDuty
-                          default: false
-                        webhook:
-                          type: boolean
-                          title: Webhook Notifications
-                          description: Send notifications to custom webhook
-                          default: false
                   required:
                     - expression
                     - summary
@@ -167,11 +141,6 @@ sample:
             disabled: false
             labels: {}
             annotations: {}
-            notification_channels:
-              email: false
-              slack: false
-              pagerduty: false
-              webhook: false
           high_error_rate:
             expression: 'rate(http_requests_total{status=~"5..",job="my-service"}[5m]) > 0.05'
             duration: "5m"
@@ -183,8 +152,3 @@ sample:
             disabled: false
             labels: {}
             annotations: {}
-            notification_channels:
-              email: false
-              slack: false
-              pagerduty: false
-              webhook: false
