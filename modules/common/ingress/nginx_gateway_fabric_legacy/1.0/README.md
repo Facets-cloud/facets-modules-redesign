@@ -342,7 +342,7 @@ Enable Cross-Origin Resource Sharing:
       "service_name": "grpc-backend",
       "namespace": "default",
       "port": "50051",
-      "grpc": {
+      "grpc_config": {
         "enabled": true,
         "match_all_methods": true
       }
@@ -360,7 +360,7 @@ Enable Cross-Origin Resource Sharing:
       "service_name": "grpc-backend",
       "namespace": "default",
       "port": "50051",
-      "grpc": {
+      "grpc_config": {
         "enabled": true,
         "match_all_methods": false,
         "method_match": {

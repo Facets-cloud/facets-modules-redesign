@@ -789,14 +789,6 @@ spec:
       description: Disable endpoint validation for cert-manager (uses DNS validation instead of HTTP)
       default: false
       x-ui-toggle: true
-    renew_cert_before:
-      type: string
-      title: Certificate Renewal Time
-      description: Renew TLS certificate before expiry (e.g., 720h for 30 days)
-      default: 720h
-      pattern: ^[0-9]+(h|m|s)$
-      x-ui-placeholder: '720h'
-      x-ui-toggle: true
     helm_wait:
       type: boolean
       title: Helm Wait
@@ -813,7 +805,6 @@ spec:
   - disable_base_domain
   - force_ssl_redirection
   - body_size
-  - renew_cert_before
   - disable_endpoint_validation
   - data_plane
   - control_plane

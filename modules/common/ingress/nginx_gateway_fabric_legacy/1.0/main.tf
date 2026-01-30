@@ -828,6 +828,8 @@ resource "helm_release" "nginx_gateway_fabric" {
         labels = local.common_labels
 
         image = {
+          repository = "facetscloud/nginx-gateway-fabric"
+          tag        = "2.3.0"
           pullPolicy = "IfNotPresent"
         }
         imagePullSecrets = lookup(var.inputs, "artifactories", null) != null ? var.inputs.artifactories.attributes.registry_secrets_list : []
