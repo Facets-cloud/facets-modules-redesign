@@ -18,10 +18,6 @@ variable "labels" {
   type = any
 }
 
-variable "cluster" {
-  type = any
-}
-
 variable "environment" {
   
 }

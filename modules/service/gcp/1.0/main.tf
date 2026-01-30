@@ -154,7 +154,6 @@ module "app-helm-chart" {
   values         = local.instance
   annotations    = local.annotations
   labels         = local.labels
-  cluster        = var.cluster
   environment    = var.environment
   inputs         = var.inputs
   vpa_release_id = lookup(lookup(lookup(var.inputs, "vpa_details", {}), "attributes", {}), "helm_release_id", "")
