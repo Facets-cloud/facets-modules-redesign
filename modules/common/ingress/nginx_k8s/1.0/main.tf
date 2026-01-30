@@ -1,5 +1,5 @@
 locals {
-  tenant_provider = lower(lookup(var.cc_metadata, "cc_tenant_provider", "aws"))
+  tenant_provider = lower(local.cc_tenant_provider != "" ? local.cc_tenant_provider : "aws")
   advanced_config = lookup(lookup(var.instance, "advanced", {}), "nginx_ingress_controller", {})
   # Get user supplied helm values and merge with PDB configuration
   base_helm_values = lookup(local.advanced_config, "values", {})
@@ -17,9 +17,9 @@ locals {
   ingressRoutes             = { for x, y in lookup(var.instance.spec, "rules", {}) : x => y }
   record_type               = lookup(var.inputs.kubernetes_details.attributes, "lb_service_record_type", var.inputs.kubernetes_details.attributes.cloud_provider == "AWS" ? "CNAME" : "A")
   #If environment name and instance exceeds 33 , take md5
-  instance_env_name          = length(var.environment.unique_name) + length(var.instance_name) + length(var.cc_metadata.tenant_base_domain) >= 60 ? substr(md5("${var.instance_name}-${var.environment.unique_name}"), 0, 20) : "${var.instance_name}-${var.environment.unique_name}"
+  instance_env_name          = length(var.environment.unique_name) + length(var.instance_name) + length(local.tenant_base_domain) >= 60 ? substr(md5("${var.instance_name}-${var.environment.unique_name}"), 0, 20) : "${var.instance_name}-${var.environment.unique_name}"
   check_domain_prefix        = coalesce(lookup(local.advanced_config, "domain_prefix_override", null), local.instance_env_name)
-  base_domain                = lower("${local.check_domain_prefix}.${var.cc_metadata.tenant_base_domain}") # domains are to be always lowercase
+  base_domain                = lower("${local.check_domain_prefix}.${local.tenant_base_domain}") # domains are to be always lowercase
   base_subdomain             = "*.${local.base_domain}"
   dns_validation_secret_name = lower("nginx-ingress-cert-${var.instance_name}")
   # Conditionally append base domain to the list of domains from json file
@@ -474,7 +474,7 @@ resource "aws_route53_record" "cluster-base-domain" {
   depends_on = [
     helm_release.nginx_ingress_ctlr
   ]
-  zone_id = var.cc_metadata.tenant_base_domain_id
+  zone_id = local.tenant_base_domain_id
   name    = local.base_domain
   type    = local.record_type
   ttl     = "300"
@@ -491,7 +491,7 @@ resource "aws_route53_record" "cluster-base-domain-wildcard" {
   depends_on = [
     helm_release.nginx_ingress_ctlr
   ]
-  zone_id = var.cc_metadata.tenant_base_domain_id
+  zone_id = local.tenant_base_domain_id
   name    = local.base_subdomain
   type    = local.record_type
   ttl     = "300"
