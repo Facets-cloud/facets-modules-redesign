@@ -16,17 +16,6 @@ variable "instance" {
           disabled      = optional(bool, false)
           labels        = optional(map(string), {})
           annotations   = optional(map(string), {})
-          notification_channels = optional(object({
-            slack     = optional(bool, false)
-            email     = optional(bool, false)
-            pagerduty = optional(bool, false)
-            webhook   = optional(bool, false)
-            }), {
-            slack     = false
-            email     = false
-            pagerduty = false
-            webhook   = false
-          })
         }))
       }))
     })
