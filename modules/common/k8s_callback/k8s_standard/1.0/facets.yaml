@@ -5,9 +5,6 @@ description: Creates ServiceAccount with admin role and registers OVH K8s creden
   with Facets control plane
 clouds:
 - kubernetes
-- aws
-- azure
-- gcp
 inputs:
   kubernetes_details:
     type: '@facets/kubernetes-details'
