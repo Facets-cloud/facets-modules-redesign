@@ -1,19 +1,13 @@
 name: '@facets/alert-rules'
 properties:
     attributes:
-        alert_group_count:
-            type: string
         alert_group_names:
-            type: string
-        alerts_enabled:
             type: string
         namespace:
             type: string
         prometheus_release:
             type: string
         prometheus_rule_name:
-            type: string
-        total_alert_count:
             type: string
     interfaces: {}
 providers: []
