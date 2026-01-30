@@ -1,0 +1,29 @@
+name: '@facets/karpenter-details'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        karpenter_namespace:
+          type: string
+        karpenter_service_account:
+          type: string
+        karpenter_version:
+          type: string
+        controller_role_arn:
+          type: string
+        node_role_arn:
+          type: string
+        node_instance_profile_name:
+          type: string
+        interruption_queue_name:
+          type: string
+        secrets:
+          type: array
+          items:
+            type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []
