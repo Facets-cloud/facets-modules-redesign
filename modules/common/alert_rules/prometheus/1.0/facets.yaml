@@ -1,0 +1,154 @@
+intent: alert_rules
+flavor: prometheus
+version: '1.0'
+description: Generic alert rules module for defining custom Prometheus alerting rules. Deploy PrometheusRule CRDs for any service or application.
+clouds:
+  - kubernetes
+  - aws
+  - azure
+  - gcp
+inputs:
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Kubernetes cluster for deploying PrometheusRule resources
+    providers:
+      - kubernetes
+      - kubernetes-alpha
+      - helm
+  prometheus:
+    type: '@facets/prometheus'
+    optional: false
+    displayName: Prometheus Instance
+    description: Prometheus instance that will evaluate these alert rules
+outputs:
+  default:
+    type: '@facets/alert-rules'
+    title: Alert Rules Configuration
+spec:
+  title: Alert Rules Configuration
+  description: Define custom alert groups and rules for Prometheus
+  type: object
+  properties:
+    alert_groups:
+      type: object
+      title: Alert Groups
+      description: Define one or more alert groups, each containing multiple alert rules
+      x-ui-toggle: true
+      patternProperties:
+        ^[a-zA-Z0-9_-]*$:
+          type: object
+          title: Alert Group
+          description: A group of related alert rules
+          properties:
+            rules:
+              type: object
+              title: Alert Rules
+              description: Individual alert rules within this group
+              x-ui-toggle: true
+              patternProperties:
+                ^[a-zA-Z0-9_-]*$:
+                  type: object
+                  title: Alert Rule
+                  description: Define an individual alert rule
+                  properties:
+                    expression:
+                      type: string
+                      title: PromQL Expression
+                      description: PromQL expression that triggers the alert (must return boolean)
+                      x-ui-placeholder: 'e.g., up{job="my-service"} == 0'
+                    duration:
+                      type: string
+                      title: For Duration
+                      description: How long expression must be true before firing (Prometheus 'for' clause)
+                      pattern: ^[0-9]+(s|m|h)$
+                      default: "5m"
+                      x-ui-placeholder: e.g., 1m, 5m, 10m
+                    severity:
+                      type: string
+                      title: Severity Level
+                      description: Alert severity classification
+                      enum:
+                        - critical
+                        - warning
+                        - info
+                      default: warning
+                    resource_type:
+                      type: string
+                      title: Resource Type
+                      description: Type of resource being monitored (e.g., service, mongo, postgres)
+                      x-ui-placeholder: e.g., service
+                    resource_name:
+                      type: string
+                      title: Resource Name
+                      description: Name of specific resource being monitored
+                      x-ui-placeholder: e.g., my-api-service
+                    summary:
+                      type: string
+                      title: Summary
+                      description: Short description of the alert (supports Go templating with {{ $labels.* }}, {{ $value }})
+                      x-ui-placeholder: e.g., Service {{ $labels.job }} is down
+                    description:
+                      type: string
+                      title: Description
+                      description: Detailed alert description with context and resolution steps (supports templating)
+                      x-ui-yaml-editor: false
+                      x-ui-placeholder: Provide detailed context and troubleshooting steps
+                    disabled:
+                      type: boolean
+                      title: Disabled
+                      description: Set to true to temporarily disable this alert rule
+                      default: false
+                    labels:
+                      type: object
+                      title: Custom Labels
+                      description: Additional labels to attach to the alert (key-value pairs)
+                      x-ui-yaml-editor: true
+                      x-ui-placeholder: "team: platform\nservice: api"
+                    annotations:
+                      type: object
+                      title: Custom Annotations
+                      description: Additional annotations for the alert (key-value pairs)
+                      x-ui-yaml-editor: true
+                      x-ui-placeholder: "dashboard: https://grafana.example.com/d/xyz"
+                  required:
+                    - expression
+                    - summary
+          required:
+            - rules
+  required:
+    - alert_groups
+  x-ui-order:
+    - alert_groups
+sample:
+  kind: alert_rules
+  flavor: prometheus
+  version: '1.0'
+  disabled: false
+  spec:
+    alert_groups:
+      service_health:
+        rules:
+          service_down:
+            expression: 'up{job="my-service"} == 0'
+            duration: "1m"
+            severity: critical
+            resource_type: service
+            resource_name: my-service
+            summary: "Service {{ $labels.job }} is down"
+            description: "Service has been unreachable for more than 1 minute. Check pod status and logs."
+            disabled: false
+            labels: {}
+            annotations: {}
+          high_error_rate:
+            expression: 'rate(http_requests_total{status=~"5..",job="my-service"}[5m]) > 0.05'
+            duration: "5m"
+            severity: warning
+            resource_type: service
+            resource_name: my-service
+            summary: "High error rate on {{ $labels.job }}"
+            description: "Error rate is {{ $value | humanizePercentage }} over the last 5 minutes."
+            disabled: false
+            labels: {}
+            annotations: {}

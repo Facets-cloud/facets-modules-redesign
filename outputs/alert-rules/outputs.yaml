@@ -1,0 +1,23 @@
+name: '@facets/alert-rules'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        alert_group_names:
+          type: string
+          description: Names of alert groups
+        namespace:
+          type: string
+          description: Namespace where alerts are configured
+        prometheus_release:
+          type: string
+          description: Prometheus release name
+        prometheus_rule_name:
+          type: string
+          description: Name of the PrometheusRule resource
+    interfaces:
+      type: object
+      properties: {}
+providers: []
