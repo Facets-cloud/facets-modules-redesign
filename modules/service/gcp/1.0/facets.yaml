@@ -26,6 +26,7 @@ inputs:
   artifactories:
     type: '@facets/artifactories'
     displayName: Container Registries
+    optional: true
   vpa_details:
     optional: true
     type: '@facets/vpa'
