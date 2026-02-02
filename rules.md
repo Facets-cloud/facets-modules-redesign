@@ -447,6 +447,70 @@ resource "kubernetes_namespace" "ns" {
 
 ---
 
+### RULE-015: Prohibited platform-injected variables
+
+The following legacy platform-injected variables are **PROHIBITED** and must never be used in modules:
+- `var.cc_metadata`
+- `var.cluster`
+- `var.baseinfra`
+
+Raptor validation will flag and fail modules using these variables.
+
+**Bad:**
+```hcl
+# Using prohibited variables
+resource "null_resource" "callback" {
+  provisioner "local-exec" {
+    command = "curl https://${var.cc_metadata.cc_host}/api"
+  }
+}
+
+locals {
+  cluster_id = var.cluster.id
+}
+```
+
+**Good - For null_resource (use env vars directly):**
+```hcl
+# Access TF_VAR_* environment variables directly in shell commands
+resource "null_resource" "callback" {
+  provisioner "local-exec" {
+    command = "curl https://$TF_VAR_cc_host/api -H \"Authorization: Bearer $TF_VAR_cc_auth_token\""
+  }
+}
+```
+
+**Good - For Terraform resources (use data external):**
+```hcl
+# Use data external to read environment variables
+data "external" "env" {
+  program = ["sh", "-c", "echo '{\"cc_host\":\"'$TF_VAR_cc_host'\",\"cc_auth_token\":\"'$TF_VAR_cc_auth_token'\"}'"]
+}
+
+locals {
+  cc_host       = data.external.env.result.cc_host
+  cc_auth_token = data.external.env.result.cc_auth_token
+}
+```
+
+**Available environment variables:**
+
+| Env Variable | Description |
+|--------------|-------------|
+| `TF_VAR_cc_host` | Control plane host |
+| `TF_VAR_cc_auth_token` | Control plane auth token |
+| `TF_VAR_cc_region` | Region |
+| `TF_VAR_cc_vpc_id` | VPC ID |
+| `TF_VAR_cc_vpc_cidr` | VPC CIDR |
+| `TF_VAR_cc_tf_state_bucket` | Terraform state bucket |
+| `TF_VAR_cc_tf_state_region` | Terraform state region |
+| `TF_VAR_cc_tf_dynamo_table` | DynamoDB lock table |
+| `TF_VAR_cc_tenant_provider` | Tenant cloud provider |
+| `TF_VAR_tenant_base_domain` | Tenant base domain |
+| `TF_VAR_tenant_base_domain_id` | Tenant base domain hosted zone ID |
+
+---
+
 ## Quick Reference
 
 | Rule | Category | Summary |
@@ -465,3 +529,4 @@ resource "kubernetes_namespace" "ns" {
 | RULE-012 | output schema | Field names match actual outputs |
 | RULE-013 | terraform | No required_providers in modules |
 | RULE-014 | terraform | All variables must be declared |
+| RULE-015 | terraform | No cc_metadata, cluster, baseinfra vars |
