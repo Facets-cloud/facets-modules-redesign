@@ -991,31 +991,6 @@ spec:
           - IfNotPresent
           - Always
           - Never
-        build:
-          type: object
-          title: Build
-          description: These contains the build objects required for running the containers
-          properties:
-            artifactory:
-              type: string
-              title: Artifactory
-              description: Parent artifactory name
-            name:
-              type: string
-              title: Name
-              description: Name of the artifactory
-            pull_policy:
-              type: string
-              title: Pull Policy
-              description: ImagePullPolicy
-              enum:
-              - IfNotPresent
-              - Always
-              - Never
-          required:
-          - artifactory
-          - name
-          x-ui-skip: true
         strategy:
           type: object
           title: Strategy

@@ -106,12 +106,6 @@ variable "instance" {
         image             = optional(string)
         image_pull_policy = optional(string, "IfNotPresent")
 
-        build = optional(object({
-          artifactory = string
-          name        = string
-          pull_policy = optional(string)
-        }))
-
         strategy = optional(object({
           type            = string
           max_available   = optional(string)

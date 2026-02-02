@@ -103,12 +103,6 @@ variable "instance" {
       release = optional(object({
         image             = optional(string)
         image_pull_policy = optional(string, "IfNotPresent")
-
-        build = optional(object({
-          artifactory = string
-          name        = string
-          pull_policy = optional(string)
-        }))
       }), {})
 
       # Environment variables
