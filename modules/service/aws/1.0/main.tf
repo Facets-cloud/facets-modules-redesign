@@ -134,7 +134,7 @@ module "app-helm-chart" {
     module.irsa, aws_iam_role.application-role,
     aws_iam_role_policy_attachment.policy-attach
   ]
-  source         = "./application"
+  source         = "github.com/Facets-cloud/facets-utility-modules//application/2.0"
   namespace      = local.namespace
   chart_name     = lower(var.instance_name)
   values         = local.instance_with_vpa_config

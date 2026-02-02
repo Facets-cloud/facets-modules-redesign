@@ -158,7 +158,7 @@ module "app-helm-chart" {
     module.azure-aadpod-identity,
     module.azure-aadpod-identity-binding
   ]
-  source         = "./application"
+  source         = "github.com/Facets-cloud/facets-utility-modules//application/2.0"
   namespace      = local.namespace
   chart_name     = local.name
   values         = local.instance_with_vpa_config
