@@ -1,0 +1,104 @@
+intent: redis
+flavor: azure_managed_redis
+version: '1.0'
+clouds:
+  - azure
+description: |
+  Azure Managed Redis - Next-generation Redis on Azure with Redis 7.4+,
+  enhanced performance, and enterprise security. Uses Private Endpoint
+  for secure VNet-only access.
+
+spec:
+  title: Azure Managed Redis Configuration
+  description: Configure Azure Managed Redis with developer-friendly settings
+  type: object
+  properties:
+    size:
+      type: string
+      title: Cache Size
+      description: Select the appropriate cache size for your workload
+      enum:
+        - small
+        - medium
+        - large
+        - xlarge
+      default: small
+      x-ui-help: |
+        Size guidelines based on workload:
+        - small: Development/Testing (~1GB, Balanced_B1)
+        - medium: Small production workloads (~6GB, Balanced_B5)
+        - large: High-traffic applications (~30GB, Balanced_B50)
+        - xlarge: Enterprise workloads (~60GB, Balanced_B100)
+    advanced:
+      type: object
+      title: Advanced Settings
+      x-ui-toggle: true
+      description: Advanced Redis configuration options
+      properties:
+        clustering_mode:
+          type: string
+          title: Clustering Mode
+          description: Redis clustering policy for data distribution
+          enum:
+            - standard
+            - legacy_compatible
+          default: standard
+          x-ui-help: |
+            - standard: OSS Cluster mode (recommended for new applications)
+            - legacy_compatible: Enterprise Cluster mode (for migration from older Redis)
+        enable_password_auth:
+          type: boolean
+          title: Enable Password Authentication
+          description: Enable access key authentication for Redis connections
+          default: true
+  required:
+    - size
+  x-ui-order:
+    - size
+    - advanced
+
+inputs:
+  azure_provider:
+    type: '@facets/azure_cloud_account'
+    optional: false
+    displayName: Azure Cloud Account
+    description: Azure cloud provider configuration
+    providers:
+      - azurerm
+  network_details:
+    type: '@facets/azure-network-details'
+    optional: false
+    displayName: Azure Network Details
+    description: Azure VNet and subnet configuration for Private Endpoint
+
+outputs:
+  default:
+    type: '@facets/redis'
+    title: Azure Managed Redis
+    secrets:
+      - interfaces.cluster.auth_token
+      - interfaces.cluster.connection_string
+
+imports:
+  - name: redis_resource_id
+    resource_address: azurerm_managed_redis.main
+    required: false
+  - name: private_endpoint_resource_id
+    resource_address: azurerm_private_endpoint.redis
+    required: false
+
+iac:
+  validated_files:
+    - main.tf
+    - locals.tf
+    - variables.tf
+    - outputs.tf
+    - versions.tf
+
+sample:
+  kind: redis
+  flavor: azure_managed_redis
+  version: '1.0'
+  disabled: true
+  spec:
+    size: small
