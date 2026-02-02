@@ -1,4 +1,7 @@
 locals {
+  # Core instance spec
+  spec = lookup(var.instance, "spec", {})
+
   azure_advanced_config     = lookup(lookup(var.instance, "advanced", {}), "azure", {})
   azure_cloud_permissions   = lookup(lookup(local.spec, "cloud_permissions", {}), "azure", {})
   azure_advanced_iam        = lookup(lookup(lookup(var.instance, "advanced", {}), "azure", {}), "iam", {})
@@ -11,23 +14,17 @@ locals {
   enable_deployment_actions  = local.enable_actions && local.spec_type == "application" ? 1 : 0
   enable_statefulset_actions = local.enable_actions && local.spec_type == "statefulset" ? 1 : 0
 
-  release_metadata_labels = {
-    "facets.cloud/blueprint_version" = tostring(lookup(local.release_metadata.metadata, "blueprint_version", "NA")) == null ? "NA" : tostring(lookup(local.release_metadata.metadata, "blueprint_version", "NA"))
-    "facets.cloud/override_version"  = tostring(lookup(local.release_metadata.metadata, "override_version", "NA")) == null ? "NA" : tostring(lookup(local.release_metadata.metadata, "override_version", "NA"))
-  }
   namespace   = lookup(var.instance.metadata, "namespace", null) == null ? var.environment.namespace : var.instance.metadata.namespace
   annotations = lookup(var.instance.metadata, "annotations", {})
   labels = merge(
     lookup(var.instance.metadata, "labels", {}),
-    length(local.iam_arns) > 0 ? { aadpodidbinding = azurerm_user_assigned_identity.service_user_iam.0.name } : {},
-    local.release_metadata_labels
+    length(local.iam_arns) > 0 ? { aadpodidbinding = azurerm_user_assigned_identity.service_user_iam.0.name } : {}
   )
   name          = lower(var.instance_name)
   resource_type = "service"
   resource_name = var.instance_name
 
-  from_artifactories      = lookup(lookup(lookup(var.inputs, "artifactories", {}), "attributes", {}), "registry_secrets_list", [])
-  from_kubernetes_cluster = []
+  image_pull_secrets = lookup(lookup(lookup(var.inputs, "artifactories", {}), "attributes", {}), "registry_secrets_list", [])
 
   # Check if VPA is available and configure accordingly
   vpa_available = lookup(var.inputs, "vpa_details", null) != null
@@ -77,6 +74,9 @@ locals {
                     # Configure pod distribution for the application chart
                     pod_distribution_enabled = local.pod_distribution_enabled
                     pod_distribution         = local.pod_distribution
+                  },
+                  {
+                    image_pull_secrets = local.image_pull_secrets
                   }
                 )
               }
@@ -158,17 +158,13 @@ module "app-helm-chart" {
     module.azure-aadpod-identity,
     module.azure-aadpod-identity-binding
   ]
-  source                  = "github.com/Facets-cloud/facets-utility-modules//application"
-  namespace               = local.namespace
-  chart_name              = local.name
-  values                  = local.instance_with_vpa_config
-  annotations             = local.annotations
-  labels                  = local.labels
-  registry_secret_objects = length(local.from_artifactories) > 0 ? local.from_artifactories : local.from_kubernetes_cluster
-  cc_metadata             = var.cc_metadata
-  baseinfra               = var.baseinfra
-  cluster                 = var.cluster
-  environment             = var.environment
-  inputs                  = var.inputs
-  vpa_release_id          = lookup(lookup(lookup(var.inputs, "vpa_details", {}), "attributes", {}), "helm_release_id", "")
+  source         = "github.com/Facets-cloud/facets-utility-modules//application/2.0"
+  namespace      = local.namespace
+  chart_name     = local.name
+  values         = local.instance_with_vpa_config
+  annotations    = local.annotations
+  labels         = local.labels
+  environment    = var.environment
+  inputs         = var.inputs
+  vpa_release_id = lookup(lookup(lookup(var.inputs, "vpa_details", {}), "attributes", {}), "helm_release_id", "")
 }

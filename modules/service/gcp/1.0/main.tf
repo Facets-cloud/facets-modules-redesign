@@ -21,10 +21,6 @@ locals {
   enable_deployment_actions  = local.enable_actions && local.spec_type == "application" ? 1 : 0
   enable_statefulset_actions = local.enable_actions && local.spec_type == "statefulset" ? 1 : 0
 
-  release_metadata_labels = {
-    "facets.cloud/blueprint_version" = tostring(lookup(local.release_metadata.metadata, "blueprint_version", "NA")) == null ? "NA" : tostring(lookup(local.release_metadata.metadata, "blueprint_version", "NA"))
-    "facets.cloud/override_version"  = tostring(lookup(local.release_metadata.metadata, "override_version", "NA")) == null ? "NA" : tostring(lookup(local.release_metadata.metadata, "override_version", "NA"))
-  }
   namespace = lookup(var.instance.metadata, "namespace", null) == null ? var.environment.namespace : var.instance.metadata.namespace
   annotations = merge(
     local.gcp_annotations,
@@ -33,7 +29,7 @@ locals {
     local.enable_alb_backend_config ? { "cloud.google.com/backend-config" = "{\"default\": \"${lower(var.instance_name)}\"}" } : {}
   )
   roles                     = { for key, val in local.iam_arns : val.role => { role = val.role, condition = lookup(val, "condition", {}) } }
-  labels                    = merge(lookup(var.instance.metadata, "labels", {}), local.release_metadata_labels)
+  labels                    = lookup(var.instance.metadata, "labels", {})
   backend_config            = lookup(local.gcp_advanced_config, "backend_config", {})
   enable_alb_backend_config = lookup(local.backend_config, "enabled", false)
   runtime                   = lookup(local.spec, "runtime", {})
@@ -112,7 +108,7 @@ locals {
                   local.enable_keda ? { keda = local.keda_config } : {},
 
                   {
-                    image_pull_secrets = var.inputs.artifactories.attributes.registry_secrets_list
+                    image_pull_secrets = lookup(lookup(lookup(var.inputs, "artifactories", {}), "attributes", {}), "registry_secrets_list", [])
                   }
                 )
               }
@@ -152,13 +148,12 @@ module "app-helm-chart" {
   depends_on = [
     module.gcp-workload-identity
   ]
-  source         = "./application"
+  source         = "github.com/Facets-cloud/facets-utility-modules//application/2.0"
   namespace      = local.namespace
   chart_name     = lower(var.instance_name)
   values         = local.instance
   annotations    = local.annotations
   labels         = local.labels
-  cluster        = var.cluster
   environment    = var.environment
   inputs         = var.inputs
   vpa_release_id = lookup(lookup(lookup(var.inputs, "vpa_details", {}), "attributes", {}), "helm_release_id", "")
