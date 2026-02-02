@@ -20,13 +20,6 @@ inputs:
 intent: grafana_dashboards
 outputs:
     default:
-        mock:
-            attributes:
-                configmap_names: mock-string-value
-                dashboard_count: mock-string-value
-                dashboard_names: mock-string-value
-                namespace: mock-string-value
-            interfaces: {}
         title: Grafana Dashboards Configuration
         type: '@facets/grafana_dashboards'
 sample:
