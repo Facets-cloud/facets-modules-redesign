@@ -1,4 +1,11 @@
 # Define your terraform resources here
+# Fetch Route53 zone by domain name
+data "aws_route53_zone" "base-domain-zone" {
+  count    = local.tenant_provider == "aws" ? 1 : 0
+  name     = local.tenant_base_domain
+  provider = aws3tooling
+}
+
 module "iam_user_name" {
   count           = local.disable_dns_validation ? 0 : 1
   source          = "github.com/Facets-cloud/facets-utility-modules//name"
