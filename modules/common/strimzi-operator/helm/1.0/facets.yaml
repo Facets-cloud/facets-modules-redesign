@@ -2,6 +2,9 @@ intent: strimzi-operator
 flavor: helm
 version: '1.0'
 clouds:
+- aws
+- azure
+- gcp
 - kubernetes
 description: Strimzi Kafka Operator deployed via Helm chart for managing Kafka clusters
   on Kubernetes

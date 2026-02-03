@@ -2,6 +2,9 @@ intent: eck-operator
 flavor: helm
 version: '1.0'
 clouds:
+- aws
+- azure
+- gcp
 - kubernetes
 description: Elastic Cloud on Kubernetes (ECK) Operator deployed via Helm chart
 spec:

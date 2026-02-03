@@ -7,6 +7,9 @@ description: 'Creates Kubernetes RBAC Roles and ClusterRoles for access control.
 
   '
 clouds:
+- aws
+- azure
+- gcp
 - kubernetes
 inputs:
   kubernetes_details:
