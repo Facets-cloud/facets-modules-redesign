@@ -1,0 +1,14 @@
+name: '@facets/mongo_k8s'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        external_endpoints:
+          type: object
+          properties: {}
+    interfaces:
+      type: object
+      properties: {}
+providers: []
