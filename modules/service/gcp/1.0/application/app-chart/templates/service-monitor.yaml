@@ -17,7 +17,8 @@ spec:
   endpoints:
   {{- range $k, $v := .Values.spec.runtime.metrics }}
   {{- with .}}
-    - interval: 10s
+    - honorLabels: true
+      interval: 10s
       path: {{ $v.path }}
       port: {{ printf "%s-%s" $v.port_name "svc" | lower | replace "_" "-" }}
   {{- end }}
