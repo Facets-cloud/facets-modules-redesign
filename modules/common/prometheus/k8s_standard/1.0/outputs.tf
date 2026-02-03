@@ -7,6 +7,7 @@ locals {
     grafana_url          = "http://${module.name.name}-grafana.${var.environment.namespace}.svc.cluster.local:80"
     helm_release_id      = helm_release.prometheus-operator.id
     prometheus_release   = module.name.name
+    prometheus_service   = "${module.name.name}-prometheus"
     alertmanager_service = "${module.name.name}-alertmanager"
     grafana_service      = "${module.name.name}-grafana"
   }
