@@ -102,10 +102,10 @@ locals {
         send_resolved = true
       },
       {
-        url           = "https://${var.cc_metadata.cc_host}/cc/v1/clusters/${var.environment.cloud_tags.facetsclusterid}/alerts"
+        url           = "https://${local.cc_host}/cc/v1/clusters/${var.environment.cluster_id}/alerts"
         send_resolved = true
         http_config = {
-          bearer_token = var.cc_metadata.cc_auth_token
+          bearer_token = local.cc_auth_token
         }
       }
     ]
@@ -313,12 +313,12 @@ locals {
           cookie_samesite = "none"
         }
         server = {
-          domain              = var.cc_metadata.cc_host
-          root_url            = "%(protocol)s://%(domain)s:%(http_port)s/tunnel/${var.environment.cloud_tags.facetsclusterid}/grafana/"
+          domain              = local.cc_host
+          root_url            = "%(protocol)s://%(domain)s:%(http_port)s/tunnel/${var.environment.cluster_id}/grafana/"
           serve_from_sub_path = true
         }
         live = {
-          allowed_origins = "https://${var.cc_metadata.cc_host}"
+          allowed_origins = "https://${local.cc_host}"
         }
         "auth.anonymous" = {
           enabled  = true
