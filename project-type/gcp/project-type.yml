@@ -1,4 +1,4 @@
-name: gcp
+name: gcp-new
 description: GCP project type with GKE and common services
 
 # Git repository details
@@ -43,25 +43,53 @@ modules:
     #   flavor: gcp-msk
 
     # Common Modules
+    - intent: alert_rules
+      flavor: prometheus
     - intent: artifactories
       flavor: standard
-    # - intent: cert_manager
-    #   flavor: standard
+    - intent: cert_manager
+      flavor: standard
     - intent: config_map
       flavor: k8s_standard
+    - intent: eck-operator
+      flavor: helm
+    - intent: grafana_dashboards
+      flavor: k8s
     - intent: helm
       flavor: k8s_standard
-    # - intent: ingress
-    #   flavor: nginx_k8s
-    # - intent: k8s_callback
-    #   flavor: k8s_standard
+    - intent: ingress
+      flavor: nginx_k8s
     - intent: k8s_access_controls
+      flavor: k8s_standard
+    - intent: k8s_callback
       flavor: k8s_standard
     - intent: k8s_resource
       flavor: k8s_standard
+    - intent: kubeblocks-crd
+      flavor: standard
+    - intent: kubeblocks-operator
+      flavor: standard
     - intent: kubernetes_secret
       flavor: k8s_standard
-    # - intent: prometheus
-    #   flavor: k8s_standard
+    - intent: monitoring
+      flavor: mongo
+    - intent: prometheus
+      flavor: k8s_standard
+    - intent: strimzi-operator
+      flavor: helm
     - intent: vpa
       flavor: standard
+    - intent: wireguard-operator
+      flavor: standard
+    - intent: wireguard-vpn
+      flavor: standard
+
+    # Kubeblocks Self-hosted Datastores
+    - intent: mongo
+      flavor: kubeblocks
+    - intent: mysql
+      flavor: kubeblocks
+    - intent: postgres
+      flavor: kubeblocks
+    - intent: redis
+      flavor: kubeblocks
