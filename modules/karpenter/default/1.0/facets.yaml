@@ -36,17 +36,6 @@ inputs:
 intent: karpenter
 outputs:
     default:
-        mock:
-            attributes:
-                controller_role_arn: mock-string-value
-                interruption_queue_name: mock-string-value
-                karpenter_namespace: mock-string-value
-                karpenter_service_account: mock-string-value
-                karpenter_version: mock-string-value
-                node_instance_profile_name: mock-string-value
-                node_role_arn: mock-string-value
-                secrets: []
-            interfaces: {}
         title: Karpenter Details
         type: '@facets/karpenter-details'
 sample:
