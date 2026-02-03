@@ -13,6 +13,8 @@ locals {
 
   spec           = lookup(var.instance, "spec", {})
   taints         = lookup(local.spec, "taints", [])
+  node_taints    = [for taint in local.taints : "${taint.key}=${taint.value}:${taint.effect}"]
+  node_labels    = lookup(var.instance.spec, "labels", {})
   spot_max_price = lookup(local.aks_advanced, "spot_max_price", null)
   os_type        = lookup(local.aks_advanced, "os_type", "Linux")
 }
@@ -29,8 +31,8 @@ resource "azurerm_kubernetes_cluster_node_pool" "node_pool" {
   max_count            = var.instance.spec.max_node_count
   min_count            = var.instance.spec.min_node_count
   node_count           = lookup(local.aks_advanced, "node_count", var.instance.spec.min_node_count)
-  node_taints          = [for taint in local.taints : "${taint.key}=${taint.value}:${taint.effect}"]
-  node_labels          = lookup(var.instance.spec, "labels", {})
+  node_taints          = local.node_taints
+  node_labels          = local.node_labels
   max_pods             = lookup(local.aks_advanced, "max_pods", null)
 
   priority = lookup(local.aks_advanced, "priority", "Regular")
