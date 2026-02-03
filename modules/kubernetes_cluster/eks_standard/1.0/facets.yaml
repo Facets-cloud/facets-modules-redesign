@@ -23,38 +23,6 @@ inputs:
 intent: kubernetes_cluster
 outputs:
     attributes:
-        mock:
-            attributes:
-                cloud_provider: mock-string-value
-                cluster_arn: mock-string-value
-                cluster_ca_certificate: mock-string-value
-                cluster_endpoint: mock-string-value
-                cluster_iam_role_arn: mock-string-value
-                cluster_id: mock-string-value
-                cluster_name: mock-string-value
-                cluster_primary_security_group_id: mock-string-value
-                cluster_security_group_id: mock-string-value
-                cluster_version: mock-string-value
-                kubernetes_provider_exec:
-                    api_version: mock-string-value
-                    args: []
-                    command: mock-string-value
-                node_iam_role_arn: mock-string-value
-                node_iam_role_name: mock-string-value
-                node_security_group_id: mock-string-value
-                oidc_issuer_url: mock-string-value
-                oidc_provider: mock-string-value
-                oidc_provider_arn: mock-string-value
-                secrets: []
-            interfaces:
-                kubernetes:
-                    cluster_ca_certificate: mock-string-value
-                    host: mock-string-value
-                    kubernetes_provider_exec:
-                        api_version: mock-string-value
-                        args: []
-                        command: mock-string-value
-                    secrets: []
         providers:
             helm:
                 attributes:
@@ -91,38 +59,6 @@ outputs:
         type: '@facets/kubernetes-details'
     default:
         description: Additional EKS cluster attributes without provider configuration
-        mock:
-            attributes:
-                cloud_provider: mock-string-value
-                cluster_arn: mock-string-value
-                cluster_ca_certificate: mock-string-value
-                cluster_endpoint: mock-string-value
-                cluster_iam_role_arn: mock-string-value
-                cluster_id: mock-string-value
-                cluster_name: mock-string-value
-                cluster_primary_security_group_id: mock-string-value
-                cluster_security_group_id: mock-string-value
-                cluster_version: mock-string-value
-                kubernetes_provider_exec:
-                    api_version: mock-string-value
-                    args: []
-                    command: mock-string-value
-                node_iam_role_arn: mock-string-value
-                node_iam_role_name: mock-string-value
-                node_security_group_id: mock-string-value
-                oidc_issuer_url: mock-string-value
-                oidc_provider: mock-string-value
-                oidc_provider_arn: mock-string-value
-                secrets: []
-            interfaces:
-                kubernetes:
-                    cluster_ca_certificate: mock-string-value
-                    host: mock-string-value
-                    kubernetes_provider_exec:
-                        api_version: mock-string-value
-                        args: []
-                        command: mock-string-value
-                    secrets: []
         title: EKS Cluster Attributes
         type: '@facets/eks'
 sample:
@@ -255,11 +191,13 @@ spec:
             description: Whether the cluster API server endpoint is accessible from within the VPC
             title: Enable Private Endpoint Access
             type: boolean
+            x-ui-overrides-only: true
         cluster_endpoint_public_access:
             default: true
             description: Whether the cluster API server endpoint is accessible from the internet
             title: Enable Public Endpoint Access
             type: boolean
+            x-ui-overrides-only: true
         cluster_tags:
             description: Additional tags for the EKS cluster
             title: Cluster Tags
@@ -279,6 +217,7 @@ spec:
                 - "1.35"
             title: Kubernetes Version
             type: string
+            x-ui-overrides-only: true
         default_node_pool:
             description: Default system node pool configuration for running system workloads (CoreDNS, Karpenter, etc.)
             properties:
