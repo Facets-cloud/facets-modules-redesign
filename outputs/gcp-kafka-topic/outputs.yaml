@@ -1,0 +1,35 @@
+name: '@facets/gcp-kafka-topic'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        topic_id:
+          description: GCP Managed Kafka topic ID
+          type: string
+        topic_name:
+          description: Name of the Kafka topic
+          type: string
+        partition_count:
+          description: Number of partitions in the topic
+          type: integer
+        replication_factor:
+          description: Replication factor for the topic
+          type: integer
+        cluster_id:
+          description: ID of the Kafka cluster where the topic exists
+          type: string
+        location:
+          description: GCP location where the topic is deployed
+          type: string
+        configs:
+          description: Kafka topic configuration key-value pairs
+          type: object
+          patternProperties:
+            ".*":
+              type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []
