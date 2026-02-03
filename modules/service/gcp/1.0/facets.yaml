@@ -691,6 +691,15 @@ spec:
       required:
       - size
       - health_checks
+      x-ui-order:
+      - autoscaling
+      - command
+      - args
+      - health_checks
+      - ports
+      - size
+      - metrics
+      - volumes
     release:
       title: Release
       description: Manage version releases to deploy updates and maintain software
@@ -1661,6 +1670,10 @@ sample:
       health_checks:
         readiness_check_type: None
         liveness_check_type: None
+      metrics:
+        custom_metrics:
+          path: /metrics
+          port_name: metrics
     env:
       LOG_LEVEL: INFO
     init_containers: {}
