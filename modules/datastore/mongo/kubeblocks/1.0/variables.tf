@@ -19,7 +19,6 @@ variable "instance" {
   type = object({
     spec = object({
       namespace_override = optional(string, "")
-      termination_policy = string
       mongodb_version    = string
       mode               = string
       replicas           = optional(number)

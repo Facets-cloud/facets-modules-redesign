@@ -54,7 +54,7 @@ module "mongodb_cluster" {
       {
         clusterDef        = "mongodb"
         topology          = local.topology
-        terminationPolicy = var.instance.spec.termination_policy
+        terminationPolicy = local.termination_policy
 
         componentSpecs = [
           merge(
@@ -153,6 +153,10 @@ module "mongodb_cluster" {
     timeout         = local.restore_enabled ? 3600 : 2700 # 60 mins if restore, else 45 mins
     cleanup_on_fail = true
     max_history     = 3
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
