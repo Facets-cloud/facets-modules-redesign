@@ -178,8 +178,6 @@ spec:
 sample:
   kind: kubernetes_cluster
   flavor: eks_automode
-  alias-flavors:
-    - default
   version: '1.0'
   metadata:
     name: eks-cluster
