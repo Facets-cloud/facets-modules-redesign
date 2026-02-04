@@ -44,9 +44,9 @@ EOF
         tolerations  = local.tolerations
       }
       prometheus = {
-        enabled = true
+        enabled = local.prometheus_enabled
         servicemonitor = {
-          enabled = true
+          enabled = local.prometheus_enabled
         }
       }
     }),

@@ -1,6 +1,6 @@
 intent: cert_manager
 flavor: standard
-version: '1.0'
+version: '3.0'
 description: Deploys Cert Manager for managing ssl certificates
 clouds:
 - aws
@@ -11,7 +11,7 @@ inputs:
   prometheus_details:
     type: '@facets/prometheus'
     displayName: Prometheus
-    optional: false
+    optional: true
     default:
       resource_type: prometheus
       resource_name: default
@@ -54,7 +54,7 @@ sample:
   flavor: standard
   disabled: true
   metadata: {}
-  version: '1.0'
+  version: '3.0'
   spec:
     cert_manager: {}
 iac:

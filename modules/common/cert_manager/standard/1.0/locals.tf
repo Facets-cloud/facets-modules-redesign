@@ -58,4 +58,7 @@ locals {
 
   # ACME configuration
   acme_email = lookup(local.spec, "acme_email", "") != "" ? lookup(local.spec, "acme_email", "") : null
+
+  # Prometheus configuration - enabled only if helm_release_id is provided
+  prometheus_enabled = try(var.inputs.prometheus_details.attributes.helm_release_id, "") != ""
 }
