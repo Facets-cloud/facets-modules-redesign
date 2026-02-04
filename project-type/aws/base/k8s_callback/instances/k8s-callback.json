@@ -2,7 +2,7 @@
   "kind": "k8s_callback",
   "flavor": "k8s_standard",
   "version": "1.0",
-  "disabled": true,
+  "disabled": false,
   "spec": {},
   "inputs": {
     "kubernetes_details": {

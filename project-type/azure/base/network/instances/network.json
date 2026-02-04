@@ -5,11 +5,7 @@
   "spec": {
     "vnet_cidr": "10.0.0.0/16",
     "region": "centralindia",
-    "availability_zones": [
-      "1",
-      "2",
-      "3"
-    ],
+    "availability_zones": ["1", "2", "3"],
     "nat_gateway": {
       "strategy": "single"
     },
@@ -19,7 +15,7 @@
       "enable_mysql_flexible_subnet": false
     }
   },
-  "disabled": true,
+  "disabled": false,
   "inputs": {
     "cloud_account": {
       "resource_name": "cloud",

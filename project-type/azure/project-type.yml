@@ -11,36 +11,80 @@ iacToolVersion: "1.5.7"
 
 # IaC modules to include
 modules:
-    # Azure Core Modules
-    - intent: cloud_account
-      flavor: azure_provider
-    - intent: kubernetes_cluster
-      flavor: aks
-    - intent: kubernetes_node_pool
-      flavor: azure
-    - intent: network
-      flavor: azure_network
-    - intent: service
-      flavor: azure
+  # === Azure Core Modules ===
+  - intent: cloud_account
+    flavor: azure_provider
+  - intent: kubernetes_cluster
+    flavor: aks
+  - intent: kubernetes_node_pool
+    flavor: azure
+  - intent: network
+    flavor: azure_network
+  - intent: service
+    flavor: azure
 
-    # Common Modules
-    - intent: artifactories
-      flavor: standard
-    # - intent: cert_manager
-    #   flavor: standard
-    - intent: config_map
-      flavor: k8s_standard
-    - intent: helm
-      flavor: k8s_standard
-    # - intent: ingress
-    #   flavor: nginx_k8s
-    # - intent: k8s_callback
-    #   flavor: k8s_standard
-    - intent: k8s_resource
-      flavor: k8s_standard
-    - intent: kubernetes_secret
-      flavor: k8s_standard
-    # - intent: prometheus
-    #   flavor: k8s_standard
-    - intent: vpa
-      flavor: standard
+  # === Azure-Specific Modules ===
+  - intent: azure_workload_identity
+    flavor: azure
+
+  # === Azure Datastore Modules ===
+  - intent: mongo
+    flavor: cosmosdb
+  - intent: mysql
+    flavor: azure-flexible-server
+  - intent: postgres
+    flavor: azure-flexible-server
+  - intent: redis
+    flavor: azure_cache_custom
+
+  # === Common Modules ===
+  - intent: alert_rules
+    flavor: prometheus
+  - intent: artifactories
+    flavor: standard
+  - intent: cert_manager
+    flavor: standard
+  - intent: config_map
+    flavor: k8s_standard
+  - intent: eck-operator
+    flavor: helm
+  - intent: grafana_dashboards
+    flavor: k8s
+  - intent: helm
+    flavor: k8s_standard
+  - intent: ingress
+    flavor: nginx_k8s
+  - intent: k8s_access_controls
+    flavor: k8s_standard
+  - intent: k8s_callback
+    flavor: k8s_standard
+  - intent: k8s_resource
+    flavor: k8s_standard
+  - intent: kubeblocks-crd
+    flavor: standard
+  - intent: kubeblocks-operator
+    flavor: standard
+  - intent: kubernetes_secret
+    flavor: k8s_standard
+  - intent: monitoring
+    flavor: mongo
+  - intent: prometheus
+    flavor: k8s_standard
+  - intent: strimzi-operator
+    flavor: helm
+  - intent: vpa
+    flavor: standard
+  - intent: wireguard-operator
+    flavor: standard
+  - intent: wireguard-vpn
+    flavor: standard
+
+  # === Kubeblocks Self-hosted Datastores ===
+  - intent: mongo
+    flavor: kubeblocks
+  - intent: mysql
+    flavor: kubeblocks
+  - intent: postgres
+    flavor: kubeblocks
+  - intent: redis
+    flavor: kubeblocks

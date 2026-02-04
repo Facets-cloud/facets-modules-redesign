@@ -25,7 +25,7 @@
       "enable_lambda": false
     }
   },
-  "disabled": true,
+  "disabled": false,
   "inputs": {
     "cloud_account": {
       "resource_name": "cloud",

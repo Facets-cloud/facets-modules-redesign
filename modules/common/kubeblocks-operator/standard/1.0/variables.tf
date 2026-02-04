@@ -9,7 +9,7 @@ variable "instance" {
       high_availability = optional(object({
         replicas   = optional(number, 1)
         enable_pdb = optional(bool, false)
-      }), {
+        }), {
         replicas   = 1
         enable_pdb = false
       })

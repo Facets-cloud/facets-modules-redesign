@@ -7,9 +7,7 @@
   },
   "spec": {
     "cluster": {
-      "cluster_endpoint_public_access_cidrs": [
-        "0.0.0.0/0"
-      ],
+      "cluster_endpoint_public_access_cidrs": ["0.0.0.0/0"],
       "sku_tier": "Free"
     },
     "auto_upgrade_settings": {
@@ -40,7 +38,7 @@
     },
     "tags": {}
   },
-  "disabled": true,
+  "disabled": false,
   "inputs": {
     "cloud_account": {
       "resource_name": "cloud",
