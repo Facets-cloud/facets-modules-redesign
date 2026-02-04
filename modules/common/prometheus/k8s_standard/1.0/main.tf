@@ -20,60 +20,59 @@ resource "helm_release" "prometheus-operator" {
   cleanup_on_fail = true
 
   values = [
-    yamlencode(merge(
-      local.default_values,
-      {
-        prometheus = {
-          prometheusSpec = {
-            storageSpec = {
-              volumeClaimTemplate = {
-                metadata = {
-                  name = "pvc"
-                }
-                spec = {
-                  # Use existing PVC
-                  # volumeName  = module.prometheus-pvc.pvc_name
-                  volumeName  = "pvc"
-                  accessModes = ["ReadWriteOnce"]
-                  resources = {
-                    requests = {
-                      storage = lookup(local.prometheusSpec.size, "volume", "100Gi")
-                    }
+    yamlencode(local.default_values),
+    yamlencode({
+      prometheus = {
+        prometheusSpec = {
+          storageSpec = {
+            volumeClaimTemplate = {
+              metadata = {
+                name = "pvc"
+              }
+              spec = {
+                # Use existing PVC
+                # volumeName  = module.prometheus-pvc.pvc_name
+                volumeName  = "pvc"
+                accessModes = ["ReadWriteOnce"]
+                resources = {
+                  requests = {
+                    storage = lookup(local.prometheusSpec.size, "volume", "100Gi")
                   }
                 }
               }
             }
           }
-        },
-        alertmanager = {
-          alertmanagerSpec = {
-            storage = {
-              volumeClaimTemplate = {
-                metadata = {
-                  name = "pvc"
-                }
-                spec = {
-                  # Use existing PVC
-                  # volumeName  = module.alertmanager-pvc.pvc_name
-                  volumeName  = "pvc"
-                  accessModes = ["ReadWriteOnce"]
-                  resources = {
-                    requests = {
-                      storage = lookup(local.alertmanagerSpec.size, "volume", "10Gi")
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        kube-state-metrics = {
-          enabled = true
         }
       },
-      local.valuesSpec,         # User's custom values (other than alertmanager.config)
-      local.alertmanager_config # Alertmanager config with concatenated receivers
-    ))
+      alertmanager = {
+        alertmanagerSpec = {
+          storage = {
+            volumeClaimTemplate = {
+              metadata = {
+                name = "pvc"
+              }
+              spec = {
+                # Use existing PVC
+                # volumeName  = module.alertmanager-pvc.pvc_name
+                volumeName  = "pvc"
+                accessModes = ["ReadWriteOnce"]
+                resources = {
+                  requests = {
+                    storage = lookup(local.alertmanagerSpec.size, "volume", "10Gi")
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      kube-state-metrics = {
+        enabled = true
+      }
+    }),
+    yamlencode(local.valuesSpec),         # User's custom values (other than alertmanager.config)
+    yamlencode(local.alertmanager_config) # Alertmanager config with concatenated receivers
+
   ]
 }
 
