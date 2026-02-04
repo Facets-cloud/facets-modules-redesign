@@ -1,5 +1,22 @@
 variable "instance" {
-  type = any
+  type = object({
+    spec = optional(object({
+      acme_email = optional(string)
+      cert_manager = optional(object({
+        values          = optional(any)
+        cleanup_on_fail = optional(bool)
+        wait            = optional(bool)
+        atomic          = optional(bool)
+        timeout         = optional(number)
+        recreate_pods   = optional(bool)
+      }))
+    }))
+    advanced = optional(object({
+      cert_manager = optional(object({
+        values = optional(any)
+      }))
+    }))
+  })
 }
 
 variable "instance_name" {
@@ -16,14 +33,14 @@ variable "environment" {
 
 variable "inputs" {
   type = object({
-    prometheus_details = object({
+    prometheus_details = optional(object({
       attributes = optional(object({
         alertmanager_url = optional(string)
         helm_release_id  = optional(string)
         prometheus_url   = optional(string)
       }))
       interfaces = optional(object({}))
-    })
+    }))
     kubernetes_details = object({
       attributes = optional(object({
         cloud_provider   = optional(string)
