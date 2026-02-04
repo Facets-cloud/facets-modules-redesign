@@ -20,9 +20,16 @@ locals {
   replicas = local.mode == "redis-cluster" ? lookup(var.instance.spec, "replicas", 2) : local.base_replicas
 
   # HA settings
-  ha_enabled               = local.mode == "replication" || local.mode == "redis-cluster"
-  enable_pod_anti_affinity = local.ha_enabled ? true : false # Enable pod anti-affinity for HA modes
-  create_read_service      = local.mode == "replication"     # Only for replication mode with sentinel
+  ha_enabled = local.mode == "replication" || local.mode == "redis-cluster"
+
+  # Anti-affinity settings (soft anti-affinity - prefers different nodes)
+  ha_config                = lookup(var.instance.spec, "high_availability", {})
+  enable_pod_anti_affinity = lookup(local.ha_config, "enable_pod_anti_affinity", true) && local.ha_enabled
+
+  # PDB settings - maxUnavailable=1 ensures only 1 pod disrupted at a time
+  enable_pdb = lookup(local.ha_config, "enable_pdb", false) && local.ha_enabled
+
+  create_read_service = local.mode == "replication" # Only for replication mode with sentinel
 
   # Get node pool details from input
   node_pool_input  = lookup(var.inputs, "node_pool", {})
