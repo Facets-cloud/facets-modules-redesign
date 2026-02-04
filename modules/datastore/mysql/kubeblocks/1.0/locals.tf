@@ -8,9 +8,16 @@ locals {
   replicas     = var.instance.spec.mode == "standalone" ? 1 : lookup(var.instance.spec, "replicas", 2)
 
   # HA settings
-  ha_enabled               = var.instance.spec.mode == "replication"
-  enable_pod_anti_affinity = true # Always enable pod anti-affinity for HA deployments
-  create_read_service      = true # Always create read service for replication mode
+  ha_enabled = var.instance.spec.mode == "replication"
+
+  # Anti-affinity settings (soft anti-affinity - prefers different nodes)
+  ha_config                = lookup(var.instance.spec, "high_availability", {})
+  enable_pod_anti_affinity = lookup(local.ha_config, "enable_pod_anti_affinity", true)
+
+  # PDB settings - maxUnavailable=1 ensures only 1 pod disrupted at a time
+  enable_pdb = lookup(local.ha_config, "enable_pdb", false) && local.ha_enabled
+
+  create_read_service = true # Always create read service for replication mode
 
   # Get node pool details from input
   node_pool_input  = lookup(var.inputs, "node_pool", {})
