@@ -142,7 +142,7 @@ locals {
   additional_ingress_annotations_with_auth = merge(
     lookup(var.instance.spec, "basicAuth", lookup(var.instance.spec, "basic_auth", false)) ? {
       "nginx.ingress.kubernetes.io/auth-realm" : "Authentication required"
-      "nginx.ingress.kubernetes.io/auth-secret" : length(kubernetes_secret.ingress-auth) > 0 ? kubernetes_secret.ingress-auth[0].metadata[0].name : ""
+      "nginx.ingress.kubernetes.io/auth-secret" : length(kubernetes_secret_v1.ingress-auth) > 0 ? kubernetes_secret_v1.ingress-auth[0].metadata[0].name : ""
       "nginx.ingress.kubernetes.io/auth-type" : "basic"
     } : {}
   )
@@ -430,7 +430,7 @@ VALUES
 }
 
 # secret with the auth details
-resource "kubernetes_secret" "ingress-auth" {
+resource "kubernetes_secret_v1" "ingress-auth" {
   count = lookup(var.instance.spec, "basicAuth", lookup(var.instance.spec, "basic_auth", false)) ? 1 : 0
   metadata {
     name      = "${var.instance_name}-nginx-ingress-auth"
@@ -834,7 +834,7 @@ module "custom_error_pages_configmap" {
   }
 }
 
-resource "kubernetes_secret" "custom_tls" {
+resource "kubernetes_secret_v1" "custom_tls" {
   for_each = local.custom_tls_domains
 
   metadata {

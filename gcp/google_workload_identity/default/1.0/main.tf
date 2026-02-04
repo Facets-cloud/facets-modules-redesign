@@ -25,7 +25,7 @@ resource "google_service_account" "cluster_service_account" {
   project      = local.project_id
 }
 
-resource "kubernetes_service_account" "main" {
+resource "kubernetes_service_account_v1" "main" {
   count = local.use_existing_k8s_sa ? 0 : 1
 
   automount_service_account_token = local.automount_service_account_token

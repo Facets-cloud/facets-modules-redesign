@@ -66,15 +66,15 @@ resource "aws_iam_access_key" "cert_manager_access_key" {
   user     = try(aws_iam_user.cert_manager_iam_user[0].name, "na")
 }
 
-resource "kubernetes_namespace" "namespace" {
+resource "kubernetes_namespace_v1" "namespace" {
   metadata {
     name = local.cert_mgr_namespace
   }
 }
 
-resource "kubernetes_secret" "cert_manager_r53_secret" {
+resource "kubernetes_secret_v1" "cert_manager_r53_secret" {
   count      = local.disable_dns_validation ? 0 : 1
-  depends_on = [kubernetes_namespace.namespace]
+  depends_on = [kubernetes_namespace_v1.namespace]
   metadata {
     name      = "${lower(module.iam_user_name[0].name)}-secret"
     namespace = local.cert_mgr_namespace
@@ -88,7 +88,7 @@ resource "kubernetes_secret" "cert_manager_r53_secret" {
 }
 
 resource "helm_release" "cert_manager" {
-  depends_on = [kubernetes_namespace.namespace]
+  depends_on = [kubernetes_namespace_v1.namespace]
   name       = "cert-manager"
   # repository       = "https://charts.jetstack.io"
   chart            = "${path.module}/cert-manager-v1.17.1.tgz"
@@ -166,9 +166,9 @@ module "cluster-issuer" {
 }
 
 
-resource "kubernetes_secret" "google-trust-services-prod-account-key" {
+resource "kubernetes_secret_v1" "google-trust-services-prod-account-key" {
   count      = local.use_gts ? 1 : 0
-  depends_on = [kubernetes_namespace.namespace]
+  depends_on = [kubernetes_namespace_v1.namespace]
   metadata {
     name      = "google-trust-services-prod-account-key"
     namespace = local.cert_mgr_namespace
@@ -198,7 +198,7 @@ module "cluster-issuer-gts-prod" {
         server                      = local.use_gts ? "https://dv.acme-v02.api.pki.goog/directory" : "https://acme-v02.api.letsencrypt.org/directory"
         disableAccountKeyGeneration = true
         privateKeySecretRef = {
-          name = kubernetes_secret.google-trust-services-prod-account-key[0].metadata[0].name
+          name = kubernetes_secret_v1.google-trust-services-prod-account-key[0].metadata[0].name
         }
         solvers = [
           {
@@ -234,7 +234,7 @@ module "cluster-issuer-gts-prod-http01" {
         server                      = local.use_gts ? "https://dv.acme-v02.api.pki.goog/directory" : "https://acme-v02.api.letsencrypt.org/directory"
         disableAccountKeyGeneration = true
         privateKeySecretRef = {
-          name = kubernetes_secret.google-trust-services-prod-account-key[0].metadata[0].name
+          name = kubernetes_secret_v1.google-trust-services-prod-account-key[0].metadata[0].name
         }
         solvers = [
           {

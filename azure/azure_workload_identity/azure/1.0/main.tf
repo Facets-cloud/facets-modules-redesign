@@ -17,7 +17,7 @@ resource "azurerm_user_assigned_identity" "main" {
 }
 
 # Kubernetes Service Account with workload identity annotation
-resource "kubernetes_service_account" "main" {
+resource "kubernetes_service_account_v1" "main" {
   count = local.use_existing_k8s_sa ? 0 : 1
 
   automount_service_account_token = local.automount_service_account_token
@@ -52,7 +52,7 @@ resource "azurerm_federated_identity_credential" "main" {
   depends_on = [
     azurerm_user_assigned_identity.main,
     data.azurerm_user_assigned_identity.existing,
-    kubernetes_service_account.main
+    kubernetes_service_account_v1.main
   ]
 }
 
