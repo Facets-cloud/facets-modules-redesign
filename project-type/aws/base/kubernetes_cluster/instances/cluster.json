@@ -14,7 +14,7 @@
       "resource_type": "network"
     }
   },
-  "disabled": true,
+  "disabled": false,
   "version": "1.0",
   "spec": {
     "cluster_endpoint_private_access": true,
@@ -40,9 +40,7 @@
       "capacity_type": "SPOT",
       "desired_size": 1,
       "disk_size": 50,
-      "instance_types": [
-        "t3.medium"
-      ],
+      "instance_types": ["t3.medium"],
       "max_size": 1,
       "min_size": 1
     },

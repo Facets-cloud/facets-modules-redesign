@@ -2,7 +2,7 @@
   "kind": "k8s_access_controls",
   "flavor": "k8s_standard",
   "version": "1.0",
-  "disabled": true,
+  "disabled": false,
   "spec": {
     "roles": {
       "cc-read-role": {
@@ -12,108 +12,49 @@
         },
         "rules": {
           "rule1": {
-            "api_groups": [
-              null
-            ],
-            "resources": [
-              "pods",
-              "pods/log"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": [null],
+            "resources": ["pods", "pods/log"],
+            "verbs": ["get", "list"]
           },
           "rule2": {
-            "api_groups": [
-              null
-            ],
-            "resources": [
-              "services",
-              "persistentvolumeclaims"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": [null],
+            "resources": ["services", "persistentvolumeclaims"],
+            "verbs": ["get", "list"]
           },
           "rule3": {
-            "api_groups": [
-              "apps"
-            ],
+            "api_groups": ["apps"],
             "resources": [
               "deployments",
               "replicasets",
               "statefulsets",
               "daemonsets"
             ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "verbs": ["get", "list"]
           },
           "rule4": {
-            "api_groups": [
-              "batch"
-            ],
-            "resources": [
-              "cronjobs",
-              "jobs"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["batch"],
+            "resources": ["cronjobs", "jobs"],
+            "verbs": ["get", "list"]
           },
           "rule5": {
-            "api_groups": [
-              "extensions",
-              "networking.k8s.io"
-            ],
-            "resources": [
-              "ingresses"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["extensions", "networking.k8s.io"],
+            "resources": ["ingresses"],
+            "verbs": ["get", "list"]
           },
           "rule6": {
-            "api_groups": [
-              "extensions"
-            ],
-            "resources": [
-              "ingresses"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["extensions"],
+            "resources": ["ingresses"],
+            "verbs": ["get", "list"]
           },
           "rule7": {
-            "api_groups": [
-              "events.k8s.io",
-              null
-            ],
-            "resources": [
-              "events"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["events.k8s.io", null],
+            "resources": ["events"],
+            "verbs": ["get", "list"]
           },
           "rule8": {
-            "api_groups": [
-              "metrics.k8s.io"
-            ],
-            "resources": [
-              "pods"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["metrics.k8s.io"],
+            "resources": ["pods"],
+            "verbs": ["get", "list"]
           }
         }
       },
@@ -124,42 +65,17 @@
         },
         "rules": {
           "rule1": {
-            "api_groups": [
-              null
-            ],
-            "resources": [
-              "pods",
-              "pods/log",
-              "pods/exec",
-              "pods/portforward"
-            ],
-            "verbs": [
-              "get",
-              "list",
-              "delete",
-              "create",
-              "patch",
-              "update"
-            ]
+            "api_groups": [null],
+            "resources": ["pods", "pods/log", "pods/exec", "pods/portforward"],
+            "verbs": ["get", "list", "delete", "create", "patch", "update"]
           },
           "rule2": {
-            "api_groups": [
-              null
-            ],
-            "resources": [
-              "services",
-              "namespaces"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": [null],
+            "resources": ["services", "namespaces"],
+            "verbs": ["get", "list"]
           },
           "rule3": {
-            "api_groups": [
-              "apps",
-              "extensions"
-            ],
+            "api_groups": ["apps", "extensions"],
             "resources": [
               "deployments",
               "replicasets",
@@ -167,108 +83,42 @@
               "daemonsets",
               "deployments/scale"
             ],
-            "verbs": [
-              "get",
-              "list",
-              "delete",
-              "create",
-              "patch",
-              "update"
-            ]
+            "verbs": ["get", "list", "delete", "create", "patch", "update"]
           },
           "rule4": {
-            "api_groups": [
-              "autoscaling"
-            ],
-            "resources": [
-              "horizontalpodautoscalers"
-            ],
-            "verbs": [
-              "get",
-              "list",
-              "patch",
-              "update"
-            ]
+            "api_groups": ["autoscaling"],
+            "resources": ["horizontalpodautoscalers"],
+            "verbs": ["get", "list", "patch", "update"]
           },
           "rule5": {
-            "api_groups": [
-              "extensions",
-              "networking.k8s.io"
-            ],
-            "resources": [
-              "ingresses"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["extensions", "networking.k8s.io"],
+            "resources": ["ingresses"],
+            "verbs": ["get", "list"]
           },
           "rule6": {
-            "api_groups": [
-              null
-            ],
-            "resources": [
-              "persistentvolumeclaims"
-            ],
-            "verbs": [
-              "get",
-              "list",
-              "patch",
-              "update"
-            ]
+            "api_groups": [null],
+            "resources": ["persistentvolumeclaims"],
+            "verbs": ["get", "list", "patch", "update"]
           },
           "rule7": {
-            "api_groups": [
-              "batch"
-            ],
-            "resources": [
-              "cronjobs"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["batch"],
+            "resources": ["cronjobs"],
+            "verbs": ["get", "list"]
           },
           "rule8": {
-            "api_groups": [
-              "batch"
-            ],
-            "resources": [
-              "jobs"
-            ],
-            "verbs": [
-              "get",
-              "list",
-              "create",
-              "delete",
-              "patch",
-              "update"
-            ]
+            "api_groups": ["batch"],
+            "resources": ["jobs"],
+            "verbs": ["get", "list", "create", "delete", "patch", "update"]
           },
           "rule9": {
-            "api_groups": [
-              "events.k8s.io",
-              null
-            ],
-            "resources": [
-              "events"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["events.k8s.io", null],
+            "resources": ["events"],
+            "verbs": ["get", "list"]
           },
           "rule10": {
-            "api_groups": [
-              "metrics.k8s.io"
-            ],
-            "resources": [
-              "pods"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["metrics.k8s.io"],
+            "resources": ["pods"],
+            "verbs": ["get", "list"]
           }
         }
       }
@@ -281,133 +131,59 @@
         },
         "rules": {
           "rule1": {
-            "api_groups": [
-              null
-            ],
-            "resources": [
-              "pods",
-              "pods/log"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": [null],
+            "resources": ["pods", "pods/log"],
+            "verbs": ["get", "list"]
           },
           "rule2": {
-            "api_groups": [
-              null
-            ],
-            "resources": [
-              "services",
-              "persistentvolumeclaims"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": [null],
+            "resources": ["services", "persistentvolumeclaims"],
+            "verbs": ["get", "list"]
           },
           "rule3": {
-            "api_groups": [
-              "apps"
-            ],
+            "api_groups": ["apps"],
             "resources": [
               "deployments",
               "replicasets",
               "statefulsets",
               "daemonsets"
             ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "verbs": ["get", "list"]
           },
           "rule4": {
-            "api_groups": [
-              "batch"
-            ],
-            "resources": [
-              "cronjobs",
-              "jobs"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["batch"],
+            "resources": ["cronjobs", "jobs"],
+            "verbs": ["get", "list"]
           },
           "rule5": {
-            "api_groups": [
-              "extensions",
-              "networking.k8s.io"
-            ],
-            "resources": [
-              "ingresses"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["extensions", "networking.k8s.io"],
+            "resources": ["ingresses"],
+            "verbs": ["get", "list"]
           },
           "rule6": {
-            "api_groups": [
-              "extensions"
-            ],
-            "resources": [
-              "ingresses"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["extensions"],
+            "resources": ["ingresses"],
+            "verbs": ["get", "list"]
           },
           "rule7": {
-            "api_groups": [
-              "events.k8s.io",
-              null
-            ],
-            "resources": [
-              "events"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["events.k8s.io", null],
+            "resources": ["events"],
+            "verbs": ["get", "list"]
           },
           "rule8": {
-            "api_groups": [
-              "metrics.k8s.io"
-            ],
-            "resources": [
-              "pods"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["metrics.k8s.io"],
+            "resources": ["pods"],
+            "verbs": ["get", "list"]
           },
           "rule9": {
-            "api_groups": [
-              null
-            ],
-            "resources": [
-              "nodes",
-              "persistentvolumes"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": [null],
+            "resources": ["nodes", "persistentvolumes"],
+            "verbs": ["get", "list"]
           },
           "rule10": {
-            "api_groups": [
-              "metrics.k8s.io"
-            ],
-            "resources": [
-              "nodes"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["metrics.k8s.io"],
+            "resources": ["nodes"],
+            "verbs": ["get", "list"]
           }
         }
       },
@@ -418,124 +194,59 @@
         },
         "rules": {
           "rule1": {
-            "api_groups": [
-              null
-            ],
+            "api_groups": [null],
             "resources": [
               "nodes",
               "persistentvolumes",
               "namespaces",
               "endpoints"
             ],
-            "verbs": [
-              "get",
-              "list",
-              "watch"
-            ]
+            "verbs": ["get", "list", "watch"]
           },
           "rule2": {
-            "api_groups": [
-              "metrics.k8s.io"
-            ],
-            "resources": [
-              "nodes"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["metrics.k8s.io"],
+            "resources": ["nodes"],
+            "verbs": ["get", "list"]
           },
           "rule3": {
-            "api_groups": [
-              null
-            ],
-            "resources": [
-              "pods",
-              "pods/log"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": [null],
+            "resources": ["pods", "pods/log"],
+            "verbs": ["get", "list"]
           },
           "rule4": {
-            "api_groups": [
-              null
-            ],
-            "resources": [
-              "services",
-              "persistentvolumeclaims"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": [null],
+            "resources": ["services", "persistentvolumeclaims"],
+            "verbs": ["get", "list"]
           },
           "rule5": {
-            "api_groups": [
-              "apps"
-            ],
+            "api_groups": ["apps"],
             "resources": [
               "deployments",
               "replicasets",
               "statefulsets",
               "daemonsets"
             ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "verbs": ["get", "list"]
           },
           "rule6": {
-            "api_groups": [
-              "batch"
-            ],
-            "resources": [
-              "cronjobs",
-              "jobs"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["batch"],
+            "resources": ["cronjobs", "jobs"],
+            "verbs": ["get", "list"]
           },
           "rule7": {
-            "api_groups": [
-              "extensions",
-              "networking.k8s.io"
-            ],
-            "resources": [
-              "ingresses"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["extensions", "networking.k8s.io"],
+            "resources": ["ingresses"],
+            "verbs": ["get", "list"]
           },
           "rule8": {
-            "api_groups": [
-              "events.k8s.io",
-              null
-            ],
-            "resources": [
-              "events"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["events.k8s.io", null],
+            "resources": ["events"],
+            "verbs": ["get", "list"]
           },
           "rule9": {
-            "api_groups": [
-              "metrics.k8s.io"
-            ],
-            "resources": [
-              "pods"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["metrics.k8s.io"],
+            "resources": ["pods"],
+            "verbs": ["get", "list"]
           }
         }
       },
@@ -546,44 +257,17 @@
         },
         "rules": {
           "rule1": {
-            "api_groups": [
-              null
-            ],
-            "resources": [
-              "pods",
-              "pods/log",
-              "pods/exec",
-              "pods/portforward"
-            ],
-            "verbs": [
-              "get",
-              "list",
-              "delete",
-              "create",
-              "patch",
-              "update"
-            ]
+            "api_groups": [null],
+            "resources": ["pods", "pods/log", "pods/exec", "pods/portforward"],
+            "verbs": ["get", "list", "delete", "create", "patch", "update"]
           },
           "rule2": {
-            "api_groups": [
-              null
-            ],
-            "resources": [
-              "services",
-              "namespaces",
-              "endpoints"
-            ],
-            "verbs": [
-              "get",
-              "list",
-              "watch"
-            ]
+            "api_groups": [null],
+            "resources": ["services", "namespaces", "endpoints"],
+            "verbs": ["get", "list", "watch"]
           },
           "rule3": {
-            "api_groups": [
-              "apps",
-              "extensions"
-            ],
+            "api_groups": ["apps", "extensions"],
             "resources": [
               "deployments",
               "replicasets",
@@ -591,108 +275,42 @@
               "daemonsets",
               "deployments/scale"
             ],
-            "verbs": [
-              "get",
-              "list",
-              "delete",
-              "create",
-              "patch",
-              "update"
-            ]
+            "verbs": ["get", "list", "delete", "create", "patch", "update"]
           },
           "rule4": {
-            "api_groups": [
-              "autoscaling"
-            ],
-            "resources": [
-              "horizontalpodautoscalers"
-            ],
-            "verbs": [
-              "get",
-              "list",
-              "patch",
-              "update"
-            ]
+            "api_groups": ["autoscaling"],
+            "resources": ["horizontalpodautoscalers"],
+            "verbs": ["get", "list", "patch", "update"]
           },
           "rule5": {
-            "api_groups": [
-              "extensions",
-              "networking.k8s.io"
-            ],
-            "resources": [
-              "ingresses"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["extensions", "networking.k8s.io"],
+            "resources": ["ingresses"],
+            "verbs": ["get", "list"]
           },
           "rule6": {
-            "api_groups": [
-              null
-            ],
-            "resources": [
-              "persistentvolumeclaims"
-            ],
-            "verbs": [
-              "get",
-              "list",
-              "patch",
-              "update"
-            ]
+            "api_groups": [null],
+            "resources": ["persistentvolumeclaims"],
+            "verbs": ["get", "list", "patch", "update"]
           },
           "rule7": {
-            "api_groups": [
-              "batch"
-            ],
-            "resources": [
-              "cronjobs"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["batch"],
+            "resources": ["cronjobs"],
+            "verbs": ["get", "list"]
           },
           "rule8": {
-            "api_groups": [
-              "batch"
-            ],
-            "resources": [
-              "jobs"
-            ],
-            "verbs": [
-              "get",
-              "list",
-              "create",
-              "delete",
-              "patch",
-              "update"
-            ]
+            "api_groups": ["batch"],
+            "resources": ["jobs"],
+            "verbs": ["get", "list", "create", "delete", "patch", "update"]
           },
           "rule9": {
-            "api_groups": [
-              "events.k8s.io",
-              null
-            ],
-            "resources": [
-              "events"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["events.k8s.io", null],
+            "resources": ["events"],
+            "verbs": ["get", "list"]
           },
           "rule10": {
-            "api_groups": [
-              "metrics.k8s.io"
-            ],
-            "resources": [
-              "pods"
-            ],
-            "verbs": [
-              "get",
-              "list"
-            ]
+            "api_groups": ["metrics.k8s.io"],
+            "resources": ["pods"],
+            "verbs": ["get", "list"]
           }
         }
       }
