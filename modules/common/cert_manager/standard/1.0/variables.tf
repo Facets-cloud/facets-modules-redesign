@@ -11,11 +11,6 @@ variable "instance" {
         recreate_pods   = optional(bool)
       }))
     }))
-    advanced = optional(object({
-      cert_manager = optional(object({
-        values = optional(any)
-      }))
-    }))
   })
 }
 

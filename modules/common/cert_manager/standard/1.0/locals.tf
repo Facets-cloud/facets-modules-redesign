@@ -2,10 +2,9 @@
 locals {
   tenant_provider           = lower(local.cc_tenant_provider != "" ? local.cc_tenant_provider : "aws")
   spec                      = lookup(var.instance, "spec", {})
-  user_supplied_helm_values = try(local.spec.cert_manager.values, try(var.instance.advanced.cert_manager.values, {}))
-  cert_manager              = lookup(local.spec, "cert_manager", try(var.instance.advanced.cert_manager, {}))
+  user_supplied_helm_values = try(local.spec.cert_manager.values, {})
+  cert_manager              = lookup(local.spec, "cert_manager", {})
   cert_mgr_namespace        = "cert-manager"
-  advanced                  = lookup(lookup(var.instance, "advanced", {}), "cert_manager", {})
 
   http_validations = {
     staging-http01 = {
