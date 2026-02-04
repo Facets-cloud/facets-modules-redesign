@@ -1,10 +1,109 @@
-# CRDs are installed by the separate kubeblocks-crd module
-# This module depends on that module's release_id to ensure proper ordering
-locals {
-  crd_input      = var.inputs.kubeblocks_crd
-  crd_attributes = lookup(local.crd_input, "attributes", {})
-  crd_release_id = lookup(local.crd_attributes, "release_id", "")
+# RBAC for the CRD installer job
+resource "kubernetes_service_account" "crd_installer" {
+  metadata {
+    name      = "kb-crd-installer"
+    namespace = "default"
+  }
+}
 
+resource "kubernetes_cluster_role" "crd_installer" {
+  metadata {
+    name = "kb-crd-installer"
+  }
+
+  rule {
+    api_groups = ["apiextensions.k8s.io"]
+    resources  = ["customresourcedefinitions"]
+    verbs      = ["get", "list", "create", "update", "patch"]
+  }
+}
+
+resource "kubernetes_cluster_role_binding" "crd_installer" {
+  metadata {
+    name = "kb-crd-installer"
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = kubernetes_cluster_role.crd_installer.metadata[0].name
+  }
+
+  subject {
+    kind      = "ServiceAccount"
+    name      = kubernetes_service_account.crd_installer.metadata[0].name
+    namespace = "default"
+  }
+}
+
+# CRD installer job
+# Downloads kubeblocks_crds.yaml from GitHub and applies via kubectl.
+# Terraform tracks only this Job — the CRDs themselves are NOT in state.
+resource "kubernetes_job" "install_crds" {
+  metadata {
+    generate_name = "kb-crd-install-"
+    namespace     = "default"
+  }
+
+  spec {
+    backoff_limit = 3
+
+    template {
+      metadata {
+        labels = {
+          "app.kubernetes.io/name"       = "kb-crd-installer"
+          "app.kubernetes.io/managed-by" = "terraform"
+        }
+      }
+
+      spec {
+        service_account_name = kubernetes_service_account.crd_installer.metadata[0].name
+        restart_policy       = "Never"
+
+        init_container {
+          name    = "download-crds"
+          image   = "alpine:3.19"
+          command = ["wget", "-qO", "/crds/kubeblocks_crds.yaml", "https://github.com/apecloud/kubeblocks/releases/download/v${var.instance.spec.version}/kubeblocks_crds.yaml"]
+
+          volume_mount {
+            name       = "crds-volume"
+            mount_path = "/crds"
+          }
+        }
+
+        container {
+          name    = "apply-crds"
+          image   = "bitnami/kubectl:latest"
+          command = ["kubectl", "apply", "--server-side", "--force-conflicts", "-f", "/crds/kubeblocks_crds.yaml"]
+
+          volume_mount {
+            name       = "crds-volume"
+            mount_path = "/crds"
+          }
+        }
+
+        volume {
+          name = "crds-volume"
+          empty_dir {}
+        }
+      }
+    }
+  }
+
+  wait_for_completion = true
+
+  timeouts {
+    create = "15m"
+  }
+}
+
+# Buffer after CRD install job completes before starting the operator
+resource "time_sleep" "wait_for_crds" {
+  create_duration = "60s"
+  depends_on      = [kubernetes_job.install_crds]
+}
+
+locals {
   # Get node pool details from input
   node_pool_input  = lookup(var.inputs, "node_pool", {})
   node_pool_attrs  = lookup(local.node_pool_input, "attributes", {})
@@ -30,7 +129,7 @@ locals {
 }
 
 # KubeBlocks Helm Release
-# CRDs are installed by the separate kubeblocks-crd module
+# CRDs are installed via the kubernetes_job above (not managed in state)
 resource "helm_release" "kubeblocks" {
   name       = "kubeblocks"
   repository = "https://apecloud.github.io/helm-charts"
@@ -44,7 +143,7 @@ resource "helm_release" "kubeblocks" {
   timeout          = 600
   max_history      = 10
 
-  # Skip CRDs - they're already installed via kubernetes_manifest resources
+  # Skip CRDs - installed via the kubernetes_job above
   skip_crds = true
 
   # Allow resource replacement during upgrades
@@ -108,15 +207,19 @@ resource "helm_release" "kubeblocks" {
           minAvailable = 1
         } : {}
 
-        # Add crd release id for dependency
-        crd_release_id = local.crd_release_id
       },
     ))
   ]
 
+  depends_on = [time_sleep.wait_for_crds]
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
+
 resource "time_sleep" "wait_for_kubeblocks" {
-  create_duration = "120s"
+  create_duration = "60s"
   depends_on      = [helm_release.kubeblocks]
 }
 
@@ -208,4 +311,8 @@ resource "helm_release" "database_addons" {
     helm_release.kubeblocks,
     time_sleep.wait_for_kubeblocks
   ]
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
