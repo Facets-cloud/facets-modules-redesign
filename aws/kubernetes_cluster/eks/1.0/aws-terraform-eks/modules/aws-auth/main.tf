@@ -11,7 +11,7 @@ locals {
   }
 }
 
-resource "kubernetes_config_map" "aws_auth" {
+resource "kubernetes_config_map_v1" "aws_auth" {
   count = var.create && var.create_aws_auth_configmap ? 1 : 0
 
   metadata {
@@ -42,6 +42,6 @@ resource "kubernetes_config_map_v1_data" "aws_auth" {
 
   depends_on = [
     # Required for instances where the configmap does not exist yet to avoid race condition
-    kubernetes_config_map.aws_auth,
+    kubernetes_config_map_v1.aws_auth,
   ]
 }

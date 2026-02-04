@@ -4,7 +4,7 @@ locals {
 }
 
 # Create ServiceAccount
-resource "kubernetes_service_account" "facets_admin" {
+resource "kubernetes_service_account_v1" "facets_admin" {
   metadata {
     name      = local.service_account_name
     namespace = local.namespace
@@ -12,7 +12,7 @@ resource "kubernetes_service_account" "facets_admin" {
 }
 
 # Create ClusterRoleBinding for admin access
-resource "kubernetes_cluster_role_binding" "facets_admin" {
+resource "kubernetes_cluster_role_binding_v1" "facets_admin" {
   metadata {
     name = "${local.service_account_name}-binding"
   }
@@ -25,18 +25,18 @@ resource "kubernetes_cluster_role_binding" "facets_admin" {
 
   subject {
     kind      = "ServiceAccount"
-    name      = kubernetes_service_account.facets_admin.metadata[0].name
-    namespace = kubernetes_service_account.facets_admin.metadata[0].namespace
+    name      = kubernetes_service_account_v1.facets_admin.metadata[0].name
+    namespace = kubernetes_service_account_v1.facets_admin.metadata[0].namespace
   }
 }
 
 # Create a secret for the service account token
-resource "kubernetes_secret" "facets_admin_token" {
+resource "kubernetes_secret_v1" "facets_admin_token" {
   metadata {
     name      = "${local.service_account_name}-token"
     namespace = local.namespace
     annotations = {
-      "kubernetes.io/service-account.name" = kubernetes_service_account.facets_admin.metadata[0].name
+      "kubernetes.io/service-account.name" = kubernetes_service_account_v1.facets_admin.metadata[0].name
     }
   }
 
@@ -44,15 +44,15 @@ resource "kubernetes_secret" "facets_admin_token" {
   wait_for_service_account_token = true
 
   depends_on = [
-    kubernetes_service_account.facets_admin
+    kubernetes_service_account_v1.facets_admin
   ]
 }
 
 # Extract the token after it's generated
 data "kubernetes_secret" "facets_admin_token" {
   metadata {
-    name      = kubernetes_secret.facets_admin_token.metadata[0].name
-    namespace = kubernetes_secret.facets_admin_token.metadata[0].namespace
+    name      = kubernetes_secret_v1.facets_admin_token.metadata[0].name
+    namespace = kubernetes_secret_v1.facets_admin_token.metadata[0].namespace
   }
 }
 
@@ -75,7 +75,7 @@ EOF
   }
 
   depends_on = [
-    kubernetes_cluster_role_binding.facets_admin,
+    kubernetes_cluster_role_binding_v1.facets_admin,
     data.kubernetes_secret.facets_admin_token
   ]
 }

@@ -65,7 +65,7 @@ resource "kubernetes_cron_job_v1" "ecr-token-refresher-cron" {
                 effect   = lookup(toleration.value, "effect", null)
               }
             }
-            service_account_name            = kubernetes_service_account.ecr-token-refresher-sa[each.key].metadata.0.name
+            service_account_name            = kubernetes_service_account_v1.ecr-token-refresher-sa[each.key].metadata.0.name
             automount_service_account_token = true
             node_selector                   = local.node_selector
             container {
@@ -162,7 +162,7 @@ resource "kubernetes_role_v1" "ecr-token-refresher-role" {
   }
 }
 
-resource "kubernetes_service_account" "ecr-token-refresher-sa" {
+resource "kubernetes_service_account_v1" "ecr-token-refresher-sa" {
   for_each = local.artifactories_ecr
   metadata {
     name      = module.name[each.key].name
@@ -183,7 +183,7 @@ resource "kubernetes_role_binding_v1" "ecr-token-refresher-crb" {
   }
   subject {
     kind      = "ServiceAccount"
-    name      = kubernetes_service_account.ecr-token-refresher-sa[each.key].metadata.0.name
+    name      = kubernetes_service_account_v1.ecr-token-refresher-sa[each.key].metadata.0.name
     namespace = local.namespace
   }
 }
@@ -220,7 +220,7 @@ resource "kubernetes_job_v1" "ecr-token-refresher-initial" {
             effect   = lookup(toleration.value, "effect", null)
           }
         }
-        service_account_name            = kubernetes_service_account.ecr-token-refresher-sa[each.key].metadata.0.name
+        service_account_name            = kubernetes_service_account_v1.ecr-token-refresher-sa[each.key].metadata.0.name
         automount_service_account_token = true
         node_selector                   = local.node_selector
         container {

@@ -13,7 +13,7 @@ locals {
 }
 
 # Create ConfigMap for each dashboard with Grafana auto-discovery labels
-resource "kubernetes_config_map" "grafana_dashboard" {
+resource "kubernetes_config_map_v1" "grafana_dashboard" {
   for_each = local.dashboards
 
   metadata {

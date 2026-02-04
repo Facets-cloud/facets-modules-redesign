@@ -1,6 +1,6 @@
 # Define your terraform resources here
 
-resource "kubernetes_namespace" "vpa_namespace" {
+resource "kubernetes_namespace_v1" "vpa_namespace" {
   count = local.create_namespace ? 1 : 0
   metadata {
     name = local.vpa_namespace
@@ -28,7 +28,7 @@ resource "helm_release" "vpa" {
   recreate_pods    = local.recreate_pods
 
   depends_on = [
-    kubernetes_namespace.vpa_namespace
+    kubernetes_namespace_v1.vpa_namespace
   ]
 
   values = [
