@@ -358,19 +358,21 @@ locals {
       enabled = lookup(local.kubeStateMetricsSpec, "enabled", true)
       collectors = distinct(concat([
         "certificatesigningrequests", "configmaps", "cronjobs", "daemonsets", "deployments",
-        "endpoints", "horizontalpodautoscalers", "verticalpodautoscalers", "ingresses", "jobs",
+        "endpoints", "horizontalpodautoscalers", "ingresses", "jobs",
         "leases", "limitranges", "mutatingwebhookconfigurations", "namespaces", "networkpolicies",
         "nodes", "persistentvolumeclaims", "persistentvolumes", "poddisruptionbudgets", "pods",
         "replicasets", "replicationcontrollers", "resourcequotas", "secrets", "services",
         "statefulsets", "storageclasses", "validatingwebhookconfigurations", "volumeattachments"
       ], lookup(local.kubeStateMetricsSpec, "collectors", [])))
       extraArgs = [
-        "--metric-labels-allowlist=pods=[*],nodes=[*],ingresses=[*]",
-        "--resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpoints,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments"
+        "--metric-labels-allowlist=pods=[*],nodes=[*],ingresses=[*]"
       ]
       # priorityClassName = "facets-critical"
       nodeSelector = local.nodeSelector
       tolerations  = local.tolerations
+      rbac = {
+        extraRules = []
+      }
     }
     "prometheus-node-exporter" = {
       nodeSelector = {
