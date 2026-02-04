@@ -53,7 +53,7 @@ module "mysql_cluster" {
       {
         clusterDef        = "mysql"
         topology          = local.topology
-        terminationPolicy = var.instance.spec.termination_policy
+        terminationPolicy = local.termination_policy
 
         componentSpecs = [
           merge(
@@ -152,6 +152,10 @@ module "mysql_cluster" {
     timeout         = local.restore_enabled ? 3600 : 2700 # 60 mins if restore, else 45 mins
     cleanup_on_fail = true
     max_history     = 3
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
