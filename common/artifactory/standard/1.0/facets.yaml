@@ -7,6 +7,10 @@ clouds:
 - kubernetes
 - azure
 - aws
+intentDetails:
+  type: storage
+  description: Manages container registry secrets for pulling images from artifactories
+  displayName: Artifactories
 inputs:
   kubernetes_details:
     optional: false

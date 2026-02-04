@@ -6,6 +6,10 @@ description: Creates an Azure Virtual Network with automatically calculated subn
   and MySQL Flexible Servers
 clouds:
 - azure
+intentDetails:
+  type: networking
+  description: Azure Virtual Network with auto-calculated subnets and database delegation support
+  displayName: Azure Network
 inputs:
   cloud_account:
     type: '@facets/azure_cloud_account'

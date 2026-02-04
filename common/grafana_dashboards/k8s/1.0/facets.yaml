@@ -5,6 +5,10 @@ clouds:
     - kubernetes
 description: Deploy Grafana dashboards as ConfigMaps with auto-discovery labels. Paste dashboard JSON exported from Grafana.
 flavor: k8s
+intentDetails:
+    type: monitoring
+    description: Deploy Grafana dashboards as ConfigMaps with auto-discovery labels
+    displayName: Grafana Dashboards
 inputs:
     kubernetes_details:
         displayName: Kubernetes Cluster
