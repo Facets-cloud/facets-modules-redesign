@@ -6,6 +6,10 @@ description: Creates a Kubernetes-optimized AWS VPC with auto-calculated subnets
   Database (256 IPs/AZ)
 clouds:
 - aws
+intentDetails:
+  type: networking
+  description: Kubernetes-optimized AWS VPC with auto-calculated subnets across availability zones
+  displayName: AWS Network
 spec:
   type: object
   properties:

@@ -6,6 +6,10 @@ clouds:
 title: GKE Cluster Control Plane
 description: Creates a GKE cluster control plane without default node pool. Use kubernetes_node_pool
   module to add node pools.
+intentDetails:
+  type: kubernetes
+  description: GKE cluster control plane without default node pool for flexible node management
+  displayName: GKE
 spec:
   type: object
   properties:

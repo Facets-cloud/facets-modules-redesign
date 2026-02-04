@@ -8,6 +8,10 @@ clouds:
 title: EKS Cluster with Auto Mode support
 description: A Kubernetes EKS cluster module with auto mode enabled by default and
   all necessary configurations preset.
+intentDetails:
+  type: kubernetes
+  description: AWS EKS cluster with auto mode enabled and all necessary configurations preset
+  displayName: EKS
 inputs:
   network_details:
     type: '@facets/aws-vpc-details'
