@@ -57,7 +57,7 @@ EOF
 
 module "cluster-issuer" {
   depends_on = [helm_release.cert_manager]
-  for_each   = [{}, local.environments][local.use_gts ? 0 : 1]
+  for_each   = local.environments
 
   source          = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
   name            = each.value.name
@@ -78,61 +78,6 @@ module "cluster-issuer" {
           name = "letsencrypt-${each.key}-account-key"
         }
         solvers = each.value.solvers
-      }
-    }
-  }
-
-}
-
-
-resource "kubernetes_secret" "google-trust-services-prod-account-key" {
-  count      = local.use_gts ? 1 : 0
-  depends_on = [kubernetes_namespace.namespace]
-  metadata {
-    name      = "google-trust-services-prod-account-key"
-    namespace = local.cert_mgr_namespace
-  }
-  data = {
-    "tls.key" = local.gts_private_key
-  }
-}
-
-module "cluster-issuer-gts-prod-http01" {
-  count           = local.use_gts ? 1 : 0
-  depends_on      = [helm_release.cert_manager]
-  source          = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
-  name            = "gts-production-http01"
-  namespace       = local.cert_mgr_namespace
-  advanced_config = {}
-
-  data = {
-    apiVersion = "cert-manager.io/v1"
-    kind       = "ClusterIssuer"
-    metadata = {
-      name = "gts-production-http01"
-    }
-    spec = {
-      acme = {
-        email                       = local.acme_email
-        server                      = local.use_gts ? "https://dv.acme-v02.api.pki.goog/directory" : "https://acme-v02.api.letsencrypt.org/directory"
-        disableAccountKeyGeneration = true
-        privateKeySecretRef = {
-          name = kubernetes_secret.google-trust-services-prod-account-key[0].metadata[0].name
-        }
-        solvers = [
-          {
-            http01 = {
-              ingress = {
-                podTemplate = {
-                  spec = {
-                    nodeSelector = local.nodeSelector
-                    tolerations  = local.tolerations
-                  }
-                }
-              }
-            }
-          },
-        ]
       }
     }
   }

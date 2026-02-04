@@ -56,8 +56,6 @@ locals {
   tolerations  = local.nodepool_tolerations
   nodeSelector = local.nodepool_labels
 
-  # GTS and ACME configuration
-  use_gts         = lookup(local.spec, "use_gts", false)
-  gts_private_key = lookup(local.spec, "gts_private_key", "")
-  acme_email      = lookup(local.spec, "acme_email", "") != "" ? lookup(local.spec, "acme_email", "") : null
+  # ACME configuration
+  acme_email = lookup(local.spec, "acme_email", "") != "" ? lookup(local.spec, "acme_email", "") : null
 }

@@ -38,22 +38,6 @@ spec:
   description: Configuration options for Cert Manager deployment
   type: object
   properties:
-    use_gts:
-      type: boolean
-      title: Use Google Trust Services
-      description: Enable Google Trust Services (GTS) certificate issuer instead of
-        Let's Encrypt
-      default: false
-    gts_private_key:
-      type: string
-      title: GTS Private Key
-      description: Private key for Google Trust Services authentication (required
-        when GTS is enabled)
-      x-ui-secret-ref: true
-      x-ui-visible-if:
-        field: spec.use_gts
-        values:
-        - true
     acme_email:
       type: string
       title: ACME Email
