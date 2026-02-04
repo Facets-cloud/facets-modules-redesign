@@ -51,7 +51,7 @@ module "redis_cluster" {
 
     spec = merge(
       {
-        terminationPolicy = var.instance.spec.termination_policy
+        terminationPolicy = local.termination_policy
       },
       local.mode != "redis-cluster" ? {
         clusterDef = "redis"
@@ -300,6 +300,10 @@ module "redis_cluster" {
     timeout         = local.restore_enabled ? 3600 : 2700 # 60 mins if restore, else 45 mins
     cleanup_on_fail = true
     max_history     = 3
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 

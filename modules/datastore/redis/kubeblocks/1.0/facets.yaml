@@ -32,7 +32,6 @@ spec:
   type: object
   x-ui-order:
   - namespace_override
-  - termination_policy
   - redis_version
   - mode
   - replicas
@@ -47,19 +46,6 @@ spec:
       description: (Optional) Specify a custom namespace for the cluster. If not set,
         the namespace from the environment will be used.
       default: ''
-    termination_policy:
-      type: string
-      title: Termination Policy
-      description: Controls cluster deletion behavior
-      enum:
-      - DoNotTerminate
-      - Delete
-      - WipeOut
-      default: Delete
-      x-enum-descriptions:
-        Delete: Delete pods and PVCs
-        DoNotTerminate: Block cluster deletion
-        WipeOut: Delete everything including backups
     redis_version:
       type: string
       title: Redis Version
@@ -219,7 +205,6 @@ sample:
   disabled: true
   spec:
     namespace_override: ''
-    termination_policy: Delete
     redis_version: 7.4.2
     mode: redis-cluster
     replicas: 2
