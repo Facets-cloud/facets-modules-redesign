@@ -122,7 +122,7 @@ resource "azurerm_storage_account" "backup" {
 
   # Lifecycle configuration with validation
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = true
 
     # Validate storage account name length
     precondition {
@@ -190,7 +190,7 @@ resource "azurerm_redis_cache" "main" {
 
   # Lifecycle configuration
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = true
     ignore_changes = [
       name,
       location,
