@@ -24,7 +24,6 @@ inputs:
       resource_name: default
     providers:
     - kubernetes
-    - kubernetes-alpha
     - helm
   kubernetes_node_pool_details:
     type: '@facets/kubernetes_nodepool'
@@ -39,18 +38,6 @@ spec:
   description: Configuration options for Cert Manager deployment
   type: object
   properties:
-    cname_strategy:
-      type: string
-      title: CNAME Strategy
-      description: Strategy for handling CNAME records in DNS validation
-      default: Follow
-      enum:
-      - Follow
-      - None
-    disable_dns_validation:
-      type: boolean
-      title: Disable DNS Validation
-      description: Disable DNS validation and only use HTTP validation
     use_gts:
       type: boolean
       title: Use Google Trust Services
@@ -78,8 +65,6 @@ spec:
       description: Specification of the Cert Manager Helm chart values
       x-ui-yaml-editor: true
       x-ui-placeholder: Enter values in YAML format
-  required:
-  - cname_strategy
 sample:
   kind: cert_manager
   flavor: standard
@@ -87,7 +72,6 @@ sample:
   metadata: {}
   version: '1.0'
   spec:
-    cname_strategy: Follow
     cert_manager: {}
 iac:
   validated_files:

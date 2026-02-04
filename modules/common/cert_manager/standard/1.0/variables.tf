@@ -2,11 +2,6 @@ variable "instance" {
   type = any
 
   validation {
-    condition     = contains(["Follow", "None"], var.instance.spec.cname_strategy)
-    error_message = "cname_strategy must be either 'Follow' or 'None'."
-  }
-
-  validation {
     condition     = lookup(var.instance.spec, "use_gts", false) ? lookup(var.instance.spec, "gts_private_key", "") != "" : true
     error_message = "gts_private_key is required when use_gts is enabled."
   }

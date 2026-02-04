@@ -12,6 +12,4 @@ locals {
   cc_tenant_provider = data.external.cc_env.result.cc_tenant_provider
   cc_region          = data.external.cc_env.result.cc_region
   tenant_base_domain = data.external.cc_env.result.tenant_base_domain
-  # Get zone_id from Route53 data source (queried by domain name)
-  tenant_base_domain_id = length(data.aws_route53_zone.base-domain-zone) > 0 ? data.aws_route53_zone.base-domain-zone[0].zone_id : ""
 }
