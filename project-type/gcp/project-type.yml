@@ -30,6 +30,18 @@ modules:
     - intent: pubsub
       flavor: gcp
 
+    # GCP Datastore Modules
+    - intent: mysql
+      flavor: gcp-cloudsql
+    - intent: postgres
+      flavor: gcp-cloudsql
+    - intent: redis
+      flavor: gcp-memorystore
+    # - intent: kafka_topic
+    #   flavor: gcp-msk
+    # - intent: kafka
+    #   flavor: gcp-msk
+
     # Common Modules
     - intent: artifactories
       flavor: standard
