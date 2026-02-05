@@ -1,0 +1,25 @@
+name: '@facets/aws_iam_role'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        iam_role_arn:
+          description: ARN of the IAM role for service account
+          type: string
+        iam_role_name:
+          description: Name of the IAM role
+          type: string
+        k8s_service_accounts:
+          description: List of Kubernetes service account names
+          type: array
+          items:
+            type: string
+        namespace:
+          description: Kubernetes namespace for the service accounts
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

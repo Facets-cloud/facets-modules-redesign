@@ -1,0 +1,131 @@
+intent: aws_sqs
+flavor: astuto
+version: '1.0'
+clouds:
+  - aws
+description: AWS SQS (Simple Queue Service) with support for FIFO queues, dead letter queues, encryption, and IAM policies
+
+inputs:
+  cloud_account:
+    description: The AWS cloud account where SQS queue will be created
+    displayName: AWS Cloud Account
+    optional: false
+    providers:
+      - aws
+    type: '@facets/aws_cloud_account'
+
+spec:
+  title: AWS SQS Queue
+  description: Creates an AWS SQS queue with optional FIFO support, dead letter queue configuration, encryption, and access policies
+  type: object
+  properties:
+    fifo_queue:
+      type: boolean
+      title: FIFO Queue
+      description: Enable FIFO (first-in-first-out) queue for ordered message processing
+      default: false
+    content_based_deduplication:
+      type: boolean
+      title: Content-Based Deduplication
+      description: Enable content-based deduplication for FIFO queues
+      default: false
+    visibility_timeout_seconds:
+      type: integer
+      title: Visibility Timeout (seconds)
+      description: Time a message is invisible after being received (0-43200)
+      default: 30
+      minimum: 0
+      maximum: 43200
+    message_retention_seconds:
+      type: integer
+      title: Message Retention (seconds)
+      description: How long messages are retained in the queue (60-1209600)
+      default: 345600
+      minimum: 60
+      maximum: 1209600
+    max_message_size:
+      type: integer
+      title: Max Message Size (bytes)
+      description: Maximum message size in bytes (1024-262144)
+      default: 5120
+      minimum: 1024
+      maximum: 262144
+    delay_seconds:
+      type: integer
+      title: Delivery Delay (seconds)
+      description: Time to delay message delivery (0-900)
+      default: 60
+      minimum: 0
+      maximum: 900
+    receive_wait_time_seconds:
+      type: integer
+      title: Receive Wait Time (seconds)
+      description: Long polling wait time for ReceiveMessage calls (0-20)
+      default: 10
+      minimum: 0
+      maximum: 20
+    use_sqs_managed_sse:
+      type: boolean
+      title: Use SQS-Managed Encryption
+      description: Use SQS-managed server-side encryption instead of KMS
+      default: false
+    kms_master_key_id:
+      type: string
+      title: KMS Key ID
+      description: KMS master key ID for encryption (ignored if SQS-managed SSE is enabled)
+      default: alias/aws/sqs
+    kms_data_key_reuse_period_seconds:
+      type: integer
+      title: KMS Data Key Reuse Period (seconds)
+      description: Time to reuse KMS data key before requesting new one (60-86400)
+      default: 300
+      minimum: 60
+      maximum: 86400
+    dead_letter_queue:
+      type: object
+      title: Dead Letter Queue
+      description: Configuration for dead letter queue
+      properties:
+        deadLetterTargetArn:
+          type: string
+          title: DLQ ARN
+          description: ARN of the dead letter queue
+        maxReceiveCount:
+          type: integer
+          title: Max Receive Count
+          description: Number of receives before sending to DLQ
+      x-ui-yaml-editor: true
+    policy:
+      type: object
+      title: Queue Policy
+      description: Custom queue policy JSON object
+      x-ui-yaml-editor: true
+  required: []
+
+sample:
+  kind: aws_sqs
+  flavor: astuto
+  version: '1.0'
+  disabled: false
+  spec:
+    fifo_queue: false
+    visibility_timeout_seconds: 30
+    message_retention_seconds: 345600
+    max_message_size: 5120
+    delay_seconds: 60
+    receive_wait_time_seconds: 10
+    use_sqs_managed_sse: false
+    kms_master_key_id: alias/aws/sqs
+
+outputs:
+  default:
+    type: '@facets/aws_sqs'
+    title: AWS SQS Queue Output
+    description: SQS queue details and IAM policy ARNs
+
+iac:
+  validated_files:
+    - variables.tf
+    - main.tf
+    - locals.tf
+    - outputs.tf

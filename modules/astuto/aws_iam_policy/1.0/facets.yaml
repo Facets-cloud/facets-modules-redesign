@@ -1,0 +1,79 @@
+intent: aws_iam_policy
+flavor: astuto
+version: '1.0'
+clouds:
+  - aws
+description: AWS IAM Policy module to create IAM policies from JSON policy documents
+
+inputs:
+  cloud_account:
+    description: The AWS cloud account where IAM policy will be created
+    displayName: AWS Cloud Account
+    optional: false
+    providers:
+      - aws
+    type: '@facets/aws_cloud_account'
+
+spec:
+  title: AWS IAM Policy
+  description: Creates an AWS IAM policy from a JSON policy document
+  type: object
+  properties:
+    policy:
+      type: object
+      title: IAM Policy Document
+      description: JSON policy document following AWS IAM policy grammar
+      x-ui-yaml-editor: true
+    description:
+      type: string
+      title: Description
+      description: Description of the IAM policy
+      maxLength: 1000
+      x-ui-placeholder: Enter policy description
+    path:
+      type: string
+      title: Path
+      description: Path for the IAM policy (must begin and end with /)
+      default: "/"
+      pattern: ^\/.*\/$|^\/$
+      x-ui-placeholder: /
+    tags:
+      type: object
+      title: Additional Tags
+      description: Additional tags to apply to the policy
+      x-ui-yaml-editor: true
+      default: {}
+  required:
+    - policy
+
+sample:
+  kind: aws_iam_policy
+  flavor: astuto
+  version: '1.0'
+  disabled: false
+  spec:
+    policy:
+      Version: "2012-10-17"
+      Statement:
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:ListBucket
+          Resource:
+            - arn:aws:s3:::my-bucket/*
+            - arn:aws:s3:::my-bucket
+    description: Policy for S3 read access
+    path: /
+
+outputs:
+  default:
+    type: '@facets/aws_iam_policy'
+    title: AWS IAM Policy Output
+    description: IAM policy ARN and details
+
+iac:
+  validated_files:
+    - variables.tf
+    - main.tf
+    - locals.tf
+    - outputs.tf

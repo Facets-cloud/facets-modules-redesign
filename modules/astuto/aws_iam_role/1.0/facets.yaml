@@ -1,0 +1,111 @@
+intent: aws_iam_role
+flavor: astuto
+version: '1.0'
+clouds:
+  - aws
+description: AWS IAM Role for Service Accounts (IRSA) allows Kubernetes service accounts to assume AWS IAM roles for secure access to AWS services
+
+inputs:
+  cloud_account:
+    description: The AWS cloud account where IAM role will be created
+    displayName: AWS Cloud Account
+    optional: false
+    providers:
+      - aws
+    type: '@facets/aws_cloud_account'
+  eks_cluster:
+    optional: false
+    type: '@facets/eks'
+    displayName: EKS Cluster
+    description: EKS cluster that will use this IAM role
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+      - kubernetes
+      - kubernetes-alpha
+      - helm
+
+spec:
+  title: AWS IAM Role for Service Accounts (IRSA)
+  description: Creates an IAM role that can be assumed by Kubernetes service accounts using OIDC
+  type: object
+  properties:
+    irsa:
+      type: object
+      title: IRSA Configuration
+      description: Configuration for IAM Roles for Service Accounts
+      properties:
+        service_accounts:
+          type: array
+          title: Service Accounts
+          description: List of Kubernetes service accounts that can assume this IAM role
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                title: Service Account Name
+                description: Name of the Kubernetes service account
+                pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+            required:
+              - name
+          minItems: 1
+        oidc_providers:
+          type: object
+          title: Additional OIDC Providers
+          description: Additional OIDC providers (optional, primary EKS OIDC is auto-configured)
+          patternProperties:
+            ^[a-zA-Z0-9_]+$:
+              type: object
+              properties:
+                arn:
+                  type: string
+                  title: OIDC Provider ARN
+                  description: ARN of the OIDC provider
+          default: {}
+      required:
+        - service_accounts
+    policies:
+      type: object
+      title: IAM Policies
+      description: IAM policies to attach to the role
+      patternProperties:
+        ^[a-zA-Z0-9_-]+$:
+          type: object
+          properties:
+            arn:
+              type: string
+              title: Policy ARN
+              description: ARN of the IAM policy to attach
+          required:
+            - arn
+      default: {}
+  required:
+    - irsa
+
+sample:
+  kind: aws_iam_role
+  flavor: astuto
+  version: '1.0'
+  disabled: false
+  spec:
+    irsa:
+      service_accounts:
+        - name: my-app-sa
+    policies:
+      s3-access:
+        arn: arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+
+outputs:
+  default:
+    type: '@facets/aws_iam_role'
+    title: AWS IAM Role Output
+    description: IAM role ARN and details for Kubernetes service account binding
+
+iac:
+  validated_files:
+    - variables.tf
+    - main.tf
+    - locals.tf
+    - outputs.tf

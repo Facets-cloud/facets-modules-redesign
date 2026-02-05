@@ -1,0 +1,165 @@
+intent: aws_s3
+flavor: astuto
+version: '1.0'
+clouds:
+  - aws
+description: AWS S3 bucket with comprehensive configuration options including versioning, lifecycle rules, encryption, CORS, and IAM policies
+
+inputs:
+  cloud_account:
+    description: The AWS cloud account where S3 bucket will be created
+    displayName: AWS Cloud Account
+    optional: false
+    providers:
+      - aws
+    type: '@facets/aws_cloud_account'
+
+spec:
+  title: AWS S3 Bucket
+  description: Creates an AWS S3 bucket with optional features like versioning, encryption, lifecycle rules, and access policies
+  type: object
+  properties:
+    enable_bucket_force_ssl:
+      type: boolean
+      title: Force SSL/TLS
+      description: Enforce SSL/TLS for all bucket operations
+      default: false
+    cors_rule:
+      type: object
+      title: CORS Configuration
+      description: Cross-Origin Resource Sharing rules
+      properties:
+        allowed_methods:
+          type: array
+          items:
+            type: string
+          title: Allowed HTTP Methods
+          description: HTTP methods allowed (GET, PUT, POST, DELETE, HEAD)
+        allowed_origins:
+          type: array
+          items:
+            type: string
+          title: Allowed Origins
+          description: Origins allowed to make cross-origin requests
+        allowed_headers:
+          type: array
+          items:
+            type: string
+          title: Allowed Headers
+          description: Headers allowed in preflight requests
+        expose_headers:
+          type: array
+          items:
+            type: string
+          title: Exposed Headers
+          description: Headers exposed to the browser
+        max_age_seconds:
+          type: integer
+          title: Max Age (seconds)
+          description: Time browser can cache preflight response
+      x-ui-yaml-editor: true
+    lifecycle_rule:
+      type: object
+      title: Lifecycle Rules
+      description: Object lifecycle management rules
+      x-ui-yaml-editor: true
+      patternProperties:
+        ^[a-zA-Z0-9_-]+$:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              default: true
+            prefix:
+              type: string
+            expiration:
+              type: object
+              properties:
+                days:
+                  type: integer
+                date:
+                  type: string
+            transition:
+              type: object
+              properties:
+                storage_class:
+                  type: string
+                days:
+                  type: integer
+    server_side_encryption_configuration:
+      type: object
+      title: Server-Side Encryption
+      description: "Encryption configuration (default: aws:kms)"
+      properties:
+        server_side_encryption_configuration:
+          type: object
+          properties:
+            sse_algorithm:
+              type: string
+              title: Encryption Algorithm
+              description: Server-side encryption algorithm
+              default: aws:kms
+              enum:
+                - aws:kms
+                - AES256
+            kms_master_key_id:
+              type: string
+              title: KMS Key ID
+              description: KMS key ID for encryption
+            bucket_key_enabled:
+              type: boolean
+              title: Enable Bucket Key
+              description: Use S3 Bucket Keys for SSE-KMS
+      x-ui-yaml-editor: true
+    logging:
+      type: object
+      title: Bucket Logging
+      description: Access logging configuration
+      properties:
+        bucket_name:
+          type: string
+          title: Target Bucket
+          description: Bucket name for storing access logs
+        target_prefix:
+          type: string
+          title: Log Prefix
+          description: Prefix for log object keys
+      x-ui-yaml-editor: true
+    aws_s3_bucket_policy:
+      type: object
+      title: Bucket Policy
+      description: Custom bucket policy statements
+      properties:
+        policy:
+          type: object
+          properties:
+            statement:
+              type: array
+              items:
+                type: object
+      x-ui-yaml-editor: true
+  required: []
+
+sample:
+  kind: aws_s3
+  flavor: astuto
+  version: '1.0'
+  disabled: false
+  spec:
+    enable_bucket_force_ssl: true
+    server_side_encryption_configuration:
+      server_side_encryption_configuration:
+        sse_algorithm: aws:kms
+
+outputs:
+  default:
+    type: '@facets/aws_s3'
+    title: AWS S3 Bucket Output
+    description: S3 bucket details and IAM policy ARNs
+
+iac:
+  validated_files:
+    - variables.tf
+    - main.tf
+    - locals.tf
+    - outputs.tf

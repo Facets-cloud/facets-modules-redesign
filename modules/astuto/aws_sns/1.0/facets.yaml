@@ -1,0 +1,248 @@
+intent: aws_sns
+flavor: astuto
+version: '1.0'
+clouds:
+  - aws
+description: AWS SNS (Simple Notification Service) topic with subscriptions, policies, and S3 trigger support
+
+inputs:
+  cloud_account:
+    description: The AWS cloud account where SNS topic will be created
+    displayName: AWS Cloud Account
+    optional: false
+    providers:
+      - aws
+    type: '@facets/aws_cloud_account'
+
+spec:
+  title: AWS SNS Topic
+  description: Creates an AWS SNS topic with optional subscriptions, policies, and S3 bucket notifications
+  type: object
+  properties:
+    fifo_topic:
+      type: boolean
+      title: FIFO Topic
+      description: Create a FIFO (first-in-first-out) topic for ordered message delivery
+      default: false
+    content_based_deduplication:
+      type: boolean
+      title: Content-Based Deduplication
+      description: Enable content-based deduplication for FIFO topics
+      default: false
+    disable_encryption:
+      type: boolean
+      title: Disable Encryption
+      description: Disable encryption for the SNS topic
+      default: false
+    kms_master_key_id:
+      type: string
+      title: KMS Key ID
+      description: KMS master key ID for encryption
+      default: alias/aws/sns
+    display_name:
+      type: string
+      title: Display Name
+      description: Display name for the SNS topic
+    delivery_policy:
+      type: object
+      title: Delivery Policy
+      description: Message delivery retry policy
+      x-ui-yaml-editor: true
+    archive_policy:
+      type: object
+      title: Archive Policy
+      description: Message archive policy for FIFO topics
+      x-ui-yaml-editor: true
+    data_protection_policy:
+      type: string
+      title: Data Protection Policy
+      description: Data protection policy JSON string
+      x-ui-yaml-editor: true
+    tracing_config:
+      type: string
+      title: Tracing Configuration
+      description: X-Ray tracing mode (PassThrough or Active)
+      enum:
+        - PassThrough
+        - Active
+    signature_version:
+      type: integer
+      title: Signature Version
+      description: Signature version (1 for SHA1, 2 for SHA256)
+      enum:
+        - 1
+        - 2
+    application_feedback:
+      type: object
+      title: Application Feedback
+      description: IAM role ARNs and sample rate for application feedback
+      properties:
+        failure_role_arn:
+          type: string
+        success_role_arn:
+          type: string
+        success_sample_rate:
+          type: integer
+      x-ui-yaml-editor: true
+    firehose_feedback:
+      type: object
+      title: Firehose Feedback
+      description: IAM role ARNs and sample rate for Firehose feedback
+      properties:
+        failure_role_arn:
+          type: string
+        success_role_arn:
+          type: string
+        success_sample_rate:
+          type: integer
+      x-ui-yaml-editor: true
+    http_feedback:
+      type: object
+      title: HTTP Feedback
+      description: IAM role ARNs and sample rate for HTTP feedback
+      properties:
+        failure_role_arn:
+          type: string
+        success_role_arn:
+          type: string
+        success_sample_rate:
+          type: integer
+      x-ui-yaml-editor: true
+    lambda_feedback:
+      type: object
+      title: Lambda Feedback
+      description: IAM role ARNs and sample rate for Lambda feedback
+      properties:
+        failure_role_arn:
+          type: string
+        success_role_arn:
+          type: string
+        success_sample_rate:
+          type: integer
+      x-ui-yaml-editor: true
+    sqs_feedback:
+      type: object
+      title: SQS Feedback
+      description: IAM role ARNs and sample rate for SQS feedback
+      properties:
+        failure_role_arn:
+          type: string
+        success_role_arn:
+          type: string
+        success_sample_rate:
+          type: integer
+      x-ui-yaml-editor: true
+    subscriptions:
+      type: object
+      title: Subscriptions
+      description: Map of subscriptions to create for this topic
+      x-ui-yaml-editor: true
+      patternProperties:
+        ^[a-zA-Z0-9_-]+$:
+          type: object
+          properties:
+            protocol:
+              type: string
+              description: Protocol (sqs, lambda, email, etc.)
+            endpoint:
+              type: string
+              description: Endpoint for the subscription
+    topic_policy:
+      type: object
+      title: Topic Policy
+      description: Custom topic policy JSON object
+      x-ui-yaml-editor: true
+    topic_policy_statements:
+      type: object
+      title: Topic Policy Statements
+      description: Map of IAM policy statements for custom permissions
+      x-ui-yaml-editor: true
+    source_topic_policy_documents:
+      type: array
+      title: Source Policy Documents
+      description: List of IAM policy documents to merge
+      items:
+        type: object
+      x-ui-yaml-editor: true
+    override_topic_policy_documents:
+      type: array
+      title: Override Policy Documents
+      description: List of IAM policy documents that override existing statements
+      items:
+        type: object
+      x-ui-yaml-editor: true
+    enable_default_topic_policy:
+      type: boolean
+      title: Enable Default Topic Policy
+      description: Enable the default topic policy allowing account owner access
+      default: true
+    create_subscription:
+      type: boolean
+      title: Create Subscriptions
+      description: Create subscriptions defined in the subscriptions field
+      default: true
+    create_topic_policy:
+      type: boolean
+      title: Create Topic Policy
+      description: Create topic policy from statements
+      default: true
+    triggers:
+      type: object
+      title: Triggers
+      description: External triggers for the SNS topic
+      properties:
+        s3:
+          type: object
+          title: S3 Bucket Trigger
+          description: S3 bucket notification configuration
+          properties:
+            name:
+              type: string
+              title: S3 Bucket Name
+              description: Name of the S3 bucket
+            arn:
+              type: string
+              title: S3 Bucket ARN
+              description: ARN of the S3 bucket
+            events:
+              type: array
+              title: S3 Events
+              description: List of S3 events to trigger notifications
+              items:
+                type: string
+            filter_prefix:
+              type: string
+              title: Filter Prefix
+              description: Object key prefix filter
+            filter_suffix:
+              type: string
+              title: Filter Suffix
+              description: Object key suffix filter
+      x-ui-yaml-editor: true
+  required: []
+
+sample:
+  kind: aws_sns
+  flavor: astuto
+  version: '1.0'
+  disabled: false
+  spec:
+    fifo_topic: false
+    disable_encryption: false
+    kms_master_key_id: alias/aws/sns
+    enable_default_topic_policy: true
+    create_subscription: true
+    create_topic_policy: true
+
+outputs:
+  default:
+    type: '@facets/aws_sns'
+    title: AWS SNS Topic Output
+    description: SNS topic ARN and IAM policy ARNs
+
+iac:
+  validated_files:
+    - variables.tf
+    - main.tf
+    - locals.tf
+    - outputs.tf

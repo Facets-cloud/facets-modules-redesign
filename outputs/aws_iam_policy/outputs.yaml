@@ -1,0 +1,20 @@
+name: '@facets/aws_iam_policy'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        arn:
+          description: ARN of the IAM policy
+          type: string
+        name:
+          description: Name of the IAM policy
+          type: string
+        policy:
+          description: The policy document JSON string
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

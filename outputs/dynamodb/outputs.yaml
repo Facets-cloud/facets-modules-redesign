@@ -1,0 +1,29 @@
+name: '@facets/dynamodb'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        table_name:
+          description: ID/name of the DynamoDB table
+          type: string
+        table_arn:
+          description: ARN of the DynamoDB table
+          type: string
+        read_only_policy:
+          description: ARN of the read-only IAM policy
+          type: string
+        read_write_policy:
+          description: ARN of the read-write IAM policy
+          type: string
+        stream_arn:
+          description: ARN of the DynamoDB stream (only if stream_enabled is true)
+          type: string
+        stream_label:
+          description: Timestamp of the DynamoDB stream (only if stream_enabled is true)
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

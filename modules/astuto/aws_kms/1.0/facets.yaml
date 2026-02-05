@@ -1,0 +1,268 @@
+intent: aws_kms
+flavor: astuto
+version: '1.0'
+clouds:
+  - aws
+description: AWS KMS (Key Management Service) with support for standard, external, replica keys, comprehensive IAM policies, aliases, and grants
+
+inputs:
+  cloud_account:
+    description: The AWS cloud account where KMS key will be created
+    displayName: AWS Cloud Account
+    optional: false
+    providers:
+      - aws
+    type: '@facets/aws_cloud_account'
+
+spec:
+  title: AWS KMS Key
+  description: Creates an AWS KMS key with comprehensive policy management, aliases, grants, and support for external/replica keys
+  type: object
+  properties:
+    description:
+      type: string
+      title: Key Description
+      description: Description of the KMS key
+      default: Complete KMS key configurations with facets
+    deletion_window_in_days:
+      type: integer
+      title: Deletion Window (days)
+      description: Waiting period before key deletion (7-30 days)
+      default: 30
+      minimum: 7
+      maximum: 30
+    enable_key_rotation:
+      type: boolean
+      title: Enable Key Rotation
+      description: Automatically rotate the key material
+      default: true
+    rotation_period_in_days:
+      type: integer
+      title: Rotation Period (days)
+      description: Days between each rotation (90-2560, default 90)
+      default: 90
+      minimum: 90
+      maximum: 2560
+    is_enabled:
+      type: boolean
+      title: Key Enabled
+      description: Whether the key is enabled for use
+      default: true
+    create_external:
+      type: boolean
+      title: Create External Key
+      description: Create key with externally provided material
+      default: false
+    create_replica:
+      type: boolean
+      title: Create Replica Key
+      description: Create multi-region replica key
+      default: false
+    create_replica_external:
+      type: boolean
+      title: Create Replica External Key
+      description: Create replica key with external material
+      default: false
+    customer_master_key_spec:
+      type: string
+      title: Key Spec
+      description: Key type and algorithm specification
+      enum:
+        - SYMMETRIC_DEFAULT
+        - RSA_2048
+        - RSA_3072
+        - RSA_4096
+        - HMAC_256
+        - ECC_NIST_P256
+        - ECC_NIST_P384
+        - ECC_NIST_P521
+        - ECC_SECG_P256K1
+    key_usage:
+      type: string
+      title: Key Usage
+      description: Intended use of the key
+      enum:
+        - ENCRYPT_DECRYPT
+        - SIGN_VERIFY
+    multi_region:
+      type: boolean
+      title: Multi-Region Key
+      description: Enable multi-region support
+      default: false
+    key_material_base64:
+      type: string
+      title: Key Material (Base64)
+      description: Base64 encoded 256-bit key material for external keys
+    valid_to:
+      type: string
+      title: Material Expiration
+      description: Expiration time for imported key material (ISO 8601)
+    primary_key_arn:
+      type: string
+      title: Primary Key ARN
+      description: ARN of primary key for replica creation
+    primary_external_key_arn:
+      type: string
+      title: Primary External Key ARN
+      description: ARN of primary external key for replica
+    bypass_policy_lockout_safety_check:
+      type: boolean
+      title: Bypass Policy Lockout Check
+      description: Skip policy lockout safety validation (risky)
+      default: false
+    custom_key_store_id:
+      type: string
+      title: Custom Key Store ID
+      description: ID of CloudHSM custom key store
+    enable_default_policy:
+      type: boolean
+      title: Enable Default Policy
+      description: Enable default account-wide key policy
+      default: true
+    policy:
+      type: object
+      title: Custom Policy
+      description: Custom IAM policy JSON document
+      x-ui-yaml-editor: true
+    key_owners:
+      type: array
+      title: Key Owners
+      description: IAM ARNs with full key permissions (kms:*)
+      items:
+        type: string
+      x-ui-yaml-editor: true
+    key_administrators:
+      type: array
+      title: Key Administrators
+      description: IAM ARNs for key administration (create, describe, enable, etc.)
+      items:
+        type: string
+      x-ui-yaml-editor: true
+    key_users:
+      type: array
+      title: Key Users
+      description: IAM ARNs for encrypt/decrypt operations
+      items:
+        type: string
+      x-ui-yaml-editor: true
+    key_service_users:
+      type: array
+      title: Key Service Users
+      description: IAM ARNs for grant operations with AWS resources
+      items:
+        type: string
+      x-ui-yaml-editor: true
+    key_service_roles_for_autoscaling:
+      type: array
+      title: Autoscaling Service Roles
+      description: IAM ARNs for autoscaling EBS encryption
+      items:
+        type: string
+      x-ui-yaml-editor: true
+    key_symmetric_encryption_users:
+      type: array
+      title: Symmetric Encryption Users
+      description: IAM ARNs for symmetric cryptographic operations
+      items:
+        type: string
+      x-ui-yaml-editor: true
+    key_hmac_users:
+      type: array
+      title: HMAC Users
+      description: IAM ARNs for HMAC operations
+      items:
+        type: string
+      x-ui-yaml-editor: true
+    key_asymmetric_public_encryption_users:
+      type: array
+      title: Asymmetric Public Encryption Users
+      description: IAM ARNs for asymmetric encryption with public keys
+      items:
+        type: string
+      x-ui-yaml-editor: true
+    key_asymmetric_sign_verify_users:
+      type: array
+      title: Asymmetric Sign/Verify Users
+      description: IAM ARNs for digital signature operations
+      items:
+        type: string
+      x-ui-yaml-editor: true
+    key_statements:
+      type: object
+      title: Custom Policy Statements
+      description: Map of custom IAM policy statements
+      x-ui-yaml-editor: true
+    source_policy_documents:
+      type: array
+      title: Source Policy Documents
+      description: Policy documents to merge into key policy
+      items:
+        type: object
+      x-ui-yaml-editor: true
+    override_policy_documents:
+      type: array
+      title: Override Policy Documents
+      description: Policy documents that override existing statements
+      items:
+        type: object
+      x-ui-yaml-editor: true
+    enable_route53_dnssec:
+      type: boolean
+      title: Enable Route53 DNSSEC
+      description: Allow Route53 to use key for DNSSEC signing
+      default: false
+    route53_dnssec_sources:
+      type: array
+      title: Route53 DNSSEC Sources
+      description: Allowed account IDs and hosted zone ARNs for DNSSEC
+      items:
+        type: object
+      x-ui-yaml-editor: true
+    aliases:
+      type: array
+      title: Key Aliases
+      description: List of alias names for the key
+      items:
+        type: string
+      x-ui-yaml-editor: true
+    computed_aliases:
+      type: object
+      title: Computed Aliases
+      description: Map of aliases with computed names
+      x-ui-yaml-editor: true
+    aliases_use_name_prefix:
+      type: boolean
+      title: Use Alias Name Prefix
+      description: Use alias names as prefixes instead of full names
+      default: false
+    grants:
+      type: object
+      title: Key Grants
+      description: Map of KMS grant definitions
+      x-ui-yaml-editor: true
+  required: []
+
+sample:
+  kind: aws_kms
+  flavor: astuto
+  version: '1.0'
+  disabled: false
+  spec:
+    description: Complete KMS key configurations with facets
+    deletion_window_in_days: 30
+    enable_key_rotation: true
+    is_enabled: true
+    enable_default_policy: true
+
+outputs:
+  default:
+    type: '@facets/aws_kms'
+    title: AWS KMS Key Output
+    description: KMS key details, policy, aliases, and grants
+
+iac:
+  validated_files:
+    - variables.tf
+    - main.tf
+    - locals.tf
+    - outputs.tf

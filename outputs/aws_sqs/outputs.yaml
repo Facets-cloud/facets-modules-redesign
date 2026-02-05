@@ -1,0 +1,26 @@
+name: '@facets/aws_sqs'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        sqs_queue_name:
+          description: Name of the SQS queue
+          type: string
+        queue_arn:
+          description: ARN of the SQS queue
+          type: string
+        queue_url:
+          description: URL of the SQS queue
+          type: string
+        consumer_policy_arn:
+          description: ARN of the consumer IAM policy for read access
+          type: string
+        producer_policy_arn:
+          description: ARN of the producer IAM policy for write access
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

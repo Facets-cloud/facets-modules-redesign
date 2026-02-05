@@ -1,0 +1,40 @@
+name: '@facets/aws_kms'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        kms_key_arn:
+          description: ARN of the KMS key
+          type: string
+        kms_key_id:
+          description: Globally unique identifier for the KMS key
+          type: string
+        kms_key_policy:
+          description: IAM resource policy set on the key
+          type: string
+        kms_external_key_expiration_model:
+          description: Whether the key material expires (external keys only)
+          type: string
+        kms_external_key_state:
+          description: State of the CMK (external keys only)
+          type: string
+        kms_external_key_usage:
+          description: Cryptographic operations for which the CMK can be used
+          type: string
+        kms_aliases:
+          description: Map of aliases created and their attributes
+          type: object
+        kms_grants:
+          description: Map of grants created and their attributes (sensitive)
+          type: object
+        secrets:
+          description: List of secret field names
+          type: array
+          items:
+            type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []
