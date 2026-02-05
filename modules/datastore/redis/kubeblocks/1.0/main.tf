@@ -301,6 +301,10 @@ module "redis_cluster" {
     cleanup_on_fail = true
     max_history     = 3
   }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Read-Only Service (only for replication mode with Sentinel)

@@ -60,7 +60,6 @@ spec:
       x-enum-descriptions:
         Delete: Delete pods and PVCs
         DoNotTerminate: Block cluster deletion
-        Halt: Delete pods but keep PVCs
         WipeOut: Delete everything including backups
     mysql_version:
       type: string
