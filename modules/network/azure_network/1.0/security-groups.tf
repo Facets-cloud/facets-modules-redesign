@@ -21,6 +21,32 @@ resource "azurerm_network_security_group" "allow_all_default" {
     description                = "Allowing connection from within vnet"
   }
 
+  security_rule {
+    name                       = "AllowHttpInbound"
+    priority                   = 110
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "Internet"
+    destination_address_prefix = "*"
+    description                = "Allow inbound HTTP traffic from Internet for LoadBalancer services"
+  }
+
+  security_rule {
+    name                       = "AllowHttpsInbound"
+    priority                   = 120
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "Internet"
+    destination_address_prefix = "*"
+    description                = "Allow inbound HTTPS traffic from Internet for LoadBalancer services"
+  }
+
   tags = merge(local.common_tags, {
     Terraform = "true"
   })
@@ -33,13 +59,6 @@ resource "azurerm_network_security_group" "allow_all_default" {
 # Network Security Groups for Subnets - Apply the allow-all NSG to all subnets
 resource "azurerm_subnet_network_security_group_association" "public" {
   for_each = azurerm_subnet.public
-
-  subnet_id                 = each.value.id
-  network_security_group_id = azurerm_network_security_group.allow_all_default.id
-}
-
-resource "azurerm_subnet_network_security_group_association" "private" {
-  for_each = azurerm_subnet.private
 
   subnet_id                 = each.value.id
   network_security_group_id = azurerm_network_security_group.allow_all_default.id
