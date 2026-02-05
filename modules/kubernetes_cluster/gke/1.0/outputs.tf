@@ -10,7 +10,7 @@ locals {
     cluster_endpoint       = "https://${google_container_cluster.primary.endpoint}"
     cluster_ca_certificate = base64decode(google_container_cluster.primary.master_auth[0].cluster_ca_certificate)
     kubernetes_provider_exec = {
-      api_version = "client.authentication.k8s.io/v1beta1"
+      api_version = "client.authentication.k8s.io/v1"
       command     = "bash"
       args        = ["-c", "command -v gke-auth-plugin >/dev/null 2>&1 || (curl -sLo /tmp/gke-auth-plugin.tar.gz https://github.com/traviswt/gke-auth-plugin/releases/download/0.3.0/gke-auth-plugin_Linux_x86_64.tar.gz && tar -xzf /tmp/gke-auth-plugin.tar.gz -C /tmp && chmod +x /tmp/gke-auth-plugin && mv /tmp/gke-auth-plugin /usr/local/bin/gke-auth-plugin); echo '${local.credentials}' > /tmp/gcp-creds-$$.json && GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-creds-$$.json gke-auth-plugin; rm -f /tmp/gcp-creds-$$.json"]
     }
@@ -49,7 +49,7 @@ locals {
       host                   = "https://${google_container_cluster.primary.endpoint}"
       cluster_ca_certificate = base64decode(google_container_cluster.primary.master_auth[0].cluster_ca_certificate)
       kubernetes_provider_exec = {
-        api_version = "client.authentication.k8s.io/v1beta1"
+        api_version = "client.authentication.k8s.io/v1"
         command     = "bash"
         args        = ["-c", "command -v gke-auth-plugin >/dev/null 2>&1 || (curl -sLo /tmp/gke-auth-plugin.tar.gz https://github.com/traviswt/gke-auth-plugin/releases/download/0.3.0/gke-auth-plugin_Linux_x86_64.tar.gz && tar -xzf /tmp/gke-auth-plugin.tar.gz -C /tmp && chmod +x /tmp/gke-auth-plugin && mv /tmp/gke-auth-plugin /usr/local/bin/gke-auth-plugin); echo '${local.credentials}' > /tmp/gcp-creds-$$.json && GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-creds-$$.json gke-auth-plugin; rm -f /tmp/gcp-creds-$$.json"]
       }
