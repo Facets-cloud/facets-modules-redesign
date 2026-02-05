@@ -6,9 +6,9 @@ properties:
       type: object
       properties:
         external_endpoints:
-          type: string
+          type: object
+          properties: {}
     interfaces:
       type: object
       properties: {}
 providers: []
-
