@@ -73,7 +73,7 @@ resource "kubernetes_job" "install_crds" {
 
         container {
           name    = "apply-crds"
-          image   = "bitnami/kubectl:latest"
+          image   = "bitnamilegacy/kubectl:1.33.4"
           command = ["kubectl", "apply", "--server-side", "--force-conflicts", "-f", "/crds/kubeblocks_crds.yaml"]
 
           volume_mount {
