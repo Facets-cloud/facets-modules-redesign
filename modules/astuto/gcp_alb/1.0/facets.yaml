@@ -1,0 +1,195 @@
+intent: ingress
+flavor: astuto
+version: '1.0'
+clouds:
+  - gcp
+description: GCP Application Load Balancer with Kubernetes Ingress, SSL/TLS certificates, and DNS management
+
+inputs:
+  kubernetes_cluster:
+    description: The Kubernetes cluster where the ingress will be deployed
+    displayName: Kubernetes Cluster
+    optional: false
+    providers:
+      - kubernetes
+      - kubernetes-alpha
+      - helm
+    type: '@facets/kubernetes-details'
+
+  network:
+    description: The GCP VPC network for internal load balancer configuration
+    displayName: GCP VPC Network
+    optional: false
+    providers:
+      - google
+    type: '@facets/gcp-network-details'
+
+  cloud_account:
+    description: The cloud account for DNS and infrastructure management (multi-cloud support for AWS/GCP)
+    displayName: Cloud Account
+    optional: false
+    providers:
+      - aws
+      - google
+    type: '@facets/gcp_cloud_account'
+
+spec:
+  title: GCP Application Load Balancer
+  description: Kubernetes Ingress with Google Cloud Load Balancer, SSL certificates, and DNS
+  type: object
+  properties:
+    domains:
+      type: object
+      title: Domains
+      description: Map of domain configurations for the ingress
+      default: {}
+      patternProperties:
+        ^[a-zA-Z][a-zA-Z0-9._-]*$:
+          type: object
+          title: Domain Configuration
+          properties:
+            domain:
+              type: string
+              title: Domain Name
+              description: The fully qualified domain name
+            alias:
+              type: string
+              title: Domain Alias
+              description: Alias for the domain
+            certificate_reference:
+              type: string
+              title: Certificate Reference
+              description: Reference to the Kubernetes secret containing the TLS certificate
+            rules:
+              type: array
+              title: Routing Rules
+              description: HTTP routing rules for this domain
+              default: []
+              items:
+                type: object
+                properties:
+                  service_name:
+                    type: string
+                    title: Service Name
+                    description: Name of the Kubernetes service to route to
+                  path:
+                    type: string
+                    title: Path
+                    description: URL path prefix for routing
+                    default: /
+                  port:
+                    type: number
+                    title: Service Port
+                    description: Port number of the service
+                  port_name:
+                    type: string
+                    title: Service Port Name
+                    description: Named port of the service (alternative to port number)
+                  domain_prefix:
+                    type: string
+                    title: Domain Prefix
+                    description: Subdomain prefix (e.g., 'api' for api.example.com)
+                  fqdn:
+                    type: string
+                    title: Fully Qualified Domain Name
+                    description: Override the full domain name for this rule
+          required:
+            - domain
+
+    rules:
+      type: array
+      title: Global Routing Rules
+      description: Routing rules applied to all domains
+      default: []
+      items:
+        type: object
+        properties:
+          service_name:
+            type: string
+            title: Service Name
+            description: Name of the Kubernetes service to route to
+          path:
+            type: string
+            title: Path
+            description: URL path prefix for routing
+            default: /
+          port:
+            type: number
+            title: Service Port
+            description: Port number of the service
+          port_name:
+            type: string
+            title: Service Port Name
+            description: Named port of the service
+          domain_prefix:
+            type: string
+            title: Domain Prefix
+            description: Subdomain prefix
+
+    subdomains:
+      type: array
+      title: Subdomains
+      description: List of subdomain prefixes to create
+      default: []
+      items:
+        type: string
+
+    ipv6_enabled:
+      type: boolean
+      title: Enable IPv6
+      description: Enable IPv6 support for the load balancer
+      default: false
+
+    private:
+      type: boolean
+      title: Internal Load Balancer
+      description: Create an internal load balancer (private access only)
+      default: false
+
+    force_ssl_redirection:
+      type: boolean
+      title: Force SSL Redirection
+      description: Automatically redirect HTTP to HTTPS
+      default: false
+
+    grpc:
+      type: boolean
+      title: gRPC Support
+      description: Enable HTTP/2 protocol for gRPC services
+      default: false
+
+sample:
+  kind: ingress
+  flavor: astuto
+  version: '1.0'
+  disabled: false
+  spec:
+    domains:
+      api:
+        domain: api.example.com
+        alias: api
+        rules:
+          - service_name: api-service
+            path: /
+            port: 8080
+    rules:
+      - service_name: default-backend
+        path: /
+        port: 80
+    private: false
+    force_ssl_redirection: true
+    ipv6_enabled: false
+    grpc: false
+
+outputs:
+  default:
+    type: '@facets/ingress'
+    title: Ingress Output
+    description: Load balancer details and service interfaces
+
+iac:
+  validated_files:
+    - variables.tf
+    - main.tf
+    - locals.tf
+    - outputs.tf
