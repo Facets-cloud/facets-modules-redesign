@@ -106,7 +106,7 @@ resource "helm_release" "kubeblocks" {
     ))
   ]
 
-  depends_on = [time_sleep.wait_for_crds]
+  depends_on = [kubernetes_job.install_crds]
 
   lifecycle {
     prevent_destroy = true
