@@ -1,4 +1,4 @@
-name: '@facets/karpenter-details'
+name: "@facets/karpenter-details"
 properties:
   type: object
   properties:

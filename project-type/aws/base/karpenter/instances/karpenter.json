@@ -1,6 +1,6 @@
 {
   "kind": "karpenter",
-  "flavor": "default",
+  "flavor": "standard",
   "version": "1.0",
   "disabled": false,
   "spec": {
