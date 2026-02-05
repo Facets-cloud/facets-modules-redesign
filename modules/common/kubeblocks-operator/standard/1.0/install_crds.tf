@@ -96,9 +96,3 @@ resource "kubernetes_job" "install_crds" {
     create = "15m"
   }
 }
-
-# Buffer after CRD install job completes before starting the operator
-resource "time_sleep" "wait_for_crds" {
-  create_duration = "60s"
-  depends_on      = [kubernetes_job.install_crds]
-}
