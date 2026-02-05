@@ -53,7 +53,7 @@ module "mysql_cluster" {
       {
         clusterDef        = "mysql"
         topology          = local.topology
-        terminationPolicy = local.termination_policy
+        terminationPolicy = var.instance.spec.termination_policy
 
         componentSpecs = [
           merge(
