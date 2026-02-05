@@ -19,7 +19,7 @@ resource "google_container_cluster" "primary" {
   deletion_protection = false
 
   # Remove default node pool - manage all node pools via kubernetes_node_pool module
-  remove_default_node_pool = true
+  remove_default_node_pool = false
   initial_node_count       = 1 # Required for creation, then immediately removed
 
   # Network configuration
