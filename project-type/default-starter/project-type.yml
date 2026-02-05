@@ -1,0 +1,50 @@
+name: default-starter
+description: Starter project type with common configurations across clouds
+
+# Git repository details
+gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
+gitRef: default-starter
+baseTemplatePath: project-type/default-starter/base
+
+iacTool: TERRAFORM
+iacToolVersion: "1.5.7"
+
+# IaC modules to include
+modules:
+  # === AWS-Specific Modules ===
+  - intent: cloud_account
+    flavor: aws_provider
+  - intent: kubernetes_cluster
+    flavor: eks_standard
+  - intent: kubernetes_node_pool
+    flavor: karpenter
+  - intent: kubernetes_node_pool
+    flavor: aws
+  - intent: karpenter
+    flavor: default
+  - intent: network
+    flavor: aws_network
+  - intent: service
+    flavor: aws
+
+  # === AWS Datastore Modules ===
+  - intent: postgres
+    flavor: aws-aurora
+  - intent: postgres
+    flavor: aws-rds
+
+  # === Common Modules ===
+  - intent: artifactories
+    flavor: standard
+  - intent: ingress
+    flavor: nginx_k8s
+  - intent: k8s_access_controls
+    flavor: k8s_standard
+  - intent: k8s_callback
+    flavor: k8s_standard
+  - intent: kubernetes_secret
+    flavor: k8s_standard
+
+  # === Kubeblocks Self-hosted Datastores ===
+  - intent: postgres
+    flavor: kubeblocks
