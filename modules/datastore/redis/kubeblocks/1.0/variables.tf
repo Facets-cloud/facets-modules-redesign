@@ -19,6 +19,7 @@ variable "instance" {
   type = object({
     spec = object({
       namespace_override = optional(string)
+      termination_policy = string
       redis_version      = string
       mode               = string
       replicas           = optional(number)
@@ -57,6 +58,11 @@ variable "instance" {
   validation {
     condition     = contains(["standalone", "replication", "redis-cluster"], var.instance.spec.mode)
     error_message = "Cluster mode must be one of: standalone, replication, redis-cluster"
+  }
+
+  validation {
+    condition     = contains(["Delete", "DoNotTerminate", "WipeOut"], var.instance.spec.termination_policy)
+    error_message = "Termination policy must be one of: Delete, DoNotTerminate, WipeOut"
   }
 
   validation {

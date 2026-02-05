@@ -51,7 +51,7 @@ module "redis_cluster" {
 
     spec = merge(
       {
-        terminationPolicy = local.termination_policy
+        terminationPolicy = var.instance.spec.termination_policy
       },
       local.mode != "redis-cluster" ? {
         clusterDef = "redis"
