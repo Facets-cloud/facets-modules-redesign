@@ -6,6 +6,7 @@ variable "instance" {
       min_node_count = 1
       max_node_count = 1
       disk_size      = 100
+      disk_type      = "pd-standard"
       taints         = []
       labels         = {}
     }
