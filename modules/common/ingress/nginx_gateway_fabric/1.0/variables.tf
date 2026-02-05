@@ -52,6 +52,14 @@ variable "inputs" {
         job_name    = optional(string)
       }))
     }))
+    prometheus_details = optional(object({
+      attributes = optional(object({
+        alertmanager_url = optional(string)
+        helm_release_id  = optional(string)
+        prometheus_url   = optional(string)
+      }))
+      interfaces = optional(object({}))
+    }))
   })
   description = "Inputs from other modules"
 }

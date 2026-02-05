@@ -46,6 +46,13 @@ inputs:
       resource_name: default
     displayName: Gateway API CRDs
     description: Gateway API CRD installation (required for NGINX Gateway Fabric)
+  prometheus_details:
+    type: "@facets/prometheus"
+    displayName: Prometheus
+    optional: true
+    default:
+      resource_type: prometheus
+      resource_name: default
 spec:
   title: NGINX Gateway Fabric
   type: object

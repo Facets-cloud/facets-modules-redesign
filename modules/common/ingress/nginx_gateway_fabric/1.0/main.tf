@@ -490,8 +490,8 @@ locals {
     } if lookup(lookup(v, "grpc_config", {}), "enabled", false)
   }
 
-  # ServiceMonitor (always enabled with defaults)
-  servicemonitor_resources = {
+  # ServiceMonitor (only created when prometheus_details input is provided)
+  servicemonitor_resources = lookup(var.inputs, "prometheus_details", null) != null ? {
     "servicemonitor-${local.name}" = {
       apiVersion = "monitoring.coreos.com/v1"
       kind       = "ServiceMonitor"
@@ -516,7 +516,7 @@ locals {
         }]
       }
     }
-  }
+  } : {}
 
   # Collect unique namespaces that need ReferenceGrants (for cross-namespace backends)
   cross_namespace_backends = {
