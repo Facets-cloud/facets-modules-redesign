@@ -61,7 +61,7 @@ jobs:
       - name: Setup Git Identity
         run: |
           git config --global user.name "facets-automation"
-          git config --global user.email "automation@facets.cloud"
+          git config --global user.email "support@facets.cloud"
 
       - name: Run Claude Code
         env:
