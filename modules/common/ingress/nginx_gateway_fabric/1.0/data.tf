@@ -9,8 +9,8 @@ data "external" "cc_env" {
 
 # Fetch Route53 zone by domain name
 data "aws_route53_zone" "base-domain-zone" {
-  count = lower(local.cc_tenant_provider != "" ? local.cc_tenant_provider : "aws") == "aws" ? 1 : 0
-  name  = local.tenant_base_domain
+  count    = lower(local.cc_tenant_provider != "" ? local.cc_tenant_provider : "aws") == "aws" ? 1 : 0
+  name     = local.tenant_base_domain
   provider = "aws3tooling"
 }
 

@@ -767,10 +767,18 @@ module "http01_certificate_additional" {
   ]
 }
 
+# Helm release name - use short name to avoid k8s label limit
+# Chart appends "-cert-generator" (15 chars) to fullnameOverride for the job
+# K8s label limit is 63 chars, so fullnameOverride must be <= 48 chars
+locals {
+  # Create a short helm release name based on local.name (max 48 chars for fullnameOverride)
+  helm_release_name = substr(local.name, 0, min(length(local.name), 48))
+}
+
 # NGINX Gateway Fabric Helm Chart
 # Note: Gateway API CRDs are installed by the gateway_api_crd module (dependency)
 resource "helm_release" "nginx_gateway_fabric" {
-  name             = "${local.name}-nginx-fabric"
+  name             = local.helm_release_name
   wait             = lookup(var.instance.spec, "helm_wait", true)
   chart            = "${path.module}/charts/nginx-gateway-fabric-2.3.0.tgz"
   namespace        = var.environment.namespace
@@ -781,6 +789,12 @@ resource "helm_release" "nginx_gateway_fabric" {
 
   values = [
     yamlencode({
+      # Override names to keep resource names under 63 chars (k8s label limit)
+      # Chart appends "-cert-generator" (15 chars) to fullnameOverride for the job name
+      # Both overrides must be set to ensure selector/label consistency
+      nameOverride     = local.helm_release_name
+      fullnameOverride = local.helm_release_name
+
       # Use release-specific TLS secret names to support multiple instances in the same namespace
       certGenerator = {
         serverTLSSecretName = "${local.name}-server-tls"
