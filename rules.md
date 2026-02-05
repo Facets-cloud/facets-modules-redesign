@@ -511,6 +511,109 @@ locals {
 
 ---
 
+### RULE-016: No `any` type in variables.tf
+
+Extends RULE-004 (which covers `var.inputs`) to ALL variables. No `type = any`, `map(any)`, or nested `any` anywhere in `variables.tf`.
+
+**Bad:**
+```hcl
+variable "instance" {
+  type = any
+}
+
+variable "instance" {
+  type = object({
+    spec = any
+  })
+}
+```
+
+**Good:**
+```hcl
+variable "instance" {
+  type = object({
+    spec = object({
+      name   = optional(string)
+      region = optional(string)
+    })
+  })
+}
+```
+
+---
+
+### RULE-018: No file references outside module directory
+
+Modules must not use `file()` or `fileexists()` to reference files outside the module directory (e.g., `../deploymentcontext.json`). All data must come through `var.instance` or `var.inputs`.
+
+**Bad:**
+```hcl
+locals {
+  deployment_context = jsondecode(file("../deploymentcontext.json"))
+  registry_url       = local.deployment_context.registry
+}
+```
+
+**Good:**
+```hcl
+locals {
+  registry_url = var.inputs.artifactory.attributes.registry_url
+}
+```
+
+---
+
+### RULE-019: intentDetails metadata required in facets.yaml
+
+Every module must include `intentDetails` with `type`, `description`, `displayName`, and `iconUrl`.
+
+**Bad:**
+```yaml
+intent: kubernetes_cluster
+flavor: eks_standard
+version: "1.0"
+```
+
+**Good:**
+```yaml
+intent: kubernetes_cluster
+flavor: eks_standard
+version: "1.0"
+intentDetails:
+  type: Kubernetes Cluster
+  description: "Provisions and manages an EKS cluster"
+  displayName: "EKS Standard"
+  iconUrl: "https://cdn.facets.cloud/icons/eks.svg"
+```
+
+---
+
+### RULE-020: Cloud resources must include standard Facets tags/labels
+
+All cloud resources must carry standard Facets identification tags for resource tracking.
+
+**Bad:**
+```hcl
+resource "google_compute_network" "vpc" {
+  name = "my-vpc"
+}
+```
+
+**Good:**
+```hcl
+resource "google_compute_network" "vpc" {
+  name = "my-vpc"
+  labels = {
+    "facets-cluster-id"    = var.instance.metadata.cluster_id
+    "facets-control-plane" = var.instance.metadata.control_plane
+    "facets-cluster-name"  = var.instance.metadata.cluster_name
+    "facets-project-name"  = var.instance.metadata.project_name
+  }
+}
+```
+
+---
+
 ## Quick Reference
 
 | Rule | Category | Summary |
@@ -530,3 +633,7 @@ locals {
 | RULE-013 | terraform | No required_providers in modules |
 | RULE-014 | terraform | All variables must be declared |
 | RULE-015 | terraform | No cc_metadata, cluster, baseinfra vars |
+| RULE-016 | variables.tf | No `any` type anywhere in variables.tf |
+| RULE-018 | terraform | No file references outside module directory |
+| RULE-019 | facets.yaml | intentDetails metadata required |
+| RULE-020 | terraform | Standard Facets tags/labels on cloud resources |

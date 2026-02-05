@@ -41,6 +41,10 @@ Look for `*_module_standard*.md` in the relevant directory:
 - `modules/workload_identity/` → `workload_identity_module_standard.md`
 - `datastore/` → `datastore_module_standards.md`
 
+## Module Writing Guide
+
+Before creating or modifying any Facets module, **always read `.claude/skills/module_writing.md`** first. It covers facets.yaml structure, Terraform file conventions, output types, provider configuration, deep merge patterns, and the complete module development workflow.
+
 ## Validation Rules
 
 See **rules.md** for complete validation ruleset with good/bad examples.
