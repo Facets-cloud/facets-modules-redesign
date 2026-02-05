@@ -49,45 +49,9 @@ locals {
     }
   }
 
-  # Build managed node groups configuration and merge with default system pool
-  user_node_groups = {
-    for ng_name, ng_config in lookup(var.instance.spec, "managed_node_groups", {}) : ng_name => {
-      # Truncate node group name to avoid IAM role name length limits
-      # Keep first 10 chars of node group name
-      name = substr(ng_name, 0, 10)
-
-      instance_types = lookup(ng_config, "instance_types", ["t3.medium"])
-      capacity_type  = lookup(ng_config, "capacity_type", "ON_DEMAND")
-
-      min_size     = lookup(ng_config, "min_size", 1)
-      max_size     = lookup(ng_config, "max_size", 10)
-      desired_size = lookup(ng_config, "desired_size", 2)
-
-      disk_size = lookup(ng_config, "disk_size", 50)
-
-      labels = lookup(ng_config, "labels", {})
-
-      # Convert taints from map to list format expected by terraform-aws-eks
-      taints = [
-        for key, value in lookup(ng_config, "taints", {}) : {
-          key    = key
-          value  = value
-          effect = "NoSchedule"
-        }
-      ]
-
-      # Use the private subnets from the network input
-      subnet_ids = var.inputs.network_details.attributes.private_subnet_ids
-
-      tags = local.cluster_tags
-    }
-  }
-
-  # Merge default system node group with user-defined node groups
-  eks_managed_node_groups = merge(
-    local.default_system_node_group,
-    local.user_node_groups
-  )
+  # Only the default system node group is managed by this module.
+  # Additional node pools should be created using the kubernetes_node_pool resource.
+  eks_managed_node_groups = local.default_system_node_group
 
   # Check if EBS CSI driver addon is enabled (default: true)
   ebs_csi_enabled = lookup(lookup(var.instance.spec.cluster_addons, "ebs_csi", {}), "enabled", true)
