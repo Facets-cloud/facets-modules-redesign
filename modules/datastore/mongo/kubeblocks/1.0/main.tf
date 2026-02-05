@@ -54,7 +54,7 @@ module "mongodb_cluster" {
       {
         clusterDef        = "mongodb"
         topology          = local.topology
-        terminationPolicy = local.termination_policy
+        terminationPolicy = var.instance.spec.termination_policy
 
         componentSpecs = [
           merge(
