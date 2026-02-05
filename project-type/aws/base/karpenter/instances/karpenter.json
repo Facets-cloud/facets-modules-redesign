@@ -1,0 +1,29 @@
+{
+  "kind": "karpenter",
+  "flavor": "default",
+  "version": "1.0",
+  "disabled": false,
+  "spec": {
+    "karpenter_replicas": 1,
+    "karpenter_version": "1.0.1"
+  },
+  "inputs": {
+    "kubernetes_details": {
+      "resource_name": "cluster",
+      "resource_type": "kubernetes_cluster"
+    },
+    "eks_details": {
+      "resource_name": "cluster",
+      "resource_type": "kubernetes_cluster",
+      "output_name": "attributes"
+    },
+    "cloud_account": {
+      "resource_name": "cloud",
+      "resource_type": "cloud_account"
+    },
+    "network_details": {
+      "resource_name": "network",
+      "resource_type": "network"
+    }
+  }
+}
