@@ -6,34 +6,9 @@ properties:
       type: object
       properties:
         external_endpoints:
-          description: JSON-encoded map of external MongoDB endpoints with their connection details
           type: string
     interfaces:
       type: object
       properties: {}
-      patternProperties:
-        ".*":
-          description: External MongoDB endpoint interface (dynamically created based on external_access configuration)
-          type: object
-          properties:
-            host:
-              description: Hostname or IP address of the external load balancer endpoint
-              type: string
-            port:
-              description: Port number for MongoDB connection
-              type: string
-            username:
-              description: MongoDB admin username
-              type: string
-            password:
-              description: MongoDB admin password (sensitive)
-              type: string
-            connection_string:
-              description: Full MongoDB connection string for this external endpoint
-              type: string
-            secrets:
-              description: List of secret field names that contain sensitive data
-              type: array
-              items:
-                type: string
 providers: []
+

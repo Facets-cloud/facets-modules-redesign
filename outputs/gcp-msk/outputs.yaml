@@ -6,25 +6,18 @@ properties:
       type: object
       properties:
         cluster_id:
-          description: GCP Managed Kafka cluster ID
           type: string
         location:
-          description: GCP location where the Kafka cluster is deployed
           type: string
         cluster_name:
-          description: Name of the Kafka cluster
           type: string
         connect_cluster_id:
-          description: Kafka Connect cluster ID (if enabled)
           type: string
         connect_cluster_location:
-          description: Location of Kafka Connect cluster (if enabled)
           type: string
         connect_cluster_state:
-          description: State of Kafka Connect cluster (if enabled)
           type: string
         kafka_version:
-          description: Version of the Kafka engine
           type: string
     interfaces:
       type: object
