@@ -1,5 +1,5 @@
 intent: kubernetes_node_pool
-flavor: aws
+flavor: eks_automode
 version: '1.0'
 clouds:
 - aws
@@ -266,7 +266,7 @@ spec:
   required: []
 sample:
   kind: kubernetes_node_pool
-  flavor: aws
+  flavor: eks_automode
   version: '1.0'
   metadata:
     name: production-nodepool
