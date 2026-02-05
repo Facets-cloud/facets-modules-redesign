@@ -19,6 +19,7 @@ variable "instance" {
   type = object({
     spec = object({
       namespace_override = optional(string)
+      termination_policy = string
       postgres_version   = string
       mode               = string
       replicas           = optional(number)
