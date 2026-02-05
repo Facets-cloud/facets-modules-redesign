@@ -8,6 +8,10 @@ clouds:
 - azure
 description: Installs KubeBlocks Custom Resource Definitions (CRDs) on Kubernetes
   cluster
+intentDetails:
+  type: operator
+  description: Installs KubeBlocks Custom Resource Definitions (CRDs) required by the operator
+  displayName: KubeBlocks CRDs
 inputs:
   kubernetes_cluster:
     type: '@facets/kubernetes-details'

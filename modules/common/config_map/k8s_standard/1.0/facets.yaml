@@ -2,6 +2,10 @@ intent: config_map
 flavor: k8s_standard
 version: '1.0'
 description: config_map - k8s
+intentDetails:
+  type: kubernetes
+  description: Create and manage Kubernetes ConfigMaps for application configuration
+  displayName: ConfigMap
 clouds:
 - aws
 - azure

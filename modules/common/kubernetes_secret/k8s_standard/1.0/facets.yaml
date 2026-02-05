@@ -2,6 +2,10 @@ intent: kubernetes_secret
 flavor: k8s_standard
 version: '1.0'
 description: kubernetes_secret - k8s
+intentDetails:
+  type: kubernetes
+  description: Create and manage Kubernetes Secrets for sensitive data
+  displayName: Secret
 clouds:
 - aws
 - azure

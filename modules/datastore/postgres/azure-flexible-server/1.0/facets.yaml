@@ -5,6 +5,10 @@ clouds:
 - azure
 description: A developer-friendly PostgreSQL flexible server with secure defaults
   and restore capabilities
+intentDetails:
+  type: database
+  description: Azure Database for PostgreSQL flexible server
+  displayName: PostgreSQL (Azure)
 spec:
   title: PostgreSQL Flexible Server on Azure
   description: A developer-friendly PostgreSQL flexible server with secure defaults

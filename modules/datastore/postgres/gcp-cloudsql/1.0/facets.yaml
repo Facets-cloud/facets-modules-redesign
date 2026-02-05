@@ -5,6 +5,10 @@ clouds:
 - gcp
 description: Managed PostgreSQL database using Google Cloud SQL with secure defaults
   and high availability
+intentDetails:
+  type: database
+  description: Google Cloud SQL PostgreSQL managed database
+  displayName: PostgreSQL (Cloud SQL)
 spec:
   title: PostgreSQL CloudSQL Database
   description: Managed PostgreSQL database using Google Cloud SQL with secure defaults

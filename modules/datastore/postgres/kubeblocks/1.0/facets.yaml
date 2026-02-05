@@ -8,6 +8,10 @@ clouds:
 - gcp
 description: Creates and manages PostgreSQL database clusters using KubeBlocks operator
   v1.0.1
+intentDetails:
+  type: database
+  description: KubeBlocks-managed PostgreSQL database on Kubernetes
+  displayName: PostgreSQL (KubeBlocks)
 inputs:
   kubeblocks_operator:
     type: '@facets/kubeblocks-operator'

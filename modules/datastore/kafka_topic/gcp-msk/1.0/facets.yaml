@@ -5,6 +5,10 @@ clouds:
 - gcp
 description: Creates and manages topics for GCP Managed Service for Apache Kafka with
   configurable partitions, replication, and retention policies
+intentDetails:
+  type: streaming
+  description: Kafka topic management for GCP Managed Kafka
+  displayName: Kafka Topic
 spec:
   title: GCP Managed Kafka Topic
   description: Configure Kafka topic with partitions, replication, and optional configurations

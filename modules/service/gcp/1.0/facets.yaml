@@ -5,6 +5,10 @@ flavor: gcp
 version: '1.0'
 description: Unified GCP cloud service module supporting deployment, cronjob, job,
   and statefulset workloads
+intentDetails:
+  type: application
+  description: Deploy and manage containerized applications on GCP GKE
+  displayName: Service
 clouds:
 - gcp
 artifact_inputs:

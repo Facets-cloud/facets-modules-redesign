@@ -2,6 +2,10 @@ intent: kubernetes_node_pool
 flavor: gcp
 version: '1.0'
 description: Custom GKE node pool with advanced configuration options
+intentDetails:
+  type: compute
+  description: GCP GKE node pool with auto-scaling and customizable machine types
+  displayName: GCP Node Pool
 clouds:
   - gcp
 inputs:

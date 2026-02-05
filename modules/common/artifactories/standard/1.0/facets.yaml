@@ -4,6 +4,10 @@ clouds:
     - azure
     - aws
 description: Adds artifactories - default flavor
+intentDetails:
+  type: storage
+  description: Manages container registry secrets for pulling images from artifactories
+  displayName: Artifactories
 flavor: standard
 inputs:
     kubernetes_details:

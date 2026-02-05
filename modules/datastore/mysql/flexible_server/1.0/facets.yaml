@@ -6,6 +6,10 @@ clouds:
 description: Azure Database for MySQL - Flexible Server with high availability and
   automated backup. Requires network module with MySQL subnet enabled (database_config.enable_mysql_flexible_subnet
   = true)
+intentDetails:
+  type: database
+  description: Azure Database for MySQL flexible server
+  displayName: MySQL (Azure)
 spec:
   title: Azure MySQL Flexible Server
   description: Azure Database for MySQL - Flexible Server with high availability and

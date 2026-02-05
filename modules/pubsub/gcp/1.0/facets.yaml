@@ -2,6 +2,10 @@ clouds:
 - gcp
 description: Creates a GCP Pub/Sub topic with optional subscription and IAM role outputs
   for Workload Identity
+intentDetails:
+  type: messaging
+  description: Google Cloud Pub/Sub for reliable messaging and event streaming
+  displayName: Pub/Sub
 flavor: gcp
 iac:
   validated_files:

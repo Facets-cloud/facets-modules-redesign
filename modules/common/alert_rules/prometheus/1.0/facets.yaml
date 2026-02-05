@@ -2,6 +2,10 @@ intent: alert_rules
 flavor: prometheus
 version: '1.0'
 description: Generic alert rules module for defining custom Prometheus alerting rules. Deploy PrometheusRule CRDs for any service or application.
+intentDetails:
+  type: monitoring
+  description: Define custom Prometheus alerting rules for any service or application
+  displayName: Alert Rules
 clouds:
   - kubernetes
   - aws

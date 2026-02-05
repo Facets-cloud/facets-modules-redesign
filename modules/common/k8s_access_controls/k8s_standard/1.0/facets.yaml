@@ -6,6 +6,10 @@ description: 'Creates Kubernetes RBAC Roles and ClusterRoles for access control.
   Includes default read and debug roles for Facets platform integration.
 
   '
+intentDetails:
+  type: security
+  description: Create and manage Kubernetes RBAC roles for access control
+  displayName: Access Controls
 clouds:
 - aws
 - azure

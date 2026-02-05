@@ -2,6 +2,10 @@ clouds:
 - gcp
 description: Creates a GKE-optimized GCP VPC with auto-calculated subnets. Fixed allocation
   - Private (8K IPs), Public (256 IPs), Database (256 IPs), plus GKE secondary ranges
+intentDetails:
+  type: networking
+  description: GKE-optimized GCP VPC with auto-calculated subnets and GKE secondary ranges
+  displayName: GCP Network
 flavor: gcp_network
 iac:
   validated_files:
