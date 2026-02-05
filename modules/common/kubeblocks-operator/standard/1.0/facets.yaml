@@ -9,7 +9,7 @@ clouds:
 description: Installs and configures KubeBlocks operator for managing databases on
   Kubernetes
 intentDetails:
-  type: operator
+  type: kubernetes
   description: KubeBlocks operator for managing databases on Kubernetes clusters
   displayName: KubeBlocks Operator
 inputs:

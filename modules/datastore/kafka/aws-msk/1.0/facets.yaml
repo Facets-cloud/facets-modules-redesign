@@ -6,7 +6,7 @@ clouds:
 description: AWS Managed Streaming for Apache Kafka cluster with secure defaults and
   automatic scaling
 intentDetails:
-  type: streaming
+  type: messaging
   description: AWS Managed Streaming for Apache Kafka (MSK)
   displayName: Kafka (MSK)
 spec:

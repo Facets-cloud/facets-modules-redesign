@@ -8,7 +8,7 @@ clouds:
 - kubernetes
 description: Elastic Cloud on Kubernetes (ECK) Operator deployed via Helm chart
 intentDetails:
-  type: operator
+  type: kubernetes
   description: Elastic Cloud on Kubernetes (ECK) Operator for managing Elasticsearch clusters
   displayName: ECK Operator
 spec:

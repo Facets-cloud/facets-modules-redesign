@@ -3,7 +3,7 @@ flavor: aws_provider
 version: '1.0'
 description: Module to configure and provision resources within a cloud account
 intentDetails:
-  type: cloud_provider
+  type: cloud
   description: Configure and provision resources within an AWS cloud account
   displayName: AWS Account
 clouds:

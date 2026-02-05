@@ -6,7 +6,7 @@ clouds:
 description: Managed MySQL database instance on AWS RDS with high availability, automated
   backups, and read replicas
 intentDetails:
-  type: database
+  type: data_storage
   description: AWS RDS MySQL managed database service
   displayName: MySQL (RDS)
 spec:

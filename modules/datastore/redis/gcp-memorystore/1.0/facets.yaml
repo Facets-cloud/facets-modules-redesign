@@ -6,7 +6,7 @@ clouds:
 description: Managed Redis instance using Google Cloud Memorystore with high availability
   and security
 intentDetails:
-  type: cache
+  type: data_storage
   description: Google Cloud Memorystore for Redis
   displayName: Redis (Memorystore)
 spec:

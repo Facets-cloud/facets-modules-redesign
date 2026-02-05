@@ -6,7 +6,7 @@ clouds:
 description: Managed PostgreSQL database using Amazon RDS with secure defaults and
   backup support
 intentDetails:
-  type: database
+  type: data_storage
   description: AWS RDS PostgreSQL managed database service
   displayName: PostgreSQL (RDS)
 spec:
