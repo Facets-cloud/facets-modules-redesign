@@ -11,11 +11,6 @@ variable "instance" {
         recreate_pods   = optional(bool)
       }))
     }))
-    advanced = optional(object({
-      cert_manager = optional(object({
-        values = optional(any)
-      }))
-    }))
   })
 }
 
@@ -69,5 +64,15 @@ variable "inputs" {
       }))
       interfaces = optional(object({}))
     })
+    gateway_api_crd_details = optional(object({
+      attributes = optional(object({
+        version     = optional(string)
+        channel     = optional(string)
+        install_url = optional(string)
+        job_name    = optional(string)
+        namespace   = optional(string)
+      }))
+      interfaces = optional(object({}))
+    }))
   })
 }

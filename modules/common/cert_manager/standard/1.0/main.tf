@@ -52,12 +52,11 @@ EOF
           enabled = local.prometheus_enabled
         }
       }
-      },
-      # Add featureGates for Gateway API support when enabled
-      local.enable_gateway_api ? {
-        featureGates = "ExperimentalGatewayAPISupport=true"
-      } : {}
-    ),
+    }),
+    # Add featureGates for Gateway API support when enabled
+    local.enable_gateway_api ? yamlencode({
+      featureGates = "ExperimentalGatewayAPISupport=true"
+    }) : "",
     yamlencode(local.user_supplied_helm_values),
   ]
 
