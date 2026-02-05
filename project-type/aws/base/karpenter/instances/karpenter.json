@@ -14,8 +14,7 @@
     },
     "eks_details": {
       "resource_name": "cluster",
-      "resource_type": "kubernetes_cluster",
-      "output_name": "attributes"
+      "resource_type": "kubernetes_cluster"
     },
     "cloud_account": {
       "resource_name": "cloud",
