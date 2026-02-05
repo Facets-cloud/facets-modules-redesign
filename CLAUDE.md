@@ -1,5 +1,9 @@
 # Facets Module Repository
 
+## MANDATORY: Read Before Any Task
+
+**Always read `.claude/skills/module_writing.md` first.** This is the complete guide to how Facets modules work — facets.yaml structure, Terraform file conventions, output types, provider configuration, and the full development workflow. Without reading it, you will not understand this codebase.
+
 ## Repository Structure
 
 ```
@@ -15,8 +19,7 @@ outputs/{type-name}/                   - Output type schemas (@facets/*)
 | `facets.yaml` | Module definition (spec schema, inputs, outputs, sample) |
 | `variables.tf` | `var.instance` (spec) and `var.inputs` (dependencies) |
 | `main.tf` | Terraform resources |
-| `locals.tf` | `output_attributes` and `output_interfaces` |
-| `outputs.tf` | Terraform outputs |
+| `outputs.tf` | `output_attributes` and `output_interfaces` locals (NO `output` blocks) |
 
 ## Raptor Commands
 
@@ -40,10 +43,6 @@ Look for `*_module_standard*.md` in the relevant directory:
 - `modules/kubernetes_node_pool/` → `kubernetes_node_pool_module_standard.md`
 - `modules/workload_identity/` → `workload_identity_module_standard.md`
 - `datastore/` → `datastore_module_standards.md`
-
-## Module Writing Guide
-
-Before creating or modifying any Facets module, **always read `.claude/skills/module_writing.md`** first. It covers facets.yaml structure, Terraform file conventions, output types, provider configuration, deep merge patterns, and the complete module development workflow.
 
 ## Validation Rules
 
