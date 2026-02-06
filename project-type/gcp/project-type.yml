@@ -65,8 +65,6 @@ modules:
     flavor: k8s_standard
   - intent: k8s_resource
     flavor: k8s_standard
-  - intent: kubeblocks-crd
-    flavor: standard
   - intent: kubeblocks-operator
     flavor: standard
   - intent: kubernetes_secret
