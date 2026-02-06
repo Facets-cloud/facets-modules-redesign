@@ -43,7 +43,7 @@ resource "azurerm_postgresql_flexible_server" "main" {
   tags = local.common_tags
 
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = true
     ignore_changes = [
       # Ignore changes that would cause resource replacement during import
       name,
@@ -87,6 +87,7 @@ resource "azurerm_postgresql_flexible_server_database" "databases" {
   charset   = "utf8"
 
   lifecycle {
+    prevent_destroy = true
     ignore_changes = [
       name,
       server_id,
@@ -153,7 +154,7 @@ resource "azurerm_postgresql_flexible_server" "replicas" {
   })
 
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = true
     ignore_changes = [
       # Ignore changes that would require recreation
       delegated_subnet_id,
