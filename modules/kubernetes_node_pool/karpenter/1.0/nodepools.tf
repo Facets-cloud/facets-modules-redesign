@@ -5,9 +5,6 @@ resource "kubernetes_manifest" "ec2_node_class" {
     kind       = "EC2NodeClass"
     metadata = {
       name = "${var.instance_name}-nodeclass"
-      annotations = {
-        "facets.cloud/karpenter-release-id" = var.inputs.karpenter_details.attributes.helm_release_id
-      }
     }
     spec = {
       # Use the instance profile from karpenter_details input
