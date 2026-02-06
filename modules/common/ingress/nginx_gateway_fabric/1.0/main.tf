@@ -842,17 +842,30 @@ resource "helm_release" "nginx_gateway_fabric" {
       # - proxyConnectTimeout, proxySendTimeout, proxyReadTimeout (not exposed in any CRD)
       nginx = {
         # Enable Proxy Protocol to get real client IP with externalTrafficPolicy: Cluster (AWS only)
-        config = local.cloud_provider == "AWS" ? {
-          rewriteClientIP = {
-            mode = "ProxyProtocol"
-            trustedAddresses = [
-              {
-                type  = "CIDR"
-                value = "0.0.0.0/0"
+        # Access logs are always enabled with upstream service name for debugging
+        config = merge(
+          local.cloud_provider == "AWS" ? {
+            rewriteClientIP = {
+              mode = "ProxyProtocol"
+              trustedAddresses = [
+                {
+                  type  = "CIDR"
+                  value = "0.0.0.0/0"
+                }
+              ]
+            }
+          } : {},
+          {
+            logging = {
+              errorLevel = "info"
+              agentLevel = "info"
+              accessLog = {
+                disable = false
+                format  = "$remote_addr - $remote_user [$time_local] \"$request\" $status $body_bytes_sent \"$http_referer\" \"$http_user_agent\" upstream=$upstream_addr upstream_name=$proxy_host"
               }
-            ]
+            }
           }
-        } : {}
+        )
 
         # Data plane autoscaling - always enabled
         autoscaling = {
