@@ -14,7 +14,8 @@ The module uses `var.environment.cloud_tags` to tag Kubernetes namespace resourc
 
 ## Resources Created
 
-- **Kubernetes Namespace**: `kb-system` namespace with metadata labels and CRD dependency tracking
+- **Custom Resource Definitions (CRDs)**: Installed via a Kubernetes Job that downloads and applies KubeBlocks CRDs (40+ CRDs)
+- **Kubernetes Namespace**: `kb-system` namespace with metadata labels
 - **KubeBlocks Operator**: Helm release installing the core operator controllers and webhooks
 - **Database Addon Helm Releases**: Optional separate releases for each enabled database type (PostgreSQL, MySQL, MongoDB, Redis, Kafka)
 - **Dependency Outputs**: Release IDs and status indicators for other modules to coordinate installation order
@@ -61,31 +62,22 @@ Addons install the following resources:
 
 The module follows a layered architecture:
 
-1. **CRD Module** (`kubeblocks-crd`): Installs 40+ CRDs as separate Kubernetes manifests
-2. **Operator Module** (this module): Deploys operator controllers with addon controller disabled
-3. **Database Cluster Modules**: Consume operator output and deploy database clusters using installed addons
+1. **CRD Installation** (this module): Installs 40+ CRDs via a Kubernetes Job that downloads the CRD manifest from GitHub and applies it using kubectl
+2. **Operator Deployment** (this module): Deploys operator controllers with addon controller disabled and CRD installation skipped (since CRDs are already installed)
+3. **Database Addon Installation** (this module): Deploys database-specific addons as separate Helm releases
+4. **Database Cluster Modules**: Consume operator output and deploy database clusters using installed addons
 
 The addon controller is explicitly disabled (`addonController.enabled = false`) to prevent webhook-created cluster-scoped Addon CRs that would block namespace deletion during destroy operations.
 
 ## Deployment
 
-```
-┌───────────────────────┐
-│   kubeblocks-crd      │
-│  (Terraform Module)   │
-└───────────┬───────────┘
-            │
-            ▼
-┌────────────────────────┐
-│  kubeblocks-operator   │
-│   (Terraform Module)   │
-└────────────────────────┘
-```
-** Deployment sequence:
-1. Creates `kb-system` namespace with dependency annotations
-2. Installs KubeBlocks operator (v1.0.1) via Helm with CRD installation skipped. CRD's are installed using a separate module.
-3. Waits 2 minutes for operator controllers to stabilize
-4. Installs enabled database addon Helm releases sequentially
+Deployment sequence:
+1. Creates RBAC resources for CRD installer (ServiceAccount, ClusterRole, ClusterRoleBinding)
+2. Runs a Kubernetes Job to download and apply KubeBlocks CRDs (40+ CRDs) from GitHub release
+3. Creates `kb-system` namespace
+4. Installs KubeBlocks operator (v1.0.1) via Helm with CRD installation skipped (since CRDs are already applied)
+5. Waits 60 seconds for operator controllers to stabilize
+6. Installs enabled database addon Helm releases sequentially
 
 ## Destruction Workflow
 
@@ -198,8 +190,6 @@ The data protection controller is enabled by default and includes:
 - `chart_version`: Helm chart version deployed
 - `release_name`: Helm release name (kubeblocks)
 - `release_status`: Current Helm release status
-- `crd_dependency`: CRD module release ID for dependency tracking
-
 ### Interfaces
 
 - `output.release_id`: Unique Helm release ID for dependency chaining
@@ -216,7 +206,8 @@ The data protection controller is enabled by default and includes:
 - **Operator Timeout**: 10 minutes
 - **Addon Timeout**: 10 minutes per addon
 - **Namespace Deletion Timeout**: 10 minutes
-- **Post-Install Wait**: 2 minutes for operator stabilization
+- **Post-Install Wait**: 60 seconds for operator stabilization
+- **CRD Installation**: Via Kubernetes Job with 15-minute timeout
 
 ## ComponentDefinition Naming Convention
 
