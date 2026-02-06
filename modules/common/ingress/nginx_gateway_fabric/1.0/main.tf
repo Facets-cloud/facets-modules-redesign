@@ -800,7 +800,7 @@ resource "helm_release" "nginx_gateway_fabric" {
         labels = local.common_labels
 
         image = {
-          repository = "facetscloud/nginx-gateway-fabric"
+          repository = "ghcr.io/nginx/nginx-gateway-fabric"
           tag        = "2.3.0"
           pullPolicy = "IfNotPresent"
         }
