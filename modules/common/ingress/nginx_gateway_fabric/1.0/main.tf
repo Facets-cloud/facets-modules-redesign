@@ -103,10 +103,7 @@ locals {
   }
 
   # Common labels for all resources
-  # Note: app.kubernetes.io/instance must match the Helm release name for selector compatibility
   common_labels = merge({
-    "app.kubernetes.io/name"       = "nginx-gateway-fabric"
-    "app.kubernetes.io/instance"   = "${local.name}-nginx-fabric"
     "app.kubernetes.io/managed-by" = "facets"
     "facets.cloud/module"          = "nginx_gateway_fabric"
     "facets.cloud/instance"        = var.instance_name
@@ -505,8 +502,8 @@ locals {
       spec = {
         selector = {
           matchLabels = {
-            "app.kubernetes.io/name"     = "nginx-gateway-fabric"
-            "app.kubernetes.io/instance" = "${local.name}-nginx-fabric"
+            "app.kubernetes.io/name"     = local.helm_release_name
+            "app.kubernetes.io/instance" = local.helm_release_name
           }
         }
         endpoints = [{
@@ -767,12 +764,9 @@ module "http01_certificate_additional" {
   ]
 }
 
-# Helm release name - use short name to avoid k8s label limit
-# Chart appends "-cert-generator" (15 chars) to fullnameOverride for the job
-# K8s label limit is 63 chars, so fullnameOverride must be <= 48 chars
+# Helm release name - keep under 63 chars for k8s label limit
 locals {
-  # Create a short helm release name based on local.name (max 48 chars for fullnameOverride)
-  helm_release_name = substr(local.name, 0, min(length(local.name), 48))
+  helm_release_name = substr(local.name, 0, min(length(local.name), 63))
 }
 
 # NGINX Gateway Fabric Helm Chart
@@ -789,12 +783,6 @@ resource "helm_release" "nginx_gateway_fabric" {
 
   values = [
     yamlencode({
-      # Override names to keep resource names under 63 chars (k8s label limit)
-      # Chart appends "-cert-generator" (15 chars) to fullnameOverride for the job name
-      # Both overrides must be set to ensure selector/label consistency
-      nameOverride     = local.helm_release_name
-      fullnameOverride = local.helm_release_name
-
       # Use release-specific TLS secret names to support multiple instances in the same namespace
       certGenerator = {
         serverTLSSecretName = "${local.name}-server-tls"
