@@ -1,0 +1,25 @@
+name: '@facets/gcp-kafka-topic'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        topic_id:
+          type: string
+        topic_name:
+          type: string
+        partition_count:
+          type: number
+        replication_factor:
+          type: number
+        cluster_id:
+          type: string
+        location:
+          type: string
+        configs:
+          type: object
+    interfaces:
+      type: object
+      properties: {}
+providers: []
