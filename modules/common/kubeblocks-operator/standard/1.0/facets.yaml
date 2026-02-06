@@ -21,11 +21,6 @@ inputs:
     providers:
     - kubernetes
     - helm
-  kubeblocks_crd:
-    type: '@facets/kubeblocks-crd'
-    optional: false
-    displayName: KubeBlocks CRDs
-    description: KubeBlocks Custom Resource Definitions (must be installed first)
   node_pool:
     type: '@facets/kubernetes_nodepool'
     optional: true

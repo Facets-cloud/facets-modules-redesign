@@ -93,6 +93,7 @@ resource "aws_db_subnet_group" "postgres" {
   })
 
   lifecycle {
+    prevent_destroy       = true
     create_before_destroy = true
     ignore_changes = [
       # Ignore tag changes that might occur outside Terraform
@@ -132,6 +133,7 @@ resource "aws_security_group" "postgres" {
   })
 
   lifecycle {
+    prevent_destroy       = true
     create_before_destroy = true
   }
 }
@@ -191,8 +193,7 @@ resource "aws_db_instance" "postgres" {
   tags = local.common_tags
 
   lifecycle {
-    # Comment out prevent_destroy for testing - uncomment for production
-    # prevent_destroy = true
+    prevent_destroy = true
     ignore_changes = [
       # Ignore changes that would trigger recreation when importing
       db_subnet_group_name,
@@ -241,8 +242,7 @@ resource "aws_db_instance" "read_replicas" {
   })
 
   lifecycle {
-    # Comment out prevent_destroy for testing - uncomment for production
-    # prevent_destroy = true
+    prevent_destroy = true
     ignore_changes = [
       # Ignore changes to the source DB after creation
       replicate_source_db,
