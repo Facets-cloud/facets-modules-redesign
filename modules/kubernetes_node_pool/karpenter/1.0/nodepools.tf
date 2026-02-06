@@ -61,7 +61,12 @@ resource "kubernetes_manifest" "node_pool" {
     spec = {
       template = {
         metadata = {
-          labels = lookup(var.instance.spec, "labels", {})
+          labels = merge(
+            lookup(var.instance.spec, "labels", {}),
+            {
+              "facets.cloud/karpenter-release-id" = var.inputs.karpenter_details.attributes.helm_release_id
+            }
+          )
         }
         spec = merge(
           {
