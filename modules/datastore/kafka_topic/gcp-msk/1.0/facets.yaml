@@ -6,7 +6,7 @@ clouds:
 description: Creates and manages topics for GCP Managed Service for Apache Kafka with
   configurable partitions, replication, and retention policies
 intentDetails:
-  type: messaging
+  type: queue
   description: Kafka topic management for GCP Managed Kafka
   displayName: Kafka Topic
 spec:

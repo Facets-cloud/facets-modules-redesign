@@ -7,7 +7,7 @@ description: 'Creates Kubernetes RBAC Roles and ClusterRoles for access control.
 
   '
 intentDetails:
-  type: security
+  type: kubernetes
   description: Create and manage Kubernetes RBAC roles for access control
   displayName: Access Controls
 clouds:

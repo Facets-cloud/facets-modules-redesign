@@ -5,7 +5,7 @@ description: |
     This module installs the Karpenter controller, IAM roles, and sets up interruption handling.
     Use this module once per cluster, then use kubernetes_node_pool/karpenter for creating NodePools.
 intentDetails:
-  type: compute
+  type: kubernetes
   description: Karpenter for automatic node provisioning and scaling in Kubernetes
   displayName: Karpenter
 flavor: default

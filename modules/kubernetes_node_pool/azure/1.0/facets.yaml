@@ -3,7 +3,7 @@ flavor: azure
 version: '1.0'
 description: Custom Azure Kubernetes Service node pool module
 intentDetails:
-  type: compute
+  type: kubernetes
   description: Azure AKS node pool with auto-scaling and customizable VM sizes
   displayName: Azure Node Pool
 clouds:
