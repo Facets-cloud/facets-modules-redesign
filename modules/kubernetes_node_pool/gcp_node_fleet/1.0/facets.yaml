@@ -2,6 +2,10 @@ intent: kubernetes_node_pool
 flavor: gcp_node_fleet
 version: '1.0'
 description: GCP GKE Node Fleet module for provisioning multiple node pools
+intentDetails:
+  type: kubernetes
+  description: GCP GKE node fleet for managing multiple node pools
+  displayName: GCP Node Fleet
 clouds:
   - gcp
 inputs:

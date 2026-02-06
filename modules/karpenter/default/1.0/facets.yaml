@@ -4,6 +4,10 @@ description: |
     Deploys Karpenter controller and necessary infrastructure for EKS clusters.
     This module installs the Karpenter controller, IAM roles, and sets up interruption handling.
     Use this module once per cluster, then use kubernetes_node_pool/karpenter for creating NodePools.
+intentDetails:
+  type: kubernetes
+  description: Karpenter for automatic node provisioning and scaling in Kubernetes
+  displayName: Karpenter
 flavor: default
 inputs:
     cloud_account:

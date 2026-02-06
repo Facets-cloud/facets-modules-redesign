@@ -5,6 +5,10 @@ clouds:
 - gcp
 description: GCP Managed Service for Apache Kafka cluster with secure defaults and
   automatic scaling
+intentDetails:
+  type: queue
+  description: GCP Managed Kafka service
+  displayName: Kafka (GCP)
 spec:
   title: GCP Managed Kafka Cluster
   description: GCP Managed Service for Apache Kafka cluster with secure defaults and

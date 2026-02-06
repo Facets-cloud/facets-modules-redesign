@@ -2,6 +2,10 @@ intent: cloud_account
 flavor: gcp_provider
 version: '1.0'
 description: Module to configure and provision resources within a cloud account
+intentDetails:
+  type: cloud
+  description: Configure and provision resources within a GCP cloud account
+  displayName: GCP Account
 clouds:
 - gcp
 spec:
