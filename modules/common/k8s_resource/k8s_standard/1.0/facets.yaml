@@ -2,6 +2,10 @@ intent: k8s_resource
 flavor: k8s_standard
 version: '1.0'
 description: Adds kubernetes objects inside the cluster via yaml manifests
+intentDetails:
+  type: kubernetes
+  description: Deploy custom Kubernetes resources using YAML manifests
+  displayName: K8s Resource
 clouds:
 - aws
 - azure

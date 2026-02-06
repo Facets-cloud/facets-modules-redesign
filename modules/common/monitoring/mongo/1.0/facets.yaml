@@ -3,6 +3,10 @@ flavor: mongo
 version: '1.0'
 description: Complete MongoDB monitoring stack - MongoDB Exporter for metrics, ServiceMonitor
   for Prometheus, PrometheusRules for alerting
+intentDetails:
+  type: monitoring
+  description: MongoDB monitoring with Prometheus ServiceMonitor and Grafana dashboard
+  displayName: MongoDB Monitoring
 clouds:
 - kubernetes
 - aws

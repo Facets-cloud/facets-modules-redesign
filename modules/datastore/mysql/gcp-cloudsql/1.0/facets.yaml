@@ -5,6 +5,10 @@ clouds:
 - gcp
 description: Managed MySQL database using Google Cloud SQL with automated backups
   and high availability
+intentDetails:
+  type: data_storage
+  description: Google Cloud SQL MySQL managed database
+  displayName: MySQL (Cloud SQL)
 spec:
   title: MySQL CloudSQL Instance
   description: Managed MySQL database using Google Cloud SQL with automated backups

@@ -4,6 +4,10 @@ version: '1.0'
 clouds:
 - aws
 description: MongoDB-compatible database using AWS DocumentDB service
+intentDetails:
+  type: data_storage
+  description: AWS DocumentDB MongoDB-compatible database service
+  displayName: MongoDB (DocumentDB)
 spec:
   title: MongoDB with AWS DocumentDB
   description: MongoDB-compatible database using AWS DocumentDB service
