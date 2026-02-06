@@ -7,13 +7,13 @@ intentDetails:
   description: Deploys Cert Manager for automated SSL/TLS certificate management in Kubernetes
   displayName: Cert Manager
 clouds:
-- aws
-- azure
-- gcp
-- kubernetes
+  - aws
+  - azure
+  - gcp
+  - kubernetes
 inputs:
   prometheus_details:
-    type: '@facets/prometheus'
+    type: "@facets/prometheus"
     displayName: Prometheus
     optional: true
     default:
@@ -21,21 +21,25 @@ inputs:
       resource_name: default
   kubernetes_details:
     optional: false
-    type: '@facets/kubernetes-details'
+    type: "@facets/kubernetes-details"
     displayName: Kubernetes Cluster
     default:
       resource_type: kubernetes_cluster
       resource_name: default
     providers:
-    - kubernetes
-    - helm
+      - kubernetes
+      - helm
   kubernetes_node_pool_details:
-    type: '@facets/kubernetes_nodepool'
+    type: "@facets/kubernetes_nodepool"
     displayName: Node Pool
     optional: false
+  gateway_api_crd_details:
+    displayName: Gateway API CRD
+    type: "@facets/gateway_api_crd"
+    optional: true
 outputs:
   default:
-    type: '@facets/cert_manager'
+    type: "@facets/cert_manager"
     title: Certificate Manager Details
 spec:
   title: Cert Manager Configuration
@@ -45,7 +49,8 @@ spec:
     acme_email:
       type: string
       title: ACME Email
-      description: Email address for ACME registration (defaults to cluster creator
+      description:
+        Email address for ACME registration (defaults to cluster creator
         if not specified)
     cert_manager:
       type: object
@@ -63,4 +68,4 @@ sample:
     cert_manager: {}
 iac:
   validated_files:
-  - variables.tf
+    - variables.tf
