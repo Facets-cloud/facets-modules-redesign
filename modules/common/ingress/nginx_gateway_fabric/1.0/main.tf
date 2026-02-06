@@ -487,26 +487,28 @@ locals {
     } if lookup(lookup(v, "grpc_config", {}), "enabled", false)
   }
 
-  # ServiceMonitor (only created when prometheus_details input is provided)
-  servicemonitor_resources = lookup(var.inputs, "prometheus_details", null) != null ? {
-    "servicemonitor-${local.name}" = {
+  # PodMonitor (only created when prometheus_details input is provided)
+  # Scrapes both control plane and data plane pods using common instance label
+  podmonitor_resources = lookup(var.inputs, "prometheus_details", null) != null ? {
+    "podmonitor-${local.name}" = {
       apiVersion = "monitoring.coreos.com/v1"
-      kind       = "ServiceMonitor"
+      kind       = "PodMonitor"
       metadata = {
-        name      = "${local.name}-gateway-metrics"
+        name      = "${local.name}-metrics"
         namespace = var.environment.namespace
         labels = {
-          prometheus = "kube-prometheus"
+          # Label required by Prometheus Operator to discover this PodMonitor
+          release = try(var.inputs.prometheus_details.attributes.helm_release_id, "prometheus")
         }
       }
       spec = {
         selector = {
           matchLabels = {
-            "app.kubernetes.io/name"     = "nginx-gateway-fabric"
+            # Common label shared by both control plane and data plane pods
             "app.kubernetes.io/instance" = local.helm_release_name
           }
         }
-        endpoints = [{
+        podMetricsEndpoints = [{
           port     = "metrics"
           interval = "30s"
           path     = "/metrics"
@@ -580,7 +582,7 @@ locals {
     local.http_redirect_resources,
     local.httproute_resources,
     local.grpcroute_resources,
-    local.servicemonitor_resources,
+    local.podmonitor_resources,
     local.referencegrant_resources,
     local.clientsettingspolicy_resources
   )
