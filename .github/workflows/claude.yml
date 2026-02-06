@@ -1,12 +1,16 @@
-name: Claude Code
+name: Claude Code (disabled)
+
+# Disabled — use praxis.yml instead
+# on:
+#   issue_comment:
+#     types: [created]
+#   pull_request_review_comment:
+#     types: [created]
+#   pull_request_review:
+#     types: [submitted]
 
 on:
-  issue_comment:
-    types: [created]
-  pull_request_review_comment:
-    types: [created]
-  pull_request_review:
-    types: [submitted]
+  workflow_dispatch:
 
 jobs:
   claude:
