@@ -861,7 +861,7 @@ resource "helm_release" "nginx_gateway_fabric" {
               agentLevel = "info"
               accessLog = {
                 disable = false
-                format  = "$remote_addr - $remote_user [$time_local] \"$request\" $status $body_bytes_sent \"$http_referer\" \"$http_user_agent\" upstream=$upstream_addr upstream_name=$proxy_host"
+                format  = "$remote_addr - $remote_user [$time_local] \"$request\" $status $body_bytes_sent \"$http_referer\" \"$http_user_agent\" $request_length $request_time [$proxy_host] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status"
               }
             }
           }
