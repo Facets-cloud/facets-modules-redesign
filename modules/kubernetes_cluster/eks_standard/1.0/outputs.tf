@@ -17,9 +17,10 @@ locals {
     cluster_security_group_id         = module.eks.cluster_security_group_id
     cloud_provider                    = "AWS"
     kubernetes_provider_exec = {
-      api_version = "client.authentication.k8s.io/v1beta1"
-      command     = "bash"
-      args        = ["-c", "command -v aws-iam-authenticator >/dev/null 2>&1 || (curl -sLo /tmp/aws-iam-authenticator https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.7.8/aws-iam-authenticator_0.7.8_linux_amd64 && chmod +x /tmp/aws-iam-authenticator && mv /tmp/aws-iam-authenticator /usr/local/bin/aws-iam-authenticator); aws-iam-authenticator token -i ${module.eks.cluster_name} --role ${var.inputs.cloud_account.attributes.aws_iam_role} -s facets-k8s-${var.instance_name} -e ${var.inputs.cloud_account.attributes.external_id} --region ${var.inputs.cloud_account.attributes.aws_region}"]
+      api_version      = "client.authentication.k8s.io/v1"
+      interactive_mode = "Never"
+      command          = "bash"
+      args             = ["-c", "command -v aws-iam-authenticator >/dev/null 2>&1 || (curl -sLo /tmp/aws-iam-authenticator https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.7.8/aws-iam-authenticator_0.7.8_linux_amd64 && chmod +x /tmp/aws-iam-authenticator && mv /tmp/aws-iam-authenticator /usr/local/bin/aws-iam-authenticator); aws-iam-authenticator token -i ${module.eks.cluster_name} --role ${var.inputs.cloud_account.attributes.aws_iam_role} -s facets-k8s-${var.instance_name} -e ${var.inputs.cloud_account.attributes.external_id} --region ${var.inputs.cloud_account.attributes.aws_region}"]
     }
     secrets = ["cluster_ca_certificate", "kubernetes_provider_exec"]
   }
@@ -28,9 +29,10 @@ locals {
       host                   = module.eks.cluster_endpoint
       cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
       kubernetes_provider_exec = {
-        api_version = "client.authentication.k8s.io/v1beta1"
-        command     = "bash"
-        args        = ["-c", "command -v aws-iam-authenticator >/dev/null 2>&1 || (curl -sLo /tmp/aws-iam-authenticator https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.7.8/aws-iam-authenticator_0.7.8_linux_amd64 && chmod +x /tmp/aws-iam-authenticator && mv /tmp/aws-iam-authenticator /usr/local/bin/aws-iam-authenticator); aws-iam-authenticator token -i ${module.eks.cluster_name} --role ${var.inputs.cloud_account.attributes.aws_iam_role} -s facets-k8s-${var.instance_name} -e ${var.inputs.cloud_account.attributes.external_id} --region ${var.inputs.cloud_account.attributes.aws_region}"]
+        api_version      = "client.authentication.k8s.io/v1"
+        interactive_mode = "Never"
+        command          = "bash"
+        args             = ["-c", "command -v aws-iam-authenticator >/dev/null 2>&1 || (curl -sLo /tmp/aws-iam-authenticator https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.7.8/aws-iam-authenticator_0.7.8_linux_amd64 && chmod +x /tmp/aws-iam-authenticator && mv /tmp/aws-iam-authenticator /usr/local/bin/aws-iam-authenticator); aws-iam-authenticator token -i ${module.eks.cluster_name} --role ${var.inputs.cloud_account.attributes.aws_iam_role} -s facets-k8s-${var.instance_name} -e ${var.inputs.cloud_account.attributes.external_id} --region ${var.inputs.cloud_account.attributes.aws_region}"]
       }
       secrets = ["cluster_ca_certificate", "kubernetes_provider_exec"]
     }
