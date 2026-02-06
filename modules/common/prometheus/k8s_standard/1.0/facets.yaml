@@ -1,8 +1,12 @@
 intent: prometheus
 flavor: k8s_standard
-version: '1.0'
+version: '1.1'
 description: Prometheus monitoring stack for Kubernetes with Grafana, Alertmanager,
   and kube-state-metrics
+intentDetails:
+  type: monitoring
+  description: Prometheus monitoring stack for Kubernetes with Grafana and Alertmanager
+  displayName: Prometheus
 clouds:
 - aws
 - azure
@@ -452,7 +456,7 @@ sample:
   metadata:
     namespace: default
   kind: prometheus
-  version: '1.0'
+  version: '1.1'
   disabled: true
   spec:
     enable_crds: true

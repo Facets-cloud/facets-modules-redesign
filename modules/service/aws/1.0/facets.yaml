@@ -3,6 +3,10 @@ flavor: aws
 version: '1.0'
 description: Unified AWS cloud service module supporting deployment, cronjob, job,
   and statefulset workloads
+intentDetails:
+  type: application
+  description: Deploy and manage containerized applications on AWS EKS
+  displayName: Service
 clouds:
 - aws
 artifact_inputs:

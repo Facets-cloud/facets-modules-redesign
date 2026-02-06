@@ -1,7 +1,11 @@
 intent: ingress
 flavor: nginx_k8s
-version: '1.0'
+version: '1.1'
 description: Adds Ingress module
+intentDetails:
+  type: networking
+  description: Create and manage NGINX Ingress resources for exposing services
+  displayName: Ingress
 clouds:
 - aws
 - azure
@@ -618,7 +622,7 @@ sample:
   flavor: nginx_k8s
   $schema: https://facets-cloud.github.io/facets-schemas/schemas/ingress/ingress.schema.json
   disabled: true
-  version: '1.0'
+  version: '1.1'
   metadata:
     annotations: {}
   spec:

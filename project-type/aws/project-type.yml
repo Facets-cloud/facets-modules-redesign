@@ -21,7 +21,7 @@ modules:
   - intent: kubernetes_node_pool
     flavor: karpenter
   - intent: kubernetes_node_pool
-    flavor: aws
+    flavor: eks_automode
   - intent: karpenter
     flavor: default
   - intent: network

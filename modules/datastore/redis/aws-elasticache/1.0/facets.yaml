@@ -5,6 +5,10 @@ clouds:
 - aws
 description: Managed Redis cache using AWS ElastiCache with security and high availability
   defaults
+intentDetails:
+  type: data_storage
+  description: AWS ElastiCache for Redis managed caching service
+  displayName: Redis (ElastiCache)
 spec:
   title: Redis AWS ElastiCache Cluster
   description: Managed Redis cache using AWS ElastiCache with security and high availability

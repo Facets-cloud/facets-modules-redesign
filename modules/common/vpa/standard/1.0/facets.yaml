@@ -3,6 +3,10 @@ flavor: standard
 version: '1.0'
 description: Deploys Vertical Pod Autoscaler (VPA) for automatic resource recommendations
   and right-sizing
+intentDetails:
+  type: kubernetes
+  description: Vertical Pod Autoscaler for automatic resource recommendations and right-sizing
+  displayName: VPA
 clouds:
 - aws
 - azure

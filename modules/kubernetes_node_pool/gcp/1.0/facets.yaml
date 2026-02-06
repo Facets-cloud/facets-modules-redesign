@@ -2,6 +2,10 @@ intent: kubernetes_node_pool
 flavor: gcp
 version: '1.0'
 description: Custom GKE node pool with advanced configuration options
+intentDetails:
+  type: kubernetes
+  description: GCP GKE node pool with auto-scaling and customizable machine types
+  displayName: GCP Node Pool
 clouds:
   - gcp
 inputs:
@@ -80,6 +84,15 @@ spec:
       type: integer
       minimum: 50
       maximum: 1000
+    disk_type:
+      title: Disk Type
+      description: Type of the disk attached to each node in the node pool
+      type: string
+      enum:
+        - pd-standard
+        - pd-ssd
+        - pd-balanced
+      default: pd-standard
     taints:
       title: Taints
       description: Array of Kubernetes taints which should be applied to nodes in the node pool. Enter array of object in YAML format.
@@ -148,6 +161,7 @@ sample:
     min_node_count: 1
     max_node_count: 20
     disk_size: 100
+    disk_type: pd-standard
     single_az: false
     spot: false
     taints: []

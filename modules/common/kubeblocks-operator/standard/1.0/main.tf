@@ -1,10 +1,4 @@
-# CRDs are installed by the separate kubeblocks-crd module
-# This module depends on that module's release_id to ensure proper ordering
 locals {
-  crd_input      = var.inputs.kubeblocks_crd
-  crd_attributes = lookup(local.crd_input, "attributes", {})
-  crd_release_id = lookup(local.crd_attributes, "release_id", "")
-
   # Get node pool details from input
   node_pool_input  = lookup(var.inputs, "node_pool", {})
   node_pool_attrs  = lookup(local.node_pool_input, "attributes", {})
@@ -30,7 +24,7 @@ locals {
 }
 
 # KubeBlocks Helm Release
-# CRDs are installed by the separate kubeblocks-crd module
+# CRDs are installed via the kubernetes_job above (not managed in state)
 resource "helm_release" "kubeblocks" {
   name       = "kubeblocks"
   repository = "https://apecloud.github.io/helm-charts"
@@ -44,7 +38,7 @@ resource "helm_release" "kubeblocks" {
   timeout          = 600
   max_history      = 10
 
-  # Skip CRDs - they're already installed via kubernetes_manifest resources
+  # Skip CRDs - installed via the kubernetes_job above
   skip_crds = true
 
   # Allow resource replacement during upgrades
@@ -108,15 +102,19 @@ resource "helm_release" "kubeblocks" {
           minAvailable = 1
         } : {}
 
-        # Add crd release id for dependency
-        crd_release_id = local.crd_release_id
       },
     ))
   ]
 
+  depends_on = [kubernetes_job.install_crds]
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
+
 resource "time_sleep" "wait_for_kubeblocks" {
-  create_duration = "120s"
+  create_duration = "60s"
   depends_on      = [helm_release.kubeblocks]
 }
 
@@ -208,4 +206,8 @@ resource "helm_release" "database_addons" {
     helm_release.kubeblocks,
     time_sleep.wait_for_kubeblocks
   ]
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }

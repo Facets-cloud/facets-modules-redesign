@@ -4,6 +4,10 @@ description: |
     Creates Karpenter NodePool and EC2NodeClass for EKS clusters.
     This module requires the karpenter controller module to be deployed first.
     Each instance creates a single NodePool. Create multiple instances for multiple node pools.
+intentDetails:
+  type: kubernetes
+  description: Karpenter-based node provisioning for Kubernetes clusters
+  displayName: Karpenter Node Pool
 flavor: karpenter
 inputs:
     cloud_account:

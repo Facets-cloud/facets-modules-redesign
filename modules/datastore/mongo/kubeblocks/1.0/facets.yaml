@@ -8,6 +8,10 @@ clouds:
 - gcp
 description: Creates and manages MongoDB database clusters using KubeBlocks operator
   v1.0.1
+intentDetails:
+  type: data_storage
+  description: KubeBlocks-managed MongoDB database on Kubernetes
+  displayName: MongoDB (KubeBlocks)
 inputs:
   kubeblocks_operator:
     type: '@facets/kubeblocks-operator'

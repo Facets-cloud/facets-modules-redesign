@@ -5,6 +5,10 @@ clouds:
 - aws
 description: A managed PostgreSQL Aurora cluster with high availability, automated
   backups, and read replicas
+intentDetails:
+  type: data_storage
+  description: AWS Aurora PostgreSQL serverless database with automatic scaling
+  displayName: PostgreSQL (Aurora)
 spec:
   title: PostgreSQL Aurora Cluster
   description: A managed PostgreSQL Aurora cluster with high availability, automated

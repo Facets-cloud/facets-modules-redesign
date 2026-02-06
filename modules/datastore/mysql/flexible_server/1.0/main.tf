@@ -55,7 +55,7 @@ resource "azurerm_mysql_flexible_server" "main" {
 
   # Prevent accidental deletion
   lifecycle {
-    prevent_destroy = false # Set to false for testing as requested
+    prevent_destroy = true
     ignore_changes = [
       # Ignore changes that would require recreation during import
       name,
@@ -92,6 +92,7 @@ resource "azurerm_mysql_flexible_database" "databases" {
   collation           = local.collation
 
   lifecycle {
+    prevent_destroy = true
     ignore_changes = [
       name,
       server_name,
@@ -132,7 +133,7 @@ resource "azurerm_mysql_flexible_server" "replicas" {
 
   # Prevent accidental deletion
   lifecycle {
-    prevent_destroy = false # Set to false for testing
+    prevent_destroy = true
   }
 
   tags = local.tags
