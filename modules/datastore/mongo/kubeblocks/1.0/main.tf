@@ -154,10 +154,6 @@ module "mongodb_cluster" {
     cleanup_on_fail = true
     max_history     = 3
   }
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 # PodDisruptionBudget for MongoDB HA
