@@ -13,10 +13,6 @@ module "ec2_node_class" {
     metadata = {
       name      = "${var.instance_name}-nodeclass"
       namespace = local.karpenter_namespace
-      annotations = {
-        # Reference helm_release_id to create dependency on Karpenter installation
-        "facets.cloud/karpenter-release-id" = var.inputs.karpenter_details.attributes.helm_release_id
-      }
     }
 
     spec = {
