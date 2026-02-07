@@ -1,11 +1,24 @@
-# Create EC2NodeClass for this instance
-resource "kubernetes_manifest" "ec2_node_class" {
-  manifest = {
+# Create EC2NodeClass for this instance using any-k8s-resource module
+module "ec2_node_class" {
+  source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
+
+  name         = "${var.instance_name}-nodeclass"
+  namespace    = local.karpenter_namespace
+  release_name = "${var.instance_name}-ec2nodeclass"
+
+  data = {
     apiVersion = "karpenter.k8s.aws/v1"
     kind       = "EC2NodeClass"
+
     metadata = {
-      name = "${var.instance_name}-nodeclass"
+      name      = "${var.instance_name}-nodeclass"
+      namespace = local.karpenter_namespace
+      annotations = {
+        # Reference helm_release_id to create dependency on Karpenter installation
+        "facets.cloud/karpenter-release-id" = var.inputs.karpenter_details.attributes.helm_release_id
+      }
     }
+
     spec = {
       # Use the instance profile from karpenter_details input
       instanceProfile = local.node_instance_profile_name
@@ -20,6 +33,7 @@ resource "kubernetes_manifest" "ec2_node_class" {
           alias = "al2023@latest"
         }
       ]
+
       subnetSelectorTerms = [
         {
           tags = {
@@ -27,6 +41,7 @@ resource "kubernetes_manifest" "ec2_node_class" {
           }
         }
       ]
+
       securityGroupSelectorTerms = [
         {
           tags = {
@@ -37,37 +52,43 @@ resource "kubernetes_manifest" "ec2_node_class" {
     }
   }
 
-  # Ignore fields that Karpenter controller manages
-  computed_fields = [
-    "metadata.finalizers",
-    "metadata.annotations",
-    "status"
-  ]
-
-  # Allow Terraform to override field manager conflicts with Karpenter controller
-  field_manager {
-    force_conflicts = true
+  advanced_config = {
+    wait            = true
+    timeout         = 300
+    cleanup_on_fail = true
+    max_history     = 10
   }
 }
 
-# Create NodePool for this instance
-resource "kubernetes_manifest" "node_pool" {
-  manifest = {
+# Create NodePool for this instance using any-k8s-resource module
+module "node_pool" {
+  source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
+
+  name         = "${var.instance_name}-nodepool"
+  namespace    = local.karpenter_namespace
+  release_name = "${var.instance_name}-nodepool"
+
+  data = {
     apiVersion = "karpenter.sh/v1"
     kind       = "NodePool"
+
     metadata = {
-      name = "${var.instance_name}-nodepool"
+      name      = "${var.instance_name}-nodepool"
+      namespace = local.karpenter_namespace
     }
+
     spec = {
       template = {
         metadata = {
           labels = merge(
             lookup(var.instance.spec, "labels", {}),
             {
+              # Reference helm_release_id to create dependency on Karpenter installation
               "facets.cloud/karpenter-release-id" = var.inputs.karpenter_details.attributes.helm_release_id
             }
           )
         }
+
         spec = merge(
           {
             requirements = concat(
@@ -101,11 +122,13 @@ resource "kubernetes_manifest" "node_pool" {
               ],
               []
             )
+
             nodeClassRef = {
               group = "karpenter.k8s.aws"
               kind  = "EC2NodeClass"
               name  = "${var.instance_name}-nodeclass"
             }
+
             expireAfter = "720h"
           },
           # Add taints if configured
@@ -120,10 +143,12 @@ resource "kubernetes_manifest" "node_pool" {
           } : {}
         )
       }
+
       limits = {
         cpu    = lookup(var.instance.spec, "cpu_limits", "1000")
         memory = lookup(var.instance.spec, "memory_limits", "1000Gi")
       }
+
       disruption = {
         consolidationPolicy = lookup(var.instance.spec, "enable_consolidation", true) ? "WhenEmptyOrUnderutilized" : "WhenEmpty"
         consolidateAfter    = "1m"
@@ -131,20 +156,15 @@ resource "kubernetes_manifest" "node_pool" {
     }
   }
 
-  # Ignore fields that Karpenter controller manages
-  computed_fields = [
-    "metadata.finalizers",
-    "metadata.annotations",
-    "metadata.labels",
-    "status"
-  ]
-
-  # Allow Terraform to override field manager conflicts with Karpenter controller
-  field_manager {
-    force_conflicts = true
+  advanced_config = {
+    wait            = true
+    timeout         = 300
+    cleanup_on_fail = true
+    max_history     = 10
   }
 
+  # Ensure EC2NodeClass is created before NodePool
   depends_on = [
-    kubernetes_manifest.ec2_node_class
+    module.ec2_node_class
   ]
 }
