@@ -13,6 +13,8 @@ locals {
     # Interruption handling
     interruption_queue_name = var.instance.spec.interruption_handling ? aws_sqs_queue.karpenter_interruption[0].name : ""
 
+    helm_release_id = helm_release.karpenter.id
+
     secrets = []
   }
 

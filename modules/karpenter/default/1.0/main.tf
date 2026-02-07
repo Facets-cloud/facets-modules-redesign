@@ -360,9 +360,8 @@ resource "aws_eks_access_entry" "karpenter_node" {
 
 # Tag subnets for Karpenter discovery
 resource "aws_ec2_tag" "karpenter_subnet_discovery" {
-  for_each = toset(var.inputs.network_details.attributes.private_subnet_ids)
-
-  resource_id = each.value
+  count       = length(var.inputs.network_details.attributes.private_subnet_ids)
+  resource_id = var.inputs.network_details.attributes.private_subnet_ids[count.index]
   key         = "karpenter.sh/discovery"
   value       = local.cluster_name
 }

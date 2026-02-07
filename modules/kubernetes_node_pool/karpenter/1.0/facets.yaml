@@ -40,23 +40,9 @@ inputs:
 intent: kubernetes_node_pool
 outputs:
     attributes:
-        mock:
-            attributes:
-                node_class_name: mock-string-value
-                node_pool_name: mock-string-value
-                node_selector: mock-string-value
-                taints: mock-string-value
-            interfaces: {}
         title: AWS Karpenter NodePool
         type: '@facets/aws_karpenter_nodepool'
     default:
-        mock:
-            attributes:
-                node_class_name: mock-string-value
-                node_pool_name: mock-string-value
-                node_selector: mock-string-value
-                taints: mock-string-value
-            interfaces: {}
         title: Kubernetes Nodepool
         type: '@facets/kubernetes_nodepool'
 sample:
