@@ -91,6 +91,7 @@ variable "inputs" {
         controller_role_arn        = optional(string)
         karpenter_namespace        = optional(string, "kube-system")
         karpenter_service_account  = optional(string, "karpenter")
+        helm_release_id            = string
       })
     })
   })

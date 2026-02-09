@@ -7,7 +7,7 @@ variable "instance" {
       # Karpenter installation settings
       karpenter_version     = string
       karpenter_replicas    = optional(number, 2)
-      interruption_handling = optional(bool, true)
+      interruption_handling = optional(bool, false)
 
       # Tags
       tags = optional(map(string), {})
