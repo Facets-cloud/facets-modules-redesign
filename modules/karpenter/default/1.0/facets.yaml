@@ -49,16 +49,10 @@ sample:
     spec:
         karpenter_replicas: 1
         karpenter_version: 1.5.0
-        interruption_handling: false
     version: "1.0"
 spec:
     description: Configure Karpenter controller for your EKS cluster
     properties:
-        interruption_handling:
-            default: false
-            description: Enable interruption handling for Spot instances
-            title: Enable Interruption Handling
-            type: boolean
         karpenter_replicas:
             default: 1
             description: Number of Karpenter controller replicas for high availability
@@ -83,6 +77,5 @@ spec:
     x-ui-order:
         - karpenter_version
         - karpenter_replicas
-        - interruption_handling
         - tags
 version: "1.0"
