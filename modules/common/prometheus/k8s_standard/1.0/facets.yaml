@@ -4,7 +4,7 @@ version: '1.1'
 description: Prometheus monitoring stack for Kubernetes with Grafana, Alertmanager,
   and kube-state-metrics
 intentDetails:
-  type: monitoring
+  type: Monitoring & Observability
   description: Prometheus monitoring stack for Kubernetes with Grafana and Alertmanager
   displayName: Prometheus
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/prometheus.svg

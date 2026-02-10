@@ -4,7 +4,7 @@ version: '1.0'
 description: Complete MongoDB monitoring stack - MongoDB Exporter for metrics, ServiceMonitor
   for Prometheus, PrometheusRules for alerting
 intentDetails:
-  type: monitoring
+  type: Monitoring & Observability
   description: MongoDB monitoring with Prometheus ServiceMonitor and Grafana dashboard
   displayName: MongoDB Monitoring
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/monitoring.svg

@@ -3,7 +3,7 @@ flavor: gcp
 version: '1.0'
 description: Custom GKE node pool with advanced configuration options
 intentDetails:
-  type: kubernetes
+  type: Cloud & Infrastructure
   description: GCP GKE node pool with auto-scaling and customizable machine types
   displayName: Kubernetes Node Pool
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_node_pool.svg

@@ -5,7 +5,7 @@ clouds:
 - azure
 description: MongoDB-compatible database using Azure Cosmos DB service
 intentDetails:
-  type: data_storage
+  type: Datastores
   description: Azure Cosmos DB with MongoDB API compatibility
   displayName: MongoDB
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mongo.svg

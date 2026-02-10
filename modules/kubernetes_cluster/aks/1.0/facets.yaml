@@ -7,7 +7,7 @@ title: AKS Cluster with Auto-Upgrade Support
 description: A Kubernetes AKS cluster module with auto-upgrade enabled by default
   and all necessary configurations preset.
 intentDetails:
-  type: kubernetes
+  type: Cloud & Infrastructure
   description: Azure AKS cluster with auto-upgrade enabled and all necessary configurations preset
   displayName: Kubernetes Cluster
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_cluster.svg

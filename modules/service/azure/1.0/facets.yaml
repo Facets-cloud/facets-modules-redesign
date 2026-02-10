@@ -4,7 +4,7 @@ version: '1.0'
 description: Unified Azure cloud service module supporting deployment, cronjob, job,
   and statefulset workloads
 intentDetails:
-  type: application
+  type: Cloud & Infrastructure
   description: Deploy and manage containerized applications on Azure AKS
   displayName: Service
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/service.svg

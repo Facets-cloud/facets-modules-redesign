@@ -3,7 +3,7 @@ flavor: k8s_standard
 version: '1.0'
 description: kubernetes_secret - k8s
 intentDetails:
-  type: kubernetes
+  type: Kubernetes Resources
   description: Create and manage Kubernetes Secrets for sensitive data
   displayName: Secret
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_secret.svg

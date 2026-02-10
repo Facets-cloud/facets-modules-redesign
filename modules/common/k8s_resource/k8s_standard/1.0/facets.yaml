@@ -3,7 +3,7 @@ flavor: k8s_standard
 version: '1.0'
 description: Adds kubernetes objects inside the cluster via yaml manifests
 intentDetails:
-  type: kubernetes
+  type: Kubernetes Resources
   description: Deploy custom Kubernetes resources using YAML manifests
   displayName: K8s Resource
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/k8s_resource.svg

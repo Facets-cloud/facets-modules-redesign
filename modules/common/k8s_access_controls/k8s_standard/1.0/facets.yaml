@@ -7,7 +7,7 @@ description: 'Creates Kubernetes RBAC Roles and ClusterRoles for access control.
 
   '
 intentDetails:
-  type: kubernetes
+  type: Kubernetes Resources
   description: Create and manage Kubernetes RBAC roles for access control
   displayName: Access Controls
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/k8s_access_controls.svg
