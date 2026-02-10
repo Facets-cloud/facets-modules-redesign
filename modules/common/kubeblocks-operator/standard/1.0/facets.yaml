@@ -9,7 +9,7 @@ clouds:
 description: Installs and configures KubeBlocks operator for managing databases on
   Kubernetes
 intentDetails:
-  type: kubernetes
+  type: Operators
   description: KubeBlocks operator for managing databases on Kubernetes clusters
   displayName: KubeBlocks Operator
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubeblocks-operator.svg

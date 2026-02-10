@@ -8,7 +8,7 @@ clouds:
   - gcp
   - kubernetes
 intentDetails:
-  type: networking
+  type: Kubernetes Resources
   description: NGINX Gateway Fabric ingress controller for Kubernetes
   displayName: Ingress
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/ingress.svg

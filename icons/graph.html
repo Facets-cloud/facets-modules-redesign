@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Facets Module Dependency Graph</title>
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f1117; color: #e0e0e0; }
+    .header { padding: 16px 24px; background: #1a1d27; border-bottom: 1px solid #2a2d3a; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+    .header h1 { font-size: 18px; color: #fff; white-space: nowrap; }
+    .search-box {
+      flex: 1; min-width: 250px; position: relative;
+    }
+    .search-box input {
+      width: 100%; padding: 8px 14px 8px 36px; background: #2a2d3a; border: 1px solid #3a3d4a;
+      border-radius: 8px; color: #fff; font-size: 13px; outline: none;
+    }
+    .search-box input:focus { border-color: #5b7fff; }
+    .search-box::before {
+      content: "\1F50D"; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 14px;
+    }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; }
+    .ctrl-btn {
+      padding: 6px 14px; border: 1px solid #3a3d4a; border-radius: 6px; background: #2a2d3a;
+      color: #ccc; font-size: 11px; cursor: pointer; font-weight: 600; transition: all 0.2s;
+    }
+    .ctrl-btn:hover { border-color: #5b7fff; color: #fff; }
+    .ctrl-btn.active { background: #5b7fff; border-color: #5b7fff; color: #fff; }
+    #graph-container { width: 100%; height: calc(100vh - 130px); }
+    .legend {
+      position: fixed; bottom: 16px; left: 16px; background: #1a1d27ee; border: 1px solid #2a2d3a;
+      border-radius: 10px; padding: 14px; font-size: 11px; z-index: 10; max-width: 220px;
+    }
+    .legend h3 { margin-bottom: 8px; font-size: 12px; color: #fff; }
+    .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+    .details-panel {
+      position: fixed; top: 70px; right: 16px; width: 340px; background: #1a1d27; border: 1px solid #2a2d3a;
+      border-radius: 10px; padding: 0; z-index: 10; display: none; max-height: calc(100vh - 100px); overflow-y: auto;
+    }
+    .details-panel.visible { display: block; }
+    .details-header {
+      padding: 14px 16px; border-bottom: 1px solid #2a2d3a; display: flex; align-items: center; gap: 10px;
+      position: sticky; top: 0; background: #1a1d27; z-index: 1;
+    }
+    .details-header img { width: 28px; height: 28px; }
+    .details-header .title { font-size: 15px; font-weight: 700; }
+    .details-header .subtitle { font-size: 11px; color: #888; }
+    .details-header .close-btn {
+      margin-left: auto; background: none; border: none; color: #888; font-size: 18px; cursor: pointer;
+    }
+    .details-section { padding: 12px 16px; border-bottom: 1px solid #2a2d3a22; }
+    .details-section h4 { font-size: 11px; text-transform: uppercase; color: #888; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .dep-item {
+      display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; padding: 6px 8px;
+      background: #2a2d3a55; border-radius: 6px; font-size: 12px; cursor: pointer;
+    }
+    .dep-item:hover { background: #2a2d3a; }
+    .dep-arrow { font-size: 14px; margin-top: 1px; }
+    .dep-name { font-weight: 600; color: #fff; }
+    .dep-type { color: #888; font-size: 10px; }
+    .dep-badge {
+      font-size: 9px; padding: 1px 6px; border-radius: 4px; font-weight: 700; margin-left: auto;
+    }
+    .dep-badge.required { background: #ff4d4d22; color: #ff6b6b; }
+    .dep-badge.optional { background: #4dabf722; color: #74c0fc; }
+    .edge-label { font-size: 10px; }
+    .stats-bar {
+      padding: 6px 24px; background: #1a1d27; border-bottom: 1px solid #2a2d3a;
+      display: flex; gap: 20px; font-size: 11px; color: #888;
+    }
+    .stats-bar span { color: #5b7fff; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Module Dependency Graph</h1>
+    <div class="search-box">
+      <input type="text" id="search" placeholder="Search modules... (e.g. postgres, eks, kubeblocks)">
+    </div>
+    <div class="controls">
+      <button class="ctrl-btn active" data-group="all">All</button>
+      <button class="ctrl-btn" data-group="Cloud & Infrastructure">Infra</button>
+      <button class="ctrl-btn" data-group="Datastores">Datastores</button>
+      <button class="ctrl-btn" data-group="Kubernetes Resources">K8s</button>
+      <button class="ctrl-btn" data-group="Operators">Operators</button>
+      <button class="ctrl-btn" data-group="Monitoring & Observability">Monitoring</button>
+      <button class="ctrl-btn" data-group="Security & Identity">Security</button>
+    </div>
+  </div>
+  <div class="stats-bar" id="stats-bar"></div>
+  <div id="graph-container"></div>
+
+  <div class="legend">
+    <h3>Color = Intent</h3>
+    <div class="legend-item" style="margin-bottom:8px;font-size:10px;color:#888">Same color = same intent (interchangeable flavors)</div>
+    <div id="legend-intents"></div>
+    <h3 style="margin-top:10px">Edges (on click)</h3>
+    <div class="legend-item"><div style="width:20px;height:3px;background:#42A5F5;border-radius:1px"></div> Input (depends on)</div>
+    <div class="legend-item"><div style="width:20px;height:3px;background:#EF5350;border-radius:1px"></div> Output (feeds into)</div>
+    <h3 style="margin-top:10px">Line Style</h3>
+    <div class="legend-item"><div style="width:20px;height:2px;background:#888"></div> Required</div>
+    <div class="legend-item"><div style="width:20px;height:0;border-top:2px dashed #888"></div> Optional</div>
+  </div>
+
+  <div class="details-panel" id="details-panel">
+    <div class="details-header">
+      <img id="detail-icon" src="" alt="">
+      <div>
+        <div class="title" id="detail-title"></div>
+        <div class="subtitle" id="detail-subtitle"></div>
+      </div>
+      <button class="close-btn" onclick="closeDetails()">&times;</button>
+    </div>
+    <div id="detail-body"></div>
+  </div>
+
+  <script>
+    const groupColors = {
+      "Cloud & Infrastructure": "#4A90D9",
+      "Datastores": "#43A047",
+      "Kubernetes Resources": "#9C27B0",
+      "Operators": "#FF7043",
+      "Monitoring & Observability": "#E53935",
+      "Security & Identity": "#546E7A",
+    };
+
+    // Module data - generated from facets.yaml files
+    const modules = [
+      // Cloud & Infrastructure
+      { id: "cloud_account/aws_provider", intent: "cloud_account", flavor: "aws_provider", displayName: "Cloud Account", group: "Cloud & Infrastructure", clouds: ["aws"], icon: "cloud_account.svg",
+        inputs: [],
+        outputs: [{ name: "default", type: "@facets/aws_cloud_account" }] },
+      { id: "cloud_account/azure_provider", intent: "cloud_account", flavor: "azure_provider", displayName: "Cloud Account", group: "Cloud & Infrastructure", clouds: ["azure"], icon: "cloud_account.svg",
+        inputs: [],
+        outputs: [{ name: "default", type: "@facets/azure_cloud_account" }] },
+      { id: "cloud_account/gcp_provider", intent: "cloud_account", flavor: "gcp_provider", displayName: "Cloud Account", group: "Cloud & Infrastructure", clouds: ["gcp"], icon: "cloud_account.svg",
+        inputs: [],
+        outputs: [{ name: "default", type: "@facets/gcp_cloud_account" }] },
+      { id: "network/aws_network", intent: "network", flavor: "aws_network", displayName: "Network", group: "Cloud & Infrastructure", clouds: ["aws"], icon: "network.svg",
+        inputs: [{ name: "cloud_account", type: "@facets/aws_cloud_account", optional: false }],
+        outputs: [{ name: "default", type: "@facets/aws-vpc-details" }] },
+      { id: "network/gcp_network", intent: "network", flavor: "gcp_network", displayName: "Network", group: "Cloud & Infrastructure", clouds: ["gcp"], icon: "network.svg",
+        inputs: [{ name: "cloud_account", type: "@facets/gcp_cloud_account", optional: false }],
+        outputs: [{ name: "default", type: "@facets/gcp-network-details" }] },
+      { id: "network/azure_network", intent: "network", flavor: "azure_network", displayName: "Network", group: "Cloud & Infrastructure", clouds: ["azure"], icon: "network.svg",
+        inputs: [{ name: "cloud_account", type: "@facets/azure_cloud_account", optional: false }],
+        outputs: [{ name: "default", type: "@facets/azure-network-details" }] },
+      { id: "kubernetes_cluster/eks_standard", intent: "kubernetes_cluster", flavor: "eks_standard", displayName: "Kubernetes Cluster", group: "Cloud & Infrastructure", clouds: ["aws"], icon: "kubernetes_cluster.svg",
+        inputs: [{ name: "cloud_account", type: "@facets/aws_cloud_account", optional: false }, { name: "network_details", type: "@facets/aws-vpc-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/kubernetes-details" }, { name: "eks", type: "@facets/eks" }] },
+      { id: "kubernetes_cluster/eks_automode", intent: "kubernetes_cluster", flavor: "eks_automode", displayName: "Kubernetes Cluster", group: "Cloud & Infrastructure", clouds: ["aws"], icon: "kubernetes_cluster.svg",
+        inputs: [{ name: "network_details", type: "@facets/aws-vpc-details", optional: false }, { name: "cloud_account", type: "@facets/aws_cloud_account", optional: false }],
+        outputs: [{ name: "default", type: "@facets/kubernetes-details" }, { name: "eks", type: "@facets/eks" }] },
+      { id: "kubernetes_cluster/gke", intent: "kubernetes_cluster", flavor: "gke", displayName: "Kubernetes Cluster", group: "Cloud & Infrastructure", clouds: ["gcp"], icon: "kubernetes_cluster.svg",
+        inputs: [{ name: "network_details", type: "@facets/gcp-network-details", optional: false }, { name: "cloud_account", type: "@facets/gcp_cloud_account", optional: false }],
+        outputs: [{ name: "default", type: "@facets/kubernetes-details" }, { name: "gke", type: "@facets/gke" }] },
+      { id: "kubernetes_cluster/aks", intent: "kubernetes_cluster", flavor: "aks", displayName: "Kubernetes Cluster", group: "Cloud & Infrastructure", clouds: ["azure"], icon: "kubernetes_cluster.svg",
+        inputs: [{ name: "network_details", type: "@facets/azure-network-details", optional: false }, { name: "cloud_account", type: "@facets/azure_cloud_account", optional: false }],
+        outputs: [{ name: "default", type: "@facets/kubernetes-details" }, { name: "aks", type: "@facets/azure_aks" }] },
+      { id: "kubernetes_node_pool/karpenter", intent: "kubernetes_node_pool", flavor: "karpenter", displayName: "Kubernetes Node Pool", group: "Cloud & Infrastructure", clouds: ["aws"], icon: "kubernetes_node_pool.svg",
+        inputs: [{ name: "cloud_account", type: "@facets/aws_cloud_account", optional: false }, { name: "karpenter_details", type: "@facets/karpenter-details", optional: false }, { name: "kubernetes_details", type: "@facets/eks", optional: false }, { name: "network_details", type: "@facets/aws-vpc-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/kubernetes_nodepool" }, { name: "karpenter", type: "@facets/aws_karpenter_nodepool" }] },
+      { id: "kubernetes_node_pool/eks_automode", intent: "kubernetes_node_pool", flavor: "eks_automode", displayName: "Kubernetes Node Pool", group: "Cloud & Infrastructure", clouds: ["aws"], icon: "kubernetes_node_pool.svg",
+        inputs: [{ name: "kubernetes_details", type: "@facets/eks", optional: false }, { name: "network_details", type: "@facets/aws-vpc-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/kubernetes_nodepool" }, { name: "karpenter", type: "@facets/aws_karpenter_nodepool" }] },
+      { id: "kubernetes_node_pool/gcp", intent: "kubernetes_node_pool", flavor: "gcp", displayName: "Kubernetes Node Pool", group: "Cloud & Infrastructure", clouds: ["gcp"], icon: "kubernetes_node_pool.svg",
+        inputs: [{ name: "cloud_account", type: "@facets/gcp_cloud_account", optional: false }, { name: "network_details", type: "@facets/gcp-network-details", optional: false }, { name: "kubernetes_details", type: "@facets/gke", optional: false }],
+        outputs: [{ name: "default", type: "@facets/kubernetes_nodepool" }, { name: "gke_pool", type: "@facets/gke_node_pool_details" }] },
+      { id: "kubernetes_node_pool/gcp_node_fleet", intent: "kubernetes_node_pool", flavor: "gcp_node_fleet", displayName: "Kubernetes Node Pool", group: "Cloud & Infrastructure", clouds: ["gcp"], icon: "kubernetes_node_pool.svg",
+        inputs: [{ name: "cloud_account", type: "@facets/gcp_cloud_account", optional: false }, { name: "network_details", type: "@facets/gcp-network-details", optional: false }, { name: "kubernetes_details", type: "@facets/gke", optional: false }],
+        outputs: [{ name: "default", type: "@facets/kubernetes_nodepool" }, { name: "gke_pool", type: "@facets/gke_node_pool_details" }] },
+      { id: "kubernetes_node_pool/azure", intent: "kubernetes_node_pool", flavor: "azure", displayName: "Kubernetes Node Pool", group: "Cloud & Infrastructure", clouds: ["azure"], icon: "kubernetes_node_pool.svg",
+        inputs: [{ name: "kubernetes_details", type: "@facets/azure_aks", optional: false }, { name: "cloud_account", type: "@facets/azure_cloud_account", optional: false }],
+        outputs: [{ name: "default", type: "@facets/kubernetes_nodepool" }, { name: "aks_pool", type: "@facets/azure_aks_nodepool" }] },
+      { id: "karpenter/default", intent: "karpenter", flavor: "default", displayName: "Karpenter", group: "Cloud & Infrastructure", clouds: ["aws"], icon: "karpenter.svg",
+        inputs: [{ name: "cloud_account", type: "@facets/aws_cloud_account", optional: false }, { name: "eks_details", type: "@facets/eks", optional: false }, { name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }, { name: "network_details", type: "@facets/aws-vpc-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/karpenter-details" }] },
+      { id: "service/aws", intent: "service", flavor: "aws", displayName: "Service", group: "Cloud & Infrastructure", clouds: ["aws"], icon: "service.svg",
+        inputs: [{ name: "cloud_account", type: "@facets/aws_cloud_account", optional: false }, { name: "kubernetes_details", type: "@facets/eks", optional: false }, { name: "kubernetes_node_pool_details", type: "@facets/aws_karpenter_nodepool", optional: false }, { name: "artifactories", type: "@facets/artifactories", optional: true }, { name: "vpa_details", type: "@facets/vpa", optional: true }],
+        outputs: [{ name: "default", type: "@facets/service" }] },
+      { id: "service/gcp", intent: "service", flavor: "gcp", displayName: "Service", group: "Cloud & Infrastructure", clouds: ["gcp"], icon: "service.svg",
+        inputs: [{ name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }, { name: "kubernetes_node_pool_details", type: "@facets/gke_node_pool_details", optional: false }, { name: "artifactories", type: "@facets/artifactories", optional: true }, { name: "vpa_details", type: "@facets/vpa", optional: true }, { name: "gcp_cloud_account", type: "@facets/gcp_cloud_account", optional: false }],
+        outputs: [{ name: "default", type: "@facets/service" }] },
+      { id: "service/azure", intent: "service", flavor: "azure", displayName: "Service", group: "Cloud & Infrastructure", clouds: ["azure"], icon: "service.svg",
+        inputs: [{ name: "cloud_account", type: "@facets/azure_cloud_account", optional: false }, { name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }, { name: "kubernetes_node_pool_details", type: "@facets/azure_aks_nodepool", optional: false }, { name: "artifactories", type: "@facets/artifactories", optional: true }, { name: "vpa_details", type: "@facets/vpa", optional: true }, { name: "network_details", type: "@facets/azure-network-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/service" }] },
+
+      // Datastores
+      { id: "mongo/kubeblocks", intent: "mongo", flavor: "kubeblocks", displayName: "MongoDB", group: "Datastores", clouds: ["kubernetes","aws","azure","gcp"], icon: "mongo.svg",
+        inputs: [{ name: "kubeblocks_operator", type: "@facets/kubeblocks-operator", optional: false }, { name: "kubernetes_cluster", type: "@facets/kubernetes-details", optional: false }, { name: "node_pool", type: "@facets/kubernetes_nodepool", optional: false }],
+        outputs: [{ name: "default", type: "@facets/mongo" }, { name: "k8s", type: "@facets/mongo_k8s" }] },
+      { id: "mongo/aws-documentdb", intent: "mongo", flavor: "aws-documentdb", displayName: "MongoDB", group: "Datastores", clouds: ["aws"], icon: "mongo.svg",
+        inputs: [{ name: "aws_provider", type: "@facets/aws_cloud_account", optional: false }, { name: "vpc_details", type: "@facets/aws-vpc-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/mongo" }] },
+      { id: "mongo/cosmosdb", intent: "mongo", flavor: "cosmosdb", displayName: "MongoDB", group: "Datastores", clouds: ["azure"], icon: "mongo.svg",
+        inputs: [{ name: "azure_provider", type: "@facets/azure_cloud_account", optional: false }, { name: "network_details", type: "@facets/azure-network-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/mongo" }] },
+      { id: "mysql/kubeblocks", intent: "mysql", flavor: "kubeblocks", displayName: "MySQL", group: "Datastores", clouds: ["kubernetes","aws","azure","gcp"], icon: "mysql.svg",
+        inputs: [{ name: "kubeblocks_operator", type: "@facets/kubeblocks-operator", optional: false }, { name: "kubernetes_cluster", type: "@facets/kubernetes-details", optional: false }, { name: "node_pool", type: "@facets/kubernetes_nodepool", optional: false }],
+        outputs: [{ name: "default", type: "@facets/mysql" }] },
+      { id: "mysql/aws-aurora", intent: "mysql", flavor: "aws-aurora", displayName: "MySQL", group: "Datastores", clouds: ["aws"], icon: "mysql.svg",
+        inputs: [{ name: "aws_provider", type: "@facets/aws_cloud_account", optional: false }, { name: "vpc_details", type: "@facets/aws-vpc-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/mysql" }] },
+      { id: "mysql/aws-rds", intent: "mysql", flavor: "aws-rds", displayName: "MySQL", group: "Datastores", clouds: ["aws"], icon: "mysql.svg",
+        inputs: [{ name: "aws_cloud_account", type: "@facets/aws_cloud_account", optional: false }, { name: "vpc_details", type: "@facets/aws-vpc-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/mysql" }] },
+      { id: "mysql/gcp-cloudsql", intent: "mysql", flavor: "gcp-cloudsql", displayName: "MySQL", group: "Datastores", clouds: ["gcp"], icon: "mysql.svg",
+        inputs: [{ name: "gcp_provider", type: "@facets/gcp_cloud_account", optional: false }, { name: "network", type: "@facets/gcp-network-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/mysql" }] },
+      { id: "mysql/azure-flexible-server", intent: "mysql", flavor: "flexible_server", displayName: "MySQL", group: "Datastores", clouds: ["azure"], icon: "mysql.svg",
+        inputs: [{ name: "azure_provider", type: "@facets/azure_cloud_account", optional: false }, { name: "network_details", type: "@facets/azure-network-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/mysql" }] },
+      { id: "postgres/kubeblocks", intent: "postgres", flavor: "kubeblocks", displayName: "PostgreSQL", group: "Datastores", clouds: ["kubernetes","aws","azure","gcp"], icon: "postgres.svg",
+        inputs: [{ name: "kubeblocks_operator", type: "@facets/kubeblocks-operator", optional: false }, { name: "kubernetes_cluster", type: "@facets/kubernetes-details", optional: false }, { name: "node_pool", type: "@facets/kubernetes_nodepool", optional: false }],
+        outputs: [{ name: "default", type: "@facets/postgres" }] },
+      { id: "postgres/aws-aurora", intent: "postgres", flavor: "aws-aurora", displayName: "PostgreSQL", group: "Datastores", clouds: ["aws"], icon: "postgres.svg",
+        inputs: [{ name: "aws_provider", type: "@facets/aws_cloud_account", optional: false }, { name: "vpc_details", type: "@facets/aws-vpc-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/postgres" }] },
+      { id: "postgres/aws-rds", intent: "postgres", flavor: "aws-rds", displayName: "PostgreSQL", group: "Datastores", clouds: ["aws"], icon: "postgres.svg",
+        inputs: [{ name: "aws_provider", type: "@facets/aws_cloud_account", optional: false }, { name: "vpc_details", type: "@facets/aws-vpc-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/postgres" }] },
+      { id: "postgres/gcp-cloudsql", intent: "postgres", flavor: "gcp-cloudsql", displayName: "PostgreSQL", group: "Datastores", clouds: ["gcp"], icon: "postgres.svg",
+        inputs: [{ name: "gcp_provider", type: "@facets/gcp_cloud_account", optional: false }, { name: "network", type: "@facets/gcp-network-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/postgres" }] },
+      { id: "postgres/azure-flexible-server", intent: "postgres", flavor: "azure-flexible-server", displayName: "PostgreSQL", group: "Datastores", clouds: ["azure"], icon: "postgres.svg",
+        inputs: [{ name: "azure_provider", type: "@facets/azure_cloud_account", optional: false }, { name: "network_details", type: "@facets/azure-network-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/postgres" }] },
+      { id: "redis/kubeblocks", intent: "redis", flavor: "kubeblocks", displayName: "Redis", group: "Datastores", clouds: ["kubernetes","aws","azure","gcp"], icon: "redis.svg",
+        inputs: [{ name: "kubeblocks_operator", type: "@facets/kubeblocks-operator", optional: false }, { name: "kubernetes_cluster", type: "@facets/kubernetes-details", optional: false }, { name: "node_pool", type: "@facets/kubernetes_nodepool", optional: false }],
+        outputs: [{ name: "default", type: "@facets/redis" }] },
+      { id: "redis/aws-elasticache", intent: "redis", flavor: "aws-elasticache", displayName: "Redis", group: "Datastores", clouds: ["aws"], icon: "redis.svg",
+        inputs: [{ name: "aws_provider", type: "@facets/aws_cloud_account", optional: false }, { name: "vpc_details", type: "@facets/aws-vpc-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/redis" }] },
+      { id: "redis/gcp-memorystore", intent: "redis", flavor: "gcp-memorystore", displayName: "Redis", group: "Datastores", clouds: ["gcp"], icon: "redis.svg",
+        inputs: [{ name: "gcp_provider", type: "@facets/gcp_cloud_account", optional: false }, { name: "network", type: "@facets/gcp-network-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/redis" }] },
+      { id: "redis/azure_cache_custom", intent: "redis", flavor: "azure_cache_custom", displayName: "Redis", group: "Datastores", clouds: ["azure"], icon: "redis.svg",
+        inputs: [{ name: "azure_provider", type: "@facets/azure_cloud_account", optional: false }, { name: "network_details", type: "@facets/azure-network-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/redis" }] },
+      { id: "kafka/aws-msk", intent: "kafka", flavor: "aws-msk", displayName: "Kafka", group: "Datastores", clouds: ["aws"], icon: "kafka.svg",
+        inputs: [{ name: "aws_cloud_account", type: "@facets/aws_cloud_account", optional: false }, { name: "vpc_details", type: "@facets/aws-vpc-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/kafka" }] },
+      { id: "kafka/gcp-msk", intent: "kafka", flavor: "gcp-msk", displayName: "Kafka", group: "Datastores", clouds: ["gcp"], icon: "kafka.svg",
+        inputs: [{ name: "gcp_cloud_account", type: "@facets/gcp_cloud_account", optional: false }, { name: "vpc_network", type: "@facets/gcp-network-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/gcp-msk" }] },
+      { id: "kafka_topic/gcp-msk", intent: "kafka_topic", flavor: "gcp-msk", displayName: "Kafka Topic", group: "Datastores", clouds: ["gcp"], icon: "kafka_topic.svg",
+        inputs: [{ name: "gcp_cloud_account", type: "@facets/gcp_cloud_account", optional: false }, { name: "vpc_network", type: "@facets/gcp-network-details", optional: false }, { name: "kafka_cluster", type: "@facets/gcp-msk", optional: false }],
+        outputs: [{ name: "default", type: "@facets/gcp-kafka-topic" }] },
+      { id: "pubsub/gcp", intent: "pubsub", flavor: "gcp", displayName: "Pub/Sub", group: "Datastores", clouds: ["gcp"], icon: "pubsub.svg",
+        inputs: [{ name: "cloud_account", type: "@facets/gcp_cloud_account", optional: false }],
+        outputs: [{ name: "default", type: "@facets/pubsub" }] },
+
+      // Kubernetes Resources
+      { id: "helm/k8s_standard", intent: "helm", flavor: "k8s_standard", displayName: "Helm", group: "Kubernetes Resources", clouds: ["aws","azure","gcp","kubernetes"], icon: "helm.svg",
+        inputs: [{ name: "prometheus_details", type: "@facets/prometheus", optional: true }, { name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/helm" }] },
+      { id: "ingress/nginx_k8s", intent: "ingress", flavor: "nginx_k8s", displayName: "Ingress", group: "Kubernetes Resources", clouds: ["aws","azure","gcp","kubernetes"], icon: "ingress.svg",
+        inputs: [{ name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }, { name: "kubernetes_node_pool_details", type: "@facets/kubernetes_nodepool", optional: false }, { name: "artifactories", type: "@facets/artifactories", optional: true }, { name: "cert_manager_details", type: "@facets/cert_manager", optional: true }],
+        outputs: [{ name: "default", type: "@facets/ingress" }] },
+      { id: "ingress/nginx_gateway_fabric", intent: "ingress", flavor: "nginx_gateway_fabric", displayName: "Ingress", group: "Kubernetes Resources", clouds: ["aws","azure","gcp","kubernetes"], icon: "ingress.svg",
+        inputs: [{ name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }, { name: "kubernetes_node_pool_details", type: "@facets/kubernetes_nodepool", optional: false }, { name: "artifactories", type: "@facets/artifactories", optional: true }, { name: "cert_manager_details", type: "@facets/cert_manager", optional: false }, { name: "gateway_api_crd_details", type: "@facets/gateway_api_crd", optional: false }, { name: "prometheus_details", type: "@facets/prometheus", optional: true }],
+        outputs: [{ name: "default", type: "@facets/ingress" }] },
+      { id: "cert_manager/standard", intent: "cert_manager", flavor: "standard", displayName: "Cert Manager", group: "Kubernetes Resources", clouds: ["aws","azure","gcp","kubernetes"], icon: "cert_manager.svg",
+        inputs: [{ name: "prometheus_details", type: "@facets/prometheus", optional: true }, { name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }, { name: "kubernetes_node_pool_details", type: "@facets/kubernetes_nodepool", optional: false }, { name: "gateway_api_crd_details", type: "@facets/gateway_api_crd", optional: true }],
+        outputs: [{ name: "default", type: "@facets/cert_manager" }] },
+      { id: "config_map/k8s_standard", intent: "config_map", flavor: "k8s_standard", displayName: "ConfigMap", group: "Kubernetes Resources", clouds: ["aws","azure","gcp","kubernetes"], icon: "config_map.svg",
+        inputs: [{ name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/config_map" }] },
+      { id: "kubernetes_secret/k8s_standard", intent: "kubernetes_secret", flavor: "k8s_standard", displayName: "Secret", group: "Kubernetes Resources", clouds: ["aws","azure","gcp","kubernetes"], icon: "kubernetes_secret.svg",
+        inputs: [{ name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/kubernetes_secret" }] },
+      { id: "k8s_access_controls/k8s_standard", intent: "k8s_access_controls", flavor: "k8s_standard", displayName: "Access Controls", group: "Kubernetes Resources", clouds: ["aws","azure","gcp","kubernetes"], icon: "k8s_access_controls.svg",
+        inputs: [{ name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/k8s_access_controls" }] },
+      { id: "k8s_callback/k8s_standard", intent: "k8s_callback", flavor: "k8s_standard", displayName: "K8s Callback", group: "Kubernetes Resources", clouds: ["aws","azure","gcp","kubernetes"], icon: "k8s_callback.svg",
+        inputs: [{ name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }],
+        outputs: [] },
+      { id: "k8s_resource/k8s_standard", intent: "k8s_resource", flavor: "k8s_standard", displayName: "K8s Resource", group: "Kubernetes Resources", clouds: ["aws","azure","gcp","kubernetes"], icon: "k8s_resource.svg",
+        inputs: [{ name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/k8s_resource" }] },
+      { id: "gateway_api_crd/default", intent: "gateway_api_crd", flavor: "default", displayName: "Gateway API CRD", group: "Kubernetes Resources", clouds: ["aws","azure","gcp","kubernetes"], icon: "gateway_api_crd.svg",
+        inputs: [{ name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }, { name: "kubernetes_node_pool_details", type: "@facets/kubernetes_nodepool", optional: false }],
+        outputs: [{ name: "default", type: "@facets/gateway_api_crd" }] },
+      { id: "vpa/standard", intent: "vpa", flavor: "standard", displayName: "VPA", group: "Kubernetes Resources", clouds: ["aws","azure","gcp","kubernetes"], icon: "vpa.svg",
+        inputs: [{ name: "prometheus_details", type: "@facets/prometheus", optional: false }, { name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }, { name: "kubernetes_node_pool_details", type: "@facets/kubernetes_nodepool", optional: false }],
+        outputs: [{ name: "default", type: "@facets/vpa" }] },
+      { id: "artifactories/standard", intent: "artifactories", flavor: "standard", displayName: "Artifactories", group: "Kubernetes Resources", clouds: ["gcp","kubernetes","azure","aws"], icon: "artifactories.svg",
+        inputs: [{ name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }, { name: "kubernetes_node_pool_details", type: "@facets/kubernetes_nodepool", optional: false }],
+        outputs: [{ name: "default", type: "@facets/artifactories" }] },
+
+      // Operators
+      { id: "kubeblocks-operator/standard", intent: "kubeblocks-operator", flavor: "standard", displayName: "KubeBlocks Operator", group: "Operators", clouds: ["kubernetes","aws","gcp","azure"], icon: "kubeblocks-operator.svg",
+        inputs: [{ name: "kubernetes_cluster", type: "@facets/kubernetes-details", optional: false }, { name: "node_pool", type: "@facets/kubernetes_nodepool", optional: true }],
+        outputs: [{ name: "default", type: "@facets/kubeblocks-operator" }] },
+      { id: "strimzi-operator/helm", intent: "strimzi-operator", flavor: "helm", displayName: "Strimzi Operator", group: "Operators", clouds: ["aws","azure","gcp","kubernetes"], icon: "strimzi-operator.svg",
+        inputs: [{ name: "kubernetes_cluster", type: "@facets/kubernetes-details", optional: false }, { name: "node_pool", type: "@facets/kubernetes_nodepool", optional: true }],
+        outputs: [{ name: "default", type: "@facets/strimzi-operator" }] },
+      { id: "eck-operator/helm", intent: "eck-operator", flavor: "helm", displayName: "ECK Operator", group: "Operators", clouds: ["aws","azure","gcp","kubernetes"], icon: "eck-operator.svg",
+        inputs: [{ name: "kubernetes_cluster", type: "@facets/kubernetes-details", optional: false }, { name: "node_pool", type: "@facets/kubernetes_nodepool", optional: false }],
+        outputs: [{ name: "default", type: "@facets/eck-operator" }] },
+      { id: "wireguard-operator/standard", intent: "wireguard-operator", flavor: "standard", displayName: "WireGuard Operator", group: "Operators", clouds: ["aws","azure","gcp","kubernetes"], icon: "wireguard-operator.svg",
+        inputs: [{ name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }, { name: "node_pool", type: "@facets/kubernetes_nodepool", optional: false }],
+        outputs: [{ name: "default", type: "@facets/wireguard-details" }] },
+      { id: "wireguard-vpn/standard", intent: "wireguard-vpn", flavor: "standard", displayName: "WireGuard VPN Server", group: "Operators", clouds: ["aws","azure","gcp","kubernetes"], icon: "wireguard-vpn.svg",
+        inputs: [{ name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }, { name: "node_pool", type: "@facets/kubernetes_nodepool", optional: false }, { name: "wireguard_operator", type: "@facets/wireguard-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/wireguard-vpn-details" }] },
+
+      // Monitoring & Observability
+      { id: "prometheus/k8s_standard", intent: "prometheus", flavor: "k8s_standard", displayName: "Prometheus", group: "Monitoring & Observability", clouds: ["aws","azure","gcp","kubernetes"], icon: "prometheus.svg",
+        inputs: [{ name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }, { name: "kubernetes_node_pool_details", type: "@facets/kubernetes_nodepool", optional: false }],
+        outputs: [{ name: "default", type: "@facets/prometheus" }] },
+      { id: "grafana_dashboards/k8s", intent: "grafana_dashboards", flavor: "k8s", displayName: "Grafana Dashboards", group: "Monitoring & Observability", clouds: ["aws","azure","gcp","kubernetes"], icon: "grafana_dashboards.svg",
+        inputs: [{ name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }, { name: "prometheus", type: "@facets/prometheus", optional: false }],
+        outputs: [{ name: "default", type: "@facets/grafana_dashboards" }] },
+      { id: "alert_rules/prometheus", intent: "alert_rules", flavor: "prometheus", displayName: "Alert Rules", group: "Monitoring & Observability", clouds: ["kubernetes","aws","azure","gcp"], icon: "alert_rules.svg",
+        inputs: [{ name: "kubernetes_cluster", type: "@facets/kubernetes-details", optional: false }, { name: "prometheus", type: "@facets/prometheus", optional: false }],
+        outputs: [{ name: "default", type: "@facets/alert-rules" }] },
+      { id: "monitoring/mongo", intent: "monitoring", flavor: "mongo", displayName: "MongoDB Monitoring", group: "Monitoring & Observability", clouds: ["kubernetes","aws","azure","gcp"], icon: "monitoring.svg",
+        inputs: [{ name: "kubernetes_cluster", type: "@facets/kubernetes-details", optional: false }, { name: "mongo", type: "@facets/mongo", optional: false }, { name: "prometheus", type: "@facets/prometheus", optional: false }, { name: "node_pool", type: "@facets/kubernetes_nodepool", optional: true }],
+        outputs: [{ name: "default", type: "@facets/monitoring-rules" }] },
+
+      // Security & Identity
+      { id: "google_workload_identity/gcp", intent: "google_workload_identity", flavor: "gcp", displayName: "GCP Workload Identity", group: "Security & Identity", clouds: ["gcp"], icon: "google_workload_identity.svg",
+        inputs: [{ name: "cloud_account", type: "@facets/gcp_cloud_account", optional: false }, { name: "gke_cluster", type: "@facets/gke", optional: false }],
+        outputs: [{ name: "default", type: "@facets/google_workload_identity" }] },
+      { id: "azure_workload_identity/azure", intent: "azure_workload_identity", flavor: "azure", displayName: "Azure Workload Identity", group: "Security & Identity", clouds: ["azure"], icon: "azure_workload_identity.svg",
+        inputs: [{ name: "cloud_account", type: "@facets/azure_cloud_account", optional: false }, { name: "aks_cluster", type: "@facets/azure_aks", optional: false }],
+        outputs: [{ name: "default", type: "@facets/azure_workload_identity" }] },
+    ];
+
+    // Build output type -> producer module IDs
+    const outputProducers = {};
+    modules.forEach(m => {
+      m.outputs.forEach(o => {
+        if (!outputProducers[o.type]) outputProducers[o.type] = [];
+        outputProducers[o.type].push(m.id);
+      });
+    });
+
+    // Build edges
+    const edges = [];
+    const edgeSet = new Set();
+    modules.forEach(m => {
+      m.inputs.forEach(inp => {
+        const producers = outputProducers[inp.type] || [];
+        producers.forEach(producerId => {
+          const key = `${producerId}->${m.id}`;
+          if (!edgeSet.has(key)) {
+            edgeSet.add(key);
+            edges.push({
+              from: producerId,
+              to: m.id,
+              inputName: inp.name,
+              outputType: inp.type,
+              optional: inp.optional,
+            });
+          }
+        });
+      });
+    });
+
+    // Generate a unique color per intent so interchangeable flavors share the same color
+    const intentColorPalette = [
+      "#4A90D9","#43A047","#9C27B0","#FF7043","#E53935","#546E7A",
+      "#00ACC1","#8E24AA","#F9A825","#5C6BC0","#26A69A","#D81B60",
+      "#FF8A65","#66BB6A","#42A5F5","#AB47BC","#FFA726","#78909C",
+      "#7E57C2","#29B6F6","#EF5350","#26C6DA","#EC407A","#9CCC65",
+      "#FFCA28","#5C6BC0","#8D6E63","#BDBDBD","#7CB342","#FF7043",
+      "#4DD0E1","#BA68C8","#AED581","#FFB74D","#90A4AE",
+    ];
+    const uniqueIntents = [...new Set(modules.map(m => m.intent))];
+    const intentColors = {};
+    uniqueIntents.forEach((intent, i) => {
+      intentColors[intent] = intentColorPalette[i % intentColorPalette.length];
+    });
+
+    // Build vis.js nodes - same intent = same color (interchangeable flavors)
+    const visNodes = modules.map(m => {
+      const iColor = intentColors[m.intent];
+      return {
+        id: m.id,
+        label: `${m.displayName}\n${m.flavor}`,
+        group: m.group,
+        color: {
+          background: iColor + "22",
+          border: iColor,
+          highlight: { background: iColor + "55", border: iColor },
+          hover: { background: iColor + "33", border: iColor },
+        },
+        font: { color: "#e0e0e0", size: 11, face: "system-ui" },
+        shape: "box",
+        borderWidth: 2,
+        margin: 8,
+        data: m,
+      };
+    });
+
+    const visEdges = edges.map((e, i) => ({
+      id: `e${i}`,
+      from: e.from,
+      to: e.to,
+      arrows: "to",
+      color: { color: e.optional ? "#43A04733" : "#43A04788", highlight: "#43A047", hover: "#43A047" },
+      dashes: e.optional,
+      width: e.optional ? 1 : 1.5,
+      smooth: { type: "cubicBezier", roundness: 0.4 },
+      data: e,
+    }));
+
+    // Init vis.js
+    const container = document.getElementById("graph-container");
+    const data = { nodes: new vis.DataSet(visNodes), edges: new vis.DataSet(visEdges) };
+    const options = {
+      physics: {
+        solver: "forceAtlas2Based",
+        forceAtlas2Based: { gravitationalConstant: -80, centralGravity: 0.008, springLength: 160, springConstant: 0.04, damping: 0.5 },
+        stabilization: { iterations: 300 },
+      },
+      interaction: { hover: true, tooltipDelay: 100, zoomView: true, dragView: true },
+      layout: { improvedLayout: true },
+    };
+
+    const network = new vis.Network(container, data, options);
+
+    // Build legend showing intents with multiple flavors
+    const legendEl = document.getElementById("legend-intents");
+    const multiFlavor = uniqueIntents.filter(i => modules.filter(m => m.intent === i).length > 1);
+    multiFlavor.forEach(intent => {
+      const flavors = modules.filter(m => m.intent === intent).map(m => m.flavor);
+      const c = intentColors[intent];
+      legendEl.innerHTML += `<div class="legend-item"><div class="legend-dot" style="background:${c}"></div><span style="font-size:10px">${intent} (${flavors.length})</span></div>`;
+    });
+
+    // Stats
+    document.getElementById("stats-bar").innerHTML =
+      `<div>Modules: <span>${modules.length}</span></div>` +
+      `<div>Connections: <span>${edges.length}</span></div>` +
+      `<div>Output Types: <span>${Object.keys(outputProducers).length}</span></div>`;
+
+    // Click handler
+    network.on("click", params => {
+      if (params.nodes.length > 0) {
+        showDetails(params.nodes[0]);
+      } else {
+        closeDetails();
+      }
+    });
+
+    function showDetails(nodeId) {
+      const m = modules.find(x => x.id === nodeId);
+      if (!m) return;
+
+      const panel = document.getElementById("details-panel");
+      document.getElementById("detail-icon").src = m.icon;
+      document.getElementById("detail-title").textContent = `${m.intent} / ${m.flavor}`;
+      document.getElementById("detail-subtitle").textContent = `${m.displayName} | ${m.clouds.join(", ")}`;
+
+      let html = "";
+
+      // Outputs
+      if (m.outputs.length) {
+        html += `<div class="details-section"><h4>Outputs (produces)</h4>`;
+        m.outputs.forEach(o => {
+          const consumers = modules.filter(c => c.inputs.some(i => i.type === o.type));
+          html += `<div class="dep-item"><span class="dep-arrow" style="color:#43A047">&#x2192;</span><div><div class="dep-name">${o.type}</div><div class="dep-type">${consumers.length} consumer${consumers.length !== 1 ? 's' : ''}</div></div></div>`;
+        });
+        html += `</div>`;
+      }
+
+      // Inputs
+      if (m.inputs.length) {
+        html += `<div class="details-section"><h4>Inputs (depends on)</h4>`;
+        m.inputs.forEach(inp => {
+          const producers = outputProducers[inp.type] || [];
+          html += `<div class="dep-item" onclick="focusNode('${producers[0] || ''}')" style="cursor:${producers[0] ? 'pointer' : 'default'}">
+            <span class="dep-arrow" style="color:#4A90D9">&#x2190;</span>
+            <div>
+              <div class="dep-name">${inp.name}</div>
+              <div class="dep-type">${inp.type}</div>
+              <div class="dep-type">from: ${producers.join(", ") || "none"}</div>
+            </div>
+            <span class="dep-badge ${inp.optional ? 'optional' : 'required'}">${inp.optional ? 'optional' : 'required'}</span>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+
+      // Downstream consumers
+      const downstreamEdges = edges.filter(e => e.from === nodeId);
+      if (downstreamEdges.length) {
+        html += `<div class="details-section"><h4>Consumed By (downstream)</h4>`;
+        const consumers = [...new Set(downstreamEdges.map(e => e.to))];
+        consumers.forEach(cid => {
+          const c = modules.find(x => x.id === cid);
+          if (c) {
+            const relevantEdges = downstreamEdges.filter(e => e.to === cid);
+            html += `<div class="dep-item" onclick="focusNode('${cid}')" style="cursor:pointer">
+              <span class="dep-arrow" style="color:#FF7043">&#x2192;</span>
+              <div>
+                <div class="dep-name">${c.intent}/${c.flavor}</div>
+                <div class="dep-type">via: ${relevantEdges.map(e => e.inputName).join(", ")}</div>
+              </div>
+            </div>`;
+          }
+        });
+        html += `</div>`;
+      }
+
+      document.getElementById("detail-body").innerHTML = html;
+      panel.classList.add("visible");
+
+      // Highlight connected nodes with directional edge colors
+      const connectedNodes = new Set([nodeId]);
+      edges.forEach(e => {
+        if (e.from === nodeId) connectedNodes.add(e.to);
+        if (e.to === nodeId) connectedNodes.add(e.from);
+      });
+      data.nodes.forEach(n => {
+        data.nodes.update({ id: n.id, opacity: connectedNodes.has(n.id) ? 1 : 0.15 });
+      });
+      data.edges.forEach(e => {
+        const isOutgoing = e.data.from === nodeId; // this module feeds downstream
+        const isIncoming = e.data.to === nodeId;   // this module consumes from upstream
+        if (isIncoming) {
+          // Input edges: BLUE - data flowing IN from upstream
+          data.edges.update({ id: e.id, hidden: false, color: { color: "#42A5F5", highlight: "#42A5F5", hover: "#42A5F5", opacity: 1 }, width: 2.5 });
+        } else if (isOutgoing) {
+          // Output edges: RED - data flowing OUT to downstream
+          data.edges.update({ id: e.id, hidden: false, color: { color: "#EF5350", highlight: "#EF5350", hover: "#EF5350", opacity: 1 }, width: 2.5 });
+        } else {
+          data.edges.update({ id: e.id, hidden: true });
+        }
+      });
+    }
+
+    function closeDetails() {
+      document.getElementById("details-panel").classList.remove("visible");
+      data.nodes.forEach(n => data.nodes.update({ id: n.id, opacity: 1 }));
+      data.edges.forEach(e => {
+        const opt = e.data.optional;
+        data.edges.update({
+          id: e.id, hidden: false, width: opt ? 1 : 1.5,
+          color: { color: opt ? "#5b7fff33" : "#5b7fff88", highlight: "#5b7fff", hover: "#5b7fff" },
+        });
+      });
+    }
+
+    function focusNode(nodeId) {
+      if (!nodeId) return;
+      network.focus(nodeId, { scale: 1.5, animation: { duration: 500, easingFunction: "easeInOutQuad" } });
+      network.selectNodes([nodeId]);
+      showDetails(nodeId);
+    }
+
+    // Search
+    document.getElementById("search").addEventListener("input", function(e) {
+      const q = e.target.value.toLowerCase().trim();
+      if (!q) {
+        data.nodes.forEach(n => data.nodes.update({ id: n.id, opacity: 1 }));
+        data.edges.forEach(e => data.edges.update({ id: e.id, hidden: false }));
+        return;
+      }
+      const matched = new Set();
+      modules.forEach(m => {
+        if (m.id.toLowerCase().includes(q) || m.displayName.toLowerCase().includes(q) ||
+            m.intent.toLowerCase().includes(q) || m.flavor.toLowerCase().includes(q) ||
+            m.group.toLowerCase().includes(q) || m.clouds.some(c => c.includes(q)) ||
+            m.inputs.some(i => i.type.toLowerCase().includes(q)) ||
+            m.outputs.some(o => o.type.toLowerCase().includes(q))) {
+          matched.add(m.id);
+        }
+      });
+      // Also include connected nodes
+      const highlighted = new Set(matched);
+      edges.forEach(e => {
+        if (matched.has(e.from) || matched.has(e.to)) {
+          highlighted.add(e.from);
+          highlighted.add(e.to);
+        }
+      });
+      data.nodes.forEach(n => {
+        data.nodes.update({ id: n.id, opacity: highlighted.has(n.id) ? 1 : 0.08 });
+      });
+      data.edges.forEach(e => {
+        const show = highlighted.has(e.data.from) && highlighted.has(e.data.to);
+        data.edges.update({ id: e.id, hidden: !show });
+      });
+      // Focus on first match
+      if (matched.size > 0) {
+        const first = [...matched][0];
+        network.focus(first, { scale: 1, animation: { duration: 300, easingFunction: "easeInOutQuad" } });
+      }
+    });
+
+    // Group filter buttons
+    document.querySelectorAll(".ctrl-btn").forEach(btn => {
+      btn.addEventListener("click", function() {
+        document.querySelectorAll(".ctrl-btn").forEach(b => b.classList.remove("active"));
+        this.classList.add("active");
+        const group = this.dataset.group;
+        if (group === "all") {
+          data.nodes.forEach(n => data.nodes.update({ id: n.id, opacity: 1 }));
+          data.edges.forEach(e => data.edges.update({ id: e.id, hidden: false }));
+          network.fit({ animation: true });
+        } else {
+          const matched = new Set();
+          modules.forEach(m => { if (m.group === group) matched.add(m.id); });
+          // Include direct dependencies
+          const highlighted = new Set(matched);
+          edges.forEach(e => {
+            if (matched.has(e.from) || matched.has(e.to)) {
+              highlighted.add(e.from);
+              highlighted.add(e.to);
+            }
+          });
+          data.nodes.forEach(n => {
+            data.nodes.update({ id: n.id, opacity: highlighted.has(n.id) ? 1 : 0.08 });
+          });
+          data.edges.forEach(e => {
+            const show = highlighted.has(e.data.from) && highlighted.has(e.data.to);
+            data.edges.update({ id: e.id, hidden: !show });
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

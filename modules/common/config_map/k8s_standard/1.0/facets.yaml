@@ -3,7 +3,7 @@ flavor: k8s_standard
 version: '1.0'
 description: config_map - k8s
 intentDetails:
-  type: kubernetes
+  type: Kubernetes Resources
   description: Create and manage Kubernetes ConfigMaps for application configuration
   displayName: ConfigMap
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/config_map.svg

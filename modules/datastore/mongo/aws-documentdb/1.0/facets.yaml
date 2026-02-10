@@ -5,7 +5,7 @@ clouds:
 - aws
 description: MongoDB-compatible database using AWS DocumentDB service
 intentDetails:
-  type: data_storage
+  type: Datastores
   description: AWS DocumentDB MongoDB-compatible database service
   displayName: MongoDB
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mongo.svg

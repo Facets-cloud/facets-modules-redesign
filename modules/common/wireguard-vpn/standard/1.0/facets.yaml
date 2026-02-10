@@ -8,7 +8,7 @@ clouds:
 - gcp
 - kubernetes
 intentDetails:
-  type: networking
+  type: Operators
   description: WireGuard VPN server instance for secure network access
   displayName: WireGuard VPN Server
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/wireguard-vpn.svg

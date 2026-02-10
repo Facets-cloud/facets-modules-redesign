@@ -4,7 +4,7 @@ version: '1.0'
 description: Unified AWS cloud service module supporting deployment, cronjob, job,
   and statefulset workloads
 intentDetails:
-  type: application
+  type: Cloud & Infrastructure
   description: Deploy and manage containerized applications on AWS EKS
   displayName: Service
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/service.svg

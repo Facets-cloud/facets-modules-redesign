@@ -5,7 +5,7 @@ clouds:
     - kubernetes
 description: Deploy Grafana dashboards as ConfigMaps with auto-discovery labels. Paste dashboard JSON exported from Grafana.
 intentDetails:
-  type: monitoring
+  type: Monitoring & Observability
   description: Deploy Grafana dashboards as ConfigMaps with auto-discovery labels
   displayName: Grafana Dashboards
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/grafana_dashboards.svg

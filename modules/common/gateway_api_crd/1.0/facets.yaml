@@ -8,7 +8,7 @@ clouds:
   - gcp
   - kubernetes
 intentDetails:
-  type: miscellaneous
+  type: Kubernetes Resources
   description: Gateway API Custom Resource Definitions for Kubernetes
   displayName: Gateway API CRD
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/gateway_api_crd.svg
