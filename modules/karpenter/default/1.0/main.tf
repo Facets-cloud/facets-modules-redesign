@@ -230,7 +230,7 @@ resource "helm_release" "karpenter" {
       settings = {
         clusterName       = local.cluster_name
         clusterEndpoint   = var.inputs.eks_details.attributes.cluster_endpoint
-        interruptionQueue = var.instance.spec.interruption_handling ? aws_sqs_queue.karpenter_interruption[0].name : ""
+        interruptionQueue = lookup(var.instance.spec, "interruption_handling", false) ? aws_sqs_queue.karpenter_interruption[0].name : ""
       }
       replicas = lookup(var.instance.spec, "karpenter_replicas", 2)
       controller = {
@@ -255,7 +255,7 @@ resource "helm_release" "karpenter" {
 
 # SQS Queue for Spot Interruption Handling (optional)
 resource "aws_sqs_queue" "karpenter_interruption" {
-  count = var.instance.spec.interruption_handling ? 1 : 0
+  count = lookup(var.instance.spec, "interruption_handling", false) ? 1 : 0
 
   name                      = "karpenter-${local.cluster_name}"
   message_retention_seconds = 300
@@ -265,7 +265,7 @@ resource "aws_sqs_queue" "karpenter_interruption" {
 }
 
 resource "aws_sqs_queue_policy" "karpenter_interruption" {
-  count = var.instance.spec.interruption_handling ? 1 : 0
+  count = lookup(var.instance.spec, "interruption_handling", false) ? 1 : 0
 
   queue_url = aws_sqs_queue.karpenter_interruption[0].id
 
@@ -290,7 +290,7 @@ resource "aws_sqs_queue_policy" "karpenter_interruption" {
 
 # EventBridge rules for interruption handling
 resource "aws_cloudwatch_event_rule" "karpenter_interruption" {
-  for_each = var.instance.spec.interruption_handling ? {
+  for_each = lookup(var.instance.spec, "interruption_handling", false) ? {
     scheduled_change = {
       event_pattern = jsonencode({
         source      = ["aws.health"]
@@ -326,7 +326,7 @@ resource "aws_cloudwatch_event_rule" "karpenter_interruption" {
 }
 
 resource "aws_cloudwatch_event_target" "karpenter_interruption" {
-  for_each = var.instance.spec.interruption_handling ? {
+  for_each = lookup(var.instance.spec, "interruption_handling", false) ? {
     scheduled_change      = "scheduled_change"
     spot_interruption     = "spot_interruption"
     rebalance             = "rebalance"
