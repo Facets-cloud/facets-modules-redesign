@@ -875,8 +875,6 @@ sample:
   flavor: nginx_gateway_fabric
   version: "1.0"
   disabled: true
-  metadata:
-    annotations: {}
   spec:
     private: false
     disable_base_domain: false

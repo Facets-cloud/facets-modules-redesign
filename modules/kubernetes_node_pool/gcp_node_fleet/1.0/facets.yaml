@@ -170,8 +170,6 @@ sample:
   flavor: gcp_node_fleet
   version: '1.0'
   kind: kubernetes_node_pool
-  metadata:
-    name: example-fleet
   spec:
     node_pools:
       worker-pool:

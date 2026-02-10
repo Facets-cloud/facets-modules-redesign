@@ -155,7 +155,6 @@ sample:
   flavor: gcp
   version: '1.0'
   kind: kubernetes_node_pool
-  metadata: {}
   disabled: true
   spec:
     instance_type: n2d-standard-2

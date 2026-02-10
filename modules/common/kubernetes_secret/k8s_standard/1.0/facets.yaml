@@ -56,7 +56,6 @@ sample:
   disabled: true
   flavor: k8s_standard
   version: '1.0'
-  metadata: {}
   spec:
     data: {}
 iac:

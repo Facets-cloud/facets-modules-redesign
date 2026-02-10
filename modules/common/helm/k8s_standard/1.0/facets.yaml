@@ -115,7 +115,6 @@ sample:
   kind: helm
   flavor: k8s_standard
   disabled: true
-  metadata: {}
   version: '1.0'
   spec:
     helm:

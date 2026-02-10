@@ -184,8 +184,6 @@ sample:
   kind: kubernetes_cluster
   flavor: eks_automode
   version: '1.0'
-  metadata:
-    name: eks-cluster
   spec:
     cluster:
       cluster_endpoint_public_access: true
