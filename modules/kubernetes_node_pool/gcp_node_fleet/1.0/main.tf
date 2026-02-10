@@ -2,9 +2,6 @@ module "gke-node-fleet" {
   for_each = local.node_pools
   source   = "./gke_node_pool"
   instance = {
-    metadata = {
-      name = each.key
-    }
     spec = {
       instance_type        = lookup(each.value, "instance_type", null)
       disk_size            = lookup(each.value, "disk_size", null)

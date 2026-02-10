@@ -95,7 +95,6 @@ locals {
     {
       "nginx.ingress.kubernetes.io/use-regex" : "true"
     },
-    lookup(lookup(var.instance, "metadata", {}), "annotations", {}),
     lookup(var.instance.spec, "force_ssl_redirection", false) ? {
       "nginx.ingress.kubernetes.io/force-ssl-redirect" = "true"
       "nginx.ingress.kubernetes.io/ssl-redirect"       = "true"
@@ -164,8 +163,7 @@ locals {
     var.inputs.kubernetes_details.cloud_provider == "AWS" ? local.aws_annotations : {},
     var.inputs.kubernetes_details.cloud_provider == "GCP" ? local.gcp_annotations : {},
     var.inputs.kubernetes_details.cloud_provider == "AZURE" ? local.azure_annotations : {},
-    local.additional_ingress_annotations_without_auth,
-    lookup(lookup(var.instance, "metadata", {}), "annotations", {})
+    local.additional_ingress_annotations_without_auth
   )
   nginx_annotations = {
     for key, value in local.annotations :
@@ -184,10 +182,6 @@ locals {
       "cert-manager.io/cluster-issuer" : local.disable_endpoint_validation ? local.cluster_issuer_dns : local.cluster_issuer_http,
       "acme.cert-manager.io/http01-ingress-class" : local.name,
       "cert-manager.io/renew-before" : lookup(local.advanced_config, "renew_cert_before", "720h") // 30days; value must be parsable by https://pkg.go.dev/time#ParseDuration
-    },
-    { // overriding common annotations from instance.metadata
-      for key, value in lookup(lookup(var.instance, "metadata", {}), "annotations", {}) :
-      key => value if can(regex("^cert-manager\\.io", key))
     }
   )
 
