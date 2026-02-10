@@ -13,8 +13,8 @@ module "facets-secret" {
     metadata = {
       name        = lower(var.instance_name)
       namespace   = local.namespace
-      annotations = lookup(var.instance.metadata, "annotations", {})
-      labels      = lookup(var.instance.metadata, "labels", {})
+      annotations = {}
+      labels      = {}
     }
     data = {
       for k, v in lookup(local.spec, "data", {}) : v.key => base64encode(v.value)
