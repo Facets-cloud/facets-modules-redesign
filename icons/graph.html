@@ -98,11 +98,11 @@
     <div class="legend-item" style="margin-bottom:8px;font-size:10px;color:#888">Same color = same intent (interchangeable flavors)</div>
     <div id="legend-intents"></div>
     <h3 style="margin-top:10px">Edges (on click)</h3>
-    <div class="legend-item"><div style="width:20px;height:2px;background:#FF7043"></div> Incoming (depends on)</div>
-    <div class="legend-item"><div style="width:20px;height:2px;background:#43A047"></div> Outgoing (feeds into)</div>
+    <div class="legend-item"><div style="width:20px;height:3px;background:#42A5F5;border-radius:1px"></div> Input (depends on)</div>
+    <div class="legend-item"><div style="width:20px;height:3px;background:#EF5350;border-radius:1px"></div> Output (feeds into)</div>
     <h3 style="margin-top:10px">Line Style</h3>
-    <div class="legend-item"><div style="width:20px;height:2px;background:#5b7fff"></div> Required</div>
-    <div class="legend-item"><div style="width:20px;height:0;border-top:2px dashed #5b7fff55"></div> Optional</div>
+    <div class="legend-item"><div style="width:20px;height:2px;background:#888"></div> Required</div>
+    <div class="legend-item"><div style="width:20px;height:0;border-top:2px dashed #888"></div> Optional</div>
   </div>
 
   <div class="details-panel" id="details-panel">
@@ -524,10 +524,12 @@
       data.edges.forEach(e => {
         const isOutgoing = e.data.from === nodeId; // this module feeds downstream
         const isIncoming = e.data.to === nodeId;   // this module consumes from upstream
-        if (isOutgoing) {
-          data.edges.update({ id: e.id, hidden: false, color: { color: "#43A047", highlight: "#66BB6A", hover: "#66BB6A" }, width: 2.5 });
-        } else if (isIncoming) {
-          data.edges.update({ id: e.id, hidden: false, color: { color: "#FF7043", highlight: "#FF8A65", hover: "#FF8A65" }, width: 2.5 });
+        if (isIncoming) {
+          // Input edges: BLUE - data flowing IN from upstream
+          data.edges.update({ id: e.id, hidden: false, color: { color: "#42A5F5", highlight: "#42A5F5", hover: "#42A5F5", opacity: 1 }, width: 2.5 });
+        } else if (isOutgoing) {
+          // Output edges: RED - data flowing OUT to downstream
+          data.edges.update({ id: e.id, hidden: false, color: { color: "#EF5350", highlight: "#EF5350", hover: "#EF5350", opacity: 1 }, width: 2.5 });
         } else {
           data.edges.update({ id: e.id, hidden: true });
         }
