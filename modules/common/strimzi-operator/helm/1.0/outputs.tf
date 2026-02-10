@@ -2,6 +2,7 @@ locals {
   output_attributes = {
     namespace     = local.namespace
     release_name  = helm_release.strimzi_operator.name
+    release_id    = helm_release.strimzi_operator.id
     chart_version = helm_release.strimzi_operator.version
     operator_name = "strimzi-cluster-operator"
     repository    = local.repository

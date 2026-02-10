@@ -1,0 +1,180 @@
+intent: kafka
+flavor: strimzi
+version: '1.0'
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+description: Apache Kafka cluster deployed using Strimzi Kafka Operator with KRaft mode (no ZooKeeper)
+spec:
+  title: Strimzi Kafka Cluster
+  description: Apache Kafka cluster deployed using Strimzi Kafka Operator with KRaft mode
+  type: object
+  properties:
+    version_config:
+      type: object
+      title: Version & Basic Configuration
+      description: Kafka version and basic cluster settings
+      properties:
+        kafka_version:
+          type: string
+          title: Kafka Version
+          description: Apache Kafka version to deploy
+          default: '4.0.0'
+          enum:
+          - '4.0.0'
+          - '4.1.0'
+          - '3.9.0'
+        admin_username:
+          type: string
+          title: Admin Username
+          description: Admin user for Kafka authentication
+          default: admin
+          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+      required:
+      - kafka_version
+
+    sizing:
+      type: object
+      title: Sizing & Performance
+      description: Cluster sizing and resource allocation
+      properties:
+        replica_count:
+          type: number
+          title: Replica Count
+          description: Number of Kafka broker replicas (dual-role controller+broker)
+          default: 3
+          minimum: 1
+          maximum: 9
+        resources:
+          type: object
+          title: Resources
+          description: CPU and memory resources for Kafka pods
+          properties:
+            cpu:
+              type: string
+              title: CPU
+              description: CPU request and limit (e.g., 1000m, 2)
+              default: '1'
+            memory:
+              type: string
+              title: Memory
+              description: Memory request and limit (e.g., 2Gi, 4Gi)
+              default: 2Gi
+              pattern: ^[0-9]+[GM]i$
+        storage_size:
+          type: string
+          title: Storage Size
+          description: Persistent volume size per replica
+          default: 10Gi
+          pattern: ^[0-9]+[GM]i$
+      required:
+      - replica_count
+
+    listeners:
+      type: object
+      title: Listener Configuration
+      description: Kafka listener configuration
+      properties:
+        plain_enabled:
+          type: boolean
+          title: Plain Listener
+          description: Enable plain (non-TLS) listener on port 9092
+          default: true
+        tls_enabled:
+          type: boolean
+          title: TLS Listener
+          description: Enable TLS listener on port 9093
+          default: true
+
+    config:
+      type: object
+      title: Kafka Configuration
+      description: Kafka broker configuration
+      properties:
+        offsets_topic_replication_factor:
+          type: number
+          title: Offsets Topic Replication Factor
+          default: 3
+          minimum: 1
+        transaction_state_log_replication_factor:
+          type: number
+          title: Transaction State Log Replication Factor
+          default: 3
+          minimum: 1
+        transaction_state_log_min_isr:
+          type: number
+          title: Transaction State Log Min ISR
+          default: 2
+          minimum: 1
+        default_replication_factor:
+          type: number
+          title: Default Replication Factor
+          default: 3
+          minimum: 1
+        min_insync_replicas:
+          type: number
+          title: Min In-Sync Replicas
+          default: 2
+          minimum: 1
+  required:
+  - version_config
+  - sizing
+
+inputs:
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Target Kubernetes cluster for Kafka deployment
+    providers:
+    - kubernetes
+    - helm
+  node_pool:
+    type: '@facets/kubernetes_nodepool'
+    optional: true
+    displayName: Node Pool
+    description: Node pool for Kafka pods
+  strimzi_operator:
+    type: '@facets/strimzi-operator'
+    optional: false
+    displayName: Strimzi Kafka Operator
+    description: Strimzi Kafka Operator deployment
+
+outputs:
+  default:
+    type: '@facets/kafka-strimzi'
+    title: Kafka Cluster
+
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+  - outputs.tf
+
+sample:
+  kind: kafka
+  flavor: strimzi
+  version: '1.0'
+  disabled: false
+  spec:
+    version_config:
+      kafka_version: '4.0.0'
+      admin_username: admin
+    sizing:
+      replica_count: 3
+      resources:
+        cpu: '1'
+        memory: 2Gi
+      storage_size: 10Gi
+    listeners:
+      plain_enabled: true
+      tls_enabled: true
+    config:
+      offsets_topic_replication_factor: 3
+      transaction_state_log_replication_factor: 3
+      transaction_state_log_min_isr: 2
+      default_replication_factor: 3
+      min_insync_replicas: 2

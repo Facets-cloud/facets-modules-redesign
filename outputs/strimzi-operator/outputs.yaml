@@ -11,6 +11,9 @@ properties:
         release_name:
           description: Helm release name
           type: string
+        release_id:
+          description: Helm release ID
+          type: string
         chart_version:
           description: Helm chart version
           type: string
