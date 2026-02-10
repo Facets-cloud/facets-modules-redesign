@@ -22,8 +22,6 @@ modules:
     flavor: karpenter
   - intent: kubernetes_node_pool
     flavor: eks_automode
-  - intent: karpenter
-    flavor: default
   - intent: network
     flavor: aws_network
   - intent: service
@@ -60,6 +58,8 @@ modules:
     flavor: helm
   - intent: grafana_dashboards
     flavor: k8s
+  - intent: gateway_api_crd
+    flavor: default
   - intent: helm
     flavor: k8s_standard
   - intent: gateway_api_crd
@@ -67,7 +67,7 @@ modules:
   - intent: ingress
     flavor: nginx_gateway_fabric
   - intent: ingress
-    flavor: nginx_k8s
+    flavor: nginx_gateway_fabric
   - intent: k8s_access_controls
     flavor: k8s_standard
   - intent: k8s_callback
