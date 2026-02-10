@@ -54,6 +54,7 @@ cd icons && python3 -m http.server 8765
 # Then open:
 #   http://localhost:8765/index.html   - Icon catalog with flavors/clouds per intent
 #   http://localhost:8765/graph.html   - Interactive module dependency graph (search, filter, click nodes)
+#   http://localhost:8765/wiring.html  - Attribute-level wiring explorer (inputs/outputs/types/attributes)
 ```
 
 ## Behavior Guidelines
