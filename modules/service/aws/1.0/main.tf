@@ -1,6 +1,7 @@
 locals {
   # Core instance spec
-  spec = lookup(var.instance, "spec", {})
+  spec     = lookup(var.instance, "spec", {})
+  metadata = lookup(var.instance, "metadata", {})
 
   aws_advanced_config   = lookup(lookup(var.instance, "advanced", {}), "aws", {})
   aws_cloud_permissions = lookup(lookup(local.spec, "cloud_permissions", {}), "aws", {})
@@ -16,12 +17,12 @@ locals {
   enable_deployment_actions  = local.enable_actions && local.spec_type == "application" ? 1 : 0
   enable_statefulset_actions = local.enable_actions && local.spec_type == "statefulset" ? 1 : 0
 
-  namespace = lookup(var.instance.metadata, "namespace", null) == null ? var.environment.namespace : var.instance.metadata.namespace
+  namespace = lookup(local.metadata, "namespace", null) == null ? var.environment.namespace : lookup(local.metadata, "namespace", var.environment.namespace)
   annotations = merge(
     local.enable_irsa ? { "eks.amazonaws.com/role-arn" = module.irsa.0.iam_role_arn } : { "iam.amazonaws.com/role" = aws_iam_role.application-role.0.arn },
-    lookup(var.instance.metadata, "annotations", {})
+    lookup(local.metadata, "annotations", {})
   )
-  labels        = lookup(var.instance.metadata, "labels", {})
+  labels        = lookup(local.metadata, "labels", {})
   name          = "${module.sr-name.name}-ar"
   resource_type = "service"
   resource_name = var.instance_name
