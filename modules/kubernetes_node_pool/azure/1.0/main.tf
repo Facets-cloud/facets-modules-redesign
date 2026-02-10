@@ -3,13 +3,12 @@ locals {
   aks_upgrade_settings      = lookup(local.aks_advanced, "upgrade_settings", {})
   aks_linux_os_config       = lookup(local.aks_advanced, "linux_os_config", {})
   aks_sysctl_config         = lookup(local.aks_linux_os_config, "sysctl_config", {})
-  metadata                  = lookup(var.instance, "metadata", {})
   priority                  = lookup(local.aks_advanced, "priority", "Regular")
   user_defined_tags         = lookup(local.aks_advanced, "tags", {})
   facets_defined_cloud_tags = lookup(var.environment, "cloud_tags", {})
   tags                      = merge(local.user_defined_tags, local.facets_defined_cloud_tags)
 
-  name = lookup(local.metadata, "name", var.instance_name)
+  name = var.instance_name
 
   spec           = lookup(var.instance, "spec", {})
   taints         = lookup(local.spec, "taints", [])

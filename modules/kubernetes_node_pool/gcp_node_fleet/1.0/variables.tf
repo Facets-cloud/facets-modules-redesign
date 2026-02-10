@@ -2,10 +2,6 @@
 variable "instance" {
   description = "Instance configuration for the GKE node fleet"
   type = object({
-    metadata = optional(object({
-      name   = optional(string)
-      labels = optional(map(string), {})
-    }), {})
     spec = object({
       node_pools = map(object({
         instance_type        = string
