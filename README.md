@@ -3,7 +3,7 @@
 Infrastructure as Code modules for the [Facets Control Plane](https://facets.cloud). Provision cloud infrastructure, datastores, Kubernetes resources, and platform tooling across AWS, GCP, and Azure.
 
 ```
-63 modules  ·  3 project types  ·  45 output types  ·  3 clouds
+3 project types  ·  3 clouds
 ```
 
 ---
@@ -14,7 +14,7 @@ A project type is a bundle of modules imported to the Control Plane in bulk. Pic
 
 ---
 
-### AWS — 40 modules
+### AWS
 
 EKS clusters (Standard + Automode), Karpenter autoscaling, managed RDS, Aurora, DocumentDB, ElastiCache, MSK, and full Kubernetes platform tooling.
 
@@ -36,28 +36,28 @@ raptor import project-type --managed facets/aws --name "My Platform"
 ```
 
 <details>
-<summary><strong>What's included (40 modules)</strong></summary>
+<summary><strong>What's included</strong></summary>
 
-**Infrastructure** (8)
+**Infrastructure**
 `Cloud Account (aws_provider)` `Network/VPC (aws_network)` `EKS Standard (eks_standard)` `EKS Automode (eks_automode)` `Node Pool/Karpenter (karpenter)` `Node Pool/Automode (eks_automode)` `Karpenter (default)` `Service (aws)`
 
-**Managed Datastores** (7)
+**Managed Datastores**
 `PostgreSQL/RDS (aws-rds)` `PostgreSQL/Aurora (aws-aurora)` `MySQL/RDS (aws-rds)` `MySQL/Aurora (aws-aurora)` `MongoDB/DocumentDB (aws-documentdb)` `Redis/ElastiCache (aws-elasticache)` `Kafka/MSK (aws-msk)`
 
-**Self-hosted via KubeBlocks** (4)
+**Self-hosted via KubeBlocks**
 `PostgreSQL` `MySQL` `MongoDB` `Redis`
 
-**K8s Platform** (12)
+**K8s Platform**
 `Helm` `Ingress/Gateway Fabric` `Ingress/NGINX` `cert-manager` `ConfigMap` `Secrets` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `VPA` `Artifactories`
 
-**Operators & Monitoring** (9)
+**Operators & Monitoring**
 `KubeBlocks` `Strimzi` `ECK` `WireGuard Operator` `WireGuard VPN` `Alert Rules` `Prometheus` `Grafana` `Monitoring`
 
 </details>
 
 ---
 
-### GCP — 35 modules
+### GCP
 
 GKE clusters, Cloud SQL, Memorystore, Pub/Sub, Workload Identity, and full Kubernetes platform tooling.
 
@@ -79,28 +79,28 @@ raptor import project-type --managed facets/gcp --name "My Platform"
 ```
 
 <details>
-<summary><strong>What's included (35 modules)</strong></summary>
+<summary><strong>What's included</strong></summary>
 
-**Infrastructure** (8)
+**Infrastructure**
 `Cloud Account (gcp_provider)` `Network/VPC (gcp_network)` `GKE (gke)` `Node Pool (gcp)` `Node Fleet (gcp_node_fleet)` `Service (gcp)` `Workload Identity (gcp)` `Pub/Sub (gcp)`
 
-**Managed Datastores** (3)
+**Managed Datastores**
 `PostgreSQL/Cloud SQL (gcp-cloudsql)` `MySQL/Cloud SQL (gcp-cloudsql)` `Redis/Memorystore (gcp-memorystore)`
 
-**Self-hosted via KubeBlocks** (4)
+**Self-hosted via KubeBlocks**
 `PostgreSQL` `MySQL` `MongoDB` `Redis`
 
-**K8s Platform** (11)
+**K8s Platform**
 `Helm` `Ingress/Gateway Fabric` `cert-manager` `ConfigMap` `Secrets` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `VPA` `Artifactories`
 
-**Operators & Monitoring** (9)
+**Operators & Monitoring**
 `KubeBlocks` `Strimzi` `ECK` `WireGuard Operator` `WireGuard VPN` `Alert Rules` `Prometheus` `Grafana` `Monitoring`
 
 </details>
 
 ---
 
-### Azure — 34 modules
+### Azure
 
 AKS clusters, Flexible Server (Postgres/MySQL), Cosmos DB, Azure Cache, Workload Identity, and full Kubernetes platform tooling.
 
@@ -122,21 +122,21 @@ raptor import project-type --managed facets/azure --name "My Platform"
 ```
 
 <details>
-<summary><strong>What's included (34 modules)</strong></summary>
+<summary><strong>What's included</strong></summary>
 
-**Infrastructure** (6)
+**Infrastructure**
 `Cloud Account (azure_provider)` `Network/VNet (azure_network)` `AKS (aks)` `Node Pool (azure)` `Service (azure)` `Workload Identity (azure)`
 
-**Managed Datastores** (4)
+**Managed Datastores**
 `PostgreSQL/Flexible Server (azure-flexible-server)` `MySQL/Flexible Server (azure-flexible-server)` `MongoDB/Cosmos DB (cosmosdb)` `Redis/Azure Cache (azure_cache_custom)`
 
-**Self-hosted via KubeBlocks** (4)
+**Self-hosted via KubeBlocks**
 `PostgreSQL` `MySQL` `MongoDB` `Redis`
 
-**K8s Platform** (11)
+**K8s Platform**
 `Helm` `Ingress/Gateway Fabric` `cert-manager` `ConfigMap` `Secrets` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `VPA` `Artifactories`
 
-**Operators & Monitoring** (9)
+**Operators & Monitoring**
 `KubeBlocks` `Strimzi` `ECK` `WireGuard Operator` `WireGuard VPN` `Alert Rules` `Prometheus` `Grafana` `Monitoring`
 
 </details>
