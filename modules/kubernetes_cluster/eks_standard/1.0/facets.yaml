@@ -4,7 +4,7 @@ description: |
     Creates an AWS EKS cluster with managed node groups using the official terraform-aws-eks module.
     This flavor does NOT support EKS Auto Mode - for Auto Mode support, use the eks_auto flavor.
 intentDetails:
-  type: kubernetes
+  type: Cloud & Infrastructure
   description: AWS EKS cluster with standard configuration and all necessary settings preset
   displayName: Kubernetes Cluster
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_cluster.svg

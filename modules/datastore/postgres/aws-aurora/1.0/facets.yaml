@@ -6,7 +6,7 @@ clouds:
 description: A managed PostgreSQL Aurora cluster with high availability, automated
   backups, and read replicas
 intentDetails:
-  type: data_storage
+  type: Datastores
   description: AWS Aurora PostgreSQL serverless database with automatic scaling
   displayName: PostgreSQL
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/postgres.svg

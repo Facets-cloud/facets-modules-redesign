@@ -6,7 +6,7 @@ clouds:
 description: Managed Redis instance using Google Cloud Memorystore with high availability
   and security
 intentDetails:
-  type: data_storage
+  type: Datastores
   description: Google Cloud Memorystore for Redis
   displayName: Redis
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/redis.svg

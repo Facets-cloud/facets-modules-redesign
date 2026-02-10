@@ -6,7 +6,7 @@ clouds:
 title: EKS Cluster with Auto Mode support
 description: A Kubernetes EKS cluster module with auto mode enabled by default and all necessary configurations preset.
 intentDetails:
-  type: kubernetes
+  type: Cloud & Infrastructure
   description: AWS EKS cluster with auto mode enabled and all necessary configurations preset
   displayName: Kubernetes Cluster
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_cluster.svg

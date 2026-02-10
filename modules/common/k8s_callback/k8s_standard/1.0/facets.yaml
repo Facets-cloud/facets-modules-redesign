@@ -4,7 +4,7 @@ version: '1.1'
 description: Creates ServiceAccount with admin role and registers OVH K8s credentials
   with Facets control plane
 intentDetails:
-  type: kubernetes
+  type: Kubernetes Resources
   description: Creates ServiceAccount with admin role and registers K8s credentials with Facets control plane
   displayName: K8s Callback
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/k8s_callback.svg

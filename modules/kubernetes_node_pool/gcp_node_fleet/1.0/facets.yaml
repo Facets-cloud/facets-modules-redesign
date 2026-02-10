@@ -3,7 +3,7 @@ flavor: gcp_node_fleet
 version: '1.0'
 description: GCP GKE Node Fleet module for provisioning multiple node pools
 intentDetails:
-  type: kubernetes
+  type: Cloud & Infrastructure
   description: GCP GKE node fleet for managing multiple node pools
   displayName: Kubernetes Node Pool
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_node_pool.svg

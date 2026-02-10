@@ -7,7 +7,7 @@ title: EKS Auto Mode Karpenter NodePool Manager
 description: Creates and manages dynamic node pools for EKS Auto Mode clusters with
   intelligent scaling and cost optimization.
 intentDetails:
-  type: kubernetes
+  type: Cloud & Infrastructure
   description: AWS EKS managed node pool with auto-scaling and customizable instance types
   displayName: Kubernetes Node Pool
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_node_pool.svg

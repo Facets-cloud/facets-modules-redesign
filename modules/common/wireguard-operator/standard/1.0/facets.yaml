@@ -9,7 +9,7 @@ clouds:
 - gcp
 - kubernetes
 intentDetails:
-  type: networking
+  type: Operators
   description: WireGuard operator that manages VPN infrastructure using Kubernetes
     CRDs
   displayName: WireGuard Operator

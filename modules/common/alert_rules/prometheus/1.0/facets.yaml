@@ -3,7 +3,7 @@ flavor: prometheus
 version: '1.0'
 description: Generic alert rules module for defining custom Prometheus alerting rules. Deploy PrometheusRule CRDs for any service or application.
 intentDetails:
-  type: monitoring
+  type: Monitoring & Observability
   description: Define custom Prometheus alerting rules for any service or application
   displayName: Alert Rules
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/alert_rules.svg

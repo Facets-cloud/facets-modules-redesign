@@ -3,7 +3,7 @@ flavor: nginx_k8s
 version: '1.1'
 description: Adds Ingress module
 intentDetails:
-  type: networking
+  type: Kubernetes Resources
   description: Create and manage NGINX Ingress resources for exposing services
   displayName: Ingress
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/ingress.svg

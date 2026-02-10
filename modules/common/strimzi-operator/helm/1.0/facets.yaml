@@ -9,7 +9,7 @@ clouds:
 description: Strimzi Kafka Operator deployed via Helm chart for managing Kafka clusters
   on Kubernetes
 intentDetails:
-  type: kubernetes
+  type: Operators
   description: Strimzi Kafka Operator for managing Apache Kafka clusters on Kubernetes
   displayName: Strimzi Operator
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/strimzi-operator.svg

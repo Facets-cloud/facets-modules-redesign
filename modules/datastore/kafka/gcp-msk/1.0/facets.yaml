@@ -6,7 +6,7 @@ clouds:
 description: GCP Managed Service for Apache Kafka cluster with secure defaults and
   automatic scaling
 intentDetails:
-  type: queue
+  type: Datastores
   description: GCP Managed Kafka service
   displayName: Kafka
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kafka.svg
