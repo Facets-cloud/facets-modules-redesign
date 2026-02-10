@@ -110,10 +110,6 @@ iac:
 sample:
   flavor: azure
   kind: kubernetes_node_pool
-  metadata:
-    tags:
-      managed-by: facets
-    annotations: {}
   disabled: true
   version: '1.0'
   spec:
