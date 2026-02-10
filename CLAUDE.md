@@ -45,6 +45,17 @@ Look for `*_module_standard*.md` in the relevant directory:
 
 See **rules.md** for complete validation ruleset with good/bad examples.
 
+## Icons & Dependency Graph (Review Pages)
+
+```bash
+# Start local server to view icon catalog and dependency graph
+cd icons && python3 -m http.server 8765
+
+# Then open:
+#   http://localhost:8765/index.html   - Icon catalog with flavors/clouds per intent
+#   http://localhost:8765/graph.html   - Interactive module dependency graph (search, filter, click nodes)
+```
+
 ## Behavior Guidelines
 
 - **NEVER** auto-skip validation - always report issues to user
