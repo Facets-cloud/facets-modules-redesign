@@ -8,10 +8,6 @@
     "karpenter_version": "1.0.1"
   },
   "inputs": {
-    "kubernetes_details": {
-      "resource_name": "cluster",
-      "resource_type": "kubernetes_cluster"
-    },
     "eks_details": {
       "resource_name": "cluster",
       "resource_type": "kubernetes_cluster"

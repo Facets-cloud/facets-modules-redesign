@@ -65,23 +65,6 @@ variable "inputs" {
         })
       })
     })
-    kubernetes_details = object({
-      cluster_endpoint       = string
-      cluster_ca_certificate = string
-      cluster_name           = string
-      cluster_version        = string
-      cluster_arn            = string
-      cluster_id             = string
-      oidc_issuer_url        = string
-      oidc_provider          = string
-      oidc_provider_arn      = string
-      node_security_group_id = string
-      kubernetes_provider_exec = object({
-        api_version = string
-        command     = string
-        args        = list(string)
-      })
-    })
     network_details = object({
       attributes = object({
         vpc_id              = string
