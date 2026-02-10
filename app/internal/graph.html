@@ -454,7 +454,7 @@
       if (!m) return;
 
       const panel = document.getElementById("details-panel");
-      document.getElementById("detail-icon").src = m.icon;
+      document.getElementById("detail-icon").src = "../../icons/" + m.icon;
       document.getElementById("detail-title").textContent = `${m.intent} / ${m.flavor}`;
       document.getElementById("detail-subtitle").textContent = `${m.displayName} | ${m.clouds.join(", ")}`;
 
