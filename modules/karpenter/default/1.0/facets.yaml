@@ -23,15 +23,6 @@ inputs:
         displayName: EKS Cluster
         optional: false
         type: '@facets/eks'
-    kubernetes_details:
-        description: The providers to be used
-        displayName: Kubernetes Details
-        optional: false
-        providers:
-            - helm
-            - kubernetes
-            - kubernetes-alpha
-        type: '@facets/kubernetes-details'
     network_details:
         default:
             resource_name: default
