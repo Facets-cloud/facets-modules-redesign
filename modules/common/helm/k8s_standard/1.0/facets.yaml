@@ -6,6 +6,7 @@ intentDetails:
   type: kubernetes
   description: Deploy applications to Kubernetes using Helm charts
   displayName: Helm
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/helm.svg
 clouds:
 - aws
 - azure

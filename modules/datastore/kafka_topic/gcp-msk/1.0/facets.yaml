@@ -9,6 +9,7 @@ intentDetails:
   type: queue
   description: Kafka topic management for GCP Managed Kafka
   displayName: Kafka Topic
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kafka_topic.svg
 spec:
   title: GCP Managed Kafka Topic
   description: Configure Kafka topic with partitions, replication, and optional configurations

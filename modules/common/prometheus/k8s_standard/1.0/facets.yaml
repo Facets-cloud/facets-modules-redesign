@@ -7,6 +7,7 @@ intentDetails:
   type: monitoring
   description: Prometheus monitoring stack for Kubernetes with Grafana and Alertmanager
   displayName: Prometheus
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/prometheus.svg
 clouds:
 - aws
 - azure

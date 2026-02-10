@@ -13,6 +13,7 @@ intentDetails:
   description: WireGuard operator that manages VPN infrastructure using Kubernetes
     CRDs
   displayName: WireGuard Operator
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/wireguard-operator.svg
 inputs:
   kubernetes_details:
     type: '@facets/kubernetes-details'

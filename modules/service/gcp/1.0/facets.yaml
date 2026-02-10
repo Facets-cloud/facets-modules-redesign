@@ -9,6 +9,7 @@ intentDetails:
   type: application
   description: Deploy and manage containerized applications on GCP GKE
   displayName: Service
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/service.svg
 clouds:
 - gcp
 artifact_inputs:

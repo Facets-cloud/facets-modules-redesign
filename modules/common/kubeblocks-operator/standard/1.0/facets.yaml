@@ -12,6 +12,7 @@ intentDetails:
   type: kubernetes
   description: KubeBlocks operator for managing databases on Kubernetes clusters
   displayName: KubeBlocks Operator
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubeblocks-operator.svg
 inputs:
   kubernetes_cluster:
     type: '@facets/kubernetes-details'

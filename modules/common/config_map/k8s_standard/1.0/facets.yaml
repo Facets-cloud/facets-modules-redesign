@@ -6,6 +6,7 @@ intentDetails:
   type: kubernetes
   description: Create and manage Kubernetes ConfigMaps for application configuration
   displayName: ConfigMap
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/config_map.svg
 clouds:
 - aws
 - azure

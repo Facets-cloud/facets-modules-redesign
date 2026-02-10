@@ -7,6 +7,7 @@ intentDetails:
   type: application
   description: Deploy and manage containerized applications on AWS EKS
   displayName: Service
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/service.svg
 clouds:
 - aws
 artifact_inputs:

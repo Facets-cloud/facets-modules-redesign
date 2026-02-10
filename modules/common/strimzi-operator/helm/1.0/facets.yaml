@@ -12,6 +12,7 @@ intentDetails:
   type: kubernetes
   description: Strimzi Kafka Operator for managing Apache Kafka clusters on Kubernetes
   displayName: Strimzi Operator
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/strimzi-operator.svg
 spec:
   title: Strimzi Kafka Operator
   description: Installs and manages the Strimzi Operator using Helm for Apache Kafka

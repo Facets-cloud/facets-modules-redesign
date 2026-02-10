@@ -12,6 +12,7 @@ intentDetails:
   type: data_storage
   description: KubeBlocks-managed MySQL database on Kubernetes
   displayName: MySQL
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mysql.svg
 inputs:
   kubeblocks_operator:
     type: '@facets/kubeblocks-operator'

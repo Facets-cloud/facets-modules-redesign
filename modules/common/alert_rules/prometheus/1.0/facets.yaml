@@ -6,6 +6,7 @@ intentDetails:
   type: monitoring
   description: Define custom Prometheus alerting rules for any service or application
   displayName: Alert Rules
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/alert_rules.svg
 clouds:
   - kubernetes
   - aws

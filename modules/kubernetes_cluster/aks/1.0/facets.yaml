@@ -9,7 +9,8 @@ description: A Kubernetes AKS cluster module with auto-upgrade enabled by defaul
 intentDetails:
   type: kubernetes
   description: Azure AKS cluster with auto-upgrade enabled and all necessary configurations preset
-  displayName: AKS
+  displayName: Kubernetes Cluster
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_cluster.svg
 allow_skipping_module_on_selective_release: false
 spec:
   type: object

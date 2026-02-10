@@ -7,6 +7,7 @@ intentDetails:
   type: monitoring
   description: MongoDB monitoring with Prometheus ServiceMonitor and Grafana dashboard
   displayName: MongoDB Monitoring
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/monitoring.svg
 clouds:
 - kubernetes
 - aws

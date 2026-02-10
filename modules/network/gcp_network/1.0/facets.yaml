@@ -5,7 +5,8 @@ description: Creates a GKE-optimized GCP VPC with auto-calculated subnets. Fixed
 intentDetails:
   type: networking
   description: GKE-optimized GCP VPC with auto-calculated subnets and GKE secondary ranges
-  displayName: GCP Network
+  displayName: Network
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/network.svg
 flavor: gcp_network
 iac:
   validated_files:

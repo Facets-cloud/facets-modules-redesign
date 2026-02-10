@@ -7,7 +7,8 @@ description: Creates a Kubernetes-optimized AWS VPC with auto-calculated subnets
 intentDetails:
   type: networking
   description: Kubernetes-optimized AWS VPC with auto-calculated subnets across availability zones
-  displayName: AWS Network
+  displayName: Network
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/network.svg
 clouds:
 - aws
 spec:

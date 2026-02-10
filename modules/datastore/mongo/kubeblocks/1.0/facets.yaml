@@ -12,6 +12,7 @@ intentDetails:
   type: data_storage
   description: KubeBlocks-managed MongoDB database on Kubernetes
   displayName: MongoDB
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mongo.svg
 inputs:
   kubeblocks_operator:
     type: '@facets/kubeblocks-operator'

@@ -7,7 +7,8 @@ description: Creates an Azure Virtual Network with automatically calculated subn
 intentDetails:
   type: networking
   description: Azure Virtual Network with auto-calculated subnets and database delegation support
-  displayName: Azure Network
+  displayName: Network
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/network.svg
 clouds:
 - azure
 inputs:

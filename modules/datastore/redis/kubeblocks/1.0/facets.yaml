@@ -11,6 +11,7 @@ intentDetails:
   type: data_storage
   description: KubeBlocks-managed Redis on Kubernetes
   displayName: Redis
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/redis.svg
 inputs:
   kubeblocks_operator:
     type: '@facets/kubeblocks-operator'

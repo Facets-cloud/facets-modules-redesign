@@ -9,6 +9,7 @@ intentDetails:
   type: data_storage
   description: Google Cloud SQL MySQL managed database
   displayName: MySQL
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mysql.svg
 spec:
   title: MySQL CloudSQL Instance
   description: Managed MySQL database using Google Cloud SQL with automated backups

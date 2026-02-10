@@ -6,6 +6,7 @@ intentDetails:
   type: queue
   description: Google Cloud Pub/Sub for reliable messaging and event streaming
   displayName: Pub/Sub
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/pubsub.svg
 flavor: gcp
 iac:
   validated_files:
