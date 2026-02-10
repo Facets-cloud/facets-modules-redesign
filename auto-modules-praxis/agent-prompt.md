@@ -487,7 +487,7 @@ Triggered when agent receives a PR trigger with fix/task instruction.
 
 ```bash
 git config user.name "facets-automation"
-git config user.email "support@facets.cloud"
+git config user.email "facets-modules-redesign-automation@facets.cloud"
 gh pr checkout $NUMBER -R $REPO
 ```
 
