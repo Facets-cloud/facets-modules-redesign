@@ -40,8 +40,6 @@ resource "aws_security_group_rule" "cluster_primary_sg_ingress" {
   cidr_blocks       = each.value.cidr_blocks
   description       = lookup(each.value, "description", null)
 
-  depends_on = [module.eks]
-
   lifecycle {
     precondition {
       condition     = try(module.eks.cluster_primary_security_group_id, "") != ""
