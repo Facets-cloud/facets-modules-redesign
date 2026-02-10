@@ -30,8 +30,11 @@ raptor import project-type --managed facets/aws
 
 ```bash
 raptor import project-type --managed facets/aws
+```
 
-# With custom name
+With custom name:
+
+```bash
 raptor import project-type --managed facets/aws --name "My Platform"
 ```
 
@@ -73,8 +76,11 @@ raptor import project-type --managed facets/gcp
 
 ```bash
 raptor import project-type --managed facets/gcp
+```
 
-# With custom name
+With custom name:
+
+```bash
 raptor import project-type --managed facets/gcp --name "My Platform"
 ```
 
@@ -116,8 +122,11 @@ raptor import project-type --managed facets/azure
 
 ```bash
 raptor import project-type --managed facets/azure
+```
 
-# With custom name
+With custom name:
+
+```bash
 raptor import project-type --managed facets/azure --name "My Platform"
 ```
 
