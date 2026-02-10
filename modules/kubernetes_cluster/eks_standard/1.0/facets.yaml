@@ -87,7 +87,7 @@ sample:
         cluster_endpoint_private_access: true
         cluster_endpoint_public_access: true
         cluster_version: "1.34"
-        enable_cluster_encryption: false
+        enable_cluster_encryption: true
     version: "1.0"
 spec:
     description: Configure your Amazon EKS cluster with managed node groups
@@ -270,8 +270,13 @@ spec:
             title: Default System Node Pool
             type: object
             x-ui-toggle: true
+        container_insights_enabled:
+            default: true
+            description: Enable CloudWatch Container Insights via the amazon-cloudwatch-observability addon.
+            title: Container Insights
+            type: boolean
         enable_cluster_encryption:
-            default: false
+            default: true
             description: Enable encryption of Kubernetes secrets using AWS KMS
             title: Enable Secrets Encryption
             type: boolean
@@ -343,6 +348,7 @@ spec:
         - cluster_endpoint_public_access
         - cluster_endpoint_private_access
         - enable_cluster_encryption
+        - container_insights_enabled
         - cluster_addons
         - default_node_pool
         - managed_node_groups
