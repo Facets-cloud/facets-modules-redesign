@@ -11,7 +11,7 @@ description: Creates and manages PostgreSQL database clusters using KubeBlocks o
 intentDetails:
   type: data_storage
   description: KubeBlocks-managed PostgreSQL database on Kubernetes
-  displayName: PostgreSQL (KubeBlocks)
+  displayName: PostgreSQL
 inputs:
   kubeblocks_operator:
     type: '@facets/kubeblocks-operator'

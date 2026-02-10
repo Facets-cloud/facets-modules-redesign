@@ -11,7 +11,7 @@ description: Creates and manages MongoDB database clusters using KubeBlocks oper
 intentDetails:
   type: data_storage
   description: KubeBlocks-managed MongoDB database on Kubernetes
-  displayName: MongoDB (KubeBlocks)
+  displayName: MongoDB
 inputs:
   kubeblocks_operator:
     type: '@facets/kubeblocks-operator'

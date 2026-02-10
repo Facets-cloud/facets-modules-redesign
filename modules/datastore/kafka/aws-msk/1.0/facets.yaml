@@ -8,7 +8,7 @@ description: AWS Managed Streaming for Apache Kafka cluster with secure defaults
 intentDetails:
   type: queue
   description: AWS Managed Streaming for Apache Kafka (MSK)
-  displayName: Kafka (MSK)
+  displayName: Kafka
 spec:
   title: AWS MSK Kafka Cluster
   description: AWS Managed Streaming for Apache Kafka cluster with secure defaults

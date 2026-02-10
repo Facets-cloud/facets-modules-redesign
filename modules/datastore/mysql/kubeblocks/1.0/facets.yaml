@@ -11,7 +11,7 @@ description: Creates and manages MySQL database clusters using KubeBlocks operat
 intentDetails:
   type: data_storage
   description: KubeBlocks-managed MySQL database on Kubernetes
-  displayName: MySQL (KubeBlocks)
+  displayName: MySQL
 inputs:
   kubeblocks_operator:
     type: '@facets/kubeblocks-operator'

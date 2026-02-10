@@ -9,7 +9,7 @@ description: Custom Azure Cache for Redis - A fully managed in-memory cache serv
 intentDetails:
   type: data_storage
   description: Azure Cache for Redis managed service
-  displayName: Redis (Azure)
+  displayName: Redis
 spec:
   title: Custom Azure Cache for Redis
   description: Configure Azure Cache for Redis with developer-friendly settings

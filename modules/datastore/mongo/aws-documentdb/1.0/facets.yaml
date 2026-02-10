@@ -7,7 +7,7 @@ description: MongoDB-compatible database using AWS DocumentDB service
 intentDetails:
   type: data_storage
   description: AWS DocumentDB MongoDB-compatible database service
-  displayName: MongoDB (DocumentDB)
+  displayName: MongoDB
 spec:
   title: MongoDB with AWS DocumentDB
   description: MongoDB-compatible database using AWS DocumentDB service

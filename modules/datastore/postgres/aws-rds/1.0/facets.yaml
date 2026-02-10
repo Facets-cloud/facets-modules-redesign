@@ -8,7 +8,7 @@ description: Managed PostgreSQL database using Amazon RDS with secure defaults a
 intentDetails:
   type: data_storage
   description: AWS RDS PostgreSQL managed database service
-  displayName: PostgreSQL (RDS)
+  displayName: PostgreSQL
 spec:
   title: PostgreSQL RDS Database
   description: Managed PostgreSQL database using Amazon RDS with secure defaults and

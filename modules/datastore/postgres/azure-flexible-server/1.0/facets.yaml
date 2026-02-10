@@ -8,7 +8,7 @@ description: A developer-friendly PostgreSQL flexible server with secure default
 intentDetails:
   type: data_storage
   description: Azure Database for PostgreSQL flexible server
-  displayName: PostgreSQL (Azure)
+  displayName: PostgreSQL
 spec:
   title: PostgreSQL Flexible Server on Azure
   description: A developer-friendly PostgreSQL flexible server with secure defaults

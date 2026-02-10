@@ -9,7 +9,7 @@ description: Azure Database for MySQL - Flexible Server with high availability a
 intentDetails:
   type: data_storage
   description: Azure Database for MySQL flexible server
-  displayName: MySQL (Azure)
+  displayName: MySQL
 spec:
   title: Azure MySQL Flexible Server
   description: Azure Database for MySQL - Flexible Server with high availability and

@@ -8,7 +8,7 @@ description: A managed MySQL Aurora cluster with high availability, automated ba
 intentDetails:
   type: data_storage
   description: AWS Aurora MySQL serverless database with automatic scaling
-  displayName: MySQL (Aurora)
+  displayName: MySQL
 spec:
   title: MySQL Aurora Cluster
   description: A managed MySQL Aurora cluster with high availability, automated backups,

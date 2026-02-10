@@ -8,7 +8,7 @@ description: GCP Managed Service for Apache Kafka cluster with secure defaults a
 intentDetails:
   type: queue
   description: GCP Managed Kafka service
-  displayName: Kafka (GCP)
+  displayName: Kafka
 spec:
   title: GCP Managed Kafka Cluster
   description: GCP Managed Service for Apache Kafka cluster with secure defaults and

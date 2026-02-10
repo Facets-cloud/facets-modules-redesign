@@ -8,7 +8,7 @@ description: Managed Redis instance using Google Cloud Memorystore with high ava
 intentDetails:
   type: data_storage
   description: Google Cloud Memorystore for Redis
-  displayName: Redis (Memorystore)
+  displayName: Redis
 spec:
   title: GCP Redis Memorystore
   description: Managed Redis instance using Google Cloud Memorystore with high availability
