@@ -11,7 +11,7 @@ locals {
     node_instance_profile_name = aws_iam_instance_profile.karpenter_node.name
 
     # Interruption handling
-    interruption_queue_name = var.instance.spec.interruption_handling ? aws_sqs_queue.karpenter_interruption[0].name : ""
+    interruption_queue_name = lookup(var.instance.spec, "interruption_handling", false) ? aws_sqs_queue.karpenter_interruption[0].name : ""
 
     helm_release_id = helm_release.karpenter.id
 
