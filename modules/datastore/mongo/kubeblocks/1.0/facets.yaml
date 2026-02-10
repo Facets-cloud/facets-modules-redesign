@@ -11,7 +11,8 @@ description: Creates and manages MongoDB database clusters using KubeBlocks oper
 intentDetails:
   type: data_storage
   description: KubeBlocks-managed MongoDB database on Kubernetes
-  displayName: MongoDB (KubeBlocks)
+  displayName: MongoDB
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mongo.svg
 inputs:
   kubeblocks_operator:
     type: '@facets/kubeblocks-operator'

@@ -8,7 +8,8 @@ description: Managed PostgreSQL database using Google Cloud SQL with secure defa
 intentDetails:
   type: data_storage
   description: Google Cloud SQL PostgreSQL managed database
-  displayName: PostgreSQL (Cloud SQL)
+  displayName: PostgreSQL
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/postgres.svg
 spec:
   title: PostgreSQL CloudSQL Database
   description: Managed PostgreSQL database using Google Cloud SQL with secure defaults

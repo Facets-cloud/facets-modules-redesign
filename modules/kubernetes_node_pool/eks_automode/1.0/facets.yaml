@@ -9,7 +9,8 @@ description: Creates and manages dynamic node pools for EKS Auto Mode clusters w
 intentDetails:
   type: kubernetes
   description: AWS EKS managed node pool with auto-scaling and customizable instance types
-  displayName: AWS Node Pool
+  displayName: Kubernetes Node Pool
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_node_pool.svg
 inputs:
   kubernetes_details:
     type: '@facets/eks'

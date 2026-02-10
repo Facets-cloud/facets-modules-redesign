@@ -6,6 +6,7 @@ intentDetails:
   type: networking
   description: Create and manage NGINX Ingress resources for exposing services
   displayName: Ingress
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/ingress.svg
 clouds:
 - aws
 - azure

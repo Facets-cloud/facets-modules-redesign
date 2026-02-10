@@ -24,25 +24,25 @@
     "cluster_addons": {
       "additional_addons": {},
       "coredns": {
-        "enabled": false,
+        "enabled": true,
         "version": "latest"
       },
       "kube_proxy": {
-        "enabled": false,
+        "enabled": true,
         "version": "latest"
       },
       "vpc_cni": {
-        "enabled": false,
+        "enabled": true,
         "version": "latest"
       }
     },
     "default_node_pool": {
       "capacity_type": "SPOT",
-      "desired_size": 1,
+      "desired_size": 2,
       "disk_size": 50,
       "instance_types": ["t3.medium"],
-      "max_size": 1,
-      "min_size": 1
+      "max_size": 5,
+      "min_size": 2
     },
     "cluster_tags": {}
   },

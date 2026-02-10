@@ -7,7 +7,8 @@ description: |
 intentDetails:
   type: kubernetes
   description: Karpenter-based node provisioning for Kubernetes clusters
-  displayName: Karpenter Node Pool
+  displayName: Kubernetes Node Pool
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_node_pool.svg
 flavor: karpenter
 inputs:
     cloud_account:

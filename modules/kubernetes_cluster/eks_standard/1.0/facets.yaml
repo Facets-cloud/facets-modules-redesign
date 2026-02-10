@@ -6,7 +6,8 @@ description: |
 intentDetails:
   type: kubernetes
   description: AWS EKS cluster with standard configuration and all necessary settings preset
-  displayName: EKS
+  displayName: Kubernetes Cluster
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_cluster.svg
 flavor: eks_standard
 alias-flavors:
   - default

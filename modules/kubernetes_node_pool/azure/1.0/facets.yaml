@@ -5,7 +5,8 @@ description: Custom Azure Kubernetes Service node pool module
 intentDetails:
   type: kubernetes
   description: Azure AKS node pool with auto-scaling and customizable VM sizes
-  displayName: Azure Node Pool
+  displayName: Kubernetes Node Pool
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_node_pool.svg
 clouds:
 - azure
 inputs:

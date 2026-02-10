@@ -9,6 +9,7 @@ intentDetails:
   type: security
   description: GCP Workload Identity for secure pod-to-cloud authentication
   displayName: GCP Workload Identity
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/google_workload_identity.svg
 inputs:
   cloud_account:
     description: The GCP project where Pub/Sub topics will be created

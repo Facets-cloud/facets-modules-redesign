@@ -5,7 +5,8 @@ description: GCP GKE Node Fleet module for provisioning multiple node pools
 intentDetails:
   type: kubernetes
   description: GCP GKE node fleet for managing multiple node pools
-  displayName: GCP Node Fleet
+  displayName: Kubernetes Node Pool
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_node_pool.svg
 clouds:
   - gcp
 inputs:

@@ -8,6 +8,7 @@ intentDetails:
   type: monitoring
   description: Deploy Grafana dashboards as ConfigMaps with auto-discovery labels
   displayName: Grafana Dashboards
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/grafana_dashboards.svg
 flavor: k8s
 inputs:
     kubernetes_details:

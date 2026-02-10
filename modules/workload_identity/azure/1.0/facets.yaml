@@ -10,6 +10,7 @@ intentDetails:
   type: security
   description: Azure Workload Identity for secure pod-to-cloud authentication
   displayName: Azure Workload Identity
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/azure_workload_identity.svg
 inputs:
   cloud_account:
     type: '@facets/azure_cloud_account'

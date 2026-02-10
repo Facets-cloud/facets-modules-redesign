@@ -6,6 +6,7 @@ intentDetails:
   type: kubernetes
   description: Deploy custom Kubernetes resources using YAML manifests
   displayName: K8s Resource
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/k8s_resource.svg
 clouds:
 - aws
 - azure

@@ -7,7 +7,8 @@ description: MongoDB-compatible database using Azure Cosmos DB service
 intentDetails:
   type: data_storage
   description: Azure Cosmos DB with MongoDB API compatibility
-  displayName: MongoDB (Cosmos DB)
+  displayName: MongoDB
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mongo.svg
 spec:
   title: MongoDB with Azure Cosmos DB
   description: MongoDB-compatible database using Azure Cosmos DB service

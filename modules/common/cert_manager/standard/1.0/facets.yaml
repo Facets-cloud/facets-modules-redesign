@@ -6,6 +6,7 @@ intentDetails:
   type: security
   description: Deploys Cert Manager for automated SSL/TLS certificate management in Kubernetes
   displayName: Cert Manager
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cert_manager.svg
 clouds:
   - aws
   - azure

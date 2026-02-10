@@ -9,7 +9,8 @@ description: Azure Database for MySQL - Flexible Server with high availability a
 intentDetails:
   type: data_storage
   description: Azure Database for MySQL flexible server
-  displayName: MySQL (Azure)
+  displayName: MySQL
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mysql.svg
 spec:
   title: Azure MySQL Flexible Server
   description: Azure Database for MySQL - Flexible Server with high availability and
