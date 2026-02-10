@@ -1,6 +1,7 @@
 locals {
   # Core instance spec and platform-provided variables
-  spec = lookup(var.instance, "spec", {})
+  spec     = lookup(var.instance, "spec", {})
+  metadata = lookup(var.instance, "metadata", {})
 
   # Platform-provided variables with fallbacks for validation
   # Get project ID from cloud account input dependency
@@ -21,15 +22,15 @@ locals {
   enable_deployment_actions  = local.enable_actions && local.spec_type == "application" ? 1 : 0
   enable_statefulset_actions = local.enable_actions && local.spec_type == "statefulset" ? 1 : 0
 
-  namespace = lookup(var.instance.metadata, "namespace", null) == null ? var.environment.namespace : var.instance.metadata.namespace
+  namespace = lookup(local.metadata, "namespace", null) == null ? var.environment.namespace : lookup(local.metadata, "namespace", var.environment.namespace)
   annotations = merge(
     local.gcp_annotations,
     length(local.iam_arns) > 0 ? { "iam.gke.io/gcp-service-account" = module.gcp-workload-identity.0.gcp_service_account_email } : {},
-    lookup(var.instance.metadata, "annotations", {}),
+    lookup(local.metadata, "annotations", {}),
     local.enable_alb_backend_config ? { "cloud.google.com/backend-config" = "{\"default\": \"${lower(var.instance_name)}\"}" } : {}
   )
   roles                     = { for key, val in local.iam_arns : val.role => { role = val.role, condition = lookup(val, "condition", {}) } }
-  labels                    = lookup(var.instance.metadata, "labels", {})
+  labels                    = lookup(local.metadata, "labels", {})
   backend_config            = lookup(local.gcp_advanced_config, "backend_config", {})
   enable_alb_backend_config = lookup(local.backend_config, "enabled", false)
   runtime                   = lookup(local.spec, "runtime", {})
