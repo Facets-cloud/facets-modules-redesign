@@ -22,6 +22,10 @@ inputs:
     description: The EKS cluster where the crds be created
     displayName: EKS Cluster
     optional: false
+    providers:
+      - helm
+      - kubernetes
+      - kubernetes-alpha
     type: "@facets/eks"
   network_details:
     default:
