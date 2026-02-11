@@ -66,6 +66,17 @@ properties:
               type: string
             host:
               type: string
+            kubernetes_provider_exec:
+              type: object
+              properties:
+                api_version:
+                  type: string
+                args:
+                  type: array
+                  items:
+                    type: string
+                command:
+                  type: string
             secrets:
               type: string
 providers: []

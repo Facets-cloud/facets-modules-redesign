@@ -293,13 +293,12 @@ inputs:
     - azapi
 outputs:
   default:
+    type: '@facets/azure_aks'
+    title: AKS Cluster Attributes
+    description: Additional AKS cluster attributes without provider configuration
+  attributes:
     type: '@facets/kubernetes-details'
     title: Kubernetes Cluster Output
-    description: The output for the Kubernetes cluster
-  attributes:
-    type: '@facets/azure_aks'
-    title: Kubernetes Cluster Output
-    description: The output for the Kubernetes cluster
     providers:
       kubernetes:
         source: hashicorp/kubernetes

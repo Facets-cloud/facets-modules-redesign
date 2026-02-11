@@ -57,6 +57,38 @@ cd icons && python3 -m http.server 8765
 #   http://localhost:8765/wiring.html  - Attribute-level wiring explorer (inputs/outputs/types/attributes)
 ```
 
+## Provider-Exposing Module Output Convention
+
+Modules that expose Terraform providers with cloud-specific implementations (e.g., `kubernetes_cluster`) **must** follow this output structure:
+
+| Output Key | Type | Providers | Purpose |
+|------------|------|-----------|---------|
+| `default` | Cloud-specific (e.g., `@facets/eks`, `@facets/gke`, `@facets/azure_aks`) | None | All cloud-specific attributes (OIDC, node roles, ARNs, etc.) |
+| `attributes` | Generic (e.g., `@facets/kubernetes-details`) | Yes (kubernetes, helm, etc.) | Common attributes + provider configuration |
+
+**Why:** Consuming modules that only need kubernetes/helm providers wire to the generic type (`@facets/kubernetes-details`), making them cloud-agnostic. Modules needing cloud-specific details (OIDC provider ARN, node IAM role) wire to the cloud-specific default type.
+
+**Example (kubernetes_cluster):**
+```yaml
+outputs:
+  default:
+    type: '@facets/eks'                    # Cloud-specific, NO providers
+    title: EKS Cluster Attributes
+  attributes:
+    type: '@facets/kubernetes-details'     # Generic, WITH providers
+    title: Kubernetes Cluster Output
+    providers:
+      kubernetes:
+        source: hashicorp/kubernetes
+        version: 2.38.0
+        attributes:
+          host: attributes.cluster_endpoint
+          cluster_ca_certificate: attributes.cluster_ca_certificate
+          ...
+```
+
+**Applies to:** `kubernetes_cluster/*`, and any future intent where multiple cloud flavors expose a common provider set.
+
 ## Behavior Guidelines
 
 - **NEVER** auto-skip validation - always report issues to user

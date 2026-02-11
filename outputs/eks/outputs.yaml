@@ -13,11 +13,17 @@ properties:
           type: string
         cluster_endpoint:
           type: string
+        cluster_iam_role_arn:
+          type: string
         cluster_id:
           type: string
         cluster_name:
           type: string
         cluster_location:
+          type: string
+        cluster_primary_security_group_id:
+          type: string
+        cluster_security_group_id:
           type: string
         cluster_version:
           type: string
