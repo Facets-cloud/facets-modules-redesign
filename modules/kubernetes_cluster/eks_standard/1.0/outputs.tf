@@ -16,6 +16,7 @@ locals {
     cluster_primary_security_group_id = module.eks.cluster_primary_security_group_id
     cluster_security_group_id         = module.eks.cluster_security_group_id
     cloud_provider                    = "AWS"
+    cluster_location                  = var.inputs.cloud_account.attributes.aws_region
     kubernetes_provider_exec = {
       api_version = "client.authentication.k8s.io/v1beta1"
       command     = "bash"
