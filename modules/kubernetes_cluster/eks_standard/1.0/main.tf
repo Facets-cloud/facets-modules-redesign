@@ -152,7 +152,7 @@ locals {
   container_insights_enabled = lookup(var.instance.spec, "container_insights_enabled", true)
 
   # KMS key for secrets encryption (only if enabled)
-  enable_kms_key = lookup(var.instance.spec, "enable_cluster_encryption", true)
+  enable_kms_key = lookup(var.instance.spec, "enable_cluster_encryption", false)
 }
 
 # KMS key for EKS secrets encryption (conditional)
@@ -191,8 +191,8 @@ module "eks" {
   cluster_endpoint_public_access  = lookup(var.instance.spec, "cluster_endpoint_public_access", true)
   cluster_endpoint_private_access = lookup(var.instance.spec, "cluster_endpoint_private_access", true)
 
-  # Control plane logging - all 5 log types enabled by default
-  cluster_enabled_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+  # Control plane logging - all 5 log types enabled by default, user-configurable
+  cluster_enabled_log_types = lookup(var.instance.spec, "enabled_log_types", ["api", "audit", "authenticator", "controllerManager", "scheduler"])
 
   # Secrets encryption configuration
   cluster_encryption_config = local.enable_kms_key ? {

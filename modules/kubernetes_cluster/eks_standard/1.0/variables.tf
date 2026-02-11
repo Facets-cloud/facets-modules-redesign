@@ -7,7 +7,7 @@ variable "instance" {
       cluster_version                 = string
       cluster_endpoint_public_access  = optional(bool, true)
       cluster_endpoint_private_access = optional(bool, true)
-      enable_cluster_encryption       = optional(bool, true)
+      enable_cluster_encryption       = optional(bool, false)
 
       cluster_addons = optional(object({
         vpc_cni = optional(object({
@@ -45,7 +45,9 @@ variable "instance" {
         taints         = optional(map(string), {})
       })), {})
 
-      container_insights_enabled = optional(bool, true)
+      container_insights_enabled = optional(bool, false)
+
+      enabled_log_types = optional(list(string), ["api", "audit", "authenticator", "controllerManager", "scheduler"])
 
       cluster_tags = optional(map(string), {})
     })
@@ -54,6 +56,17 @@ variable "instance" {
   validation {
     condition     = contains(["1.28", "1.29", "1.30", "1.31", "1.32", "1.33", "1.34", "1.35", "1.36", "1.37"], var.instance.spec.cluster_version)
     error_message = "Kubernetes version must be one of: 1.28, 1.29, 1.30, 1.31, 1.32, 1.33, 1.34, 1.35, 1.36, 1.37"
+  }
+
+  validation {
+    condition = (
+      var.instance.spec.enabled_log_types == null ||
+      alltrue([
+        for log_type in var.instance.spec.enabled_log_types :
+        contains(["api", "audit", "authenticator", "controllerManager", "scheduler"], log_type)
+      ])
+    )
+    error_message = "enabled_log_types must be from: api, audit, authenticator, controllerManager, scheduler."
   }
 }
 

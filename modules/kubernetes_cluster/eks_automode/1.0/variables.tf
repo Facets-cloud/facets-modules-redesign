@@ -10,8 +10,9 @@ variable "instance" {
         cloudwatch = optional(object({
           log_group_retention_in_days  = optional(number, 90)
           enabled_log_types            = optional(list(string), ["api", "audit", "authenticator", "controllerManager", "scheduler"])
-          container_insights_enabled   = optional(bool, true)
+          container_insights_enabled   = optional(bool, false)
         }), {})
+        enable_cluster_encryption = optional(bool, false)
         cluster_addons = optional(map(object({
           name                        = string
           enabled                     = optional(bool, true)

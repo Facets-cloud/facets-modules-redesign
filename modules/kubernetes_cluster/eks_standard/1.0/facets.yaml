@@ -87,7 +87,7 @@ sample:
         cluster_endpoint_private_access: true
         cluster_endpoint_public_access: true
         cluster_version: "1.34"
-        enable_cluster_encryption: true
+        enable_cluster_encryption: false
     version: "1.0"
 spec:
     description: Configure your Amazon EKS cluster with managed node groups
@@ -271,15 +271,38 @@ spec:
             type: object
             x-ui-toggle: true
         container_insights_enabled:
-            default: true
-            description: Enable CloudWatch Container Insights via the amazon-cloudwatch-observability addon.
+            default: false
+            description: Enable CloudWatch Container Insights via the amazon-cloudwatch-observability addon. See CloudWatch pricing for cost details.
             title: Container Insights
             type: boolean
         enable_cluster_encryption:
-            default: true
-            description: Enable encryption of Kubernetes secrets using AWS KMS
-            title: Enable Secrets Encryption
+            default: false
+            description: |
+                Enable encryption with customer-managed KMS keys for compliance and audit requirements.
+
+                Note: EKS 1.28+ automatically encrypts all secrets with AWS-owned keys (free).
+                Enable this only if you need CloudTrail audit logs or compliance (PCI-DSS, HIPAA).
+            title: Use Customer-Managed KMS Key
             type: boolean
+        enabled_log_types:
+            default:
+                - api
+                - audit
+                - authenticator
+                - controllerManager
+                - scheduler
+            description: List of EKS control plane log types to enable. All types enabled by default for security and compliance.
+            items:
+                enum:
+                    - api
+                    - audit
+                    - authenticator
+                    - controllerManager
+                    - scheduler
+                type: string
+            title: Enabled Control Plane Log Types
+            type: array
+            x-ui-overrides-only: true
         managed_node_groups:
             description: Configure managed node groups for the EKS cluster
             patternProperties:
@@ -348,6 +371,7 @@ spec:
         - cluster_endpoint_public_access
         - cluster_endpoint_private_access
         - enable_cluster_encryption
+        - enabled_log_types
         - container_insights_enabled
         - cluster_addons
         - default_node_pool
