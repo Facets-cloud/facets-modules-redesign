@@ -12,7 +12,7 @@ locals {
   cloudwatch_log_group_retention_in_days = lookup(local.cloudwatch_config, "log_group_retention_in_days", 90)
   cluster_endpoint_private_access_cidrs  = lookup(local.cluster, "cluster_endpoint_private_access_cidrs", [])
   cluster_service_ipv4_cidr              = lookup(local.cluster, "cluster_service_ipv4_cidr", null)
-  container_insights_enabled             = lookup(local.cloudwatch_config, "container_insights_enabled", true)
+  container_insights_enabled             = lookup(local.cloudwatch_config, "container_insights_enabled", false)
   cluster_addons                         = lookup(local.cluster, "cluster_addons", {})
   cloud_tags                             = var.environment.cloud_tags
   default_addons = local.container_insights_enabled ? {

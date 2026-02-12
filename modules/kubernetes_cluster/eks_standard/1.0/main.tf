@@ -149,10 +149,10 @@ locals {
   }
 
   # Container Insights
-  container_insights_enabled = lookup(var.instance.spec, "container_insights_enabled", true)
+  container_insights_enabled = lookup(var.instance.spec, "container_insights_enabled", false)
 
   # KMS key for secrets encryption (only if enabled)
-  enable_kms_key = lookup(var.instance.spec, "enable_cluster_encryption", false)
+  enable_kms_key = lookup(var.instance.spec, "enable_cluster_encryption", true)
 }
 
 # KMS key for EKS secrets encryption (conditional)

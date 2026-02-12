@@ -12,7 +12,7 @@ variable "instance" {
           enabled_log_types            = optional(list(string), ["api", "audit", "authenticator", "controllerManager", "scheduler"])
           container_insights_enabled   = optional(bool, false)
         }), {})
-        enable_cluster_encryption = optional(bool, false)
+        enable_cluster_encryption = optional(bool, true)
         cluster_addons = optional(map(object({
           name                        = string
           enabled                     = optional(bool, true)
