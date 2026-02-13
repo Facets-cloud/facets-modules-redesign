@@ -23,7 +23,7 @@ data "external" "artifactory_fetcher" {
 locals {
   name               = lookup(local.metadata, "name", var.instance_name)
   namespace          = lookup(local.metadata, "namespace", lookup(var.environment, "namespace", "default"))
-  kubernetes_details = var.inputs.kubernetes_details.attributes
+  kubernetes_details = var.inputs.kubernetes_details
 
   # Node pool configuration
   kubernetes_node_pool_details = lookup(var.inputs, "kubernetes_node_pool_details", {})

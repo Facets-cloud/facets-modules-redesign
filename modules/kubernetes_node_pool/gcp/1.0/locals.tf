@@ -13,9 +13,8 @@ locals {
 
   # Management settings from spec
   auto_repair = lookup(lookup(local.spec, "management", {}), "auto_repair", true)
-  # auto_upgrade follows cluster auto_upgrade setting - access directly from kubernetes_details
-  kubernetes_attributes = var.inputs.kubernetes_details
-  auto_upgrade          = lookup(local.kubernetes_attributes, "auto_upgrade", false)
+  # auto_upgrade follows cluster auto_upgrade setting
+  auto_upgrade = var.inputs.kubernetes_details.attributes.auto_upgrade
 
   # Network configuration
   pod_ip_range_name = lookup(var.inputs.network_details.attributes, "gke_pods_range_name", "")
