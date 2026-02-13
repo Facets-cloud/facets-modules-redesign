@@ -16,11 +16,11 @@ variable "instance_name" {
 variable "environment" {
   description = "An object containing details about the environment."
   type = object({
-    name        = string
-    unique_name = string
-    namespace   = optional(string)
-    cloud       = optional(string)
-    cluster_id  = optional(string)
+    name           = string
+    unique_name    = string
+    namespace      = optional(string)
+    cloud          = optional(string)
+    environment_id = optional(string)
   })
 }
 
