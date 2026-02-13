@@ -1,0 +1,49 @@
+name: '@facets/s3_bucket'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        bucket_name:
+          description: S3 bucket name
+          type: string
+        bucket_arn:
+          description: S3 bucket ARN
+          type: string
+        region:
+          description: AWS region where bucket is located
+          type: string
+        bucket_domain_name:
+          description: S3 bucket domain name
+          type: string
+        bucket_regional_domain_name:
+          description: S3 bucket regional domain name
+          type: string
+        readonly_policy_arn:
+          description: IAM policy ARN for read-only access
+          type: string
+        readwrite_policy_arn:
+          description: IAM policy ARN for read-write access
+          type: string
+        readonly_policy_name:
+          description: IAM policy name for read-only access
+          type: string
+        readwrite_policy_name:
+          description: IAM policy name for read-write access
+          type: string
+    interfaces:
+      type: object
+      properties:
+        bucket:
+          type: object
+          properties:
+            name:
+              description: Bucket name
+              type: string
+            arn:
+              description: Bucket ARN
+              type: string
+            region:
+              description: AWS region
+              type: string

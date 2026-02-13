@@ -1,0 +1,213 @@
+intent: sqs_queue
+flavor: standard
+version: '1.0'
+description: AWS SQS queue with optional FIFO support, dead letter queue, and encryption
+intentDetails:
+  type: Messaging
+  description: AWS Simple Queue Service for reliable message queuing
+  displayName: SQS Queue
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/sqs-queue.svg
+clouds:
+- aws
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: Cloud Account
+    description: The AWS Cloud Account for SQS queue deployment
+    optional: false
+    providers:
+    - aws
+outputs:
+  default:
+    type: '@facets/sqs_queue'
+    title: SQS Queue Details
+spec:
+  description: Configure SQS queue with encryption, dead letter queue, and access policies
+  type: object
+  title: SQS Queue Configuration
+  x-ui-order:
+  - import_existing
+  - imports
+  - queue_config
+  - dlq_config
+  - encryption_config
+  - tags
+  properties:
+    import_existing:
+      type: boolean
+      title: Import Existing SQS Queue
+      description: Set to true to import an existing SQS queue
+      default: false
+    imports:
+      type: object
+      title: Import Existing Queue
+      description: Provide queue name and ARN of existing SQS queue to import
+      x-ui-visible-if:
+        field: spec.import_existing
+        values:
+        - true
+      properties:
+        queue_name:
+          type: string
+          title: Existing Queue Name
+          description: Name of the existing SQS queue (must match the queue to import)
+          x-ui-placeholder: my-existing-queue
+        queue_arn:
+          type: string
+          title: Queue ARN
+          description: ARN of the existing SQS queue
+          pattern: ^arn:aws:sqs:[a-z0-9-]+:[0-9]+:.+$
+          x-ui-placeholder: arn:aws:sqs:us-east-1:123456789012:my-queue
+        dlq_queue_name:
+          type: string
+          title: Existing DLQ Name (Optional)
+          description: Name of the existing dead letter queue if DLQ is enabled
+          x-ui-placeholder: my-existing-queue-dlq
+        dlq_queue_arn:
+          type: string
+          title: DLQ ARN (Optional)
+          description: ARN of the existing dead letter queue
+          pattern: ^arn:aws:sqs:[a-z0-9-]+:[0-9]+:.+$
+          x-ui-placeholder: arn:aws:sqs:us-east-1:123456789012:my-queue-dlq
+      required:
+      - queue_name
+      - queue_arn
+    queue_config:
+      type: object
+      title: Queue Configuration
+      description: Core queue settings
+      properties:
+        fifo_queue:
+          type: boolean
+          title: FIFO Queue
+          description: Enable FIFO (First-In-First-Out) queue for strict ordering
+          default: false
+        content_based_deduplication:
+          type: boolean
+          title: Content-Based Deduplication
+          description: Enable content-based deduplication (FIFO queues only)
+          default: false
+          x-ui-visible-if:
+            field: spec.queue_config.fifo_queue
+            values:
+            - true
+        visibility_timeout_seconds:
+          type: integer
+          title: Visibility Timeout (seconds)
+          description: Time a message is hidden after being received
+          default: 30
+          minimum: 0
+          maximum: 43200
+        message_retention_seconds:
+          type: integer
+          title: Message Retention (seconds)
+          description: How long messages are retained in the queue
+          default: 345600
+          minimum: 60
+          maximum: 1209600
+        max_message_size:
+          type: integer
+          title: Max Message Size (bytes)
+          description: Maximum size of a message in bytes
+          default: 262144
+          minimum: 1024
+          maximum: 262144
+        delay_seconds:
+          type: integer
+          title: Delivery Delay (seconds)
+          description: Time to delay message delivery to consumers
+          default: 0
+          minimum: 0
+          maximum: 900
+        receive_wait_time_seconds:
+          type: integer
+          title: Receive Wait Time (seconds)
+          description: Long polling wait time for ReceiveMessage calls
+          default: 0
+          minimum: 0
+          maximum: 20
+    dlq_config:
+      type: object
+      title: Dead Letter Queue Configuration
+      description: Configure dead letter queue for failed message processing
+      properties:
+        enable_dlq:
+          type: boolean
+          title: Enable Dead Letter Queue
+          description: Create a separate DLQ for messages that fail processing
+          default: false
+        max_receive_count:
+          type: integer
+          title: Max Receive Count
+          description: Number of times a message can be received before moving to DLQ
+          default: 3
+          minimum: 1
+          maximum: 1000
+          x-ui-visible-if:
+            field: spec.dlq_config.enable_dlq
+            values:
+            - true
+    encryption_config:
+      type: object
+      title: Encryption Configuration
+      description: Server-side encryption settings
+      properties:
+        enable_encryption:
+          type: boolean
+          title: Enable Encryption
+          description: Enable server-side encryption (recommended)
+          default: true
+        kms_key_id:
+          type: string
+          title: KMS Key ID (Optional)
+          description: Custom KMS key ARN for encryption (uses AWS managed key if not provided)
+          x-ui-visible-if:
+            field: spec.encryption_config.enable_encryption
+            values:
+            - true
+          x-ui-placeholder: arn:aws:kms:region:account:key/key-id
+        kms_data_key_reuse_period_seconds:
+          type: integer
+          title: KMS Data Key Reuse Period (seconds)
+          description: How long to reuse data keys for encryption
+          default: 300
+          minimum: 60
+          maximum: 86400
+          x-ui-visible-if:
+            field: spec.encryption_config.enable_encryption
+            values:
+            - true
+    tags:
+      type: object
+      title: Additional Tags
+      description: Additional tags to apply to the queue (key-value pairs)
+      x-ui-yaml-editor: true
+  required: []
+imports:
+- name: main_queue
+  required: false
+  resource_address: aws_sqs_queue.main
+- name: dlq_queue
+  required: false
+  resource_address: aws_sqs_queue.dlq[0]
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+sample:
+  version: '1.0'
+  flavor: standard
+  kind: sqs_queue
+  disabled: true
+  spec:
+    import_existing: false
+    queue_config:
+      fifo_queue: false
+      visibility_timeout_seconds: 30
+      message_retention_seconds: 345600
+      receive_wait_time_seconds: 0
+    dlq_config:
+      enable_dlq: false
+    encryption_config:
+      enable_encryption: true

@@ -1,0 +1,159 @@
+intent: sns_topic
+flavor: standard
+version: '1.0'
+description: AWS SNS topic with optional FIFO support, dead letter queue, and encryption
+intentDetails:
+  type: Messaging
+  description: AWS Simple Notification Service for pub/sub messaging
+  displayName: SNS Topic
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/sns-topic.svg
+clouds:
+- aws
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: Cloud Account
+    description: The AWS Cloud Account for SNS topic deployment
+    optional: false
+    providers:
+    - aws
+outputs:
+  default:
+    type: '@facets/sns_topic'
+    title: SNS Topic Details
+spec:
+  description: Configure SNS topic with encryption, dead letter queue for failed deliveries, and access policies
+  type: object
+  title: SNS Topic Configuration
+  x-ui-order:
+  - import_existing
+  - imports
+  - topic_config
+  - dlq_config
+  - encryption_config
+  - tags
+  properties:
+    import_existing:
+      type: boolean
+      title: Import Existing SNS Topic
+      description: Set to true to import an existing SNS topic
+      default: false
+    imports:
+      type: object
+      title: Import Existing Topic
+      description: Provide topic name and ARN of existing SNS topic to import
+      x-ui-visible-if:
+        field: spec.import_existing
+        values:
+        - true
+      properties:
+        topic_name:
+          type: string
+          title: Existing Topic Name
+          description: Name of the existing SNS topic (must match the topic to import)
+          x-ui-placeholder: my-existing-topic
+        topic_arn:
+          type: string
+          title: Topic ARN
+          description: ARN of the existing SNS topic
+          pattern: ^arn:aws:sns:[a-z0-9-]+:[0-9]+:.+$
+          x-ui-placeholder: arn:aws:sns:us-east-1:123456789012:my-topic
+        dlq_queue_name:
+          type: string
+          title: Existing DLQ Name (Optional)
+          description: Name of the existing dead letter queue if DLQ is enabled
+          x-ui-placeholder: my-existing-topic-dlq
+        dlq_queue_arn:
+          type: string
+          title: DLQ ARN (Optional)
+          description: ARN of the existing dead letter queue
+          pattern: ^arn:aws:sqs:[a-z0-9-]+:[0-9]+:.+$
+          x-ui-placeholder: arn:aws:sqs:us-east-1:123456789012:my-topic-dlq
+      required:
+      - topic_name
+      - topic_arn
+    topic_config:
+      type: object
+      title: Topic Configuration
+      description: Core topic settings
+      properties:
+        fifo_topic:
+          type: boolean
+          title: FIFO Topic
+          description: Enable FIFO (First-In-First-Out) topic for strict ordering
+          default: false
+        content_based_deduplication:
+          type: boolean
+          title: Content-Based Deduplication
+          description: Enable content-based deduplication (FIFO topics only)
+          default: false
+          x-ui-visible-if:
+            field: spec.topic_config.fifo_topic
+            values:
+            - true
+        display_name:
+          type: string
+          title: Display Name
+          description: Human-readable display name for the topic (optional)
+          maxLength: 100
+          x-ui-placeholder: My SNS Topic
+    dlq_config:
+      type: object
+      title: Dead Letter Queue Configuration
+      description: Configure dead letter queue for failed message deliveries
+      properties:
+        enable_dlq:
+          type: boolean
+          title: Enable Dead Letter Queue
+          description: Create an SQS DLQ for messages that fail delivery to subscriptions
+          default: false
+    encryption_config:
+      type: object
+      title: Encryption Configuration
+      description: Server-side encryption settings
+      properties:
+        enable_encryption:
+          type: boolean
+          title: Enable Encryption
+          description: Enable server-side encryption (recommended)
+          default: true
+        kms_key_id:
+          type: string
+          title: KMS Key ID (Optional)
+          description: Custom KMS key ARN for encryption (uses AWS managed key if not provided)
+          x-ui-visible-if:
+            field: spec.encryption_config.enable_encryption
+            values:
+            - true
+          x-ui-placeholder: arn:aws:kms:region:account:key/key-id
+    tags:
+      type: object
+      title: Additional Tags
+      description: Additional tags to apply to the topic (key-value pairs)
+      x-ui-yaml-editor: true
+  required: []
+imports:
+- name: sns_topic
+  required: false
+  resource_address: aws_sns_topic.main
+- name: dlq_queue
+  required: false
+  resource_address: aws_sqs_queue.dlq[0]
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+sample:
+  version: '1.0'
+  flavor: standard
+  kind: sns_topic
+  disabled: true
+  spec:
+    import_existing: false
+    topic_config:
+      fifo_topic: false
+    dlq_config:
+      enable_dlq: false
+    encryption_config:
+      enable_encryption: true

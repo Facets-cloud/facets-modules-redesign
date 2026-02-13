@@ -1,0 +1,275 @@
+intent: s3_bucket
+flavor: standard
+version: '1.0'
+description: AWS S3 bucket with encryption, versioning, and lifecycle management
+intentDetails:
+  type: Storage
+  description: AWS S3 Object Storage for scalable data storage
+  displayName: S3 Bucket
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/s3-bucket.svg
+clouds:
+- aws
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: Cloud Account
+    description: The AWS Cloud Account for S3 bucket deployment
+    optional: false
+    providers:
+    - aws
+outputs:
+  default:
+    type: '@facets/s3_bucket'
+    title: S3 Bucket Details
+spec:
+  description: Configure S3 bucket with encryption, versioning, lifecycle, and access controls
+  type: object
+  title: S3 Bucket
+  x-ui-order:
+  - import_existing
+  - imports
+  - encryption_enabled
+  - kms_key_id
+  - bucket_key_enabled
+  - versioning_enabled
+  - block_public_acls
+  - block_public_policy
+  - ignore_public_acls
+  - restrict_public_buckets
+  - lifecycle_rules
+  - cors_rules
+  - bucket_policy_json
+  - tags
+  - force_destroy
+  properties:
+    block_public_acls:
+      type: boolean
+      title: Block Public ACLs
+      description: Block public access granted through new/existing ACLs
+      default: true
+    block_public_policy:
+      type: boolean
+      title: Block Public Bucket Policies
+      description: Block public access granted through bucket policies
+      default: true
+    bucket_key_enabled:
+      type: boolean
+      title: Enable S3 Bucket Key
+      description: Reduce KMS costs by using bucket keys (only applies with KMS encryption)
+      default: true
+    bucket_policy_json:
+      type: string
+      title: Bucket Policy JSON
+      description: Custom bucket policy in JSON format (optional)
+      x-ui-yaml-editor: true
+    cors_rules:
+      type: array
+      title: CORS Rules
+      description: Cross-Origin Resource Sharing configuration
+      x-ui-overrides-only: true
+      items:
+        type: object
+        properties:
+          allowed_headers:
+            type: array
+            title: Allowed Headers
+            description: Headers allowed in preflight requests
+            x-ui-overrides-only: true
+            items:
+              type: string
+          allowed_methods:
+            type: array
+            title: Allowed HTTP Methods
+            x-ui-overrides-only: true
+            items:
+              type: string
+              enum:
+              - GET
+              - PUT
+              - POST
+              - DELETE
+              - HEAD
+          allowed_origins:
+            type: array
+            title: Allowed Origins
+            description: List of origins allowed to make requests
+            x-ui-overrides-only: true
+            items:
+              type: string
+          expose_headers:
+            type: array
+            title: Expose Headers
+            description: Headers exposed to the browser
+            x-ui-overrides-only: true
+            items:
+              type: string
+          max_age_seconds:
+            type: integer
+            title: Max Age (seconds)
+            description: Time browser caches preflight response
+            default: 3600
+    encryption_enabled:
+      type: boolean
+      title: Enable Server-Side Encryption
+      description: Enable SSE-S3 encryption for bucket (recommended)
+      default: true
+    force_destroy:
+      type: boolean
+      title: Force Destroy
+      description: Allow bucket deletion even with objects (USE WITH CAUTION - recommended false for production)
+      default: false
+    ignore_public_acls:
+      type: boolean
+      title: Ignore Public ACLs
+      description: Ignore all public ACLs on this bucket and objects
+      default: true
+    import_existing:
+      type: boolean
+      title: Import Existing S3 Bucket
+      description: Set to true to import an existing S3 bucket and its configurations
+      default: false
+    imports:
+      type: object
+      title: Import Existing Bucket
+      description: Provide bucket name and ARN of existing S3 bucket to import
+      x-ui-visible-if:
+        field: spec.import_existing
+        values:
+        - true
+      properties:
+        bucket_name:
+          type: string
+          title: Existing Bucket Name
+          description: Name of the existing S3 bucket (must match the bucket to import)
+          pattern: ^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$
+          x-ui-placeholder: my-existing-bucket
+        bucket_arn:
+          type: string
+          title: Bucket ARN
+          description: ARN of the existing S3 bucket
+          pattern: ^arn:aws:s3:::[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$
+          x-ui-placeholder: arn:aws:s3:::my-existing-bucket
+      required:
+      - bucket_name
+    kms_key_id:
+      type: string
+      title: KMS Key ID
+      description: Custom KMS key ARN for SSE-KMS encryption (optional, uses SSE-S3 if not provided)
+      x-ui-visible-if:
+        field: spec.encryption_enabled
+        values:
+        - true
+    lifecycle_rules:
+      type: array
+      title: Lifecycle Rules
+      description: Configure lifecycle rules for object transitions and expiration
+      x-ui-overrides-only: true
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            title: Rule ID
+            description: Unique identifier for this rule
+          enabled:
+            type: boolean
+            title: Enable Rule
+            default: true
+          prefix:
+            type: string
+            title: Object Key Prefix
+            description: Prefix filter for objects (optional, applies to all if not specified)
+          transitions:
+            type: array
+            title: Storage Class Transitions
+            description: Transition objects to different storage classes
+            x-ui-overrides-only: true
+            items:
+              type: object
+              properties:
+                days:
+                  type: integer
+                  title: Days After Creation
+                  description: Number of days after object creation
+                  minimum: 0
+                storage_class:
+                  type: string
+                  title: Target Storage Class
+                  enum:
+                  - STANDARD_IA
+                  - INTELLIGENT_TIERING
+                  - GLACIER_IR
+                  - GLACIER
+                  - DEEP_ARCHIVE
+          expiration_days:
+            type: integer
+            title: Expiration Days
+            description: Delete objects after this many days (optional)
+            minimum: 1
+          noncurrent_version_expiration_days:
+            type: integer
+            title: Noncurrent Version Expiration
+            description: Delete noncurrent versions after this many days (for versioned buckets)
+            minimum: 1
+          abort_incomplete_multipart_days:
+            type: integer
+            title: Abort Incomplete Multipart Upload
+            description: Abort incomplete multipart uploads after this many days
+            default: 7
+            minimum: 1
+    restrict_public_buckets:
+      type: boolean
+      title: Restrict Public Bucket Policies
+      description: Restrict access to buckets with public policies to AWS services and authorized users
+      default: true
+    tags:
+      type: object
+      title: Additional Tags
+      description: Additional tags to apply to the bucket (key-value pairs)
+      x-ui-yaml-editor: true
+    versioning_enabled:
+      type: boolean
+      title: Enable Versioning
+      description: Enable versioning to preserve all versions of objects
+      default: false
+  required: []
+imports:
+- name: s3_bucket
+  required: false
+  resource_address: aws_s3_bucket.main
+- name: bucket_versioning
+  required: false
+  resource_address: aws_s3_bucket_versioning.main
+- name: bucket_encryption
+  required: false
+  resource_address: aws_s3_bucket_server_side_encryption_configuration.main[0]
+- name: bucket_public_access_block
+  required: false
+  resource_address: aws_s3_bucket_public_access_block.main
+- name: bucket_lifecycle
+  required: false
+  resource_address: aws_s3_bucket_lifecycle_configuration.main[0]
+- name: bucket_cors
+  required: false
+  resource_address: aws_s3_bucket_cors_configuration.main[0]
+- name: bucket_policy
+  required: false
+  resource_address: aws_s3_bucket_policy.main[0]
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+sample:
+  version: '1.0'
+  flavor: standard
+  kind: s3_bucket
+  disabled: true
+  spec:
+    block_public_acls: true
+    block_public_policy: true
+    encryption_enabled: true
+    ignore_public_acls: true
+    import_existing: false
+    restrict_public_buckets: true
+    versioning_enabled: false
