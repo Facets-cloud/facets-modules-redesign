@@ -8,9 +8,11 @@ variable "instance" {
         cluster_endpoint_private_access_cidrs = optional(list(string), [])
         cluster_service_ipv4_cidr             = optional(string)
         cloudwatch = optional(object({
-          log_group_retention_in_days = optional(number, 90)
-          enabled_log_types           = optional(list(string), ["api", "audit", "authenticator"])
+          log_group_retention_in_days  = optional(number, 90)
+          enabled_log_types            = optional(list(string), ["api", "audit", "authenticator", "controllerManager", "scheduler"])
+          container_insights_enabled   = optional(bool, false)
         }), {})
+        enable_cluster_encryption = optional(bool, true)
         cluster_addons = optional(map(object({
           name                        = string
           enabled                     = optional(bool, true)

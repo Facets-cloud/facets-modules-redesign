@@ -117,6 +117,22 @@ spec:
                 - api
                 - audit
                 - authenticator
+                - controllerManager
+                - scheduler
+            container_insights_enabled:
+              type: boolean
+              title: Container Insights
+              description: Enable CloudWatch Container Insights via the amazon-cloudwatch-observability addon. See CloudWatch pricing for cost details.
+              default: false
+        enable_cluster_encryption:
+          type: boolean
+          title: Use Customer-Managed KMS Key
+          description: |
+            Enable encryption with customer-managed KMS keys for compliance and audit requirements.
+
+            Note: EKS Auto Mode automatically encrypts all secrets with AWS-owned keys (free).
+            Enable this only if you need CloudTrail audit logs or compliance (PCI-DSS, HIPAA).
+          default: true
         cluster_addons:
           type: object
           title: EKS Cluster Addons
