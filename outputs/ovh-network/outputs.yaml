@@ -1,0 +1,55 @@
+name: "@facets/ovh-network"
+title: "OVH Network Configuration"
+description: "OVH private network configuration with subnets and gateway details"
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        network_id:
+          type: string
+          description: "OVH private network ID"
+        network_name:
+          type: string
+          description: "OVH private network name"
+        network_cidr:
+          type: string
+          description: "Network CIDR block"
+        openstack_network_id:
+          type: string
+          description: "OpenStack network ID"
+        region:
+          type: string
+          description: "OVH region"
+        project_id:
+          type: string
+          description: "OVH project ID"
+        k8s_subnet_id:
+          type: string
+          description: "Kubernetes subnet ID"
+        k8s_subnet_cidr:
+          type: string
+          description: "Kubernetes subnet CIDR"
+        k8s_gateway_ip:
+          type: string
+          description: "Kubernetes subnet gateway IP"
+        gateway_id:
+          type: string
+          description: "Network gateway ID"
+        db_subnet_id:
+          type: string
+          description: "Database subnet ID"
+        db_subnet_cidr:
+          type: string
+          description: "Database subnet CIDR"
+        lb_subnet_id:
+          type: string
+          description: "Load balancer subnet ID"
+        lb_subnet_cidr:
+          type: string
+          description: "Load balancer subnet CIDR"
+    interfaces:
+      type: object
+      properties: {}
+providers: []

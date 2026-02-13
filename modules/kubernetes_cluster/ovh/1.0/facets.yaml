@@ -1,0 +1,133 @@
+intent: kubernetes_cluster
+flavor: ovh
+version: '1.0'
+clouds:
+- kubernetes
+description: Creates and manages an OVH Managed Kubernetes Service (MKS) cluster with
+  default node pool, exposing Kubernetes and Helm providers
+intentDetails:
+  type: Cloud & Infrastructure
+  description: OVH Managed Kubernetes cluster with default node pool and provider configuration
+  displayName: Kubernetes Cluster
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_cluster.svg
+spec:
+  title: OVH Managed Kubernetes Cluster
+  description: Configure OVH Managed Kubernetes Service cluster
+  type: object
+  properties:
+    plan:
+      type: string
+      title: Cluster Plan
+      description: MKS cluster plan
+      enum:
+      - free
+      - standard
+      default: free
+    default_node_pool:
+      type: object
+      title: Default Node Pool
+      description: Default node pool configuration
+      x-ui-overrides-only: true
+      properties:
+        flavor_name:
+          type: string
+          title: Instance SKU/Flavor
+          description: OVH instance type
+          enum:
+          - b2-7
+          - b2-15
+          - b2-30
+          - b2-60
+          - b2-120
+          - b3-8
+          - b3-16
+          - b3-32
+          - b3-64
+          - b3-128
+          default: b3-8
+        desired_nodes:
+          type: integer
+          title: Initial Node Count
+          description: Initial number of nodes
+          minimum: 1
+          default: 3
+        max_nodes:
+          type: integer
+          title: Maximum Nodes
+          description: Maximum nodes for autoscaling
+          minimum: 1
+          default: 10
+        autoscale:
+          type: boolean
+          title: Enable Autoscaling
+          description: Enable cluster autoscaler
+          default: true
+        monthly_billed:
+          type: boolean
+          title: Monthly Billing
+          description: Use monthly billing instead of hourly
+          default: false
+      default:
+        flavor_name: b3-8
+        desired_nodes: 3
+        max_nodes: 10
+        autoscale: true
+        monthly_billed: false
+inputs:
+  ovh_provider:
+    type: '@facets/ovh-provider'
+    optional: false
+    displayName: OVH Provider
+    description: OVH provider configuration
+    providers:
+    - ovh
+  network:
+    type: '@facets/ovh-network'
+    optional: false
+    displayName: OVH Network
+    description: Network configuration for the cluster
+    default:
+      resource_type: network
+      resource_name: default
+outputs:
+  default:
+    type: '@facets/ovh-kubernetes'
+    title: OVH Kubernetes Cluster Attributes
+    description: OVH-specific cluster attributes without provider configuration
+  attributes:
+    type: '@facets/kubernetes-details'
+    title: Kubernetes Cluster Output
+    providers:
+      kubernetes:
+        source: hashicorp/kubernetes
+        version: 2.23.0
+        attributes:
+          host: cluster_endpoint
+          cluster_ca_certificate: cluster_ca_certificate
+          client_certificate: client_certificate
+          client_key: client_key
+      helm:
+        source: hashicorp/helm
+        version: 2.11.0
+        attributes:
+          kubernetes:
+            host: cluster_endpoint
+            cluster_ca_certificate: cluster_ca_certificate
+            client_certificate: client_certificate
+            client_key: client_key
+iac:
+  validated_files:
+  - variables.tf
+sample:
+  kind: kubernetes_cluster
+  flavor: ovh
+  version: '1.0'
+  disabled: false
+  spec:
+    plan: free
+    default_node_pool:
+      flavor_name: b3-8
+      desired_nodes: 3
+      max_nodes: 10
+      autoscale: true
+      monthly_billed: false

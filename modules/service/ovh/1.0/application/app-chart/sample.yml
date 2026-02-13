@@ -1,0 +1,37 @@
+metadata:
+  name: "my-app"
+  labels:
+    resourceType: service
+    resourceName: my-app
+spec:
+  type: application
+  config_files:
+    config1:
+      mount_directory: "/etc/nginx"
+      file_name: "application.properties"
+      content: |
+        spring.application.name=my-app
+        server.port=8080
+  release:
+    image: nginx:latest
+    strategy:
+      type: RollingUpdate
+  runtime:
+    volumes:
+      secrets:
+      - name: facets-uptime-certificate
+        mount_path: /etc/mycert
+    size:
+      cpu: 100m
+      memory: 200Mi
+    ports:
+      http:
+        protocol: tcp
+        port: 8080
+
+advanced:
+  common:
+    app_chart:
+      values:
+        enable_service_links: false
+        enable_vpa: false
