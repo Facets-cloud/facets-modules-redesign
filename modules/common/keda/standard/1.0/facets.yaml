@@ -1,0 +1,84 @@
+clouds:
+    - aws
+    - kubernetes
+description: |
+    Deploys KEDA (Kubernetes Event-Driven Autoscaling) via Helm chart.
+    Enables event-driven autoscaling for Kubernetes workloads with support
+    for multiple event sources and scalers.
+flavor: fourkites_keda
+inputs:
+    kubernetes_details:
+        description: Kubernetes cluster for KEDA deployment
+        displayName: Kubernetes Cluster
+        optional: false
+        providers:
+            - kubernetes
+            - helm
+        type: '@facets/kubernetes-details'
+    kubernetes_node_pool_details:
+        description: Node pool for KEDA operator deployment
+        displayName: Node Pool
+        optional: true
+        type: '@facets/kubernetes_nodepool'
+    prometheus_details:
+        description: Prometheus instance for metrics-based scaling integration
+        displayName: Prometheus
+        optional: true
+        type: '@facets/prometheus'
+intent: keda
+outputs:
+    default:
+        mock:
+            attributes:
+                chart_version: mock-string-value
+                namespace: mock-string-value
+                release_name: mock-string-value
+                release_status: mock-string-value
+            interfaces: {}
+        title: KEDA Helm Release
+        type: '@facets/keda'
+sample:
+    disabled: false
+    flavor: fourkites_keda
+    kind: keda
+    spec:
+        chart_version: "2.9.4"
+    version: "1.0"
+spec:
+    description: Configure KEDA event-driven autoscaler
+    properties:
+        chart_version:
+            default: "2.9.4"
+            description: KEDA Helm chart version
+            title: Chart Version
+            type: string
+        size:
+            description: Resource sizing for the KEDA operator. When set, the same value is applied to both requests and limits.
+            properties:
+                cpu:
+                    description: CPU allocation for the KEDA operator
+                    title: CPU
+                    type: string
+                memory:
+                    description: Memory allocation for the KEDA operator
+                    title: Memory
+                    type: string
+            title: Resource Sizing
+            type: object
+            x-ui-order:
+                - cpu
+                - memory
+            x-ui-toggle: true
+        custom_values:
+            default: {}
+            description: Additional Helm values to pass to the KEDA chart (merged last, highest priority)
+            title: Custom Helm Values
+            type: object
+            x-ui-yaml-editor: true
+    title: KEDA Configuration
+    type: object
+    x-ui-order:
+        - chart_version
+        - size
+        - custom_values
+version: "1.0"
