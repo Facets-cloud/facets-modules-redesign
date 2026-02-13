@@ -6,18 +6,12 @@ variable "instance" {
         name = string
       }))
     })
-    metadata = object({
-      name      = optional(string)
-      namespace = optional(string)
-      labels    = optional(map(string))
-    })
   })
   default = {
     spec = {
       include_all   = false
       artifactories = {}
     }
-    metadata = {}
   }
   description = "Instance configuration for the artifactories module"
 }

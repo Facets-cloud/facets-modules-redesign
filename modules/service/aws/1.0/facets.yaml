@@ -57,14 +57,6 @@ inputs:
 outputs:
   default:
     type: '@facets/service'
-metadata:
-  title: Metadata of service
-  type: object
-  properties:
-    namespace:
-      type: string
-      title: Namespace
-      description: Namespace in which service should be deployed
 spec:
   title: AWS Cloud Service
   type: object
@@ -1914,9 +1906,6 @@ spec:
 sample:
   $schema: https://facets-cloud.github.io/facets-schemas/schemas/service/service.schema.json
   flavor: aws
-  metadata:
-    labels:
-      deliveryType: MANUAL
   kind: service
   disabled: true
   version: '1.0'

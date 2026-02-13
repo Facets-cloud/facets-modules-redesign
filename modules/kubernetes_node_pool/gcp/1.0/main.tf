@@ -73,7 +73,7 @@ resource "google_container_node_pool" "node_pool" {
       }
     }
     labels          = local.labels
-    resource_labels = merge(var.environment.cloud_tags, lookup(lookup(var.instance, "metadata", {}), "labels", {}))
+    resource_labels = var.environment.cloud_tags
     # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
     service_account = length(local.iam_roles) > 0 ? google_service_account.sa[0].email : null
     oauth_scopes = [

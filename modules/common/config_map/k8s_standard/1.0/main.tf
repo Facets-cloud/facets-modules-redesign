@@ -1,9 +1,8 @@
 
 locals {
-  metadata        = lookup(var.instance, "metadata", {})
   spec            = lookup(var.instance, "spec", {})
   advanced_config = lookup(lookup(var.instance, "advanced", {}), "k8s", {})
-  namespace       = lookup(local.metadata, "namespace", null) == null ? var.environment.namespace : var.instance.metadata.namespace
+  namespace       = var.environment.namespace
 }
 
 module "facets-configmap" {
@@ -18,8 +17,8 @@ module "facets-configmap" {
     metadata = {
       name        = lower(var.instance_name)
       namespace   = local.namespace
-      annotations = lookup(local.metadata, "annotations", {})
-      labels      = lookup(local.metadata, "labels", {})
+      annotations = {}
+      labels      = {}
     }
     data = {
       for k, v in lookup(local.spec, "data", {}) : v.key => v.value
