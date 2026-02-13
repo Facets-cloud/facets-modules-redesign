@@ -2,7 +2,7 @@ locals {
   # Extract configuration from Facets instance
   spec = var.instance.spec
   # Extract input dependencies
-  kubernetes_details = var.inputs.kubernetes_details
+  kubernetes_details = var.inputs.kubernetes_details.attributes
   network_details    = var.inputs.network_details
   # Extract user configuration with defaults
   # Instance name must follow Kubernetes naming conventions (RFC 1123 DNS subdomain format)
