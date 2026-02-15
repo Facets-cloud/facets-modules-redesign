@@ -11,7 +11,7 @@ resource "helm_release" "keda" {
 
   values = [
     <<VALUES
-prometheus_id: ${local.prometheus_helm_release_id}
+prometheus_id: ${local.prometheus_release_id}
 resources:
   operator:
     limits:

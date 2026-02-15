@@ -12,7 +12,7 @@ locals {
   memory_request = lookup(local.size, "memory", "100m")
 
   # Prometheus details - optional input, extract helm_release_id if available
-  prometheus_helm_release_id = var.inputs.prometheus_details != null ? lookup(
+  prometheus_release_id = var.inputs.prometheus_details != null ? lookup(
     lookup(var.inputs.prometheus_details, "attributes", {}),
     "helm_release_id", ""
   ) : ""
@@ -26,14 +26,4 @@ locals {
   tolerations    = local.nodepool_tolerations
   node_selectors = local.nodepool_labels
 
-  # Output attributes and interfaces
-  output_attributes = {
-    id             = helm_release.keda.id
-    release_name   = helm_release.keda.name
-    namespace      = helm_release.keda.namespace
-    chart_version  = helm_release.keda.version
-    release_status = helm_release.keda.status
-  }
-
-  output_interfaces = {}
 }
