@@ -14,12 +14,12 @@ variable "instance" {
         disk_size          = number
         read_replica_count = number
       })
-      restore_config = object({
+      restore_config = optional(object({
         restore_from_backup = bool
         source_instance_id  = optional(string)
         master_username     = optional(string)
         master_password     = optional(string)
-      })
+      }))
       imports = optional(object({
         import_existing = optional(bool, false)
         instance_name   = optional(string)
@@ -63,7 +63,7 @@ variable "instance" {
   }
 
   validation {
-    condition = !var.instance.spec.restore_config.restore_from_backup || (
+    condition = var.instance.spec.restore_config == null || !var.instance.spec.restore_config.restore_from_backup || (
       var.instance.spec.restore_config.source_instance_id != null &&
       var.instance.spec.restore_config.master_username != null &&
       var.instance.spec.restore_config.master_password != null
