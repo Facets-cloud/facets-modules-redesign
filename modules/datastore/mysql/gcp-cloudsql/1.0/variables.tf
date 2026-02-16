@@ -63,7 +63,7 @@ variable "instance" {
   }
 
   validation {
-    condition = var.instance.spec.restore_config == null || !var.instance.spec.restore_config.restore_from_backup || (
+    condition = !var.instance.spec.restore_config.restore_from_backup || (
       var.instance.spec.restore_config.source_instance_id != null &&
       var.instance.spec.restore_config.master_username != null &&
       var.instance.spec.restore_config.master_password != null
