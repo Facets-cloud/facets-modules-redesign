@@ -303,65 +303,6 @@ spec:
             title: Enabled Control Plane Log Types
             type: array
             x-ui-overrides-only: true
-        managed_node_groups:
-            description: Configure managed node groups for the EKS cluster
-            patternProperties:
-                ^[a-zA-Z0-9_-]+$:
-                    properties:
-                        capacity_type:
-                            default: ON_DEMAND
-                            description: Type of capacity for the node group
-                            enum:
-                                - ON_DEMAND
-                                - SPOT
-                            title: Capacity Type
-                            type: string
-                        desired_size:
-                            default: 2
-                            description: Desired number of nodes
-                            minimum: 1
-                            title: Desired Size
-                            type: integer
-                        disk_size:
-                            default: 50
-                            description: Disk size in GB for worker nodes
-                            maximum: 1000
-                            minimum: 20
-                            title: Disk Size (GB)
-                            type: integer
-                        instance_types:
-                            default:
-                                - t3.medium
-                            description: List of EC2 instance types for the node group
-                            items:
-                                type: string
-                            title: Instance Types
-                            type: array
-                        labels:
-                            description: Kubernetes labels to apply to nodes
-                            title: Node Labels
-                            type: object
-                            x-ui-yaml-editor: true
-                        max_size:
-                            default: 10
-                            description: Maximum number of nodes
-                            minimum: 1
-                            title: Maximum Size
-                            type: integer
-                        min_size:
-                            default: 1
-                            description: Minimum number of nodes
-                            minimum: 0
-                            title: Minimum Size
-                            type: integer
-                        taints:
-                            description: Kubernetes taints to apply to nodes
-                            title: Node Taints
-                            type: object
-                            x-ui-yaml-editor: true
-                    type: object
-            title: Managed Node Groups
-            type: object
     required:
         - cluster_version
     title: EKS Cluster Configuration
@@ -375,6 +316,5 @@ spec:
         - container_insights_enabled
         - cluster_addons
         - default_node_pool
-        - managed_node_groups
         - cluster_tags
 version: "1.1"
