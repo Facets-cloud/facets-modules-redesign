@@ -1,6 +1,6 @@
 intent: mongo
 flavor: kubeblocks
-version: '1.0'
+version: '1.1'
 clouds:
 - kubernetes
 - aws
@@ -262,7 +262,7 @@ iac:
 sample:
   kind: mongo
   flavor: kubeblocks
-  version: '1.0'
+  version: '1.1'
   disabled: true
   spec:
     namespace_override: ''

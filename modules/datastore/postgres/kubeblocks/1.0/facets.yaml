@@ -1,6 +1,6 @@
 intent: postgres
 flavor: kubeblocks
-version: '1.0'
+version: '1.1'
 clouds:
 - kubernetes
 - aws
@@ -229,7 +229,7 @@ iac:
 sample:
   kind: postgres
   flavor: kubeblocks
-  version: '1.0'
+  version: '1.1'
   disabled: true
   spec:
     namespace_override: ''
