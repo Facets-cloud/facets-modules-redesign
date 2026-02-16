@@ -161,7 +161,7 @@ locals {
     "networking.gke.io/internal-load-balancer-allow-global-access" = "true"
   } : {}
 
-  cloud_provider = upper(try(var.inputs.kubernetes_details.attributes.cloud_provider, "aws"))
+  cloud_provider = upper(try(var.inputs.kubernetes_details.cloud_provider, "aws"))
 
   service_annotations = merge(
     local.cloud_provider == "AWS" ? local.aws_annotations : {},

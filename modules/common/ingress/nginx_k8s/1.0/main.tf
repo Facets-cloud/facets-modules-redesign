@@ -22,7 +22,7 @@ locals {
   # Merge user supplied values with PDB configuration
   user_supplied_helm_values = merge(local.base_helm_values, local.pdb_helm_values)
   ingressRoutes             = { for x, y in lookup(var.instance.spec, "rules", {}) : x => y }
-  record_type               = lookup(var.inputs.kubernetes_details.attributes, "lb_service_record_type", var.inputs.kubernetes_details.attributes.cloud_provider == "AWS" ? "CNAME" : "A")
+  record_type               = lookup(var.inputs.kubernetes_details, "lb_service_record_type", var.inputs.kubernetes_details.cloud_provider == "AWS" ? "CNAME" : "A")
   #If environment name and instance exceeds 33 , take md5
   instance_env_name          = length(var.environment.unique_name) + length(var.instance_name) + length(local.tenant_base_domain) >= 60 ? substr(md5("${var.instance_name}-${var.environment.unique_name}"), 0, 20) : "${var.instance_name}-${var.environment.unique_name}"
   check_domain_prefix        = coalesce(lookup(local.advanced_config, "domain_prefix_override", null), local.instance_env_name)
@@ -161,9 +161,9 @@ locals {
   )
   annotations = merge(
     local.common_annotations,
-    var.inputs.kubernetes_details.attributes.cloud_provider == "AWS" ? local.aws_annotations : {},
-    var.inputs.kubernetes_details.attributes.cloud_provider == "GCP" ? local.gcp_annotations : {},
-    var.inputs.kubernetes_details.attributes.cloud_provider == "AZURE" ? local.azure_annotations : {},
+    var.inputs.kubernetes_details.cloud_provider == "AWS" ? local.aws_annotations : {},
+    var.inputs.kubernetes_details.cloud_provider == "GCP" ? local.gcp_annotations : {},
+    var.inputs.kubernetes_details.cloud_provider == "AZURE" ? local.azure_annotations : {},
     local.additional_ingress_annotations_without_auth,
     lookup(lookup(var.instance, "metadata", {}), "annotations", {})
   )
@@ -308,7 +308,7 @@ resource "helm_release" "nginx_ingress_ctlr" {
   namespace   = var.environment.namespace
   max_history = 10
   values = [
-    var.inputs.kubernetes_details.attributes.cloud_provider == "AWS" ?
+    var.inputs.kubernetes_details.cloud_provider == "AWS" ?
     yamlencode({
       controller = {
         config = {
@@ -325,7 +325,7 @@ resource "helm_release" "nginx_ingress_ctlr" {
     yamlencode({
       controller = {
         service = {
-          annotations = var.inputs.kubernetes_details.attributes.cloud_provider == "GCP" ? merge(local.gcp_annotations, local.service_annotations) : local.service_annotations
+          annotations = var.inputs.kubernetes_details.cloud_provider == "GCP" ? merge(local.gcp_annotations, local.service_annotations) : local.service_annotations
         }
       }
       imagePullSecrets : lookup(var.inputs, "artifactories", null) != null ? var.inputs.artifactories.attributes.registry_secrets_list : []
