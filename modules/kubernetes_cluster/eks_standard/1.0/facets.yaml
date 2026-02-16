@@ -88,7 +88,7 @@ sample:
         cluster_endpoint_public_access: true
         cluster_version: "1.34"
         enable_cluster_encryption: true
-    version: "1.0"
+    version: "1.1"
 spec:
     description: Configure your Amazon EKS cluster with managed node groups
     properties:
@@ -377,4 +377,4 @@ spec:
         - default_node_pool
         - managed_node_groups
         - cluster_tags
-version: "1.0"
+version: "1.1"
