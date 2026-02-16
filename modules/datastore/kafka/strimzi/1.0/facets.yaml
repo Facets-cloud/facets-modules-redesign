@@ -133,7 +133,7 @@ inputs:
     - helm
   node_pool:
     type: '@facets/kubernetes_nodepool'
-    optional: true
+    optional: false
     displayName: Node Pool
     description: Node pool for Kafka pods
   strimzi_operator:
@@ -144,7 +144,7 @@ inputs:
 
 outputs:
   default:
-    type: '@facets/kafka-strimzi'
+    type: '@facets/kafka'
     title: Kafka Cluster
 
 iac:
