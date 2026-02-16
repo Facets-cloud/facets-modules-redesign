@@ -11,10 +11,13 @@ locals {
   iam_roles            = lookup(lookup(local.spec, "iam", {}), "roles", {})
   autoscaling_per_zone = lookup(local.spec, "autoscaling_per_zone", false)
 
+  # Kubernetes cluster attributes
+  kubernetes_attributes = lookup(lookup(var.inputs, "kubernetes_details", {}), "attributes", {})
+
   # Management settings from spec
   auto_repair = lookup(lookup(local.spec, "management", {}), "auto_repair", true)
   # auto_upgrade follows cluster auto_upgrade setting
-  auto_upgrade = lookup(var.inputs.kubernetes_details.attributes, "auto_upgrade", true)
+  auto_upgrade = lookup(local.kubernetes_attributes, "auto_upgrade", true)
 
   # Network configuration
   pod_ip_range_name = lookup(var.inputs.network_details.attributes, "gke_pods_range_name", "")
