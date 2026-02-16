@@ -7,7 +7,8 @@
   "inputs": {
     "kubernetes_details": {
       "resource_name": "cluster",
-      "resource_type": "kubernetes_cluster"
+      "resource_type": "kubernetes_cluster",
+      "output_name": "attributes"
     }
   }
 }
