@@ -6,6 +6,10 @@
 modules/{intent}/{flavor}/{version}/   - Core infrastructure modules
 datastore/{tech}/{flavor}/{version}/   - Database modules
 outputs/{type-name}/                   - Output type schemas (@facets/*)
+icons/{intent}.svg                     - Module icons (one per intent, cloud-neutral)
+project-type/{cloud}/project-type.yml  - Project type definitions (AWS/GCP/Azure)
+index.html                             - User-facing catalog page (GitHub Pages)
+app/internal/                          - Internal dev tools (icons, graph, wiring)
 ```
 
 ## Module Files
@@ -45,16 +49,19 @@ Look for `*_module_standard*.md` in the relevant directory:
 
 See **rules.md** for complete validation ruleset with good/bad examples.
 
-## Icons & Dependency Graph (Review Pages)
+## Internal Dev Tools
 
 ```bash
-# Start local server to view icon catalog and dependency graph
-cd icons && python3 -m http.server 8765
+# Start local server from repo root
+python3 -m http.server 8765
 
-# Then open:
-#   http://localhost:8765/index.html   - Icon catalog with flavors/clouds per intent
-#   http://localhost:8765/graph.html   - Interactive module dependency graph (search, filter, click nodes)
-#   http://localhost:8765/wiring.html  - Attribute-level wiring explorer (inputs/outputs/types/attributes)
+# Internal pages (not user-facing):
+#   http://localhost:8765/app/internal/icons.html   - Icon catalog with flavors/clouds per intent
+#   http://localhost:8765/app/internal/graph.html   - Interactive module dependency graph
+#   http://localhost:8765/app/internal/wiring.html  - Attribute-level wiring explorer
+
+# User-facing catalog page:
+#   http://localhost:8765/index.html
 ```
 
 ## Provider-Exposing Module Output Convention
@@ -88,6 +95,44 @@ outputs:
 ```
 
 **Applies to:** `kubernetes_cluster/*`, and any future intent where multiple cloud flavors expose a common provider set.
+
+## New Module Checklist
+
+When creating a new module, complete ALL of these steps:
+
+### 1. Icon (`icons/{intent}.svg`)
+- Each **intent** gets one SVG icon (not per flavor)
+- Icons MUST be **cloud-neutral** (no AWS/GCP/Azure branding) since intents span multiple clouds
+- Place at `icons/{intent}.svg` (e.g., `icons/postgres.svg`, `icons/helm.svg`)
+- Use filled SVGs (`fill="#4A5568"` or similar), NOT stroke-only (stroke-only is invisible on some backgrounds)
+- If the intent already has an icon, do NOT create a new one
+
+### 2. Project Type (`project-type/{cloud}/project-type.yml`)
+- Add the new module entry (intent + flavor) to the relevant cloud's project-type.yml
+- AWS: `project-type/aws/project-type.yml`
+- GCP: `project-type/gcp/project-type.yml`
+- Azure: `project-type/azure/project-type.yml`
+- Common modules (K8s platform, operators) go in ALL three project types
+- Cloud-specific modules go only in their cloud's project type
+
+### 3. Catalog Page (`index.html`)
+- Update the `CLOUD_DATA` JavaScript object with the new module
+- Add to the correct cloud (aws/gcp/azure) and correct category
+- Categories: Infrastructure, Managed Datastores, Self-hosted via KubeBlocks, K8s Platform, Operators & Monitoring
+- Do NOT hardcode module counts — they are computed dynamically
+
+### 4. README (`README.md`)
+- Add the new module to the correct cloud section's collapsible "What's included" list
+- Use format: `` `DisplayName (flavor)` `` (e.g., `` `PostgreSQL/RDS (aws-rds)` ``)
+- Do NOT add module counts — the README is count-free
+- Praxis prompts use format "Prompt for Praxis:" with copyable code blocks
+- Raptor CLI: base command and `--name` variant are separate copyable blocks
+
+### 5. Internal Pages (if new intent)
+- `app/internal/icons.html` — Add entry to the `MODULES` data array with intent, displayName, type, icon filename, flavors/clouds
+- `app/internal/graph.html` — Add entry to the `MODULES` data array with id, intent, flavor, displayName, group, clouds, icon, inputs/outputs
+- `app/internal/wiring.html` — Data is in `app/internal/wiring-data.json`, update if module has inputs/outputs
+- Icon paths in internal pages use `../../icons/{filename}` (relative from `app/internal/`)
 
 ## Behavior Guidelines
 
