@@ -1,13 +1,18 @@
 intent: aws_iam_role
-flavor: fourkites_aws_iam_role
-version: '0.2'
+flavor: standard
+version: '1.0'
 description: Adds AWS IAM Role
+intentDetails:
+  type: Security & Identity
+  description: Create and manage AWS IAM roles with IRSA for EKS workloads
+  displayName: AWS IAM Role
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/aws_iam_role.svg
 clouds:
 - aws
 inputs:
   kubernetes_details:
     optional: false
-    type: '@fourkites/kubernetes_cluster'
+    type: '@facets/kubernetes-details'
     providers:
     - kubernetes
     - kubernetes-alpha
@@ -16,12 +21,12 @@ inputs:
     description: The AWS Cloud Account where the EKS cluster will be created
     displayName: Cloud Account
     optional: false
-    type: '@fourkites/aws_cloud_account'
+    type: '@facets/aws_cloud_account'
     providers:
     - aws
 outputs:
   default:
-    type: '@fourkites/aws_iam_role'
+    type: '@facets/aws_iam_role'
 spec:
   title: AWS IAM Role
   description: Specification of the aws iam role resource intent
@@ -94,9 +99,9 @@ spec:
   required:
   - policies
 sample:
-  version: '0.2'
+  version: '1.0'
   disabled: true
-  flavor: fourkites_aws_iam_role
+  flavor: standard
   metadata: {}
   kind: aws_iam_role
   spec:
