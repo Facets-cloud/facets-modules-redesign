@@ -8,13 +8,26 @@ locals {
   cluster_endpoint_public_access_cidrs   = length(lookup(local.cluster, "cluster_endpoint_public_access_cidrs", [])) > 0 ? lookup(local.cluster, "cluster_endpoint_public_access_cidrs", ["0.0.0.0/0"]) : ["0.0.0.0/0"]
   kubernetes_version                     = null # Use latest available version by default
   cloudwatch_config                      = lookup(local.cluster, "cloudwatch", {})
-  cluster_enabled_log_types              = lookup(local.cloudwatch_config, "enabled_log_types", [])
+  cluster_enabled_log_types              = lookup(local.cloudwatch_config, "enabled_log_types", ["api", "audit", "authenticator", "controllerManager", "scheduler"])
   cloudwatch_log_group_retention_in_days = lookup(local.cloudwatch_config, "log_group_retention_in_days", 90)
   cluster_endpoint_private_access_cidrs  = lookup(local.cluster, "cluster_endpoint_private_access_cidrs", [])
   cluster_service_ipv4_cidr              = lookup(local.cluster, "cluster_service_ipv4_cidr", null)
+  container_insights_enabled             = lookup(local.cloudwatch_config, "container_insights_enabled", false)
   cluster_addons                         = lookup(local.cluster, "cluster_addons", {})
   cloud_tags                             = var.environment.cloud_tags
-  addons = {
+  default_addons = local.container_insights_enabled ? {
+    amazon-cloudwatch-observability = {
+      name                        = "amazon-cloudwatch-observability"
+      addon_version               = null
+      configuration_values        = null
+      resolve_conflicts_on_create = "OVERWRITE"
+      resolve_conflicts_on_update = "OVERWRITE"
+      tags                        = local.cloud_tags
+      preserve                    = false
+      service_account_role_arn    = null
+    }
+  } : {}
+  user_addons = {
     for name, attributes in local.cluster_addons : name => {
       name          = lookup(attributes, "name", null)
       addon_version = lookup(attributes, "addon_version", null)
@@ -31,6 +44,8 @@ locals {
     }
     if lookup(attributes, "enabled", true)
   }
+  addons                     = merge(local.default_addons, local.user_addons)
+  needs_cloudwatch_iam_policy = contains(keys(local.addons), "amazon-cloudwatch-observability")
   cluster_compute_config = {
     enabled    = true
     node_pools = ["system", "general-purpose"]

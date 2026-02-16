@@ -117,6 +117,12 @@ locals {
       resolve_conflicts        = "OVERWRITE"
       service_account_role_arn = aws_iam_role.ebs_csi_driver[0].arn
     } : null
+
+    amazon-cloudwatch-observability = local.container_insights_enabled ? {
+      addon_version            = null
+      resolve_conflicts        = "OVERWRITE"
+      service_account_role_arn = null
+    } : null
   }
 
   # Build additional/custom addons configuration
@@ -142,8 +148,12 @@ locals {
     addon_name => addon_config if addon_config != null
   }
 
+  # Container Insights
+  container_insights_enabled  = lookup(var.instance.spec, "container_insights_enabled", false)
+  needs_cloudwatch_iam_policy = contains(keys(local.enabled_cluster_addons), "amazon-cloudwatch-observability")
+
   # KMS key for secrets encryption (only if enabled)
-  enable_kms_key = lookup(var.instance.spec, "enable_cluster_encryption", false)
+  enable_kms_key = lookup(var.instance.spec, "enable_cluster_encryption", true)
 }
 
 # KMS key for EKS secrets encryption (conditional)
@@ -182,6 +192,9 @@ module "eks" {
   cluster_endpoint_public_access  = lookup(var.instance.spec, "cluster_endpoint_public_access", true)
   cluster_endpoint_private_access = lookup(var.instance.spec, "cluster_endpoint_private_access", true)
 
+  # Control plane logging - all 5 log types enabled by default, user-configurable
+  cluster_enabled_log_types = lookup(var.instance.spec, "enabled_log_types", ["api", "audit", "authenticator", "controllerManager", "scheduler"])
+
   # Secrets encryption configuration
   cluster_encryption_config = local.enable_kms_key ? {
     provider_key_arn = aws_kms_key.eks[0].arn
@@ -190,6 +203,11 @@ module "eks" {
 
   # Managed node groups
   eks_managed_node_groups = local.eks_managed_node_groups
+  eks_managed_node_group_defaults = local.needs_cloudwatch_iam_policy ? {
+    iam_role_additional_policies = {
+      CloudWatchAgentServerPolicy = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+    }
+  } : {}
 
   # Cluster addons
   cluster_addons = local.enabled_cluster_addons

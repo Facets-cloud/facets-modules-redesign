@@ -1,6 +1,6 @@
 intent: kubernetes_cluster
 flavor: eks_automode
-version: '1.0'
+version: '1.1'
 clouds:
   - aws
 title: EKS Cluster with Auto Mode support
@@ -117,6 +117,22 @@ spec:
                 - api
                 - audit
                 - authenticator
+                - controllerManager
+                - scheduler
+            container_insights_enabled:
+              type: boolean
+              title: Container Insights
+              description: Enable CloudWatch Container Insights via the amazon-cloudwatch-observability addon. See CloudWatch pricing for cost details.
+              default: false
+        enable_cluster_encryption:
+          type: boolean
+          title: Use Customer-Managed KMS Key
+          description: |
+            Enable encryption with customer-managed KMS keys for compliance and audit requirements.
+
+            Note: EKS Auto Mode automatically encrypts all secrets with AWS-owned keys (free).
+            Disable this if you don't need CloudTrail audit logs or compliance requirements (PCI-DSS, HIPAA).
+          default: true
         cluster_addons:
           type: object
           title: EKS Cluster Addons
@@ -183,7 +199,7 @@ spec:
 sample:
   kind: kubernetes_cluster
   flavor: eks_automode
-  version: '1.0'
+  version: '1.1'
   metadata:
     name: eks-cluster
   spec:
