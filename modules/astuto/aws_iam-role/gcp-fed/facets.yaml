@@ -1,0 +1,108 @@
+intent: aws_iam_role
+flavor: gcp-federation
+version: '1.1'
+clouds:
+  - aws
+description: |
+  AWS IAM Role for GCP Workload Identity Federation.
+  Automatically creates a GCP Service Account and configures AWS IAM Role
+  with Google OIDC trust policy for GCP-to-AWS cross-cloud authentication.
+  Handles the complete federation chain: GCP SA → Workload Identity → AWS OIDC → AWS IAM Role.
+x-facets-ui-hide-from-wizard: true
+
+inputs:
+  cloud_account:
+    description: The AWS cloud account where IAM role will be created
+    displayName: AWS Cloud Account
+    optional: false
+    providers:
+      - aws
+    type: '@facets/aws_cloud_account'
+  gcp_cloud_account:
+    description: The GCP cloud account where service account will be created
+    displayName: GCP Cloud Account
+    optional: false
+    providers:
+      - google
+    type: '@facets/gcp_cloud_account'
+
+spec:
+  title: AWS IAM Role for GCP Federation
+  description: Creates AWS IAM role with Google OIDC trust policy and GCP service account for cross-cloud access
+  type: object
+  properties:
+    gcp_federation:
+      type: object
+      title: GCP Federation Configuration
+      description: Configuration for GCP-to-AWS identity federation via Google OIDC
+      properties:
+        gcp_project_id:
+          type: string
+          title: GCP Project ID
+          description: GCP project ID where the service account will be created
+          x-ui-overrides-only: true
+          x-ui-placeholder: "e.g., my-gcp-project-12345"
+        create_oidc_provider:
+          type: boolean
+          title: Create Google OIDC Provider
+          description: Set to true for the first aws_iam_role/gcp-federation in this AWS account. Set to false for subsequent roles (only one Google OIDC provider per AWS account).
+          default: true
+        service_accounts:
+          type: object
+          title: Kubernetes Service Accounts
+          description: Map of Kubernetes service account names to bind via Workload Identity
+          patternProperties:
+            "^[a-zA-Z0-9_-]+$":
+              type: object
+              properties:
+                name:
+                  type: string
+                  title: Service Account Name
+                  description: Kubernetes service account name
+              required:
+                - name
+          default: {}
+      required:
+        - gcp_project_id
+    policies:
+      type: object
+      title: IAM Policies
+      description: IAM policies to attach to the role
+      patternProperties:
+        "^[a-zA-Z0-9_-]+$":
+          type: object
+          properties:
+            arn:
+              type: string
+              title: Policy ARN
+              description: ARN of the IAM policy to attach
+          required:
+            - arn
+      default: {}
+  required:
+    - gcp_federation
+  x-ui-order:
+    - gcp_federation
+    - policies
+
+sample:
+  kind: aws_iam_role
+  flavor: gcp-federation
+  version: '1.1'
+  disabled: false
+  spec:
+    gcp_federation:
+      gcp_project_id: my-gcp-project-12345
+      create_oidc_provider: true
+      service_accounts:
+        my-service:
+          name: my-service
+    policies:
+      s3-access:
+        arn: arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+
+outputs:
+  default:
+    type: '@facets/aws_iam_role'
+    title: AWS IAM Role Output
+    description: IAM role ARN and cross-cloud federation metadata
