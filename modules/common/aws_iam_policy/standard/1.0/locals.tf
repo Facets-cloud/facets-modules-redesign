@@ -2,8 +2,7 @@
 locals {
   spec = var.instance.spec
 
-  # Advanced configuration
-  advanced_iam_policy = try(var.instance.advanced.iam_policy.aws_iam_policy, {})
+  iam_policy = lookup(local.spec, "aws_iam_policy", {})
 
   # IAM Policy configuration
   policy_name = local.spec.name
