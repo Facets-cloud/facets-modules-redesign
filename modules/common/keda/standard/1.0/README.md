@@ -121,7 +121,7 @@ No interfaces are exposed by this module.
 
 ```yaml
 kind: keda
-flavor: fourkites_keda
+flavor: standard
 version: "1.0"
 spec:
   chart_version: "2.9.4"
@@ -131,7 +131,7 @@ spec:
 
 ```yaml
 kind: keda
-flavor: fourkites_keda
+flavor: standard
 version: "1.0"
 spec:
   chart_version: "2.9.4"
@@ -144,7 +144,7 @@ spec:
 
 ```yaml
 kind: keda
-flavor: fourkites_keda
+flavor: standard
 version: "1.0"
 spec:
   chart_version: "2.9.4"
@@ -161,7 +161,7 @@ spec:
 
 ```yaml
 kind: keda
-flavor: fourkites_keda
+flavor: standard
 version: "1.0"
 spec:
   chart_version: "2.9.4"
