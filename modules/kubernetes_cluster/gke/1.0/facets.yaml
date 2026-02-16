@@ -1,6 +1,6 @@
 intent: kubernetes_cluster
 flavor: gke
-version: '1.0'
+version: '2.0'
 clouds:
 - gcp
 title: GKE Cluster Control Plane
@@ -119,7 +119,7 @@ outputs:
 sample:
   kind: kubernetes_cluster
   flavor: gke
-  version: '1.0'
+  version: '2.0'
   spec:
     auto_upgrade: true
     whitelisted_cidrs:
