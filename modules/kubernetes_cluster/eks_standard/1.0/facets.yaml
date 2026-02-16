@@ -281,7 +281,7 @@ spec:
                 Enable encryption with customer-managed KMS keys for compliance and audit requirements.
 
                 Note: EKS 1.28+ automatically encrypts all secrets with AWS-owned keys (free).
-                Enable this only if you need CloudTrail audit logs or compliance (PCI-DSS, HIPAA).
+                Disable this if you don't need CloudTrail audit logs or compliance requirements (PCI-DSS, HIPAA).
             title: Use Customer-Managed KMS Key
             type: boolean
         enabled_log_types:

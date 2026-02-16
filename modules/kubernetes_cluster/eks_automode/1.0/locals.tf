@@ -44,7 +44,8 @@ locals {
     }
     if lookup(attributes, "enabled", true)
   }
-  addons = merge(local.default_addons, local.user_addons)
+  addons                     = merge(local.default_addons, local.user_addons)
+  needs_cloudwatch_iam_policy = contains(keys(local.addons), "amazon-cloudwatch-observability")
   cluster_compute_config = {
     enabled    = true
     node_pools = ["system", "general-purpose"]

@@ -149,7 +149,8 @@ locals {
   }
 
   # Container Insights
-  container_insights_enabled = lookup(var.instance.spec, "container_insights_enabled", false)
+  container_insights_enabled  = lookup(var.instance.spec, "container_insights_enabled", false)
+  needs_cloudwatch_iam_policy = contains(keys(local.enabled_cluster_addons), "amazon-cloudwatch-observability")
 
   # KMS key for secrets encryption (only if enabled)
   enable_kms_key = lookup(var.instance.spec, "enable_cluster_encryption", true)
@@ -202,7 +203,7 @@ module "eks" {
 
   # Managed node groups
   eks_managed_node_groups = local.eks_managed_node_groups
-  eks_managed_node_group_defaults = local.container_insights_enabled ? {
+  eks_managed_node_group_defaults = local.needs_cloudwatch_iam_policy ? {
     iam_role_additional_policies = {
       CloudWatchAgentServerPolicy = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
     }

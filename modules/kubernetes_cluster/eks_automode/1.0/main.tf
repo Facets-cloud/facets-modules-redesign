@@ -27,7 +27,7 @@ module "eks" {
   enable_kms_key_rotation                  = lookup(var.instance.spec.cluster, "enable_cluster_encryption", true)
   cluster_addons                           = local.addons
   node_security_group_additional_rules     = local.node_security_group_additional_rules
-  node_iam_role_additional_policies        = local.container_insights_enabled ? { CloudWatchAgentServerPolicy = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy" } : {}
+  node_iam_role_additional_policies        = local.needs_cloudwatch_iam_policy ? { CloudWatchAgentServerPolicy = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy" } : {}
 }
 
 resource "aws_security_group_rule" "cluster_primary_sg_ingress" {
