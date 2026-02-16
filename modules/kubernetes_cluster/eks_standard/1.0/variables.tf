@@ -34,17 +34,6 @@ variable "instance" {
         })), {})
       }), {})
 
-      managed_node_groups = optional(map(object({
-        instance_types = optional(list(string), ["t3.medium"])
-        min_size       = optional(number, 1)
-        max_size       = optional(number, 10)
-        desired_size   = optional(number, 2)
-        capacity_type  = optional(string, "ON_DEMAND")
-        disk_size      = optional(number, 50)
-        labels         = optional(map(string), {})
-        taints         = optional(map(string), {})
-      })), {})
-
       container_insights_enabled = optional(bool, false)
 
       enabled_log_types = optional(list(string), ["api", "audit", "authenticator", "controllerManager", "scheduler"])
