@@ -1,0 +1,205 @@
+intent: cloudrun
+flavor: gcp
+version: "1.0"
+clouds:
+  - gcp
+description: |
+  Cloud Run Job for long-running batch tasks (up to 7 days).
+  Ideal for data processing, ETL, migrations, batch operations.
+  Jobs run to completion and exit (no HTTP server).
+  For GPU workloads, use cloudrun/gpu-job instead.
+
+artifact_inputs:
+  primary:
+    artifact_type: docker_image
+    attribute_path: spec.container.image
+
+inputs:
+  gcp_provider:
+    type: '@facets/gcp_cloud_account'
+    optional: false
+    displayName: GCP Cloud Account
+    description: GCP project and authentication configuration
+    providers:
+      - google
+  network:
+    type: '@facets/gcp-network-details'
+    optional: true
+    displayName: VPC Network
+    description: VPC network for private connectivity
+
+sample:
+  kind: cloudrun
+  flavor: gcp
+  version: "1.0"
+  disabled: false
+  spec:
+    container:
+      image: "${blueprint.self.artifacts.batch-processor}"
+    resources:
+      cpu: "2"
+      memory: 4Gi
+    job:
+      task_count: 1
+      parallelism: 1
+      max_retries: 3
+      task_timeout: "3600s"
+
+spec:
+  title: Cloud Run Job Configuration
+  description: Configure Cloud Run Job for batch processing tasks
+  type: object
+  properties:
+    container:
+      type: object
+      title: Container Configuration
+      properties:
+        image:
+          type: string
+          title: Container Image
+          description: Container image URI (use artifact reference)
+          default: "${blueprint.self.artifacts.default}"
+        command:
+          type: array
+          title: Command
+          description: Entrypoint command override
+          items:
+            type: string
+          x-ui-command: true
+        args:
+          type: array
+          title: Arguments
+          description: Arguments to the entrypoint
+          items:
+            type: string
+          x-ui-command: true
+      required:
+        - image
+    resources:
+      type: object
+      title: Resource Allocation
+      properties:
+        cpu:
+          type: string
+          title: CPU
+          description: Number of vCPUs
+          enum:
+            - "1"
+            - "2"
+            - "4"
+            - "8"
+          default: "2"
+        memory:
+          type: string
+          title: Memory
+          description: Memory allocation
+          enum:
+            - 512Mi
+            - 1Gi
+            - 2Gi
+            - 4Gi
+            - 8Gi
+            - 16Gi
+            - 32Gi
+          default: 4Gi
+    job:
+      type: object
+      title: Job Configuration
+      properties:
+        task_count:
+          type: integer
+          title: Task Count
+          description: Number of tasks to run (all must succeed)
+          default: 1
+          minimum: 1
+          maximum: 100
+        parallelism:
+          type: integer
+          title: Parallelism
+          description: Maximum tasks running in parallel
+          default: 1
+          minimum: 1
+          maximum: 100
+        max_retries:
+          type: integer
+          title: Max Retries
+          description: Retries per task before marking failed
+          default: 3
+          minimum: 0
+          maximum: 10
+        task_timeout:
+          type: string
+          title: Task Timeout
+          description: Maximum time per task (up to 168h/7 days)
+          default: "3600s"
+    env:
+      type: object
+      title: Environment Variables
+      description: Environment variables for the container
+      x-ui-yaml-editor: true
+    secrets:
+      type: object
+      title: Secret Environment Variables
+      description: Mount secrets from Secret Manager
+      patternProperties:
+        "^[A-Z][A-Z0-9_]*$":
+          type: object
+          properties:
+            secret_name:
+              type: string
+              title: Secret Name
+              description: Name of the secret in Secret Manager
+            version:
+              type: string
+              title: Secret Version
+              default: latest
+          required:
+            - secret_name
+    service_account:
+      type: string
+      title: Service Account
+      description: Custom service account email for the job
+      x-ui-overrides-only: true
+    vpc_access:
+      type: object
+      title: VPC Access Configuration
+      x-ui-toggle: true
+      properties:
+        enabled:
+          type: boolean
+          title: Enable VPC Access
+          description: Connect to VPC resources (databases, internal services)
+          default: false
+        egress:
+          type: string
+          title: VPC Egress
+          description: Route egress traffic through VPC
+          enum:
+            - all-traffic
+            - private-ranges-only
+          default: private-ranges-only
+          x-ui-visible-if:
+            field: spec.vpc_access.enabled
+            values:
+              - true
+    labels:
+      type: object
+      title: Labels
+      description: Resource labels for organization and billing
+      x-ui-yaml-editor: true
+  required:
+    - container
+  x-ui-order:
+    - container
+    - resources
+    - job
+    - env
+    - secrets
+    - vpc_access
+    - service_account
+    - labels
+
+outputs:
+  default:
+    type: '@facets/cloudrun'
+    title: Cloud Run Job
