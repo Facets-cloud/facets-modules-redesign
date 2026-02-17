@@ -3,6 +3,8 @@
 # =============================================================================
 
 locals {
+  resource_type = "service"
+  resource_name = var.instance_name
   project_id = var.inputs.gcp_provider.attributes.project_id
   region     = var.inputs.gcp_provider.attributes.region
   job_name   = "${var.instance_name}-${var.environment.unique_name}"

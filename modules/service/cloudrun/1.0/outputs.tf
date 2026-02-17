@@ -4,6 +4,9 @@
 
 locals {
   output_attributes = {
+    resource_type   = local.resource_type
+    resource_name   = local.resource_name
+    service_name    = var.instance_name
     job_name   = google_cloud_run_v2_job.this.name
     location   = google_cloud_run_v2_job.this.location
     project_id = local.project_id
