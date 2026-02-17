@@ -31,6 +31,6 @@ properties:
       type: object
       description: "No interfaces defined for provider"
 providers:
-  ovh:
+  - name: ovh
     source: "ovh/ovh"
     version: "2.7.0"

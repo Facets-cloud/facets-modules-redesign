@@ -1,6 +1,6 @@
 intent: cloud_account
-flavor: ovh
-version: '1.0'
+flavor: ovh_provider
+version: "1.0"
 description: Module to configure and provision resources within an OVH cloud account
 intentDetails:
   type: Cloud & Infrastructure
@@ -8,7 +8,7 @@ intentDetails:
   displayName: Cloud Account
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloud_account.svg
 clouds:
-- kubernetes
+  - kubernetes
 spec:
   title: OVH Provider Configuration
   description: Configure OVH API access credentials and endpoint
@@ -19,8 +19,8 @@ spec:
       title: OVH API Endpoint
       description: Select the OVH API endpoint for your cloud project
       enum:
-      - ovh-eu
-      - ovh-ca
+        - ovh-eu
+        - ovh-ca
       default: ovh-eu
       x-ui-overrides-only: true
     application_key:
@@ -44,20 +44,20 @@ spec:
       description: OVH Cloud Project ID (service_name)
       x-ui-overrides-only: true
   required:
-  - endpoint
-  - application_key
-  - application_secret
-  - consumer_key
-  - project_id
+    - endpoint
+    - application_key
+    - application_secret
+    - consumer_key
+    - project_id
   x-ui-order:
-  - endpoint
-  - application_key
-  - application_secret
-  - consumer_key
-  - project_id
+    - endpoint
+    - application_key
+    - application_secret
+    - consumer_key
+    - project_id
 outputs:
   default:
-    type: '@facets/ovh-provider'
+    type: "@facets/ovh-provider"
     providers:
       ovh:
         source: ovh/ovh
@@ -69,12 +69,16 @@ outputs:
           consumer_key: attributes.consumer_key
 sample:
   kind: cloud_account
-  flavor: ovh
-  version: '1.0'
+  flavor: ovh_provider
+  version: "1.0"
   disabled: true
   spec:
     endpoint: ovh-eu
+    application_key: ""
+    application_secret: ""
+    consumer_key: ""
+    project_id: ""
 iac:
   validated_files:
-  - main.tf
-  - variables.tf
+    - main.tf
+    - variables.tf

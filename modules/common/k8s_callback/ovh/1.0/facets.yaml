@@ -1,4 +1,4 @@
-intent: facets_k8s_callback
+intent: k8s_callback
 flavor: ovh
 version: '1.0'
 description: Creates ServiceAccount with admin role and registers OVH K8s credentials
@@ -24,7 +24,7 @@ spec:
   type: object
   properties: {}
 sample:
-  kind: facets_k8s_callback
+  kind: k8s_callback
   flavor: ovh
   version: '1.0'
   disabled: false
