@@ -31,8 +31,6 @@ sample:
     disabled: true
     flavor: k8s
     kind: grafana_dashboards
-    metadata:
-        name: my-dashboards
     spec:
         dashboards: {}
     version: "1.0"

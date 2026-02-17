@@ -624,8 +624,6 @@ sample:
   $schema: https://facets-cloud.github.io/facets-schemas/schemas/ingress/ingress.schema.json
   disabled: true
   version: '1.1'
-  metadata:
-    annotations: {}
   spec:
     private: false
     basic_auth: false
