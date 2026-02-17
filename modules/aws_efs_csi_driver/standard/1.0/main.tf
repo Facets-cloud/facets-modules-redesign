@@ -18,9 +18,8 @@ locals {
   vpc_cidr_block    = var.inputs.network_details.attributes.vpc_cidr_block
   private_subnets   = var.inputs.network_details.attributes.private_subnet_ids
 
-  spec                = lookup(var.instance, "spec", {})
-  aws_efs_file_system = lookup(local.spec, "aws_efs_file_system", {})
-  size                = lookup(local.spec, "size", {})
+  aws_efs_file_system = lookup(var.instance.spec, "aws_efs_file_system", {})
+  size                = lookup(var.instance.spec, "size", {})
 
   controller_cpu    = lookup(lookup(local.size, "controller", {}), "cpu", "100m")
   controller_memory = lookup(lookup(local.size, "controller", {}), "memory", "128Mi")

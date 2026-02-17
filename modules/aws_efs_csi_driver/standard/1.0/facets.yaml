@@ -39,11 +39,13 @@ outputs:
     title: AWS EFS CSI Driver Details
     type: '@facets/aws-efs-csi-driver'
 sample:
-  disabled: true
+  disabled: false
   flavor: standard
   kind: aws_efs_csi_driver
   spec:
     chart_version: "2.4.6"
+    aws_efs_file_system: {}
+    size: {}
   version: "1.0"
 spec:
   description: Configure the AWS EFS CSI Driver for your EKS cluster
@@ -82,8 +84,56 @@ spec:
               type: string
               default: "128Mi"
               description: Memory request for the node pod
+    aws_efs_file_system:
+      description: Advanced configuration for the AWS EFS file system resource
+      title: EFS File System Configuration
+      type: object
+      properties:
+        encrypted:
+          type: boolean
+          default: true
+          description: Enable encryption at rest for the EFS file system
+          title: Encrypted
+        kms_key_id:
+          type: string
+          description: ARN of the KMS key to use for encryption (uses AWS-managed key if omitted)
+          title: KMS Key ID
+        performance_mode:
+          type: string
+          description: EFS performance mode
+          title: Performance Mode
+        creation_token:
+          type: string
+          description: Unique token to ensure idempotent creation of the file system
+          title: Creation Token
+        availability_zone_name:
+          type: string
+          description: AWS Availability Zone for a One Zone EFS file system
+          title: Availability Zone
+        throughput_mode:
+          type: string
+          description: EFS throughput mode
+          title: Throughput Mode
+          enum:
+            - bursting
+            - provisioned
+            - elastic
+        provisioned_throughput_in_mibps:
+          type: number
+          description: Provisioned throughput in MiB/s (required when throughput_mode is provisioned)
+          title: Provisioned Throughput (MiB/s)
+        lifecycle_policy:
+          type: object
+          description: Lifecycle policy rules for transitioning files to/from Infrequent Access storage
+          title: Lifecycle Policy
+          x-ui-yaml-editor: true
+        tags:
+          type: object
+          description: Additional AWS tags to apply to the EFS file system
+          title: EFS Tags
+          x-ui-yaml-editor: true
     tags:
-      description: Additional AWS tags to apply to EFS resources
+      description: Additional AWS tags to apply to all EFS CSI Driver resources
       title: Resource Tags
       type: object
       x-ui-yaml-editor: true
@@ -94,5 +144,6 @@ spec:
   x-ui-order:
     - chart_version
     - size
+    - aws_efs_file_system
     - tags
 version: "1.0"
