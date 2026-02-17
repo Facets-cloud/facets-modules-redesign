@@ -6,7 +6,7 @@ intentDetails:
   type: Messaging
   description: AWS Simple Notification Service for pub/sub messaging
   displayName: SNS Topic
-  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/sns-topic.svg
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/sns.svg
 clouds:
 - aws
 inputs:

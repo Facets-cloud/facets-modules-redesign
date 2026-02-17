@@ -6,7 +6,7 @@ intentDetails:
   type: Messaging
   description: AWS Simple Queue Service for reliable message queuing
   displayName: SQS Queue
-  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/sqs-queue.svg
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/sqs.svg
 clouds:
 - aws
 inputs:

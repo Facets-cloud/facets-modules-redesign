@@ -6,7 +6,7 @@ intentDetails:
   type: Storage
   description: AWS S3 Object Storage for scalable data storage
   displayName: S3 Bucket
-  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/s3-bucket.svg
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/s3.svg
 clouds:
 - aws
 inputs:
