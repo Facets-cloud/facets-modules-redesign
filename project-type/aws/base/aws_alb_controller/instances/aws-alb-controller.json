@@ -1,0 +1,24 @@
+{
+  "kind": "aws_alb_controller",
+  "flavor": "standard",
+  "version": "1.0",
+  "disabled": false,
+  "spec": {
+    "controller_replicas": 1,
+    "controller_version": "1.12.0"
+  },
+  "inputs": {
+    "eks_details": {
+      "resource_name": "cluster",
+      "resource_type": "kubernetes_cluster"
+    },
+    "cloud_account": {
+      "resource_name": "cloud",
+      "resource_type": "cloud_account"
+    },
+    "network_details": {
+      "resource_name": "network",
+      "resource_type": "network"
+    }
+  }
+}

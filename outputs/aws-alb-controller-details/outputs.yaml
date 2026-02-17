@@ -1,0 +1,25 @@
+name: '@facets/aws-alb-controller-details'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        controller_namespace:
+          type: string
+        controller_service_account:
+          type: string
+        controller_version:
+          type: string
+        controller_role_arn:
+          type: string
+        helm_release_id:
+          type: string
+        secrets:
+          type: array
+          items:
+            type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []
