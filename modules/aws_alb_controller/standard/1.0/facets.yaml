@@ -45,13 +45,13 @@ sample:
   kind: aws_alb_controller
   spec:
     controller_replicas: 1
-    controller_version: "1.12.0"
+    controller_version: "3.0.0"
   version: "1.0"
 spec:
   description: Configure the AWS Load Balancer Controller for your EKS cluster
   properties:
     controller_version:
-      default: "1.12.0"
+      default: "3.0.0"
       description: Helm chart version of the AWS Load Balancer Controller
       title: Controller Version
       type: string
