@@ -7,7 +7,7 @@ variable "instance" {
       cluster_version                 = string
       cluster_endpoint_public_access  = optional(bool, true)
       cluster_endpoint_private_access = optional(bool, true)
-      enable_cluster_encryption       = optional(bool, true)
+      customer_managed_kms            = optional(bool, true)
 
       cluster_addons = optional(object({
         vpc_cni = optional(object({
@@ -33,17 +33,6 @@ variable "instance" {
           service_account_role_arn = optional(string)
         })), {})
       }), {})
-
-      managed_node_groups = optional(map(object({
-        instance_types = optional(list(string), ["t3.medium"])
-        min_size       = optional(number, 1)
-        max_size       = optional(number, 10)
-        desired_size   = optional(number, 2)
-        capacity_type  = optional(string, "ON_DEMAND")
-        disk_size      = optional(number, 50)
-        labels         = optional(map(string), {})
-        taints         = optional(map(string), {})
-      })), {})
 
       container_insights_enabled = optional(bool, false)
 
