@@ -125,24 +125,6 @@ locals {
   enable_kms_key = lookup(var.instance.spec, "customer_managed_kms", true)
 }
 
-# KMS key for EKS secrets encryption (conditional)
-resource "aws_kms_key" "eks" {
-  count = local.enable_kms_key ? 1 : 0
-
-  description             = "EKS Secret Encryption Key for ${local.cluster_name}"
-  deletion_window_in_days = 7
-  enable_key_rotation     = true
-
-  tags = local.cluster_tags
-}
-
-resource "aws_kms_alias" "eks" {
-  count = local.enable_kms_key ? 1 : 0
-
-  name          = "alias/eks-${local.cluster_name}"
-  target_key_id = aws_kms_key.eks[0].key_id
-}
-
 # EKS Cluster using the official terraform-aws-eks module
 module "eks" {
   source = "./aws-terraform-eks"
@@ -164,19 +146,14 @@ module "eks" {
   # Control plane logging - all 5 log types enabled by default, user-configurable
   cluster_enabled_log_types = lookup(var.instance.spec, "enabled_log_types", ["api", "audit", "authenticator", "controllerManager", "scheduler"])
 
-  # Secrets encryption configuration
-  cluster_encryption_config = local.enable_kms_key ? {
-    provider_key_arn = aws_kms_key.eks[0].arn
-    resources        = ["secrets"]
-  } : {}
+  # Secrets encryption - let the submodule manage its own KMS key
+  create_kms_key = local.enable_kms_key
+  cluster_encryption_config = jsondecode(
+    local.enable_kms_key ? jsonencode({ resources = ["secrets"] }) : jsonencode({})
+  )
 
   # Managed node groups
   eks_managed_node_groups = local.eks_managed_node_groups
-  eks_managed_node_group_defaults = local.needs_cloudwatch_iam_policy ? {
-    iam_role_additional_policies = {
-      CloudWatchAgentServerPolicy = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
-    }
-  } : {}
 
   # Cluster addons
   cluster_addons = local.enabled_cluster_addons
@@ -227,4 +204,12 @@ resource "aws_iam_role_policy_attachment" "ebs_csi_driver" {
 
   role       = aws_iam_role.ebs_csi_driver[0].name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+}
+
+# CloudWatch Agent policy for node groups (when Container Insights is enabled)
+resource "aws_iam_role_policy_attachment" "cloudwatch_agent" {
+  for_each = local.needs_cloudwatch_iam_policy ? module.eks.eks_managed_node_groups : {}
+
+  role       = each.value.iam_role_name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
 }
