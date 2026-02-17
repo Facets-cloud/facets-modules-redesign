@@ -110,3 +110,17 @@ After all per-module reports, output a summary:
 ```
 
 If all modules pass, add a confirmation message. If any fail, list the critical failures that should be fixed before commit.
+
+---
+
+## Step 6: Recommend new rules (if applicable)
+
+During validation, if you encounter any of the following that are NOT covered by existing rules in `rules.md`:
+- A new anti-pattern seen across multiple modules
+- A validation gap (something raptor catches but rules.md doesn't cover)
+- A convention that modules follow inconsistently
+
+Propose a new rule to the user in the standard format:
+- Rule number: next available (RULE-025, RULE-026, etc.)
+- Category, description, bad example, good example
+- Do NOT modify rules.md automatically — present the proposal and wait for approval

@@ -158,3 +158,10 @@ When creating a new module, complete ALL of these steps:
 - Branch naming: `fix/<issue-number>-<short-description>`
 - If provider issues (aws3tooling, facets provider), **report to user**
 - **NEVER** use `--skip-validation` flag
+
+## Rule Discovery
+
+When working on modules (writing, reviewing, or validating), if you notice a recurring pattern, anti-pattern, or convention that is NOT already covered by an existing rule in `rules.md`:
+- Flag it to the user with a brief description and a good/bad example
+- Propose a new rule following the existing format (RULE-XXX, category, description, bad example, good example)
+- Do NOT add the rule to rules.md without user approval
