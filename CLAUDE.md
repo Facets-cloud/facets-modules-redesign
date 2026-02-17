@@ -4,7 +4,7 @@
 
 ```
 modules/{intent}/{flavor}/{version}/   - Core infrastructure modules
-datastore/{tech}/{flavor}/{version}/   - Database modules
+modules/datastore/{tech}/{flavor}/{version}/ - Database modules
 outputs/{type-name}/                   - Output type schemas (@facets/*)
 icons/{intent}.svg                     - Module icons (one per intent, cloud-neutral)
 project-type/{cloud}/project-type.yml  - Project type definitions (AWS/GCP/Azure)
@@ -100,6 +100,11 @@ outputs:
 
 When creating a new module, complete ALL of these steps:
 
+### 0. facets.yaml intentDetails (required)
+- Every `facets.yaml` must include an `intentDetails` block
+- Required fields: `type`, `description`, `displayName`, `iconUrl`
+- See RULE-022 in `rules.md` for details and valid `type` values
+
 ### 1. Icon (`icons/{intent}.svg`)
 - Each **intent** gets one SVG icon (not per flavor)
 - Icons MUST be **cloud-neutral** (no AWS/GCP/Azure branding) since intents span multiple clouds
@@ -141,3 +146,21 @@ When creating a new module, complete ALL of these steps:
 - Branch naming: `fix/<issue-number>-<short-description>`
 - If provider issues (aws3tooling, facets provider), **report to user**
 - **NEVER** use `--skip-validation` flag
+
+## Common Pitfalls
+
+Frequent bugs from real PRs. See **rules.md** for full details and examples.
+
+| Pitfall | Source | Rule |
+|---------|--------|------|
+| Accessing optional spec fields without `lookup()` defaults | #211, #206, #238 | RULE-015 |
+| Wrong access pattern on `var.inputs` — always verify against output type schema | #228, #233, #224 | RULE-016 |
+| Unnecessary `depends_on` causing Terraform cycles | #210 | RULE-017 |
+| CRD resources missing `depends_on` to Helm release | #200 | RULE-018 |
+| Using non-existent or `:latest` Docker image tags | #204 | RULE-019 |
+| Multiple modules managing same tags causing oscillation | #234 | RULE-020 |
+| Using unsupported `metadata:` in facets.yaml | #212 | RULE-021 |
+| Missing `intentDetails` in facets.yaml | #153 | RULE-022 |
+| Referencing platform-injected vars (`cc_metadata`, `cluster`) | #95 | RULE-014 |
+| Provider type mismatch (consuming type without checking output schema) | #208 | RULE-016 |
+| Security defaults not enabled (encryption, logging) | #218 | RULE-023 |
