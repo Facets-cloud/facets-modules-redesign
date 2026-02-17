@@ -767,6 +767,54 @@ enable_logging = lookup(var.instance.spec, "enable_logging", true)
 
 ---
 
+### RULE-024: Bump version for breaking changes and update project types
+
+**Category:** Module lifecycle
+
+When introducing a breaking change to a module (e.g., changing input/output types, renaming spec fields, removing features), increment the version by `0.1` in `facets.yaml`. The directory name stays the same — only the `version:` field in facets.yaml changes. If the module is referenced in any base project type (`project-type/{cloud}/project-type.yml`), update the version there too.
+
+**Bad (breaking change without version bump):**
+```yaml
+# facets.yaml - changed output type but kept same version
+intent: kubernetes_cluster
+flavor: eks_standard
+version: "1.0"          # Still 1.0 despite breaking output change!
+outputs:
+  default:
+    type: "@facets/eks-v2"   # Was @facets/eks — breaking change
+```
+
+**Good (version bumped, project type updated):**
+```yaml
+# facets.yaml
+intent: kubernetes_cluster
+flavor: eks_standard
+version: "1.1"          # Bumped from 1.0 to 1.1
+outputs:
+  default:
+    type: "@facets/eks-v2"
+```
+
+```yaml
+# project-type/aws/project-type.yml — updated to use new version
+- intent: kubernetes_cluster
+  flavor: eks_standard
+  version: "1.1"        # Was "1.0", updated to match
+```
+
+**What counts as a breaking change:**
+- Changing an output type (consumers may break)
+- Removing or renaming a spec field
+- Changing input types or removing inputs
+- Altering output attribute/interface structure
+
+**What does NOT require a version bump:**
+- Adding new optional spec fields
+- Bug fixes that don't change the contract
+- Adding new outputs (existing consumers unaffected)
+
+---
+
 ## Quick Reference
 
 | Rule | Category | Summary |
@@ -794,3 +842,4 @@ enable_logging = lookup(var.instance.spec, "enable_logging", true)
 | RULE-021 | facets.yaml | No unsupported metadata in facets.yaml |
 | RULE-022 | facets.yaml | facets.yaml must include intentDetails |
 | RULE-023 | module design | Enable security defaults (encryption, logging) |
+| RULE-024 | module lifecycle | Bump version for breaking changes; update project types |

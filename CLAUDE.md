@@ -164,3 +164,4 @@ Frequent bugs from real PRs. See **rules.md** for full details and examples.
 | Referencing platform-injected vars (`cc_metadata`, `cluster`) | #95 | RULE-014 |
 | Provider type mismatch (consuming type without checking output schema) | #208 | RULE-016 |
 | Security defaults not enabled (encryption, logging) | #218 | RULE-023 |
+| Breaking changes without version bump or project-type update | — | RULE-024 |
