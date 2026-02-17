@@ -74,22 +74,7 @@ sample:
 
 ## var.inputs Rules
 
-### Finding Input/Output Type Schemas
-
-To build correct `var.inputs` types, you need to know the schema of each input type. Two ways to find it:
-
-1. **From `outputs/` directory:**
-   ```
-   outputs/{type-name}/outputs.yaml
-   ```
-   Example: For `@facets/aws_cloud_account`, check `outputs/aws_cloud_account/outputs.yaml`
-
-2. **Using raptor CLI:**
-   ```bash
-   raptor get output-type @facets/aws_cloud_account
-   ```
-
----
+To build correct `var.inputs` types, verify the schema of each input type in `outputs/{type-name}/outputs.yaml` or via `raptor get output-type <type>`.
 
 ### RULE-004: Explicit object type required
 
@@ -447,12 +432,6 @@ resource "kubernetes_namespace" "ns" {
 
 ---
 
-## Real-World Bug Rules
-
-The following rules are derived from actual bugs found in production modules. Each references the issue/PR where the bug was discovered.
-
----
-
 ### RULE-015: Use lookup() for optional spec fields
 
 **Source:** #211, #206, #238
@@ -500,87 +479,47 @@ host = var.inputs.kubernetes_details.cluster_endpoint  # Wrong level!
 host = var.inputs.kubernetes_details.attributes.cluster_endpoint
 ```
 
-**Also applies to blueprints:** When consuming non-default output keys, you must specify `"output_name"` in the blueprint input wiring:
-
-**Bad:**
-```json
-{
-  "inputs": {
-    "kubernetes_details": {
-      "resourceType": "kubernetes_cluster",
-      "resourceName": "default"
-    }
-  }
-}
-```
-
-**Good (when consuming the `attributes` output key):**
-```json
-{
-  "inputs": {
-    "kubernetes_details": {
-      "resourceType": "kubernetes_cluster",
-      "resourceName": "default",
-      "output_name": "attributes"
-    }
-  }
-}
-```
+**Note:** In blueprints, when consuming non-default output keys, specify `"output_name"` in the input wiring (e.g., `"output_name": "attributes"`).
 
 ---
 
-### RULE-017: Avoid unnecessary explicit depends_on
+### RULE-017: depends_on — when to use and when not to
 
-**Source:** #210
+**Source:** #210, #200
 **Category:** Terraform
 
-Adding `depends_on` to a resource that already implicitly depends on another resource (via attribute references) creates redundant dependency edges. In some cases, this can cause Terraform cycles.
+Use `depends_on` only when no attribute reference creates an implicit dependency. Adding `depends_on` to a resource that already references another resource's attributes is redundant and can cause Terraform cycles.
 
-**Bad:**
+**Case A — Don't add depends_on when attribute references exist:**
 ```hcl
+# Bad
 resource "aws_eks_addon" "ebs_csi" {
   cluster_name = aws_eks_cluster.main.name  # Already implicit dependency
   depends_on   = [aws_eks_cluster.main]      # Unnecessary and can cause cycles
 }
-```
 
-**Good:**
-```hcl
+# Good
 resource "aws_eks_addon" "ebs_csi" {
   cluster_name = aws_eks_cluster.main.name  # Terraform infers dependency automatically
 }
 ```
 
-**When `depends_on` IS needed:** See RULE-018 for cases where no attribute reference exists.
-
----
-
-### RULE-018: CRD resources must depend on their Helm release
-
-**Source:** #200
-**Category:** Terraform
-
-Terraform resources that use Custom Resource Definitions (CRDs) installed by a Helm chart will fail if the Helm release hasn't completed. Since there's no attribute reference to create an implicit dependency, an explicit `depends_on` is required.
-
-**Bad:**
+**Case B — depends_on IS required for CRD resources (no attribute reference exists):**
 ```hcl
+# Bad
 resource "kubectl_manifest" "karpenter_nodepool" {
   yaml_body = yamlencode({
     apiVersion = "karpenter.sh/v1"
     kind       = "NodePool"
-    # ...
   })
   # Missing depends_on - CRD may not exist yet!
 }
-```
 
-**Good:**
-```hcl
+# Good
 resource "kubectl_manifest" "karpenter_nodepool" {
   yaml_body = yamlencode({
     apiVersion = "karpenter.sh/v1"
     kind       = "NodePool"
-    # ...
   })
   depends_on = [helm_release.karpenter]  # Ensure CRDs are installed first
 }
@@ -588,7 +527,7 @@ resource "kubectl_manifest" "karpenter_nodepool" {
 
 ---
 
-### RULE-019: Pin Docker images to verified tags
+### RULE-018: Pin Docker images to verified tags
 
 **Source:** #204, #201
 **Category:** Terraform
@@ -610,20 +549,14 @@ image = "kubectl:latest"
 image = "registry.k8s.io/kubectl:v1.31.4"
 ```
 
-**Verification:** Before using an image tag, verify it exists:
-```bash
-# Check if tag exists
-docker manifest inspect registry.k8s.io/kubectl:v1.31.4
-```
-
 ---
 
-### RULE-020: Single owner for shared resource tags
+### RULE-019: Single owner for shared resource tags
 
 **Source:** #234
 **Category:** Terraform
 
-When multiple modules manage the same tag on a shared resource (e.g., subnets), Terraform oscillates between states on every apply. Only the resource-owning module should manage its tags.
+When multiple modules manage the same tag on a shared resource (e.g., subnets), Terraform oscillates between states on every apply. Only the resource-owning module should manage its tags; other modules should use data sources to read.
 
 **Bad (two modules setting the same tag on a shared subnet):**
 ```hcl
@@ -642,16 +575,8 @@ resource "aws_ec2_tag" "subnet_discovery" {
 }
 ```
 
-**Good (only the resource owner manages the tag):**
+**Good (consuming module reads via data source, does not manage tags):**
 ```hcl
-# In network module - single owner of subnet tags
-resource "aws_subnet" "private" {
-  tags = {
-    "karpenter.sh/discovery" = var.cluster_name
-  }
-}
-
-# Karpenter module reads the subnet via data source, does NOT manage its tags
 data "aws_subnets" "private" {
   filter {
     name   = "tag:karpenter.sh/discovery"
@@ -662,7 +587,9 @@ data "aws_subnets" "private" {
 
 ---
 
-### RULE-021: No unsupported metadata in facets.yaml
+## facets.yaml Rules
+
+### RULE-020: No unsupported metadata in facets.yaml
 
 **Source:** #212
 **Category:** facets.yaml
@@ -702,7 +629,7 @@ sample:
 
 ---
 
-### RULE-022: facets.yaml must include intentDetails
+### RULE-021: facets.yaml must include intentDetails
 
 **Source:** #153, #185
 **Category:** facets.yaml
@@ -740,7 +667,9 @@ intentDetails:
 
 ---
 
-### RULE-023: Enable security defaults
+## Module Design & Lifecycle Rules
+
+### RULE-022: Enable security defaults
 
 **Source:** #218
 **Category:** Module design
@@ -767,7 +696,7 @@ enable_logging = lookup(var.instance.spec, "enable_logging", true)
 
 ---
 
-### RULE-024: Bump version for breaking changes and update project types
+### RULE-023: Bump version for breaking changes and update project types
 
 **Category:** Module lifecycle
 
@@ -835,11 +764,10 @@ outputs:
 | RULE-014 | terraform | All variables must be declared; no platform-injected vars |
 | RULE-015 | terraform | Use lookup() for optional spec fields |
 | RULE-016 | var.inputs | Match input access pattern to output type schema |
-| RULE-017 | terraform | Avoid unnecessary explicit depends_on |
-| RULE-018 | terraform | CRD resources must depend on their Helm release |
-| RULE-019 | terraform | Pin Docker images to verified tags |
-| RULE-020 | terraform | Single owner for shared resource tags |
-| RULE-021 | facets.yaml | No unsupported metadata in facets.yaml |
-| RULE-022 | facets.yaml | facets.yaml must include intentDetails |
-| RULE-023 | module design | Enable security defaults (encryption, logging) |
-| RULE-024 | module lifecycle | Bump version for breaking changes; update project types |
+| RULE-017 | terraform | depends_on: when to use and when not to |
+| RULE-018 | terraform | Pin Docker images to verified tags |
+| RULE-019 | terraform | Single owner for shared resource tags |
+| RULE-020 | facets.yaml | No unsupported metadata in facets.yaml |
+| RULE-021 | facets.yaml | facets.yaml must include intentDetails |
+| RULE-022 | module design | Enable security defaults (encryption, logging) |
+| RULE-023 | module lifecycle | Bump version for breaking changes; update project types |

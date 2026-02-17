@@ -103,7 +103,7 @@ When creating a new module, complete ALL of these steps:
 ### 0. facets.yaml intentDetails (required)
 - Every `facets.yaml` must include an `intentDetails` block
 - Required fields: `type`, `description`, `displayName`, `iconUrl`
-- See RULE-022 in `rules.md` for details and valid `type` values
+- See RULE-021 in `rules.md` for details and valid `type` values
 
 ### 1. Icon (`icons/{intent}.svg`)
 - Each **intent** gets one SVG icon (not per flavor)
@@ -155,13 +155,12 @@ Frequent bugs from real PRs. See **rules.md** for full details and examples.
 |---------|--------|------|
 | Accessing optional spec fields without `lookup()` defaults | #211, #206, #238 | RULE-015 |
 | Wrong access pattern on `var.inputs` — always verify against output type schema | #228, #233, #224 | RULE-016 |
-| Unnecessary `depends_on` causing Terraform cycles | #210 | RULE-017 |
-| CRD resources missing `depends_on` to Helm release | #200 | RULE-018 |
-| Using non-existent or `:latest` Docker image tags | #204 | RULE-019 |
-| Multiple modules managing same tags causing oscillation | #234 | RULE-020 |
-| Using unsupported `metadata:` in facets.yaml | #212 | RULE-021 |
-| Missing `intentDetails` in facets.yaml | #153 | RULE-022 |
+| Unnecessary `depends_on` or missing `depends_on` for CRD resources | #210, #200 | RULE-017 |
+| Using non-existent or `:latest` Docker image tags | #204 | RULE-018 |
+| Multiple modules managing same tags causing oscillation | #234 | RULE-019 |
+| Using unsupported `metadata:` in facets.yaml | #212 | RULE-020 |
+| Missing `intentDetails` in facets.yaml | #153 | RULE-021 |
 | Referencing platform-injected vars (`cc_metadata`, `cluster`) | #95 | RULE-014 |
 | Provider type mismatch (consuming type without checking output schema) | #208 | RULE-016 |
-| Security defaults not enabled (encryption, logging) | #218 | RULE-023 |
-| Breaking changes without version bump or project-type update | — | RULE-024 |
+| Security defaults not enabled (encryption, logging) | #218 | RULE-022 |
+| Breaking changes without version bump or project-type update | — | RULE-023 |
