@@ -1,4 +1,14 @@
+module "name" {
+  source          = "github.com/Facets-cloud/facets-utility-modules//name"
+  environment     = var.environment
+  limit           = 48
+  resource_name   = var.instance_name
+  resource_type   = "aws_alb_controller"
+  globally_unique = true
+}
+
 locals {
+  name                       = module.name.name
   controller_namespace       = "kube-system"
   controller_service_account = "aws-load-balancer-controller"
   cluster_name               = var.inputs.eks_details.attributes.cluster_name
@@ -20,7 +30,7 @@ locals {
 
 # IAM Role for AWS Load Balancer Controller
 resource "aws_iam_role" "alb_controller" {
-  name = "aws-lb-controller-${local.cluster_name}"
+  name = "${local.name}-alb-ctrl"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -47,7 +57,7 @@ resource "aws_iam_role" "alb_controller" {
 # IAM Policy for AWS Load Balancer Controller (official v3.0.0 policy from
 # https://github.com/kubernetes-sigs/aws-load-balancer-controller/blob/main/docs/install/iam_policy.json)
 resource "aws_iam_policy" "alb_controller" {
-  name        = "aws-lb-controller-${local.cluster_name}"
+  name        = "${local.name}-alb-ctrl"
   description = "IAM policy for the AWS Load Balancer Controller"
 
   policy = jsonencode({
