@@ -1,4 +1,4 @@
-name: '@facets/aws-alb-controller-details'
+name: '@facets/aws-alb-controller'
 properties:
   type: object
   properties:

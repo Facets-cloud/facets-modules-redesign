@@ -1304,7 +1304,7 @@
       ],
       "outputs": {
         "default": {
-          "type": "@facets/aws-alb-controller-details",
+          "type": "@facets/aws-alb-controller",
           "hasProviders": false,
           "providers": []
         }

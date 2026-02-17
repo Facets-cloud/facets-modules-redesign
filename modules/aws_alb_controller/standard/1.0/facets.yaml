@@ -38,7 +38,7 @@ intent: aws_alb_controller
 outputs:
   default:
     title: AWS ALB Controller Details
-    type: '@facets/aws-alb-controller-details'
+    type: '@facets/aws-alb-controller'
 sample:
   disabled: false
   flavor: standard
