@@ -25,6 +25,17 @@ spec:
   description: Specification of the aws iam policy resource intent
   type: object
   properties:
+    aws_iam_policy:
+    title: AWS IAM policy
+    type: object
+    properties:
+      path:
+        type: string
+        title: IAM Policy Path
+        default: "/"
+      description:
+        type: string
+        title: Description
     name:
       type: string
     policy:
