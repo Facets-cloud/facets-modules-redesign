@@ -1,6 +1,4 @@
-# Data sources for region and account information
 data "aws_region" "current" {}
-data "aws_caller_identity" "current" {}
 
 locals {
   # Instance spec shortcuts
@@ -92,9 +90,9 @@ resource "aws_sqs_queue" "dlq" {
   )
 }
 
-# IAM Policy for Send Messages
-resource "aws_iam_policy" "send" {
-  name        = "${var.instance_name}-${var.environment.unique_name}-sqs-send"
+# IAM Policy for producing (sending) messages
+resource "aws_iam_policy" "producer" {
+  name        = "${var.instance_name}-${var.environment.unique_name}-sqs-producer"
   description = "Send messages to ${local.queue_name} SQS queue"
   policy = jsonencode({
     Version = "2012-10-17"
@@ -109,7 +107,6 @@ resource "aws_iam_policy" "send" {
         Resource = aws_sqs_queue.main.arn
       }
       ],
-      # Add KMS permissions when using customer-managed keys
       local.kms_key_id != null ? [{
         Effect = "Allow"
         Action = [
@@ -123,9 +120,9 @@ resource "aws_iam_policy" "send" {
   tags = local.all_tags
 }
 
-# IAM Policy for Receive Messages
-resource "aws_iam_policy" "receive" {
-  name        = "${var.instance_name}-${var.environment.unique_name}-sqs-receive"
+# IAM Policy for consuming (receiving) messages
+resource "aws_iam_policy" "consumer" {
+  name        = "${var.instance_name}-${var.environment.unique_name}-sqs-consumer"
   description = "Receive messages from ${local.queue_name} SQS queue"
   policy = jsonencode({
     Version = "2012-10-17"
@@ -142,49 +139,10 @@ resource "aws_iam_policy" "receive" {
         Resource = aws_sqs_queue.main.arn
       }
       ],
-      # Add KMS permissions when using customer-managed keys
       local.kms_key_id != null ? [{
         Effect = "Allow"
         Action = [
           "kms:Decrypt"
-        ]
-        Resource = local.kms_key_id
-      }] : []
-    )
-  })
-  tags = local.all_tags
-}
-
-# IAM Policy for Full Access (Send + Receive + Manage)
-resource "aws_iam_policy" "full_access" {
-  name        = "${var.instance_name}-${var.environment.unique_name}-sqs-full"
-  description = "Full access to ${local.queue_name} SQS queue"
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = concat([
-      {
-        Effect = "Allow"
-        Action = [
-          "sqs:SendMessage",
-          "sqs:ReceiveMessage",
-          "sqs:DeleteMessage",
-          "sqs:ChangeMessageVisibility",
-          "sqs:GetQueueUrl",
-          "sqs:GetQueueAttributes",
-          "sqs:SetQueueAttributes",
-          "sqs:ListQueueTags",
-          "sqs:TagQueue",
-          "sqs:UntagQueue"
-        ]
-        Resource = aws_sqs_queue.main.arn
-      }
-      ],
-      # Add KMS permissions when using customer-managed keys
-      local.kms_key_id != null ? [{
-        Effect = "Allow"
-        Action = [
-          "kms:Decrypt",
-          "kms:GenerateDataKey"
         ]
         Resource = local.kms_key_id
       }] : []

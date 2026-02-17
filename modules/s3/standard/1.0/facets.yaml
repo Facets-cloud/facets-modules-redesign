@@ -1,4 +1,4 @@
-intent: s3_bucket
+intent: s3
 flavor: standard
 version: '1.0'
 description: AWS S3 bucket with encryption, versioning, and lifecycle management
@@ -19,7 +19,7 @@ inputs:
     - aws
 outputs:
   default:
-    type: '@facets/s3_bucket'
+    type: '@facets/s3'
     title: S3 Bucket Details
 spec:
   description: Configure S3 bucket with encryption, versioning, lifecycle, and access controls
@@ -263,7 +263,7 @@ iac:
 sample:
   version: '1.0'
   flavor: standard
-  kind: s3_bucket
+  kind: s3
   disabled: true
   spec:
     block_public_acls: true

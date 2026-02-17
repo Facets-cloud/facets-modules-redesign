@@ -1,4 +1,4 @@
-intent: sqs_queue
+intent: sqs
 flavor: standard
 version: '1.0'
 description: AWS SQS queue with optional FIFO support, dead letter queue, and encryption
@@ -19,7 +19,7 @@ inputs:
     - aws
 outputs:
   default:
-    type: '@facets/sqs_queue'
+    type: '@facets/sqs'
     title: SQS Queue Details
 spec:
   description: Configure SQS queue with encryption, dead letter queue, and access policies
@@ -198,7 +198,7 @@ iac:
 sample:
   version: '1.0'
   flavor: standard
-  kind: sqs_queue
+  kind: sqs
   disabled: true
   spec:
     import_existing: false

@@ -202,59 +202,77 @@ resource "aws_s3_bucket_policy" "main" {
   depends_on = [aws_s3_bucket_public_access_block.main]
 }
 
-# Custom IAM policy for read-only access to this bucket
-resource "aws_iam_policy" "s3_readonly" {
-  name        = "${var.instance_name}-${var.environment.unique_name}-s3-readonly"
+# IAM policy for read-only access to this bucket
+resource "aws_iam_policy" "read_only" {
+  name        = "${var.instance_name}-${var.environment.unique_name}-read-only"
   description = "Read-only access to ${local.bucket_name} S3 bucket"
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:GetObjectVersion",
-          "s3:ListBucket",
-          "s3:ListBucketVersions",
-          "s3:GetBucketLocation",
-          "s3:GetBucketVersioning"
-        ]
-        Resource = [
-          aws_s3_bucket.main.arn,
-          "${aws_s3_bucket.main.arn}/*"
-        ]
-      }
-    ]
+    Statement = concat(
+      [
+        {
+          Effect = "Allow"
+          Action = [
+            "s3:GetObject",
+            "s3:GetObjectVersion",
+            "s3:ListBucket",
+            "s3:ListBucketVersions",
+            "s3:GetBucketLocation",
+            "s3:GetBucketVersioning"
+          ]
+          Resource = [
+            aws_s3_bucket.main.arn,
+            "${aws_s3_bucket.main.arn}/*"
+          ]
+        }
+      ],
+      local.kms_key_id != null ? [
+        {
+          Effect   = "Allow"
+          Action   = ["kms:Decrypt"]
+          Resource = [local.kms_key_id]
+        }
+      ] : []
+    )
   })
   tags = local.all_tags
 }
 
-# Custom IAM policy for read-write access to this bucket
-resource "aws_iam_policy" "s3_readwrite" {
-  name        = "${var.instance_name}-${var.environment.unique_name}-s3-readwrite"
+# IAM policy for read-write access to this bucket
+resource "aws_iam_policy" "read_write" {
+  name        = "${var.instance_name}-${var.environment.unique_name}-read-write"
   description = "Read-write access to ${local.bucket_name} S3 bucket"
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:GetObjectVersion",
-          "s3:PutObject",
-          "s3:DeleteObject",
-          "s3:DeleteObjectVersion",
-          "s3:ListBucket",
-          "s3:ListBucketVersions",
-          "s3:GetBucketLocation",
-          "s3:GetBucketVersioning"
-        ]
-        Resource = [
-          aws_s3_bucket.main.arn,
-          "${aws_s3_bucket.main.arn}/*"
-        ]
-      }
-    ]
+    Statement = concat(
+      [
+        {
+          Effect = "Allow"
+          Action = [
+            "s3:GetObject",
+            "s3:GetObjectVersion",
+            "s3:PutObject",
+            "s3:DeleteObject",
+            "s3:DeleteObjectVersion",
+            "s3:ListBucket",
+            "s3:ListBucketVersions",
+            "s3:GetBucketLocation",
+            "s3:GetBucketVersioning"
+          ]
+          Resource = [
+            aws_s3_bucket.main.arn,
+            "${aws_s3_bucket.main.arn}/*"
+          ]
+        }
+      ],
+      local.kms_key_id != null ? [
+        {
+          Effect   = "Allow"
+          Action   = ["kms:Decrypt", "kms:GenerateDataKey"]
+          Resource = [local.kms_key_id]
+        }
+      ] : []
+    )
   })
   tags = local.all_tags
 }

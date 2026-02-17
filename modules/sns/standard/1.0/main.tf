@@ -1,6 +1,4 @@
-# Data sources for region and account information
 data "aws_region" "current" {}
-data "aws_caller_identity" "current" {}
 
 locals {
   # Instance spec shortcuts
@@ -73,25 +71,11 @@ resource "aws_sqs_queue" "dlq" {
   )
 }
 
-# SNS Topic Subscription DLQ Policy
-resource "aws_sns_topic_subscription" "dlq_policy" {
-  count = local.enable_dlq ? 1 : 0
-
-  topic_arn            = aws_sns_topic.main.arn
-  protocol             = "sqs"
-  endpoint             = aws_sqs_queue.dlq[0].arn
-  raw_message_delivery = true
-
-  redrive_policy = jsonencode({
-    deadLetterTargetArn = aws_sqs_queue.dlq[0].arn
-  })
-}
-
 # SQS Queue Policy to allow SNS to send messages to DLQ
 resource "aws_sqs_queue_policy" "dlq" {
   count = local.enable_dlq ? 1 : 0
 
-  queue_url = aws_sqs_queue.dlq[0].id
+  queue_url = aws_sqs_queue.dlq[0].url
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -113,9 +97,9 @@ resource "aws_sqs_queue_policy" "dlq" {
   })
 }
 
-# IAM Policy for Publishing Messages
-resource "aws_iam_policy" "publish" {
-  name        = "${var.instance_name}-${var.environment.unique_name}-sns-publish"
+# IAM Policy for producing (publishing) messages
+resource "aws_iam_policy" "producer" {
+  name        = "${var.instance_name}-${var.environment.unique_name}-sns-producer"
   description = "Publish messages to ${local.topic_name} SNS topic"
   policy = jsonencode({
     Version = "2012-10-17"
@@ -129,7 +113,6 @@ resource "aws_iam_policy" "publish" {
         Resource = aws_sns_topic.main.arn
       }
       ],
-      # Add KMS permissions when using customer-managed keys
       local.kms_key_id != null ? [{
         Effect = "Allow"
         Action = [
@@ -143,9 +126,9 @@ resource "aws_iam_policy" "publish" {
   tags = local.all_tags
 }
 
-# IAM Policy for Subscribing to Topic
-resource "aws_iam_policy" "subscribe" {
-  name        = "${var.instance_name}-${var.environment.unique_name}-sns-subscribe"
+# IAM Policy for consuming (subscribing to) messages
+resource "aws_iam_policy" "consumer" {
+  name        = "${var.instance_name}-${var.environment.unique_name}-sns-consumer"
   description = "Subscribe to ${local.topic_name} SNS topic"
   policy = jsonencode({
     Version = "2012-10-17"
@@ -162,50 +145,10 @@ resource "aws_iam_policy" "subscribe" {
         Resource = aws_sns_topic.main.arn
       }
       ],
-      # Add KMS permissions when using customer-managed keys
       local.kms_key_id != null ? [{
         Effect = "Allow"
         Action = [
           "kms:Decrypt"
-        ]
-        Resource = local.kms_key_id
-      }] : []
-    )
-  })
-  tags = local.all_tags
-}
-
-# IAM Policy for Full Access (Publish + Subscribe + Manage)
-resource "aws_iam_policy" "full_access" {
-  name        = "${var.instance_name}-${var.environment.unique_name}-sns-full"
-  description = "Full access to ${local.topic_name} SNS topic"
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = concat([
-      {
-        Effect = "Allow"
-        Action = [
-          "sns:Publish",
-          "sns:Subscribe",
-          "sns:Unsubscribe",
-          "sns:GetTopicAttributes",
-          "sns:SetTopicAttributes",
-          "sns:GetSubscriptionAttributes",
-          "sns:SetSubscriptionAttributes",
-          "sns:ListSubscriptionsByTopic",
-          "sns:ListTagsForResource",
-          "sns:TagResource",
-          "sns:UntagResource"
-        ]
-        Resource = aws_sns_topic.main.arn
-      }
-      ],
-      # Add KMS permissions when using customer-managed keys
-      local.kms_key_id != null ? [{
-        Effect = "Allow"
-        Action = [
-          "kms:Decrypt",
-          "kms:GenerateDataKey"
         ]
         Resource = local.kms_key_id
       }] : []

@@ -1,4 +1,4 @@
-intent: sns_topic
+intent: sns
 flavor: standard
 version: '1.0'
 description: AWS SNS topic with optional FIFO support, dead letter queue, and encryption
@@ -19,7 +19,7 @@ inputs:
     - aws
 outputs:
   default:
-    type: '@facets/sns_topic'
+    type: '@facets/sns'
     title: SNS Topic Details
 spec:
   description: Configure SNS topic with encryption, dead letter queue for failed deliveries, and access policies
@@ -147,7 +147,7 @@ iac:
 sample:
   version: '1.0'
   flavor: standard
-  kind: sns_topic
+  kind: sns
   disabled: true
   spec:
     import_existing: false
