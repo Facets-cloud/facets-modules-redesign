@@ -24,9 +24,9 @@ locals {
       instance_types = lookup(lookup(var.instance.spec, "default_node_pool", {}), "instance_types", ["t3.medium"])
       capacity_type  = lookup(lookup(var.instance.spec, "default_node_pool", {}), "capacity_type", "ON_DEMAND")
 
-      min_size     = lookup(lookup(var.instance.spec, "default_node_pool", {}), "min_size", 1)
-      max_size     = lookup(lookup(var.instance.spec, "default_node_pool", {}), "max_size", 3)
-      desired_size = lookup(lookup(var.instance.spec, "default_node_pool", {}), "desired_size", 2)
+      min_size     = lookup(lookup(var.instance.spec, "default_node_pool", {}), "size", 2)
+      max_size     = lookup(lookup(var.instance.spec, "default_node_pool", {}), "size", 2)
+      desired_size = lookup(lookup(var.instance.spec, "default_node_pool", {}), "size", 2)
 
       disk_size = lookup(lookup(var.instance.spec, "default_node_pool", {}), "disk_size", 50)
 
@@ -83,6 +83,12 @@ locals {
 
     amazon-cloudwatch-observability = local.container_insights_enabled ? {
       addon_version            = null
+      resolve_conflicts        = "OVERWRITE"
+      service_account_role_arn = null
+    } : null
+
+    metrics-server = lookup(lookup(var.instance.spec.cluster_addons, "metrics_server", {}), "enabled", true) ? {
+      addon_version            = lookup(lookup(var.instance.spec.cluster_addons, "metrics_server", {}), "version", "latest") == "latest" ? null : lookup(lookup(var.instance.spec.cluster_addons, "metrics_server", {}), "version", null)
       resolve_conflicts        = "OVERWRITE"
       service_account_role_arn = null
     } : null

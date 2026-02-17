@@ -81,6 +81,9 @@ sample:
             kube_proxy:
                 enabled: true
                 version: latest
+            metrics_server:
+                enabled: true
+                version: latest
             vpc_cni:
                 enabled: true
                 version: latest
@@ -172,6 +175,22 @@ spec:
                                     - true
                     title: Kube Proxy
                     type: object
+                metrics_server:
+                    properties:
+                        enabled:
+                            default: true
+                            title: Enable Metrics Server
+                            type: boolean
+                        version:
+                            default: latest
+                            title: Version
+                            type: string
+                            x-ui-visible-if:
+                                field: spec.cluster_addons.metrics_server.enabled
+                                values:
+                                    - true
+                    title: Metrics Server
+                    type: object
                 vpc_cni:
                     properties:
                         enabled:
@@ -234,12 +253,6 @@ spec:
                         - SPOT
                     title: Capacity Type
                     type: string
-                desired_size:
-                    default: 2
-                    description: Desired number of nodes in the default system pool
-                    minimum: 1
-                    title: Desired Size
-                    type: integer
                 disk_size:
                     default: 50
                     description: Disk size in GB for default system nodes
@@ -255,17 +268,11 @@ spec:
                         type: string
                     title: Instance Types
                     type: array
-                max_size:
-                    default: 3
-                    description: Maximum number of nodes in the default system pool
+                size:
+                    default: 2
+                    description: Number of nodes in the default system pool
                     minimum: 1
-                    title: Maximum Size
-                    type: integer
-                min_size:
-                    default: 1
-                    description: Minimum number of nodes in the default system pool
-                    minimum: 1
-                    title: Minimum Size
+                    title: Node Count
                     type: integer
             title: Default System Node Pool
             type: object
