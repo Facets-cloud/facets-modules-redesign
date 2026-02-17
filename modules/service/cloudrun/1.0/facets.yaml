@@ -1,5 +1,5 @@
-intent: cloudrun
-flavor: gcp
+intent: service
+flavor: cloudrun
 version: "1.0"
 clouds:
   - gcp
