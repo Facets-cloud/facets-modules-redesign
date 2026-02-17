@@ -1,205 +1,380 @@
-intent: service
-flavor: cloudrun
-version: "1.0"
-clouds:
-  - gcp
-description: |
-  Cloud Run Job for long-running batch tasks (up to 7 days).
-  Ideal for data processing, ETL, migrations, batch operations.
-  Jobs run to completion and exit (no HTTP server).
-  For GPU workloads, use cloudrun/gpu-job instead.
-
 artifact_inputs:
-  primary:
-    artifact_type: docker_image
-    attribute_path: spec.container.image
-
+    primary:
+        artifact_type: docker_image
+        attribute_path: spec.container.image
+clouds:
+    - gcp
+description: |
+    Deploys containerized applications to Google Cloud Run with auto-scaling,
+    traffic management, and VPC connector support
+flavor: cloudrun
 inputs:
-  gcp_provider:
-    type: '@facets/gcp_cloud_account'
-    optional: false
-    displayName: GCP Cloud Account
-    description: GCP project and authentication configuration
-    providers:
-      - google
-  network:
-    type: '@facets/gcp-network-details'
-    optional: true
-    displayName: VPC Network
-    description: VPC network for private connectivity
-
-sample:
-  kind: service
-  flavor: cloudrun
-  version: "1.0"
-  disabled: false
-  spec:
-    container:
-      image: "${blueprint.self.artifacts.batch-processor}"
-    resources:
-      cpu: "2"
-      memory: 4Gi
-    job:
-      task_count: 1
-      parallelism: 1
-      max_retries: 3
-      task_timeout: "3600s"
-
-spec:
-  title: Cloud Run Job Configuration
-  description: Configure Cloud Run Job for batch processing tasks
-  type: object
-  properties:
-    container:
-      type: object
-      title: Container Configuration
-      properties:
-        image:
-          type: string
-          title: Container Image
-          description: Container image URI (use artifact reference)
-          default: "${blueprint.self.artifacts.default}"
-        command:
-          type: array
-          title: Command
-          description: Entrypoint command override
-          items:
-            type: string
-          x-ui-command: true
-        args:
-          type: array
-          title: Arguments
-          description: Arguments to the entrypoint
-          items:
-            type: string
-          x-ui-command: true
-      required:
-        - image
-    resources:
-      type: object
-      title: Resource Allocation
-      properties:
-        cpu:
-          type: string
-          title: CPU
-          description: Number of vCPUs
-          enum:
-            - "1"
-            - "2"
-            - "4"
-            - "8"
-          default: "2"
-        memory:
-          type: string
-          title: Memory
-          description: Memory allocation
-          enum:
-            - 512Mi
-            - 1Gi
-            - 2Gi
-            - 4Gi
-            - 8Gi
-            - 16Gi
-            - 32Gi
-          default: 4Gi
-    job:
-      type: object
-      title: Job Configuration
-      properties:
-        task_count:
-          type: integer
-          title: Task Count
-          description: Number of tasks to run (all must succeed)
-          default: 1
-          minimum: 1
-          maximum: 100
-        parallelism:
-          type: integer
-          title: Parallelism
-          description: Maximum tasks running in parallel
-          default: 1
-          minimum: 1
-          maximum: 100
-        max_retries:
-          type: integer
-          title: Max Retries
-          description: Retries per task before marking failed
-          default: 3
-          minimum: 0
-          maximum: 10
-        task_timeout:
-          type: string
-          title: Task Timeout
-          description: Maximum time per task (up to 168h/7 days)
-          default: "3600s"
-    env:
-      type: object
-      title: Environment Variables
-      description: Environment variables for the container
-      x-ui-yaml-editor: true
-    secrets:
-      type: object
-      title: Secret Environment Variables
-      description: Mount secrets from Secret Manager
-      patternProperties:
-        "^[A-Z][A-Z0-9_]*$":
-          type: object
-          properties:
-            secret_name:
-              type: string
-              title: Secret Name
-              description: Name of the secret in Secret Manager
-            version:
-              type: string
-              title: Secret Version
-              default: latest
-          required:
-            - secret_name
-    service_account:
-      type: string
-      title: Service Account
-      description: Custom service account email for the job
-      x-ui-overrides-only: true
-    vpc_access:
-      type: object
-      title: VPC Access Configuration
-      x-ui-toggle: true
-      properties:
-        enabled:
-          type: boolean
-          title: Enable VPC Access
-          description: Connect to VPC resources (databases, internal services)
-          default: false
-        egress:
-          type: string
-          title: VPC Egress
-          description: Route egress traffic through VPC
-          enum:
-            - all-traffic
-            - private-ranges-only
-          default: private-ranges-only
-          x-ui-visible-if:
-            field: spec.vpc_access.enabled
-            values:
-              - true
-    labels:
-      type: object
-      title: Labels
-      description: Resource labels for organization and billing
-      x-ui-yaml-editor: true
-  required:
-    - container
-  x-ui-order:
-    - container
-    - resources
-    - job
-    - env
-    - secrets
-    - vpc_access
-    - service_account
-    - labels
-
+    gcp_provider:
+        description: GCP project and authentication configuration
+        displayName: GCP Cloud Account
+        optional: false
+        providers:
+            - google
+        type: '@facets/gcp_cloud_account'
+    network:
+        description: VPC network for private Cloud Run services
+        displayName: VPC Network
+        optional: true
+        type: '@facets/gcp-network-details'
+intent: service
 outputs:
-  default:
-    type: '@facets/cloudrun'
-    title: Cloud Run Job
+    default:
+        mock:
+            attributes:
+                location: mock-string-value
+                service_name: mock-string-value
+                url: mock-string-value
+            interfaces:
+                http:
+                    location: mock-string-value
+                    protocol: mock-string-value
+                    service_name: mock-string-value
+                    url: mock-string-value
+        title: Cloud Run Service
+        type: '@facets/service'
+sample:
+    disabled: false
+    flavor: cloudrun
+    kind: service
+    spec:
+        auth:
+            allow_unauthenticated: false
+        container:
+            image: ${blueprint.self.artifacts.cloudrun-service}
+            port: "8080"
+        ingress: all
+        resources:
+            cpu: 1000m
+            memory: 512Mi
+            startup_cpu_boost: false
+        scaling:
+            concurrency: 80
+            max_instances: 10
+            min_instances: 0
+        timeout: "300"
+    version: "1.0"
+spec:
+    description: Configure your containerized service on Google Cloud Run
+    properties:
+        annotations:
+            description: Cloud Run service annotations
+            title: Service Annotations
+            type: object
+            x-ui-yaml-editor: true
+        auth:
+            description: Configure public access to this Cloud Run service
+            properties:
+                allow_unauthenticated:
+                    default: false
+                    description: Allow unauthenticated access (allUsers). When enabled, anyone can invoke the service.
+                    title: Allow Unauthenticated Access
+                    type: boolean
+            title: Authentication
+            type: object
+        container:
+            properties:
+                args:
+                    description: Arguments to the entrypoint
+                    items:
+                        type: string
+                    title: Arguments
+                    type: array
+                    x-ui-command: true
+                command:
+                    description: Entrypoint command override
+                    items:
+                        type: string
+                    title: Command
+                    type: array
+                    x-ui-command: true
+                image:
+                    default: ${blueprint.self.artifacts.cloudrun-service}
+                    description: Container image URI (e.g., gcr.io/project/image:tag)
+                    title: Container Image
+                    type: string
+                port:
+                    default: "8080"
+                    description: Port the container listens on
+                    title: Container Port
+                    type: string
+            required:
+                - image
+                - port
+            title: Container Configuration
+            type: object
+        env:
+            description: Environment variables for the container
+            title: Environment Variables
+            type: object
+            x-ui-yaml-editor: true
+        gcs_volumes:
+            description: Mount GCS buckets as volumes using Cloud Storage FUSE
+            patternProperties:
+                ^[a-z][a-z0-9-]*$:
+                    properties:
+                        bucket:
+                            description: Name of the GCS bucket to mount
+                            title: GCS Bucket Name
+                            type: string
+                        mount_path:
+                            description: Path inside the container where the bucket will be mounted (e.g., /data)
+                            title: Mount Path
+                            type: string
+                        read_only:
+                            default: false
+                            description: Mount the bucket as read-only for better performance and safety
+                            title: Read Only
+                            type: boolean
+                    required:
+                        - bucket
+                        - mount_path
+                    type: object
+            title: GCS Bucket Volumes
+            type: object
+        health_checks:
+            properties:
+                liveness_probe:
+                    properties:
+                        enabled:
+                            default: false
+                            title: Enable Liveness Probe
+                            type: boolean
+                        failure_threshold:
+                            default: 3
+                            title: Failure Threshold
+                            type: integer
+                            x-ui-visible-if:
+                                field: spec.health_checks.liveness_probe.enabled
+                                values:
+                                    - true
+                        initial_delay:
+                            default: 0
+                            title: Initial Delay (seconds)
+                            type: integer
+                            x-ui-visible-if:
+                                field: spec.health_checks.liveness_probe.enabled
+                                values:
+                                    - true
+                        path:
+                            default: /health/live
+                            title: HTTP Path
+                            type: string
+                            x-ui-visible-if:
+                                field: spec.health_checks.liveness_probe.enabled
+                                values:
+                                    - true
+                        period:
+                            default: 10
+                            title: Period (seconds)
+                            type: integer
+                            x-ui-visible-if:
+                                field: spec.health_checks.liveness_probe.enabled
+                                values:
+                                    - true
+                        timeout:
+                            default: 1
+                            title: Timeout (seconds)
+                            type: integer
+                            x-ui-visible-if:
+                                field: spec.health_checks.liveness_probe.enabled
+                                values:
+                                    - true
+                    title: Liveness Probe
+                    type: object
+                startup_probe:
+                    properties:
+                        enabled:
+                            default: false
+                            title: Enable Startup Probe
+                            type: boolean
+                        failure_threshold:
+                            default: 3
+                            title: Failure Threshold
+                            type: integer
+                            x-ui-visible-if:
+                                field: spec.health_checks.startup_probe.enabled
+                                values:
+                                    - true
+                        initial_delay:
+                            default: 0
+                            title: Initial Delay (seconds)
+                            type: integer
+                            x-ui-visible-if:
+                                field: spec.health_checks.startup_probe.enabled
+                                values:
+                                    - true
+                        path:
+                            default: /health/startup
+                            title: HTTP Path
+                            type: string
+                            x-ui-visible-if:
+                                field: spec.health_checks.startup_probe.enabled
+                                values:
+                                    - true
+                        period:
+                            default: 10
+                            title: Period (seconds)
+                            type: integer
+                            x-ui-visible-if:
+                                field: spec.health_checks.startup_probe.enabled
+                                values:
+                                    - true
+                        timeout:
+                            default: 1
+                            title: Timeout (seconds)
+                            type: integer
+                            x-ui-visible-if:
+                                field: spec.health_checks.startup_probe.enabled
+                                values:
+                                    - true
+                    title: Startup Probe
+                    type: object
+            title: Health Check Configuration
+            type: object
+            x-ui-toggle: true
+        ingress:
+            default: all
+            description: Control which traffic can reach the service
+            enum:
+                - all
+                - internal-only
+                - internal-load-balancer
+            title: Ingress Settings
+            type: string
+            x-ui-override-disable: true
+        labels:
+            description: Resource labels for organization and billing
+            title: Labels
+            type: object
+            x-ui-yaml-editor: true
+        resources:
+            properties:
+                cpu:
+                    default: 1000m
+                    description: CPU allocation (e.g., 1000m = 1 vCPU)
+                    enum:
+                        - 1000m
+                        - 2000m
+                        - 4000m
+                        - 8000m
+                    title: CPU
+                    type: string
+                memory:
+                    default: 512Mi
+                    description: Memory allocation
+                    enum:
+                        - 256Mi
+                        - 512Mi
+                        - 1Gi
+                        - 2Gi
+                        - 4Gi
+                        - 8Gi
+                    title: Memory
+                    type: string
+                startup_cpu_boost:
+                    default: false
+                    description: Boost CPU during startup to reduce cold start time
+                    title: Startup CPU Boost
+                    type: boolean
+            title: Resource Limits
+            type: object
+        scaling:
+            properties:
+                concurrency:
+                    default: 80
+                    description: Maximum concurrent requests per container instance
+                    maximum: 1000
+                    minimum: 1
+                    title: Concurrent Requests
+                    type: integer
+                max_instances:
+                    default: 10
+                    description: Maximum number of container instances
+                    maximum: 1000
+                    minimum: 1
+                    title: Maximum Instances
+                    type: integer
+                min_instances:
+                    default: 0
+                    description: Minimum number of container instances (0 = scale to zero)
+                    maximum: 100
+                    minimum: 0
+                    title: Minimum Instances
+                    type: integer
+            title: Auto-scaling Configuration
+            type: object
+        secrets:
+            description: Mount secrets as environment variables from Secret Manager
+            patternProperties:
+                ^[A-Z][A-Z0-9_]*$:
+                    properties:
+                        secret_name:
+                            description: Name of the secret in Secret Manager
+                            title: Secret Name
+                            type: string
+                        version:
+                            default: latest
+                            title: Secret Version
+                            type: string
+                    required:
+                        - secret_name
+                    type: object
+            title: Secret Environment Variables
+            type: object
+        service_account:
+            description: IAM service account for Cloud Run service
+            title: Service Account Email
+            type: string
+            x-ui-overrides-only: true
+        timeout:
+            default: "300"
+            description: Maximum request timeout in seconds
+            title: Request Timeout
+            type: string
+        vpc_access:
+            properties:
+                egress:
+                    default: private-ranges-only
+                    description: Route egress traffic through VPC
+                    enum:
+                        - all-traffic
+                        - private-ranges-only
+                    title: VPC Egress
+                    type: string
+                    x-ui-visible-if:
+                        field: spec.vpc_access.enabled
+                        values:
+                            - true
+                enabled:
+                    default: false
+                    description: Connect to VPC resources (databases, internal services)
+                    title: Enable VPC Access
+                    type: boolean
+            title: VPC Access Configuration
+            type: object
+            x-ui-toggle: true
+    required:
+        - container
+    title: Cloud Run Service Configuration
+    type: object
+    x-ui-order:
+        - container
+        - env
+        - secrets
+        - gcs_volumes
+        - resources
+        - scaling
+        - timeout
+        - ingress
+        - auth
+        - vpc_access
+        - service_account
+        - health_checks
+        - annotations
+        - labels
+version: "1.0"

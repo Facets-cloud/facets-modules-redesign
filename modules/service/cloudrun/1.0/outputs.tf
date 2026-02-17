@@ -1,19 +1,17 @@
-# =============================================================================
-# OUTPUTS
-# =============================================================================
-
 locals {
   output_attributes = {
-    resource_type   = local.resource_type
-    resource_name   = local.resource_name
-    service_name    = var.instance_name
-    job_name   = google_cloud_run_v2_job.this.name
-    location   = google_cloud_run_v2_job.this.location
-    project_id = local.project_id
-
-    # Job execution URI (for Cloud Tasks or manual triggering)
-    execution_uri = "https://${local.region}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${local.project_id}/jobs/${local.job_name}:run"
+    service_name = google_cloud_run_v2_service.this.name
+    location     = google_cloud_run_v2_service.this.location
+    url          = try(google_cloud_run_v2_service.this.uri, "")
   }
 
-  output_interfaces = {}
+  # Cloud Run services expose HTTP endpoints
+  output_interfaces = {
+    http = {
+      url          = try(google_cloud_run_v2_service.this.uri, "")
+      protocol     = "https"
+      service_name = google_cloud_run_v2_service.this.name
+      location     = google_cloud_run_v2_service.this.location
+    }
+  }
 }
