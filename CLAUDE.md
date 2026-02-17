@@ -110,6 +110,7 @@ When creating a new module, complete ALL of these steps:
 - Icons MUST be **cloud-neutral** (no AWS/GCP/Azure branding) since intents span multiple clouds
 - Place at `icons/{intent}.svg` (e.g., `icons/postgres.svg`, `icons/helm.svg`)
 - Use filled SVGs (`fill="#4A5568"` or similar), NOT stroke-only (stroke-only is invisible on some backgrounds)
+- Source SVG files from https://vecta.io/symbols — search for the technology name and download the SVG
 - If the intent already has an icon, do NOT create a new one
 
 ### 2. Project Type (`project-type/{cloud}/project-type.yml`)
