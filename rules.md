@@ -744,6 +744,36 @@ outputs:
 
 ---
 
+### RULE-024: Use //name module for resource name length limits
+
+**Category:** Terraform
+
+All modules should use the `//name` utility module to generate resource names that respect cloud provider length limits. Hardcoding names or simple concatenation can exceed provider limits and cause deployment failures.
+
+**Bad:**
+```hcl
+resource "aws_eks_cluster" "main" {
+  name = "${var.environment.name}-${var.instance_name}-cluster"  # May exceed 63-char limit
+}
+```
+
+**Good:**
+```hcl
+module "name" {
+  source        = "github.com/Facets-cloud/facets-utility-modules//name"
+  environment   = var.environment
+  limit         = 63
+  resource_name = var.instance_name
+  resource_type = "kubernetes_cluster"
+}
+
+resource "aws_eks_cluster" "main" {
+  name = module.name.name
+}
+```
+
+---
+
 ## Quick Reference
 
 | Rule | Category | Summary |
@@ -771,3 +801,4 @@ outputs:
 | RULE-021 | facets.yaml | facets.yaml must include intentDetails |
 | RULE-022 | module design | Enable security defaults (encryption, logging) |
 | RULE-023 | module lifecycle | Bump version for breaking changes; update project types |
+| RULE-024 | terraform | Use //name module for resource name length limits |

@@ -1,6 +1,6 @@
 # Module Development Rules
 
-Before editing any module in this directory, read `/rules.md` for the 23 validation rules.
+Before editing any module in this directory, read `/rules.md` for all validation rules.
 
 Key rules to check:
 - RULE-015: Use lookup() for optional spec fields
