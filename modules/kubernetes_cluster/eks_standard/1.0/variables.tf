@@ -7,7 +7,7 @@ variable "instance" {
       cluster_version                 = string
       cluster_endpoint_public_access  = optional(bool, true)
       cluster_endpoint_private_access = optional(bool, true)
-      enable_cluster_encryption       = optional(bool, true)
+      customer_managed_kms            = optional(bool, true)
 
       cluster_addons = optional(object({
         vpc_cni = optional(object({
