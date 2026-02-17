@@ -24,6 +24,8 @@ modules:
     flavor: eks_automode
   - intent: karpenter
     flavor: default
+  - intent: aws_alb_controller
+    flavor: standard
   - intent: network
     flavor: aws_network
   - intent: service
