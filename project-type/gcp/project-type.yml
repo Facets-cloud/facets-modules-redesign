@@ -29,6 +29,8 @@ modules:
     flavor: gcp
   - intent: pubsub
     flavor: gcp
+  - intent: cloudrun
+    flavor: gcp
 
   # GCP Datastore Modules
   - intent: mysql
