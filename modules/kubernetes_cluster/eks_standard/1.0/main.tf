@@ -155,6 +155,18 @@ module "eks" {
   # Managed node groups
   eks_managed_node_groups = local.eks_managed_node_groups
 
+  # Allow control plane to reach metrics-server on port 10251 (API aggregation)
+  node_security_group_additional_rules = {
+    ingress_cluster_10251_metrics_server = {
+      description                   = "Cluster API to metrics-server"
+      protocol                      = "tcp"
+      from_port                     = 10251
+      to_port                       = 10251
+      type                          = "ingress"
+      source_cluster_security_group = true
+    }
+  }
+
   # Cluster addons
   cluster_addons = local.enabled_cluster_addons
 
