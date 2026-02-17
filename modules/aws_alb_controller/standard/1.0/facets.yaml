@@ -1,0 +1,78 @@
+clouds:
+  - aws
+description: |
+  Deploys the AWS Load Balancer Controller on EKS clusters via Helm.
+  This controller manages AWS Application Load Balancers (ALB) for Kubernetes Ingress
+  and Network Load Balancers (NLB) for LoadBalancer Services.
+  Includes IAM role with OIDC trust and the official AWS-recommended IAM policy.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: AWS Load Balancer Controller for ALB/NLB management on EKS
+  displayName: AWS ALB Controller
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/aws_alb_controller.svg
+flavor: standard
+inputs:
+  cloud_account:
+    description: The AWS Cloud Account for IAM and resource provisioning
+    displayName: Cloud Account
+    optional: false
+    providers:
+      - aws
+    type: '@facets/aws_cloud_account'
+  eks_details:
+    description: The EKS cluster where the ALB controller will be deployed
+    displayName: EKS Cluster
+    optional: false
+    providers:
+      - helm
+      - kubernetes
+      - kubernetes-alpha
+    type: '@facets/eks'
+  network_details:
+    default:
+      resource_name: default
+      resource_type: network
+    displayName: Network
+    type: '@facets/aws-vpc-details'
+intent: aws_alb_controller
+outputs:
+  default:
+    title: AWS ALB Controller Details
+    type: '@facets/aws-alb-controller-details'
+sample:
+  disabled: false
+  flavor: standard
+  kind: aws_alb_controller
+  spec:
+    controller_replicas: 1
+    controller_version: "1.12.0"
+  version: "1.0"
+spec:
+  description: Configure the AWS Load Balancer Controller for your EKS cluster
+  properties:
+    controller_version:
+      default: "1.12.0"
+      description: Helm chart version of the AWS Load Balancer Controller
+      title: Controller Version
+      type: string
+    controller_replicas:
+      default: 1
+      description: Number of controller replicas for high availability
+      maximum: 5
+      minimum: 1
+      title: Controller Replicas
+      type: integer
+    tags:
+      description: Additional AWS tags to apply to ALB controller resources
+      title: Resource Tags
+      type: object
+      x-ui-yaml-editor: true
+  required:
+    - controller_version
+  title: AWS ALB Controller Configuration
+  type: object
+  x-ui-order:
+    - controller_version
+    - controller_replicas
+    - tags
+version: "1.0"

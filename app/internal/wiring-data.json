@@ -1295,6 +1295,94 @@
       "outputInterfaces": {}
     },
     {
+      "id": "aws_alb_controller/standard/1.0",
+      "intent": "aws_alb_controller",
+      "flavor": "standard",
+      "version": "1.0",
+      "clouds": [
+        "aws"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/aws-alb-controller-details",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/aws_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "aws"
+          ],
+          "attributesUsed": [
+            "aws_account_id",
+            "aws_iam_role",
+            "aws_region",
+            "external_id",
+            "session_name"
+          ],
+          "interfacesUsed": []
+        },
+        "eks_details": {
+          "type": "@facets/eks",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "cluster_arn",
+            "cluster_ca_certificate",
+            "cluster_endpoint",
+            "cluster_id",
+            "cluster_name",
+            "cluster_version",
+            "kubernetes_provider_exec",
+            "node_security_group_id",
+            "oidc_issuer_url",
+            "oidc_provider",
+            "oidc_provider_arn"
+          ],
+          "interfacesUsed": []
+        },
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "helm",
+            "kubernetes",
+            "kubernetes-alpha"
+          ],
+          "attributesUsed": [],
+          "interfacesUsed": []
+        },
+        "network_details": {
+          "type": "@facets/aws-vpc-details",
+          "optional": false,
+          "default": {
+            "resource_name": "default",
+            "resource_type": "network"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "vpc_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "controller_namespace": "local.controller_namespace",
+        "controller_service_account": "local.controller_service_account",
+        "controller_version": "var.instance.spec.controller_version",
+        "controller_role_arn": "aws_iam_role.alb_controller.arn",
+        "helm_release_id": "helm_release.alb_controller.id",
+        "secrets": "[]"
+      },
+      "outputInterfaces": {}
+    },
+    {
       "id": "kubeblocks-operator/standard/1.0",
       "intent": "kubeblocks-operator",
       "flavor": "standard",
