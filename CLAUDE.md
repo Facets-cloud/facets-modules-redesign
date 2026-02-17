@@ -4,13 +4,24 @@
 
 ```
 modules/{intent}/{flavor}/{version}/   - Core infrastructure modules
-datastore/{tech}/{flavor}/{version}/   - Database modules
+modules/datastore/{tech}/{flavor}/{version}/ - Database modules
 outputs/{type-name}/                   - Output type schemas (@facets/*)
 icons/{intent}.svg                     - Module icons (one per intent, cloud-neutral)
 project-type/{cloud}/project-type.yml  - Project type definitions (AWS/GCP/Azure)
 index.html                             - User-facing catalog page (GitHub Pages)
 app/internal/                          - Internal dev tools (icons, graph, wiring)
 ```
+
+## Prerequisites
+
+Install the Facets Claude Code plugin for module development workflows, blueprint management, and Raptor CLI skills:
+
+```bash
+/plugin marketplace add Facets-cloud/claude-plugin
+/plugin install facets-plugin@facets-marketplace
+```
+
+Key skills: `/facets-module` (module development), `/blueprint` (blueprint management), `/raptor` (CLI operations)
 
 ## Module Files
 
@@ -100,11 +111,17 @@ outputs:
 
 When creating a new module, complete ALL of these steps:
 
+### 0. facets.yaml intentDetails (required)
+- Every `facets.yaml` must include an `intentDetails` block
+- Required fields: `type`, `description`, `displayName`, `iconUrl`
+- See RULE-021 in `rules.md` for details and valid `type` values
+
 ### 1. Icon (`icons/{intent}.svg`)
 - Each **intent** gets one SVG icon (not per flavor)
 - Icons MUST be **cloud-neutral** (no AWS/GCP/Azure branding) since intents span multiple clouds
 - Place at `icons/{intent}.svg` (e.g., `icons/postgres.svg`, `icons/helm.svg`)
 - Use filled SVGs (`fill="#4A5568"` or similar), NOT stroke-only (stroke-only is invisible on some backgrounds)
+- Source SVG files from https://vecta.io/symbols — search for the technology name and download the SVG
 - If the intent already has an icon, do NOT create a new one
 
 ### 2. Project Type (`project-type/{cloud}/project-type.yml`)
