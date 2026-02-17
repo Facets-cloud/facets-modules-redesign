@@ -34,7 +34,6 @@ spec:
       title: GKE Logging Components
       description: Configuration for GKE logging components. SYSTEM_COMPONENTS is
         required and enabled by default. Add other components as needed.
-      x-ui-toggle: true
       patternProperties:
         .*:
           type: object
@@ -128,4 +127,7 @@ sample:
     logging_components:
       system:
         name: SYSTEM_COMPONENTS
+        enabled: true
+      apiserver:
+        name: APISERVER
         enabled: true
