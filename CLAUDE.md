@@ -12,6 +12,17 @@ index.html                             - User-facing catalog page (GitHub Pages)
 app/internal/                          - Internal dev tools (icons, graph, wiring)
 ```
 
+## Prerequisites
+
+Install the Facets Claude Code plugin for module development workflows, blueprint management, and Raptor CLI skills:
+
+```bash
+/plugin marketplace add Facets-cloud/claude-plugin
+/plugin install facets-plugin@facets-marketplace
+```
+
+Key skills: `/facets-module` (module development), `/blueprint` (blueprint management), `/raptor` (CLI operations)
+
 ## Module Files
 
 | File | Purpose |
