@@ -29,6 +29,14 @@ modules:
   - intent: service
     flavor: aws
 
+  # === AWS Messaging & Storage Modules ===
+  - intent: s3
+    flavor: standard
+  - intent: sqs
+    flavor: standard
+  - intent: sns
+    flavor: standard
+
   # === AWS Datastore Modules ===
   - intent: kafka
     flavor: aws-msk
