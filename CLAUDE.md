@@ -1,5 +1,9 @@
 # Facets Module Repository
 
+## MANDATORY: Read Before Any Task
+
+**Always read `.claude/skills/module_writing.md` first.** This is the complete guide to how Facets modules work — facets.yaml structure, Terraform file conventions, output types, provider configuration, and the full development workflow. Without reading it, you will not understand this codebase.
+
 ## Repository Structure
 
 ```
@@ -19,8 +23,7 @@ app/internal/                          - Internal dev tools (icons, graph, wirin
 | `facets.yaml` | Module definition (spec schema, inputs, outputs, sample) |
 | `variables.tf` | `var.instance` (spec) and `var.inputs` (dependencies) |
 | `main.tf` | Terraform resources |
-| `locals.tf` | `output_attributes` and `output_interfaces` |
-| `outputs.tf` | Terraform outputs |
+| `outputs.tf` | `output_attributes` and `output_interfaces` locals (NO `output` blocks) |
 
 ## Raptor Commands
 
