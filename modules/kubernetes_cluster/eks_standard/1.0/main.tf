@@ -122,7 +122,7 @@ locals {
   needs_cloudwatch_iam_policy = contains(keys(local.enabled_cluster_addons), "amazon-cloudwatch-observability")
 
   # KMS key for secrets encryption (only if enabled)
-  enable_kms_key = lookup(var.instance.spec, "enable_cluster_encryption", true)
+  enable_kms_key = lookup(var.instance.spec, "customer_managed_kms", true)
 }
 
 # KMS key for EKS secrets encryption (conditional)
