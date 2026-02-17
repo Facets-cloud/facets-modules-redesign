@@ -1,3 +1,4 @@
+name_length_limit: 30
 artifact_inputs:
   primary:
     artifact_type: docker_image
