@@ -1,0 +1,30 @@
+name: '@facets/aws-efs-csi-driver'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        efs_file_system_id:
+          description: The ID of the EFS file system
+          type: string
+        efs_file_system_arn:
+          description: The ARN of the EFS file system
+          type: string
+        iam_role_arn:
+          description: The ARN of the IAM role used by the EFS CSI controller
+          type: string
+        storage_class_name:
+          description: The name of the Kubernetes StorageClass created for EFS
+          type: string
+        helm_release_id:
+          description: The Helm release ID of the EFS CSI Driver deployment
+          type: string
+        secrets:
+          type: array
+          items:
+            type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []
