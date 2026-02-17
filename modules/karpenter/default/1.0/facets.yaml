@@ -8,7 +8,7 @@ intentDetails:
   type: Cloud & Infrastructure
   description: Karpenter for automatic node provisioning and scaling in Kubernetes
   displayName: Karpenter
-  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/karpenter.svg
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/karpenter.png
 flavor: default
 inputs:
     cloud_account:
