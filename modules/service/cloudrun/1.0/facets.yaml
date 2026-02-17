@@ -29,8 +29,8 @@ inputs:
     description: VPC network for private connectivity
 
 sample:
-  kind: cloudrun
-  flavor: gcp
+  kind: service
+  flavor: cloudrun
   version: "1.0"
   disabled: false
   spec:
