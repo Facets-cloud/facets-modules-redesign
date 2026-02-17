@@ -36,7 +36,7 @@ locals {
     local.custom_tags,
     {
       Name          = var.instance_name
-      resource_type = "sns_topic"
+      resource_type = "sns"
       flavor        = "standard"
     }
   )

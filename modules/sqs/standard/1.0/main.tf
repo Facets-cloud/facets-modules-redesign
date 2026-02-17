@@ -44,7 +44,7 @@ locals {
     local.custom_tags,
     {
       Name          = var.instance_name
-      resource_type = "sqs_queue"
+      resource_type = "sqs"
       flavor        = "standard"
     }
   )

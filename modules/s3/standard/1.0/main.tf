@@ -47,7 +47,7 @@ locals {
     local.custom_tags,
     {
       Name          = var.instance_name
-      resource_type = "s3_bucket"
+      resource_type = "s3"
       flavor        = "standard"
     }
   )
@@ -60,11 +60,6 @@ resource "aws_s3_bucket" "main" {
   force_destroy = local.force_destroy
 
   tags = local.all_tags
-
-  lifecycle {
-    # Prevent accidental deletion in production
-    prevent_destroy = false
-  }
 }
 
 # Bucket Versioning
