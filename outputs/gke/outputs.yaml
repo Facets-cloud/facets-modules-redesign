@@ -51,7 +51,9 @@ properties:
         release_channel:
           type: string
         secrets:
-          type: string
+          type: array
+          items:
+            type: string
         services_range_name:
           type: string
         subnetwork:
