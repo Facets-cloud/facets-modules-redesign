@@ -57,6 +57,12 @@ variable "inputs" {
     kubernetes_details = object({
       attributes = optional(object({}))
     })
+    csi_driver = object({
+      attributes = object({
+        iam_role_arn    = string
+        helm_release_id = string
+      })
+    })
   })
   description = "Inputs from dependent modules"
 }

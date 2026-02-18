@@ -2,9 +2,10 @@ intent: aws_efs
 flavor: standard
 version: '1.0'
 description: |
-  Creates an AWS EFS (Elastic File System) with mount targets in all private subnets,
-  a dedicated security group allowing NFS access from within the VPC, and a Kubernetes
-  StorageClass backed by the EFS CSI driver for dynamic provisioning.
+  Creates an AWS EFS (Elastic File System) with mount targets in all private subnets
+  and a dedicated security group allowing NFS access from within the VPC. Creates a
+  Kubernetes StorageClass backed by the EFS CSI driver. Requires the aws_efs_csi_driver
+  module to be deployed on the cluster first.
 intentDetails:
   type: Cloud & Infrastructure
   description: AWS Elastic File System with Kubernetes StorageClass for shared persistent storage
@@ -32,6 +33,11 @@ inputs:
     optional: false
     providers:
     - kubernetes
+  csi_driver:
+    type: '@facets/aws-efs-csi-driver'
+    displayName: EFS CSI Driver
+    description: The EFS CSI Driver installation that enables dynamic EFS provisioning
+    optional: false
 outputs:
   default:
     type: '@facets/aws_efs'
