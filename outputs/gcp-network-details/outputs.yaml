@@ -20,6 +20,11 @@ properties:
           type: array
           items:
             type: string
+        nat_gateway_ids:
+          description: List of Cloud NAT gateway IDs
+          type: array
+          items:
+            type: string
         private_services_connection_id:
           description: The ID of the service networking connection
           type: string
@@ -38,9 +43,24 @@ properties:
         private_services_range_name:
           description: The name of the global address reserved for private services
           type: string
+        private_subnet_cidrs:
+          description: List of private subnet CIDR blocks
+          type: array
+          items:
+            type: string
+        private_subnet_ids:
+          description: List of private subnet IDs
+          type: array
+          items:
+            type: string
         project_id:
           description: The GCP project ID
           type: string
+        public_subnet_cidrs:
+          description: List of public subnet CIDR blocks
+          type: array
+          items:
+            type: string
         public_subnet_ids:
           description: List of public subnet IDs
           type: array
