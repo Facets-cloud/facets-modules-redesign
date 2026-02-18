@@ -67,7 +67,7 @@ sample:
       - Sid: ListYourObjects
         Effect: Allow
         Action: s3:ListBucket
-        Resource: []
+        Resource: "arn:aws:s3:::*"
 iac:
   validated_files:
   - variables.tf
