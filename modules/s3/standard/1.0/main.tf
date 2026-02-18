@@ -1,10 +1,18 @@
+module "name" {
+  source          = "github.com/Facets-cloud/facets-utility-modules//name"
+  environment     = var.environment
+  limit           = 63
+  resource_name   = var.instance_name
+  resource_type   = "s3"
+  globally_unique = true
+}
+
 locals {
   # Instance spec shortcuts
   spec = var.instance.spec
 
-  # Bucket configuration - auto-generate from environment and instance name
-  # S3 bucket names: 3-63 characters, lowercase, no underscores
-  bucket_name   = "${var.instance_name}-${var.environment.unique_name}"
+  # Bucket name via utility module (globally unique, max 63 chars)
+  bucket_name   = module.name.name
   force_destroy = try(local.spec.force_destroy, false)
 
   # Encryption configuration
@@ -60,6 +68,10 @@ resource "aws_s3_bucket" "main" {
   force_destroy = local.force_destroy
 
   tags = local.all_tags
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Bucket Versioning
@@ -199,7 +211,7 @@ resource "aws_s3_bucket_policy" "main" {
 
 # IAM policy for read-only access to this bucket
 resource "aws_iam_policy" "read_only" {
-  name        = "${var.instance_name}-${var.environment.unique_name}-read-only"
+  name        = "${module.name.name}-read-only"
   description = "Read-only access to ${local.bucket_name} S3 bucket"
   policy = jsonencode({
     Version = "2012-10-17"
@@ -235,7 +247,7 @@ resource "aws_iam_policy" "read_only" {
 
 # IAM policy for read-write access to this bucket
 resource "aws_iam_policy" "read_write" {
-  name        = "${var.instance_name}-${var.environment.unique_name}-read-write"
+  name        = "${module.name.name}-read-write"
   description = "Read-write access to ${local.bucket_name} S3 bucket"
   policy = jsonencode({
     Version = "2012-10-17"

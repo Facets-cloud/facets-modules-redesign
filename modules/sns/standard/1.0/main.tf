@@ -1,15 +1,21 @@
 data "aws_region" "current" {}
 
+module "name" {
+  source        = "github.com/Facets-cloud/facets-utility-modules//name"
+  environment   = var.environment
+  limit         = 251
+  resource_name = var.instance_name
+  resource_type = "sns"
+}
+
 locals {
   # Instance spec shortcuts
   spec = var.instance.spec
 
-  # Topic naming - auto-generate from environment and instance name
-  # Standard topic: instance-name-environment
-  # FIFO topic: instance-name-environment.fifo
+  # Topic naming via utility module
   topic_config                = try(local.spec.topic_config, {})
   is_fifo                     = try(local.topic_config.fifo_topic, false)
-  topic_base_name             = "${var.instance_name}-${var.environment.unique_name}"
+  topic_base_name             = module.name.name
   topic_name                  = local.is_fifo ? "${local.topic_base_name}.fifo" : local.topic_base_name
   display_name                = try(local.topic_config.display_name, var.instance_name)
   content_based_deduplication = try(local.topic_config.content_based_deduplication, false)
@@ -51,6 +57,10 @@ resource "aws_sns_topic" "main" {
   kms_master_key_id           = local.kms_master_key_id
 
   tags = local.all_tags
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Dead Letter Queue for failed message deliveries (SQS)
@@ -99,7 +109,7 @@ resource "aws_sqs_queue_policy" "dlq" {
 
 # IAM Policy for producing (publishing) messages
 resource "aws_iam_policy" "producer" {
-  name        = "${var.instance_name}-${var.environment.unique_name}-sns-producer"
+  name        = "${module.name.name}-sns-producer"
   description = "Publish messages to ${local.topic_name} SNS topic"
   policy = jsonencode({
     Version = "2012-10-17"
@@ -128,7 +138,7 @@ resource "aws_iam_policy" "producer" {
 
 # IAM Policy for consuming (subscribing to) messages
 resource "aws_iam_policy" "consumer" {
-  name        = "${var.instance_name}-${var.environment.unique_name}-sns-consumer"
+  name        = "${module.name.name}-sns-consumer"
   description = "Subscribe to ${local.topic_name} SNS topic"
   policy = jsonencode({
     Version = "2012-10-17"

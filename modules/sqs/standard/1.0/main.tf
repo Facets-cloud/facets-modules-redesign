@@ -1,15 +1,21 @@
 data "aws_region" "current" {}
 
+module "name" {
+  source        = "github.com/Facets-cloud/facets-utility-modules//name"
+  environment   = var.environment
+  limit         = 75
+  resource_name = var.instance_name
+  resource_type = "sqs"
+}
+
 locals {
   # Instance spec shortcuts
   spec = var.instance.spec
 
-  # Queue naming - auto-generate from environment and instance name
-  # Standard queue: instance-name-environment
-  # FIFO queue: instance-name-environment.fifo
+  # Queue naming via utility module
   queue_config    = try(local.spec.queue_config, {})
   is_fifo         = try(local.queue_config.fifo_queue, false)
-  queue_base_name = "${var.instance_name}-${var.environment.unique_name}"
+  queue_base_name = module.name.name
   queue_name      = local.is_fifo ? "${local.queue_base_name}.fifo" : local.queue_base_name
 
   # Queue configuration
@@ -70,6 +76,10 @@ resource "aws_sqs_queue" "main" {
   }) : null
 
   tags = local.all_tags
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Dead Letter Queue (created only if enabled)
@@ -92,7 +102,7 @@ resource "aws_sqs_queue" "dlq" {
 
 # IAM Policy for producing (sending) messages
 resource "aws_iam_policy" "producer" {
-  name        = "${var.instance_name}-${var.environment.unique_name}-sqs-producer"
+  name        = "${module.name.name}-sqs-producer"
   description = "Send messages to ${local.queue_name} SQS queue"
   policy = jsonencode({
     Version = "2012-10-17"
@@ -122,7 +132,7 @@ resource "aws_iam_policy" "producer" {
 
 # IAM Policy for consuming (receiving) messages
 resource "aws_iam_policy" "consumer" {
-  name        = "${var.instance_name}-${var.environment.unique_name}-sqs-consumer"
+  name        = "${module.name.name}-sqs-consumer"
   description = "Receive messages from ${local.queue_name} SQS queue"
   policy = jsonencode({
     Version = "2012-10-17"
