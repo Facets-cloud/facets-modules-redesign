@@ -4,10 +4,10 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
-      name   = string
-      policy = any
+      name           = string
+      policy         = any
       aws_iam_policy = any
-      tags   = optional(map(string), {})
+      tags           = optional(map(string), {})
     })
   })
 }

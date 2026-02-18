@@ -10,8 +10,8 @@ module "iam-policy-name" {
 
 resource "aws_iam_policy" "iam_policy" {
   name        = module.iam-policy-name.name
-  path        = try(local.iam_policy, "/")
-  description = try(local.iam_policy, null)
+  path        = try(local.iam_policy.path, "/")
+  description = try(local.iam_policy.description, null)
   tags        = local.tags
   policy      = jsonencode(local.policy)
 
