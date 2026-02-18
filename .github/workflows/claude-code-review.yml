@@ -2,7 +2,7 @@ name: Claude Facets Module Validation
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened]
     paths:
       - 'modules/**'
       - 'outputs/**'
@@ -16,16 +16,16 @@ jobs:
        github.event.pull_request.author_association == 'OWNER') &&
       !github.event.pull_request.head.repo.fork
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
       pull-requests: write
-      issues: read
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Install Raptor CLI
         run: |
@@ -33,12 +33,35 @@ jobs:
           chmod +x raptor
           sudo mv raptor /usr/local/bin/raptor
 
+      - name: Detect changed modules
+        id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          modules=$(gh pr diff --name-only | while read f; do
+            dir=$(dirname "$f")
+            while [ "$dir" != "." ]; do
+              [ -f "$dir/facets.yaml" ] && echo "$dir" && break
+              dir=$(dirname "$dir")
+            done
+          done | sort -u)
+          if [ -z "$modules" ]; then
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "list<<EOF"
+              echo "$modules"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run Claude Facets Validation
+        if: steps.detect.outputs.found == 'true'
         env:
           CONTROL_PLANE_URL: ${{ secrets.CONTROL_PLANE_URL }}
           FACETS_USERNAME: ${{ secrets.FACETS_USERNAME }}
           FACETS_TOKEN: ${{ secrets.FACETS_TOKEN }}
-          FACETS_PROFILE: "1155708878"
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -47,27 +70,22 @@ jobs:
             https://github.com/Facets-cloud/claude-plugin
           plugins: |
             facets-plugin@facets-marketplace
-          claude_args: '--max-turns 30 --allowedTools "Bash(raptor:*),Bash(terraform:*),Bash(git:*),Bash(gh:*),Bash(cat:*),Bash(ls:*),Bash(file:*),Bash(head:*),Bash(tail:*),Bash(curl:*),Bash(wget:*),Bash(find:*),Bash(grep:*),Bash(awk:*),Bash(sed:*),Bash(wc:*),Bash(sort:*),Bash(uniq:*),Bash(diff:*),Bash(echo:*),Bash(pwd:*),Bash(mkdir:*),Bash(cp:*),Bash(mv:*),Bash(chmod:*),Bash(which:*),Bash(env:*),Bash(jq:*),Bash(yq:*),Read,Write,Edit,Grep,Glob,WebSearch"'
+          claude_args: '--max-turns 30 --allowedTools "Bash(raptor:*),Bash(terraform:*),Bash(git:*),Bash(gh:*),Bash(cat:*),Bash(ls:*),Bash(file:*),Bash(head:*),Bash(tail:*),Bash(find:*),Bash(grep:*),Bash(awk:*),Bash(sed:*),Bash(wc:*),Bash(sort:*),Bash(uniq:*),Bash(diff:*),Bash(echo:*),Bash(pwd:*),Bash(which:*),Bash(jq:*),Bash(yq:*),Read,Grep,Glob,WebSearch"'
           prompt: |
             You are reviewing and validating Facets modules changed in this PR.
 
-            ## Step 1 — Detect changed modules
+            The following modules were changed:
+            ${{ steps.detect.outputs.list }}
 
-            Run `gh pr diff --name-only` to list all changed files in this PR.
-            For each changed file, walk up the file path to find the nearest directory containing a `facets.yaml` file. That directory is the module path.
-            Deduplicate the list to get unique module directories.
-            Print the list of modules that will be validated before proceeding.
-            If no modules are found, comment "No module changes detected" and stop.
-
-            ## Step 2 — Review and validate each module
+            ## Validation process
 
             First, invoke the /module-development skill to load Facets module development standards. Use this knowledge throughout your review for understanding module structure, conventions, spec schemas, output types, and Terraform patterns.
 
-            Then, use the /facets-modules-validate skill to validate each detected module. Follow its full 6-step process exactly:
-            1. Module detection (already done in Step 1 — pass the list)
+            Then, use the /facets-modules-validate skill to validate each module above. Follow its full 6-step process:
+            1. Module detection — use the list above (already computed)
             2. Read rules.md and all module files
             3. Systematic rule-by-rule validation (PASS/FAIL/SKIP for every rule)
-            4. Raptor dry-run with FACETS_PROFILE=1155708878
+            4. Raptor dry-run
             5. Per-module report tables
             6. New rule discovery
 
