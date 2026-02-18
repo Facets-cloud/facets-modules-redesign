@@ -17,23 +17,24 @@ variable "inputs" {
   description = "Inputs from dependent modules"
   type = object({
     kubernetes_details = optional(object({
-      attributes = object({
-        cluster_endpoint       = string
-        cluster_ca_certificate = string
-        cluster_name           = string
-        cluster_version        = string
-        cluster_arn            = string
-        cluster_id             = string
-        oidc_issuer_url        = string
-        oidc_provider          = string
-        oidc_provider_arn      = string
-        node_security_group_id = string
-        kubernetes_provider_exec = object({
-          api_version = string
-          command     = string
-          args        = list(string)
-        })
-      })
+      attributes = optional(object({
+        cluster_endpoint       = optional(string)
+        cluster_ca_certificate = optional(string)
+        cluster_name           = optional(string)
+        cluster_version        = optional(string)
+        cluster_arn            = optional(string)
+        cluster_id             = optional(string)
+        oidc_issuer_url        = optional(string)
+        oidc_provider          = optional(string)
+        oidc_provider_arn      = optional(string)
+        node_security_group_id = optional(string)
+        kubernetes_provider_exec = optional(object({
+          api_version = optional(string)
+          command     = optional(string)
+          args        = optional(list(string))
+        }))
+      }))
+      interfaces = optional(object({}))
     }))
     cloud_account = object({
       attributes = object({
