@@ -5,17 +5,21 @@ variable "instance" {
     version = string
     spec = object({
       domains = map(object({
-        domain          = string
-        default_service = string
-        paths = optional(map(object({
-          service   = string
-          path_type = optional(string, "PREFIX")
-        })), {})
+        domain = string
+        rules  = list(string)
         certificate = optional(object({
           mode               = optional(string, "auto")
           managed_cert_name  = optional(string)
           existing_cert_name = optional(string)
         }))
+      }))
+      rules = map(object({
+        default_service = string
+        paths = optional(list(object({
+          path      = string
+          service   = string
+          path_type = optional(string, "PREFIX")
+        })), [])
       }))
       global_config = optional(object({
         enable_cdn = optional(bool, false)
