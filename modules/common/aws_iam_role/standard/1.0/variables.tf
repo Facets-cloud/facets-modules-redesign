@@ -16,7 +16,7 @@ variable "environment" {
 variable "inputs" {
   description = "Inputs from dependent modules"
   type = object({
-    kubernetes_details = object({
+    kubernetes_details = optional(object({
       attributes = object({
         cluster_endpoint       = string
         cluster_ca_certificate = string
@@ -34,7 +34,7 @@ variable "inputs" {
           args        = list(string)
         })
       })
-    })
+    }))
     cloud_account = object({
       attributes = object({
         aws_region     = string
