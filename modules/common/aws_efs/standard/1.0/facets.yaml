@@ -1,0 +1,136 @@
+intent: aws_efs
+flavor: standard
+version: '1.0'
+description: |
+  Creates an AWS EFS (Elastic File System) with mount targets in all private subnets,
+  a dedicated security group allowing NFS access from within the VPC, and a Kubernetes
+  StorageClass backed by the EFS CSI driver for dynamic provisioning.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: AWS Elastic File System with Kubernetes StorageClass for shared persistent storage
+  displayName: AWS EFS
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/aws_efs.svg
+clouds:
+- aws
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: Cloud Account
+    description: The AWS Cloud Account where the EFS will be created
+    optional: false
+    providers:
+    - aws
+  network_details:
+    type: '@facets/aws-vpc-details'
+    displayName: Network
+    description: The VPC network details for EFS mount targets and security group
+    optional: false
+  kubernetes_details:
+    type: '@facets/kubernetes-details'
+    displayName: Kubernetes Cluster
+    description: The Kubernetes cluster where the StorageClass will be created
+    optional: false
+    providers:
+    - kubernetes
+outputs:
+  default:
+    type: '@facets/aws_efs'
+    title: AWS EFS Attributes
+spec:
+  title: AWS EFS Configuration
+  description: Configure your AWS Elastic File System
+  type: object
+  properties:
+    encrypted:
+      type: boolean
+      title: Enable Encryption at Rest
+      description: Whether to enable encryption at rest for the EFS file system
+      default: true
+    performance_mode:
+      type: string
+      title: Performance Mode
+      description: The file system performance mode. generalPurpose is suitable for most workloads; maxIO is optimized for highly parallelized workloads
+      enum:
+      - generalPurpose
+      - maxIO
+      default: generalPurpose
+    throughput_mode:
+      type: string
+      title: Throughput Mode
+      description: The throughput mode for the EFS file system
+      enum:
+      - bursting
+      - provisioned
+      - elastic
+      default: bursting
+    provisioned_throughput_in_mibps:
+      type: number
+      title: Provisioned Throughput (MiB/s)
+      description: The throughput in MiB/s when throughput_mode is set to provisioned
+      minimum: 1
+      maximum: 1024
+      x-ui-visible-if:
+        field: spec.throughput_mode
+        values:
+        - provisioned
+    kms_key_id:
+      type: string
+      title: KMS Key ID
+      description: The ARN of the KMS key to use for encryption. Defaults to the AWS-managed key if not specified
+      x-ui-visible-if:
+        field: spec.encrypted
+        values:
+        - true
+    availability_zone_name:
+      type: string
+      title: Availability Zone
+      description: The Availability Zone in which to create the EFS file system (for One Zone storage class). Leave empty for regional (multi-AZ) deployment
+    lifecycle_policy:
+      type: object
+      title: Lifecycle Policy
+      description: Configure transition policies for moving files between storage tiers
+      x-ui-toggle: true
+      properties:
+        transition_to_ia:
+          type: string
+          title: Transition to Infrequent Access
+          description: How long until files are transitioned to the Infrequent Access storage class
+          enum:
+          - AFTER_1_DAY
+          - AFTER_7_DAYS
+          - AFTER_14_DAYS
+          - AFTER_30_DAYS
+          - AFTER_60_DAYS
+          - AFTER_90_DAYS
+          - AFTER_180_DAYS
+          - AFTER_270_DAYS
+          - AFTER_365_DAYS
+        transition_to_primary_storage_class:
+          type: string
+          title: Transition Back to Primary Storage
+          description: Policy for transitioning files back to primary storage class on access
+          enum:
+          - AFTER_1_ACCESS
+    tags:
+      type: object
+      title: Additional Tags
+      description: Optional additional tags to apply to all EFS resources
+      x-ui-yaml-editor: true
+  x-ui-order:
+  - encrypted
+  - performance_mode
+  - throughput_mode
+  - provisioned_throughput_in_mibps
+  - kms_key_id
+  - availability_zone_name
+  - lifecycle_policy
+  - tags
+sample:
+  kind: aws_efs
+  flavor: standard
+  version: '1.0'
+  disabled: false
+  spec:
+    encrypted: true
+    performance_mode: generalPurpose
+    throughput_mode: bursting
