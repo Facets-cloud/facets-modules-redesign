@@ -3,8 +3,8 @@ locals {
   metadata_name = lookup(lookup(var.instance, "metadata", {}), "name", "")
   instance_name = length(local.metadata_name) > 0 ? local.metadata_name : var.instance_name
 
-  vpc_id         = var.inputs.network_details.attributes.vpc_id
-  vpc_cidr       = var.inputs.network_details.attributes.vpc_cidr_block
+  vpc_id          = var.inputs.network_details.attributes.vpc_id
+  vpc_cidr        = var.inputs.network_details.attributes.vpc_cidr_block
   private_subnets = var.inputs.network_details.attributes.private_subnet_ids
 }
 
