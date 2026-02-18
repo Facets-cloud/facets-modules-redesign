@@ -11,7 +11,7 @@ clouds:
 - aws
 inputs:
   kubernetes_details:
-    optional: false
+    optional: true
     type: '@facets/kubernetes-details'
     providers:
     - kubernetes
