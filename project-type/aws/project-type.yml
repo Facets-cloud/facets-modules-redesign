@@ -28,6 +28,8 @@ modules:
     flavor: aws_network
   - intent: service
     flavor: aws
+  - intent: aws_iam_role
+    flavor: standard
 
   # === AWS Datastore Modules ===
   - intent: kafka

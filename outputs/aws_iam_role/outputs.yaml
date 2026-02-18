@@ -1,0 +1,17 @@
+name: '@facets/aws_iam_role'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        iam_role_arn:
+          type: string
+        iam_role_name:
+          type: string
+        irsa_iam_role_arn:
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []
