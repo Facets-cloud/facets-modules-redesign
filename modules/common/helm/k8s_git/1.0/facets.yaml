@@ -80,17 +80,6 @@ spec:
         if empty)
       default: ""
       x-ui-typeable: true
-      x-ui-api-source:
-        endpoint: "/cc-ui/v1/dropdown/stack/{{stackName}}/resources-info"
-        method: GET
-        params:
-          includeContent: false
-        labelKey: resourceName
-        valueKey: resourceName
-        valueTemplate: "${namespace.{{value}}.out.attributes.name}"
-        filterConditions:
-        - field: resourceType
-          value: namespace
       x-ui-error-message: "Must be a valid Kubernetes namespace name or empty"
     values:
       type: object
