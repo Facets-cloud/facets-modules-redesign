@@ -965,7 +965,6 @@ spec:
                   - name
                   - mount_path
       required:
-      - ports
       - size
     release:
       title: Release
@@ -1850,10 +1849,10 @@ spec:
                         - ExecCheck
                       description: Commands for startup check
                       x-ui-override-disable: true
-                    port:
+                    readiness_port:
                       type: string
-                      title: Health Check Port
-                      x-ui-placeholder: Enter health check port for the Sidecar
+                      title: Readiness Port
+                      x-ui-placeholder: Enter readiness port for the Sidecar
                       x-ui-error-message: Value doesn't match pattern, accepted values
                         are from 0-65535
                       x-ui-visible-if:
@@ -1861,17 +1860,37 @@ spec:
                         values:
                         - PortCheck
                         - HttpCheck
-                      description: Port for Health Checks
+                      description: Port for readiness health check
+                      x-ui-dynamic-enum: spec.sidecars.{{this}}.runtime.ports.*.port
                       x-ui-disable-tooltip: No Ports Added
-                      x-ui-typeable: true
-                  required:
-                  - readiness_url
-                  - readiness_exec_command
-                  - liveness_url
-                  - liveness_exec_command
-                  - startup_url
-                  - startup_exec_command
-                  - port
+                    liveness_port:
+                      type: string
+                      title: Liveness Port
+                      x-ui-placeholder: Enter liveness port for the Sidecar
+                      x-ui-error-message: Value doesn't match pattern, accepted values
+                        are from 0-65535
+                      x-ui-visible-if:
+                        field: spec.sidecars.{{this}}.runtime.health_checks.liveness_check_type
+                        values:
+                        - PortCheck
+                        - HttpCheck
+                      description: Port for liveness health check
+                      x-ui-dynamic-enum: spec.sidecars.{{this}}.runtime.ports.*.port
+                      x-ui-disable-tooltip: No Ports Added
+                    startup_port:
+                      type: string
+                      title: Startup Port
+                      x-ui-placeholder: Enter startup port for the Sidecar
+                      x-ui-error-message: Value doesn't match pattern, accepted values
+                        are from 0-65535
+                      x-ui-visible-if:
+                        field: spec.sidecars.{{this}}.runtime.health_checks.startup_check_type
+                        values:
+                        - PortCheck
+                        - HttpCheck
+                      description: Port for startup health check
+                      x-ui-dynamic-enum: spec.sidecars.{{this}}.runtime.ports.*.port
+                      x-ui-disable-tooltip: No Ports Added
               required:
               - size
               x-ui-order:

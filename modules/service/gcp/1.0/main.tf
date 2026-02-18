@@ -27,8 +27,8 @@ locals {
     length(local.iam_arns) > 0 ? { "iam.gke.io/gcp-service-account" = module.gcp-workload-identity.0.gcp_service_account_email } : {},
     local.enable_alb_backend_config ? { "cloud.google.com/backend-config" = "{\"default\": \"${lower(var.instance_name)}\"}" } : {}
   )
-  roles  = { for key, val in local.iam_arns : val.role => { role = val.role, condition = lookup(val, "condition", {}) } }
-  labels = {}
+  roles                     = { for key, val in local.iam_arns : val.role => { role = val.role, condition = lookup(val, "condition", {}) } }
+  labels                    = {}
   backend_config            = lookup(local.gcp_advanced_config, "backend_config", {})
   enable_alb_backend_config = lookup(local.backend_config, "enabled", false)
   runtime                   = lookup(local.spec, "runtime", {})
@@ -74,15 +74,30 @@ locals {
 
   # Configure pod distribution directly from spec
   enable_host_anti_affinity = lookup(local.spec, "enable_host_anti_affinity", false)
+  pod_distribution_enabled  = lookup(local.spec, "pod_distribution_enabled", false)
+  pod_distribution_spec     = lookup(local.spec, "pod_distribution", {})
+
+  # Convert pod_distribution object to array format expected by helm chart
+  pod_distribution_array = [
+    for key, config in local.pod_distribution_spec : {
+      topology_key         = config.topology_key
+      when_unsatisfiable   = config.when_unsatisfiable
+      max_skew             = config.max_skew
+      node_taints_policy   = lookup(config, "node_taints_policy", null)
+      node_affinity_policy = lookup(config, "node_affinity_policy", null)
+    }
+  ]
 
   # Determine final pod_distribution configuration
-  pod_distribution = {
-    "facets-pod-topology-spread" = {
-      max_skew           = 1
-      when_unsatisfiable = "ScheduleAnyway"
-      topology_key       = var.inputs.kubernetes_node_pool_details.topology_spread_key
-    }
-  }
+  pod_distribution = local.pod_distribution_enabled ? (
+    length(local.pod_distribution_spec) > 0 ? local.pod_distribution_array : (
+      local.enable_host_anti_affinity ? [{
+        topology_key       = "kubernetes.io/hostname"
+        when_unsatisfiable = "DoNotSchedule"
+        max_skew           = 1
+      }] : []
+    )
+  ) : []
 
   # Create instance configuration with VPA settings, topology spread constraints, and KEDA configuration
   instance = merge(var.instance, {
@@ -100,7 +115,7 @@ locals {
                   {
                     enable_vpa = local.vpa_available
                     # Configure pod distribution for the application chart
-                    pod_distribution_enabled = true
+                    pod_distribution_enabled = local.pod_distribution_enabled
                     pod_distribution         = local.pod_distribution
                   },
                   # Add KEDA configuration when enabled

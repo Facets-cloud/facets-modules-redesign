@@ -20,6 +20,9 @@ inputs:
     displayName: Cloud Account
     description: The Azure Cloud Account where the AKS cluster will be created
     optional: false
+    default:
+      resource_type: cloud_account
+      resource_name: default
     providers:
     - azurerm
   kubernetes_details:
@@ -61,7 +64,7 @@ outputs:
   default:
     type: '@facets/service'
 spec:
-  title: AWS Cloud Service
+  title: Azure Cloud Service
   type: object
   properties:
     type:
@@ -444,6 +447,90 @@ spec:
               - PortCheck
               - HttpCheck
               - ExecCheck
+            readiness_start_up_time:
+              type: integer
+              title: Readiness Start-Up Time
+              default: 10
+              minimum: 0
+              maximum: 10000
+              x-ui-placeholder: Enter readiness start up time for the Pod
+              x-ui-error-message: Value doesn't match pattern, accepted values are
+                from 0-10000
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.readiness_check_type
+                values:
+                - PortCheck
+                - HttpCheck
+                - ExecCheck
+              description: Wait time for readiness check (in sec)
+            readiness_timeout:
+              type: integer
+              title: Readiness Timeout
+              default: 10
+              minimum: 0
+              maximum: 10000
+              x-ui-placeholder: Enter readiness timeout for the Pod
+              x-ui-error-message: Value doesn't match pattern, accepted values are
+                from 0-10000
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.readiness_check_type
+                values:
+                - PortCheck
+                - HttpCheck
+                - ExecCheck
+              description: Max time for readiness (in sec)
+            readiness_period:
+              type: integer
+              title: Readiness Check Interval
+              default: 10
+              minimum: 0
+              maximum: 10000
+              x-ui-placeholder: Enter readiness period for the Pod
+              x-ui-error-message: Value doesn't match pattern, accepted values are
+                from 0-10000
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.readiness_check_type
+                values:
+                - PortCheck
+                - HttpCheck
+                - ExecCheck
+              description: Repeated interval for health-check (in sec)
+            readiness_port:
+              type: string
+              title: Readiness Port
+              x-ui-placeholder: Enter readiness port for the Pod
+              x-ui-error-message: Value doesn't match pattern, accepted values are
+                from 0-65535
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.readiness_check_type
+                values:
+                - PortCheck
+                - HttpCheck
+              description: Port for Health Checks
+              x-ui-dynamic-enum: spec.runtime.ports.*.port
+              x-ui-disable-tooltip: No Ports Added
+            readiness_url:
+              type: string
+              title: Readiness URL
+              pattern: ^(/[^/]+)*(/)?$
+              x-ui-placeholder: Enter readiness url for the Pod
+              x-ui-error-message: 'Value doesn''t match pattern, eg: / , /<path>'
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.readiness_check_type
+                values:
+                - HttpCheck
+              description: URL for readiness
+            readiness_exec_command:
+              type: array
+              title: Readiness Exec Command
+              x-ui-placeholder: Add each command argument as a new entry
+              x-ui-error-message: Enter each command/argument in a separate line
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.readiness_check_type
+                values:
+                - ExecCheck
+              description: Commands for readiness check
+              x-ui-override-disable: true
             liveness_check_type:
               type: string
               title: Liveness Check Type
@@ -454,9 +541,193 @@ spec:
               - PortCheck
               - HttpCheck
               - ExecCheck
-          required:
-          - readiness_check_type
-          - liveness_check_type
+            liveness_start_up_time:
+              type: integer
+              default: 10
+              title: Liveness Start-Up Time
+              minimum: 0
+              maximum: 10000
+              x-ui-placeholder: Enter liveness start up time for the Pod
+              x-ui-error-message: Value doesn't match pattern, accepted values are
+                from 0-10000
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.liveness_check_type
+                values:
+                - PortCheck
+                - HttpCheck
+                - ExecCheck
+              description: Wait time for liveness (in sec)
+            liveness_timeout:
+              type: integer
+              default: 10
+              title: Liveness Timeout
+              minimum: 0
+              maximum: 10000
+              x-ui-placeholder: Enter liveness timeout for the Pod
+              x-ui-error-message: Value doesn't match pattern, accepted values are
+                from 0-10000
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.liveness_check_type
+                values:
+                - PortCheck
+                - HttpCheck
+                - ExecCheck
+              description: Max time for liveness (in sec)
+            liveness_period:
+              type: integer
+              title: Liveness Check Interval
+              default: 10
+              minimum: 0
+              maximum: 10000
+              x-ui-placeholder: Enter liveness period for the Pod
+              x-ui-error-message: Value doesn't match pattern, accepted values are
+                from 0-10000
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.liveness_check_type
+                values:
+                - PortCheck
+                - HttpCheck
+                - ExecCheck
+              description: Interval for Liveness (in sec)
+            liveness_port:
+              type: string
+              title: Liveness Port
+              x-ui-placeholder: Enter liveness port for the Pod
+              x-ui-error-message: Value doesn't match pattern, accepted values are
+                from 0-65535
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.liveness_check_type
+                values:
+                - PortCheck
+                - HttpCheck
+              description: Port for Health Checks
+              x-ui-dynamic-enum: spec.runtime.ports.*.port
+              x-ui-disable-tooltip: No Ports Added
+            liveness_url:
+              type: string
+              title: Liveness URL
+              pattern: ^(/[^/]+)*(/)?$
+              x-ui-placeholder: Enter liveness url for the Pod
+              x-ui-error-message: 'Value doesn''t match pattern, eg: / , /<path>'
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.liveness_check_type
+                values:
+                - HttpCheck
+              description: URL for liveness
+            liveness_exec_command:
+              type: array
+              title: Liveness Exec Command
+              x-ui-placeholder: Add each command argument as a new entry
+              x-ui-error-message: Enter each command/argument in a separate line
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.liveness_check_type
+                values:
+                - ExecCheck
+              description: Commands for liveness
+              x-ui-override-disable: true
+            startup_check_type:
+              type: string
+              title: Startup Check Type
+              default: None
+              x-ui-no-sort: true
+              enum:
+              - None
+              - PortCheck
+              - HttpCheck
+              - ExecCheck
+            startup_start_up_time:
+              type: integer
+              title: Startup Start-Up Time
+              default: 10
+              minimum: 0
+              maximum: 10000
+              x-ui-placeholder: Enter startup start up time for the Pod
+              x-ui-error-message: Value doesn't match pattern, accepted values are
+                from 0-10000
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.startup_check_type
+                values:
+                - PortCheck
+                - HttpCheck
+                - ExecCheck
+              description: Wait time for startup check (in sec)
+            startup_timeout:
+              type: integer
+              title: Startup Timeout
+              default: 10
+              minimum: 0
+              maximum: 10000
+              x-ui-placeholder: Enter startup timeout for the Pod
+              x-ui-error-message: Value doesn't match pattern, accepted values are
+                from 0-10000
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.startup_check_type
+                values:
+                - PortCheck
+                - HttpCheck
+                - ExecCheck
+              description: Max time for startup (in sec)
+            startup_period:
+              type: integer
+              title: Startup Check Interval
+              default: 10
+              minimum: 0
+              maximum: 10000
+              x-ui-placeholder: Enter startup period for the Pod
+              x-ui-error-message: Value doesn't match pattern, accepted values are
+                from 0-10000
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.startup_check_type
+                values:
+                - PortCheck
+                - HttpCheck
+                - ExecCheck
+              description: Repeated interval for health-check (in sec)
+            startup_port:
+              type: string
+              title: Startup Port
+              x-ui-placeholder: Enter startup port for the Pod
+              x-ui-error-message: Value doesn't match pattern, accepted values are
+                from 0-65535
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.startup_check_type
+                values:
+                - PortCheck
+                - HttpCheck
+              description: Port for Health Checks
+              x-ui-dynamic-enum: spec.runtime.ports.*.port
+              x-ui-disable-tooltip: No Ports Added
+            startup_url:
+              type: string
+              title: Startup URL
+              pattern: ^(/[^/]+)*(/)?$
+              x-ui-placeholder: Enter startup url for the Pod
+              x-ui-error-message: 'Value doesn''t match pattern, eg: / , /<path>'
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.startup_check_type
+                values:
+                - HttpCheck
+              description: URL for startup
+            startup_headers:
+              type: object
+              title: Startup Headers
+              description: Headers to be sent with startup check request
+              x-ui-yaml-editor: true
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.startup_check_type
+                values:
+                - HttpCheck
+            startup_exec_command:
+              type: array
+              title: Startup Exec Command
+              x-ui-placeholder: Add each command argument as a new entry
+              x-ui-error-message: Enter each command/argument in a separate line
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.startup_check_type
+                values:
+                - ExecCheck
+              description: Commands for startup check
+              x-ui-override-disable: true
         autoscaling:
           type: object
           title: Autoscaling
@@ -690,7 +961,6 @@ spec:
                   - name
                   - mount_path
       required:
-      - ports
       - size
     release:
       title: Release
@@ -1575,10 +1845,10 @@ spec:
                         - ExecCheck
                       description: Commands for startup check
                       x-ui-override-disable: true
-                    port:
+                    readiness_port:
                       type: string
-                      title: Health Check Port
-                      x-ui-placeholder: Enter health check port for the Sidecar
+                      title: Readiness Port
+                      x-ui-placeholder: Enter readiness port for the Sidecar
                       x-ui-error-message: Value doesn't match pattern, accepted values
                         are from 0-65535
                       x-ui-visible-if:
@@ -1586,17 +1856,37 @@ spec:
                         values:
                         - PortCheck
                         - HttpCheck
-                      description: Port for Health Checks
+                      description: Port for readiness health check
+                      x-ui-dynamic-enum: spec.sidecars.{{this}}.runtime.ports.*.port
                       x-ui-disable-tooltip: No Ports Added
-                      x-ui-typeable: true
-                  required:
-                  - readiness_url
-                  - readiness_exec_command
-                  - liveness_url
-                  - liveness_exec_command
-                  - startup_url
-                  - startup_exec_command
-                  - port
+                    liveness_port:
+                      type: string
+                      title: Liveness Port
+                      x-ui-placeholder: Enter liveness port for the Sidecar
+                      x-ui-error-message: Value doesn't match pattern, accepted values
+                        are from 0-65535
+                      x-ui-visible-if:
+                        field: spec.sidecars.{{this}}.runtime.health_checks.liveness_check_type
+                        values:
+                        - PortCheck
+                        - HttpCheck
+                      description: Port for liveness health check
+                      x-ui-dynamic-enum: spec.sidecars.{{this}}.runtime.ports.*.port
+                      x-ui-disable-tooltip: No Ports Added
+                    startup_port:
+                      type: string
+                      title: Startup Port
+                      x-ui-placeholder: Enter startup port for the Sidecar
+                      x-ui-error-message: Value doesn't match pattern, accepted values
+                        are from 0-65535
+                      x-ui-visible-if:
+                        field: spec.sidecars.{{this}}.runtime.health_checks.startup_check_type
+                        values:
+                        - PortCheck
+                        - HttpCheck
+                      description: Port for startup health check
+                      x-ui-dynamic-enum: spec.sidecars.{{this}}.runtime.ports.*.port
+                      x-ui-disable-tooltip: No Ports Added
               required:
               - size
               x-ui-order:

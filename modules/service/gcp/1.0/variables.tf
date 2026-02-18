@@ -17,6 +17,8 @@ variable "instance" {
 
       # Pod distribution settings
       enable_host_anti_affinity = optional(bool, false)
+      pod_distribution_enabled  = optional(bool, false)
+      pod_distribution          = optional(map(any), {})
 
       # Cronjob configuration
       cronjob = optional(object({
@@ -68,11 +70,8 @@ variable "instance" {
           protocol     = string
         })), {})
 
-        # Health checks
-        health_checks = optional(object({
-          readiness_check_type = string
-          liveness_check_type  = string
-        }))
+        # Health checks (optional, typed as any to support all check type fields)
+        health_checks = optional(any)
 
         # Autoscaling
         autoscaling = optional(object({
@@ -143,9 +142,11 @@ variable "instance" {
 
       # Init containers
       init_containers = optional(map(object({
-        image       = string
-        pull_policy = string
-        env         = optional(map(string), {})
+        image                   = string
+        pull_policy             = string
+        env                     = optional(map(string), {})
+        additional_k8s_env      = optional(any)
+        additional_k8s_env_from = optional(any)
         runtime = object({
           command = optional(list(string), [])
           args    = optional(list(string), [])
@@ -161,9 +162,11 @@ variable "instance" {
 
       # Sidecar containers
       sidecars = optional(map(object({
-        image       = string
-        pull_policy = string
-        env         = optional(map(string), {})
+        image                   = string
+        pull_policy             = string
+        env                     = optional(map(string), {})
+        additional_k8s_env      = optional(any)
+        additional_k8s_env_from = optional(any)
         runtime = object({
           command = optional(list(string), [])
           args    = optional(list(string), [])
