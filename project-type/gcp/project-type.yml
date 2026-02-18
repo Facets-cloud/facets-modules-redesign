@@ -57,6 +57,8 @@ modules:
     flavor: k8s
   - intent: helm
     flavor: k8s_standard
+  - intent: helm
+    flavor: k8s_git
   - intent: gateway_api_crd
     flavor: default
   - intent: ingress

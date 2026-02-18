@@ -73,8 +73,8 @@ sample:
   kind: cloud_account
   disabled: false
   spec:
-    cloud_account: gcp-prod-account
-    region: us-central1
+    cloud_account: ""
+    region: ""
 iac:
   validated_files:
   - variables.tf

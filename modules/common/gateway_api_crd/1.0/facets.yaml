@@ -59,7 +59,6 @@ sample:
   disabled: true
   flavor: default
   kind: gateway_api_crd
-  metadata: {}
   spec:
     channel: experimental
     version: v1.4.1

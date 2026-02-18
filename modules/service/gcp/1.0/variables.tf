@@ -7,13 +7,6 @@ variable "instance" {
     version  = string
     disabled = optional(bool, false)
 
-    # Metadata for the service
-    metadata = optional(object({
-      namespace   = optional(string)
-      labels      = optional(map(string), {})
-      annotations = optional(map(string), {})
-    }), {})
-
     # Main specification from facets.yaml
     spec = object({
       # Workload type: application, cronjob, job, or statefulset

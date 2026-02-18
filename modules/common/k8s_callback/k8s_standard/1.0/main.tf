@@ -59,19 +59,19 @@ data "kubernetes_secret" "facets_admin_token" {
 # Make callback to control plane
 resource "null_resource" "add_k8s_creds_backend" {
   triggers = {
-    host       = var.inputs.kubernetes_details.attributes.cluster_endpoint
+    host       = var.inputs.kubernetes_details.cluster_endpoint
     token      = data.kubernetes_secret.facets_admin_token.data["token"]
-    cluster_id = var.environment.cluster_id
+    cluster_id = var.environment.environment_id
   }
 
   provisioner "local-exec" {
     # Use TF_VAR_* environment variables directly in shell command
     # This replaces the deprecated var.cc_metadata pattern
     command = <<EOF
-curl -X POST "https://$TF_VAR_cc_host/cc/v1/clusters/${var.environment.cluster_id}/credentials" \
+curl -X POST "https://$TF_VAR_cc_host/cc/v1/clusters/${var.environment.environment_id}/credentials" \
   -H "accept: */*" \
   -H "Content-Type: application/json" \
-  -d "{\"kubernetesApiEndpoint\": \"${var.inputs.kubernetes_details.attributes.cluster_endpoint}\", \"kubernetesToken\": \"${data.kubernetes_secret.facets_admin_token.data["token"]}\"}" \
+  -d "{\"kubernetesApiEndpoint\": \"${var.inputs.kubernetes_details.cluster_endpoint}\", \"kubernetesToken\": \"${data.kubernetes_secret.facets_admin_token.data["token"]}\"}" \
   -H "X-DEPLOYER-INTERNAL-AUTH-TOKEN: $TF_VAR_cc_auth_token"
 EOF
   }

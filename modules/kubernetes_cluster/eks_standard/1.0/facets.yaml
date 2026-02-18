@@ -81,14 +81,17 @@ sample:
             kube_proxy:
                 enabled: true
                 version: latest
+            metrics_server:
+                enabled: true
+                version: latest
             vpc_cni:
                 enabled: true
                 version: latest
         cluster_endpoint_private_access: true
         cluster_endpoint_public_access: true
         cluster_version: "1.34"
-        enable_cluster_encryption: false
-    version: "1.0"
+        customer_managed_kms: true
+    version: "1.1"
 spec:
     description: Configure your Amazon EKS cluster with managed node groups
     properties:
@@ -172,6 +175,22 @@ spec:
                                     - true
                     title: Kube Proxy
                     type: object
+                metrics_server:
+                    properties:
+                        enabled:
+                            default: true
+                            title: Enable Metrics Server
+                            type: boolean
+                        version:
+                            default: latest
+                            title: Version
+                            type: string
+                            x-ui-visible-if:
+                                field: spec.cluster_addons.metrics_server.enabled
+                                values:
+                                    - true
+                    title: Metrics Server
+                    type: object
                 vpc_cni:
                     properties:
                         enabled:
@@ -234,12 +253,6 @@ spec:
                         - SPOT
                     title: Capacity Type
                     type: string
-                desired_size:
-                    default: 2
-                    description: Desired number of nodes in the default system pool
-                    minimum: 1
-                    title: Desired Size
-                    type: integer
                 disk_size:
                     default: 50
                     description: Disk size in GB for default system nodes
@@ -255,85 +268,44 @@ spec:
                         type: string
                     title: Instance Types
                     type: array
-                max_size:
-                    default: 3
-                    description: Maximum number of nodes in the default system pool
+                size:
+                    default: 2
+                    description: Number of nodes in the default system pool
                     minimum: 1
-                    title: Maximum Size
-                    type: integer
-                min_size:
-                    default: 1
-                    description: Minimum number of nodes in the default system pool
-                    minimum: 1
-                    title: Minimum Size
+                    title: Node Count
                     type: integer
             title: Default System Node Pool
             type: object
             x-ui-toggle: true
-        enable_cluster_encryption:
+        container_insights_enabled:
             default: false
-            description: Enable encryption of Kubernetes secrets using AWS KMS
-            title: Enable Secrets Encryption
+            description: Enable CloudWatch Container Insights for cluster monitoring.
+            title: Container Insights
             type: boolean
-        managed_node_groups:
-            description: Configure managed node groups for the EKS cluster
-            patternProperties:
-                ^[a-zA-Z0-9_-]+$:
-                    properties:
-                        capacity_type:
-                            default: ON_DEMAND
-                            description: Type of capacity for the node group
-                            enum:
-                                - ON_DEMAND
-                                - SPOT
-                            title: Capacity Type
-                            type: string
-                        desired_size:
-                            default: 2
-                            description: Desired number of nodes
-                            minimum: 1
-                            title: Desired Size
-                            type: integer
-                        disk_size:
-                            default: 50
-                            description: Disk size in GB for worker nodes
-                            maximum: 1000
-                            minimum: 20
-                            title: Disk Size (GB)
-                            type: integer
-                        instance_types:
-                            default:
-                                - t3.medium
-                            description: List of EC2 instance types for the node group
-                            items:
-                                type: string
-                            title: Instance Types
-                            type: array
-                        labels:
-                            description: Kubernetes labels to apply to nodes
-                            title: Node Labels
-                            type: object
-                            x-ui-yaml-editor: true
-                        max_size:
-                            default: 10
-                            description: Maximum number of nodes
-                            minimum: 1
-                            title: Maximum Size
-                            type: integer
-                        min_size:
-                            default: 1
-                            description: Minimum number of nodes
-                            minimum: 0
-                            title: Minimum Size
-                            type: integer
-                        taints:
-                            description: Kubernetes taints to apply to nodes
-                            title: Node Taints
-                            type: object
-                            x-ui-yaml-editor: true
-                    type: object
-            title: Managed Node Groups
-            type: object
+        customer_managed_kms:
+            default: true
+            description: Use a customer-managed KMS key for Kubernetes secrets encryption. Required for compliance (PCI-DSS, HIPAA). EKS always encrypts secrets with AWS-owned keys by default.
+            title: Customer-Managed KMS Key
+            type: boolean
+        enabled_log_types:
+            default:
+                - api
+                - audit
+                - authenticator
+                - controllerManager
+                - scheduler
+            description: List of EKS control plane log types to enable. All types enabled by default for security and compliance.
+            items:
+                enum:
+                    - api
+                    - audit
+                    - authenticator
+                    - controllerManager
+                    - scheduler
+                type: string
+            title: Enabled Control Plane Log Types
+            type: array
+            x-ui-overrides-only: true
     required:
         - cluster_version
     title: EKS Cluster Configuration
@@ -342,9 +314,10 @@ spec:
         - cluster_version
         - cluster_endpoint_public_access
         - cluster_endpoint_private_access
-        - enable_cluster_encryption
+        - customer_managed_kms
+        - enabled_log_types
+        - container_insights_enabled
         - cluster_addons
         - default_node_pool
-        - managed_node_groups
         - cluster_tags
-version: "1.0"
+version: "1.1"

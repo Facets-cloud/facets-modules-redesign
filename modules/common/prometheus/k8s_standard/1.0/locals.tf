@@ -102,7 +102,7 @@ locals {
         send_resolved = true
       },
       {
-        url           = "https://${local.cc_host}/cc/v1/clusters/${var.environment.cluster_id}/alerts"
+        url           = "https://${local.cc_host}/cc/v1/clusters/${var.environment.environment_id}/alerts"
         send_resolved = true
         http_config = {
           bearer_token = local.cc_auth_token
@@ -314,7 +314,7 @@ locals {
         }
         server = {
           domain              = local.cc_host
-          root_url            = "%(protocol)s://%(domain)s:%(http_port)s/tunnel/${var.environment.cluster_id}/grafana/"
+          root_url            = "%(protocol)s://%(domain)s:%(http_port)s/tunnel/${var.environment.environment_id}/grafana/"
           serve_from_sub_path = true
         }
         live = {
