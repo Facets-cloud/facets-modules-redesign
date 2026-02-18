@@ -1,6 +1,6 @@
 locals {
   spec          = lookup(var.instance, "spec", {})
-  metadata_name = lookup(lookup(var.instance, "metadata", {}), "name", "")
+  metadata_name = lookup(lookup(var.instance, "metadata", {}), "name", module.name.name)
   instance_name = length(local.metadata_name) > 0 ? local.metadata_name : var.instance_name
 
   vpc_id          = var.inputs.network_details.attributes.vpc_id
