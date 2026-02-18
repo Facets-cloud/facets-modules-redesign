@@ -121,8 +121,8 @@ resource "aws_iam_policy" "efs_csi_driver" {
         }
       },
       {
-        Effect = "Allow"
-        Action = "elasticfilesystem:DeleteAccessPoint"
+        Effect   = "Allow"
+        Action   = "elasticfilesystem:DeleteAccessPoint"
         Resource = "*"
         Condition = {
           StringEquals = {
