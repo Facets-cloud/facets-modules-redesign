@@ -3,7 +3,9 @@ locals {
   spec = var.instance.spec
   name = lookup(local.spec, "name", module.iam-policy-name.name)
 
-  iam_policy = lookup(local.spec, "aws_iam_policy", {})
+  iam_policy  = lookup(local.spec, "aws_iam_policy", {})
+  path        = lookup(local.iam_policy, "path", "/")
+  description = lookup(local.iam_policy, "description", null)
 
   # IAM Policy configuration
   policy_name = local.spec.name

@@ -6,7 +6,7 @@ variable "instance" {
     spec = object({
       name           = string
       policy         = any
-      aws_iam_policy = any
+      aws_iam_policy = optional(any, {})
       tags           = optional(map(string), {})
     })
   })
