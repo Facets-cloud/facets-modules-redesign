@@ -2,9 +2,9 @@ clouds:
   - aws
 description: |
   Deploys the AWS EFS CSI Driver on EKS clusters via Helm.
-  Creates an EFS file system, mount targets in each private subnet, and a security group
-  allowing NFS traffic from the VPC. Configures IRSA (IAM Roles for Service Accounts)
-  for the CSI controller and installs a StorageClass backed by EFS Access Points.
+  Configures IRSA (IAM Roles for Service Accounts) for the CSI controller so it can
+  manage EFS Access Points. Does not create EFS file systems — use the aws_efs module
+  for that.
 intentDetails:
   type: Cloud & Infrastructure
   description: AWS EFS CSI Driver for elastic file system storage on EKS
@@ -27,12 +27,6 @@ inputs:
       - helm
       - kubernetes
     type: '@facets/eks'
-  network_details:
-    default:
-      resource_name: default
-      resource_type: network
-    displayName: Network
-    type: '@facets/aws-vpc-details'
 intent: aws_efs_csi_driver
 outputs:
   default:
@@ -75,54 +69,6 @@ spec:
               type: string
               default: "128Mi"
               description: Memory request for the node pod
-    aws_efs_file_system:
-      description: Advanced configuration for the AWS EFS file system resource
-      title: EFS File System Configuration
-      type: object
-      properties:
-        encrypted:
-          type: boolean
-          default: true
-          description: Enable encryption at rest for the EFS file system
-          title: Encrypted
-        kms_key_id:
-          type: string
-          description: ARN of the KMS key to use for encryption (uses AWS-managed key if omitted)
-          title: KMS Key ID
-        performance_mode:
-          type: string
-          description: EFS performance mode
-          title: Performance Mode
-        creation_token:
-          type: string
-          description: Unique token to ensure idempotent creation of the file system
-          title: Creation Token
-        availability_zone_name:
-          type: string
-          description: AWS Availability Zone for a One Zone EFS file system
-          title: Availability Zone
-        throughput_mode:
-          type: string
-          description: EFS throughput mode
-          title: Throughput Mode
-          enum:
-            - bursting
-            - provisioned
-            - elastic
-        provisioned_throughput_in_mibps:
-          type: number
-          description: Provisioned throughput in MiB/s (required when throughput_mode is provisioned)
-          title: Provisioned Throughput (MiB/s)
-        lifecycle_policy:
-          type: object
-          description: Lifecycle policy rules for transitioning files to/from Infrequent Access storage
-          title: Lifecycle Policy
-          x-ui-yaml-editor: true
-        tags:
-          type: object
-          description: Additional AWS tags to apply to the EFS file system
-          title: EFS Tags
-          x-ui-yaml-editor: true
     values:
       description: Advanced Helm chart values to pass directly to the EFS CSI Driver chart. These are deep-merged over the computed values, allowing full override of any chart setting.
       title: Helm Values
@@ -140,7 +86,6 @@ spec:
   x-ui-order:
     - chart_version
     - size
-    - aws_efs_file_system
     - values
     - tags
 version: "1.0"
@@ -150,6 +95,5 @@ sample:
   kind: aws_efs_csi_driver
   spec:
     chart_version: "2.4.6"
-    aws_efs_file_system: {}
     size: {}
   version: "1.0"

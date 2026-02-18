@@ -19,19 +19,6 @@ variable "instance" {
         }), {})
       }), {})
 
-      # EFS File System advanced configuration
-      aws_efs_file_system = optional(object({
-        encrypted                       = optional(bool, true)
-        kms_key_id                      = optional(string)
-        performance_mode                = optional(string)
-        creation_token                  = optional(string)
-        availability_zone_name          = optional(string)
-        throughput_mode                 = optional(string)
-        provisioned_throughput_in_mibps = optional(number)
-        lifecycle_policy                = optional(map(any), {})
-        tags                            = optional(map(string), {})
-      }), {})
-
       # User-supplied Helm values (deep-merged over computed values)
       values = optional(any, {})
 
@@ -84,14 +71,6 @@ variable "inputs" {
           command     = string
           args        = list(string)
         })
-      })
-    })
-    network_details = object({
-      attributes = object({
-        vpc_id             = string
-        vpc_cidr_block     = string
-        private_subnet_ids = list(string)
-        public_subnet_ids  = list(string)
       })
     })
   })

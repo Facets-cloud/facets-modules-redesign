@@ -14,12 +14,8 @@ locals {
   controller_service_account = "efs-csi-controller-sa"
 
   oidc_provider_arn = var.inputs.kubernetes_details.attributes.oidc_provider_arn
-  vpc_id            = var.inputs.network_details.attributes.vpc_id
-  vpc_cidr_block    = var.inputs.network_details.attributes.vpc_cidr_block
-  private_subnets   = var.inputs.network_details.attributes.private_subnet_ids
 
-  aws_efs_file_system = lookup(var.instance.spec, "aws_efs_file_system", {})
-  size                = lookup(var.instance.spec, "size", {})
+  size = lookup(var.instance.spec, "size", {})
 
   controller_cpu    = lookup(lookup(local.size, "controller", {}), "cpu", "100m")
   controller_memory = lookup(lookup(local.size, "controller", {}), "memory", "128Mi")
@@ -78,81 +74,7 @@ locals {
         }
       }
     }
-    storageClasses = [
-      {
-        name         = "efs-sc"
-        mountOptions = ["tls", "iam"]
-        parameters = {
-          provisioningMode = "efs-ap"
-          fileSystemId     = aws_efs_file_system.efs_csi_driver.id
-          directoryPerms   = "700"
-        }
-        reclaimPolicy     = "Delete"
-        volumeBindingMode = "Immediate"
-      }
-    ]
   }
-}
-
-# EFS File System
-resource "aws_efs_file_system" "efs_csi_driver" {
-  encrypted                       = lookup(local.aws_efs_file_system, "encrypted", true)
-  kms_key_id                      = lookup(local.aws_efs_file_system, "kms_key_id", null)
-  performance_mode                = lookup(local.aws_efs_file_system, "performance_mode", null)
-  creation_token                  = lookup(local.aws_efs_file_system, "creation_token", null)
-  availability_zone_name          = lookup(local.aws_efs_file_system, "availability_zone_name", null)
-  throughput_mode                 = lookup(local.aws_efs_file_system, "throughput_mode", null)
-  provisioned_throughput_in_mibps = lookup(local.aws_efs_file_system, "provisioned_throughput_in_mibps", null)
-
-  dynamic "lifecycle_policy" {
-    for_each = lookup(local.aws_efs_file_system, "lifecycle_policy", {})
-    content {
-      transition_to_ia                    = lookup(lifecycle_policy.value, "transition_to_ia", null)
-      transition_to_primary_storage_class = lookup(lifecycle_policy.value, "transition_to_primary_storage_class", null)
-    }
-  }
-
-  tags = merge(
-    local.instance_tags,
-    lookup(local.aws_efs_file_system, "tags", {}),
-    { Name = local.name }
-  )
-
-  lifecycle {
-    prevent_destroy = true
-  }
-}
-
-# Security Group allowing NFS traffic from within the VPC
-resource "aws_security_group" "efs_csi_driver" {
-  name   = local.name
-  vpc_id = local.vpc_id
-
-  ingress {
-    from_port   = 2049
-    to_port     = 2049
-    protocol    = "TCP"
-    cidr_blocks = [local.vpc_cidr_block]
-    description = "NFS inbound access to EFS filesystem ${local.name}"
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow all outbound traffic"
-  }
-
-  tags = local.instance_tags
-}
-
-# Mount Targets in each private subnet
-resource "aws_efs_mount_target" "efs_csi_driver" {
-  count           = length(local.private_subnets)
-  file_system_id  = aws_efs_file_system.efs_csi_driver.id
-  subnet_id       = local.private_subnets[count.index]
-  security_groups = [aws_security_group.efs_csi_driver.id]
 }
 
 # IAM Policy for the EFS CSI Driver
@@ -172,20 +94,14 @@ resource "aws_iam_policy" "efs_csi_driver" {
           "elasticfilesystem:DescribeMountTargets",
           "ec2:DescribeAvailabilityZones"
         ]
-        Resource = [
-          aws_efs_file_system.efs_csi_driver.arn,
-          "${aws_efs_file_system.efs_csi_driver.arn}/*"
-        ]
+        Resource = "*"
       },
       {
         Effect = "Allow"
         Action = [
           "elasticfilesystem:CreateAccessPoint"
         ]
-        Resource = [
-          aws_efs_file_system.efs_csi_driver.arn,
-          "${aws_efs_file_system.efs_csi_driver.arn}/*"
-        ]
+        Resource = "*"
         Condition = {
           StringLike = {
             "aws:RequestTag/efs.csi.aws.com/cluster" = "true"
@@ -197,10 +113,7 @@ resource "aws_iam_policy" "efs_csi_driver" {
         Action = [
           "elasticfilesystem:TagResource"
         ]
-        Resource = [
-          aws_efs_file_system.efs_csi_driver.arn,
-          "${aws_efs_file_system.efs_csi_driver.arn}/*"
-        ]
+        Resource = "*"
         Condition = {
           StringLike = {
             "aws:ResourceTag/efs.csi.aws.com/cluster" = "true"
@@ -210,10 +123,7 @@ resource "aws_iam_policy" "efs_csi_driver" {
       {
         Effect = "Allow"
         Action = "elasticfilesystem:DeleteAccessPoint"
-        Resource = [
-          aws_efs_file_system.efs_csi_driver.arn,
-          "${aws_efs_file_system.efs_csi_driver.arn}/*"
-        ]
+        Resource = "*"
         Condition = {
           StringEquals = {
             "aws:ResourceTag/efs.csi.aws.com/cluster" = "true"
