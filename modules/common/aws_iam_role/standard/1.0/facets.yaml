@@ -3,7 +3,7 @@ flavor: standard
 version: '1.0'
 description: Adds AWS IAM Role
 intentDetails:
-  type: Security & Identity
+  type: Security & Compliance
   description: Create and manage AWS IAM roles with IRSA for EKS workloads
   displayName: AWS IAM Role
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/aws_iam_role.svg
