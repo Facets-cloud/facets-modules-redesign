@@ -1,5 +1,14 @@
+module "name" {
+  source          = "github.com/Facets-cloud/facets-utility-modules//name"
+  environment     = var.environment
+  limit           = 63
+  resource_name   = var.instance_name
+  resource_type   = "service"
+  globally_unique = false
+}
+
 locals {
-  service_name = "${var.instance_name}-${var.environment.unique_name}"
+  service_name = module.name.name
   location     = var.inputs.gcp_provider.attributes.region
   project_id   = var.inputs.gcp_provider.attributes.project_id
 

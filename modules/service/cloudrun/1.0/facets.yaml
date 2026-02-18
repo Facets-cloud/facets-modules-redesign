@@ -7,6 +7,11 @@ clouds:
 description: |
     Deploys containerized applications to Google Cloud Run with auto-scaling,
     traffic management, and VPC connector support
+intentDetails:                                                                                                                                                               
+      type: Cloud & Infrastructure                                                                                                                                             
+      description: Deploy and manage containerized applications on Google Cloud Run                                                                                            
+      displayName: Service                                                                                                                                                     
+      iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/service.svg
 flavor: cloudrun
 inputs:
     gcp_provider:
