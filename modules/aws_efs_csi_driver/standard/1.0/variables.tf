@@ -32,6 +32,9 @@ variable "instance" {
         tags                            = optional(map(string), {})
       }), {})
 
+      # User-supplied Helm values (deep-merged over computed values)
+      values = optional(any, {})
+
       # Tags
       tags = optional(map(string), {})
     })

@@ -36,6 +36,8 @@ locals {
     }
   )
 
+  user_helm_values = lookup(var.instance.spec, "values", {})
+
   helm_values = {
     controller = {
       serviceAccount = {
@@ -248,5 +250,8 @@ resource "helm_release" "efs_csi_driver" {
   name       = "aws-efs-csi-driver"
   namespace  = local.controller_namespace
 
-  values = [yamlencode(local.helm_values)]
+  values = [
+    yamlencode(local.helm_values),
+    yamlencode(local.user_helm_values),
+  ]
 }

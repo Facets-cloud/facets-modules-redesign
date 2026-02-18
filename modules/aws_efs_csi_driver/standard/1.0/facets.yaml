@@ -38,15 +38,6 @@ outputs:
   default:
     title: AWS EFS CSI Driver Details
     type: '@facets/aws-efs-csi-driver'
-sample:
-  disabled: false
-  flavor: standard
-  kind: aws_efs_csi_driver
-  spec:
-    chart_version: "2.4.6"
-    aws_efs_file_system: {}
-    size: {}
-  version: "1.0"
 spec:
   description: Configure the AWS EFS CSI Driver for your EKS cluster
   properties:
@@ -132,6 +123,11 @@ spec:
           description: Additional AWS tags to apply to the EFS file system
           title: EFS Tags
           x-ui-yaml-editor: true
+    values:
+      description: Advanced Helm chart values to pass directly to the EFS CSI Driver chart. These are deep-merged over the computed values, allowing full override of any chart setting.
+      title: Helm Values
+      type: object
+      x-ui-yaml-editor: true
     tags:
       description: Additional AWS tags to apply to all EFS CSI Driver resources
       title: Resource Tags
@@ -145,5 +141,15 @@ spec:
     - chart_version
     - size
     - aws_efs_file_system
+    - values
     - tags
 version: "1.0"
+sample:
+  disabled: false
+  flavor: standard
+  kind: aws_efs_csi_driver
+  spec:
+    chart_version: "2.4.6"
+    aws_efs_file_system: {}
+    size: {}
+  version: "1.0"
