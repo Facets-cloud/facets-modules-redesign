@@ -6,16 +6,9 @@ variable "instance" {
     spec = object({
       name   = string
       policy = any
+      aws_iam_policy = any
       tags   = optional(map(string), {})
     })
-    advanced = optional(object({
-      iam_policy = optional(object({
-        aws_iam_policy = optional(object({
-          path        = optional(string, "/")
-          description = optional(string)
-        }), {})
-      }), {})
-    }), {})
   })
 }
 
