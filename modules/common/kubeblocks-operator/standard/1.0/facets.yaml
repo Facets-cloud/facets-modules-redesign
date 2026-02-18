@@ -8,6 +8,11 @@ clouds:
 - azure
 description: Installs and configures KubeBlocks operator for managing databases on
   Kubernetes
+intentDetails:
+  type: Operators
+  description: KubeBlocks operator for managing databases on Kubernetes clusters
+  displayName: KubeBlocks Operator
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubeblocks-operator.svg
 inputs:
   kubernetes_cluster:
     type: '@facets/kubernetes-details'
@@ -17,11 +22,6 @@ inputs:
     providers:
     - kubernetes
     - helm
-  kubeblocks_crd:
-    type: '@facets/kubeblocks-crd'
-    optional: false
-    displayName: KubeBlocks CRDs
-    description: KubeBlocks Custom Resource Definitions (must be installed first)
   node_pool:
     type: '@facets/kubernetes_nodepool'
     optional: true

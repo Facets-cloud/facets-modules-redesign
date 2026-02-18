@@ -2,6 +2,11 @@ intent: cloud_account
 flavor: gcp_provider
 version: '1.0'
 description: Module to configure and provision resources within a cloud account
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Configure and provision resources within a GCP cloud account
+  displayName: Cloud Account
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloud_account.svg
 clouds:
 - gcp
 spec:
@@ -68,8 +73,8 @@ sample:
   kind: cloud_account
   disabled: false
   spec:
-    cloud_account: gcp-prod-account
-    region: us-central1
+    cloud_account: ""
+    region: ""
 iac:
   validated_files:
   - variables.tf

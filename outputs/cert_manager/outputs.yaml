@@ -13,6 +13,8 @@ properties:
           type: string
         use_gts:
           type: string
+        acme_email:
+          type: string
     interfaces:
       type: object
       properties: {}

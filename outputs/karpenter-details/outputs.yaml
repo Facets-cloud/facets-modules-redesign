@@ -19,6 +19,8 @@ properties:
           type: string
         interruption_queue_name:
           type: string
+        helm_release_id:
+          type: string
         secrets:
           type: array
           items:

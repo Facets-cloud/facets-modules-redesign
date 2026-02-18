@@ -2,6 +2,11 @@ clouds:
 - gcp
 description: Creates a GCP Pub/Sub topic with optional subscription and IAM role outputs
   for Workload Identity
+intentDetails:
+  type: Datastores
+  description: Google Cloud Pub/Sub for reliable messaging and event streaming
+  displayName: Pub/Sub
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/pubsub.svg
 flavor: gcp
 iac:
   validated_files:
@@ -24,8 +29,6 @@ sample:
   disabled: true
   flavor: gcp
   kind: pubsub
-  metadata:
-    name: my-topic
   spec:
     create_subscription: true
     message_retention_duration: 604800s

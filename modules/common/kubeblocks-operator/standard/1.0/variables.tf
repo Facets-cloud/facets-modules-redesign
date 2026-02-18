@@ -59,14 +59,6 @@ variable "inputs" {
         kubernetes_token                  = optional(string)
       }))
     }),
-    kubeblocks_crd = object({
-      attributes = optional(object({
-        version    = optional(string)
-        crds_count = optional(number)
-        release_id = optional(string)
-      }))
-      interfaces = optional(object({}))
-    })
     node_pool = optional(object({
       attributes = object({
         node_pool_name = string

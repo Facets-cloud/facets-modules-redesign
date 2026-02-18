@@ -12,12 +12,12 @@
         },
         "rules": {
           "rule1": {
-            "api_groups": [null],
+            "api_groups": [""],
             "resources": ["pods", "pods/log"],
             "verbs": ["get", "list"]
           },
           "rule2": {
-            "api_groups": [null],
+            "api_groups": [""],
             "resources": ["services", "persistentvolumeclaims"],
             "verbs": ["get", "list"]
           },
@@ -47,7 +47,7 @@
             "verbs": ["get", "list"]
           },
           "rule7": {
-            "api_groups": ["events.k8s.io", null],
+            "api_groups": ["events.k8s.io", ""],
             "resources": ["events"],
             "verbs": ["get", "list"]
           },
@@ -65,12 +65,12 @@
         },
         "rules": {
           "rule1": {
-            "api_groups": [null],
+            "api_groups": [""],
             "resources": ["pods", "pods/log", "pods/exec", "pods/portforward"],
             "verbs": ["get", "list", "delete", "create", "patch", "update"]
           },
           "rule2": {
-            "api_groups": [null],
+            "api_groups": [""],
             "resources": ["services", "namespaces"],
             "verbs": ["get", "list"]
           },
@@ -96,7 +96,7 @@
             "verbs": ["get", "list"]
           },
           "rule6": {
-            "api_groups": [null],
+            "api_groups": [""],
             "resources": ["persistentvolumeclaims"],
             "verbs": ["get", "list", "patch", "update"]
           },
@@ -111,7 +111,7 @@
             "verbs": ["get", "list", "create", "delete", "patch", "update"]
           },
           "rule9": {
-            "api_groups": ["events.k8s.io", null],
+            "api_groups": ["events.k8s.io", ""],
             "resources": ["events"],
             "verbs": ["get", "list"]
           },
@@ -131,12 +131,12 @@
         },
         "rules": {
           "rule1": {
-            "api_groups": [null],
+            "api_groups": [""],
             "resources": ["pods", "pods/log"],
             "verbs": ["get", "list"]
           },
           "rule2": {
-            "api_groups": [null],
+            "api_groups": [""],
             "resources": ["services", "persistentvolumeclaims"],
             "verbs": ["get", "list"]
           },
@@ -166,7 +166,7 @@
             "verbs": ["get", "list"]
           },
           "rule7": {
-            "api_groups": ["events.k8s.io", null],
+            "api_groups": ["events.k8s.io", ""],
             "resources": ["events"],
             "verbs": ["get", "list"]
           },
@@ -176,7 +176,7 @@
             "verbs": ["get", "list"]
           },
           "rule9": {
-            "api_groups": [null],
+            "api_groups": [""],
             "resources": ["nodes", "persistentvolumes"],
             "verbs": ["get", "list"]
           },
@@ -194,7 +194,7 @@
         },
         "rules": {
           "rule1": {
-            "api_groups": [null],
+            "api_groups": [""],
             "resources": [
               "nodes",
               "persistentvolumes",
@@ -209,12 +209,12 @@
             "verbs": ["get", "list"]
           },
           "rule3": {
-            "api_groups": [null],
+            "api_groups": [""],
             "resources": ["pods", "pods/log"],
             "verbs": ["get", "list"]
           },
           "rule4": {
-            "api_groups": [null],
+            "api_groups": [""],
             "resources": ["services", "persistentvolumeclaims"],
             "verbs": ["get", "list"]
           },
@@ -239,7 +239,7 @@
             "verbs": ["get", "list"]
           },
           "rule8": {
-            "api_groups": ["events.k8s.io", null],
+            "api_groups": ["events.k8s.io", ""],
             "resources": ["events"],
             "verbs": ["get", "list"]
           },
@@ -257,12 +257,12 @@
         },
         "rules": {
           "rule1": {
-            "api_groups": [null],
+            "api_groups": [""],
             "resources": ["pods", "pods/log", "pods/exec", "pods/portforward"],
             "verbs": ["get", "list", "delete", "create", "patch", "update"]
           },
           "rule2": {
-            "api_groups": [null],
+            "api_groups": [""],
             "resources": ["services", "namespaces", "endpoints"],
             "verbs": ["get", "list", "watch"]
           },
@@ -288,7 +288,7 @@
             "verbs": ["get", "list"]
           },
           "rule6": {
-            "api_groups": [null],
+            "api_groups": [""],
             "resources": ["persistentvolumeclaims"],
             "verbs": ["get", "list", "patch", "update"]
           },
@@ -303,7 +303,7 @@
             "verbs": ["get", "list", "create", "delete", "patch", "update"]
           },
           "rule9": {
-            "api_groups": ["events.k8s.io", null],
+            "api_groups": ["events.k8s.io", ""],
             "resources": ["events"],
             "verbs": ["get", "list"]
           },
@@ -314,6 +314,13 @@
           }
         }
       }
+    }
+  },
+  "inputs": {
+    "kubernetes_details": {
+      "resource_type": "kubernetes_cluster",
+      "resource_name": "cluster",
+      "output_name": "attributes"
     }
   },
   "advanced": {

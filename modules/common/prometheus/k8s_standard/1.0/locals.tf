@@ -102,7 +102,7 @@ locals {
         send_resolved = true
       },
       {
-        url           = "https://${local.cc_host}/cc/v1/clusters/${var.environment.cluster_id}/alerts"
+        url           = "https://${local.cc_host}/cc/v1/clusters/${var.environment.environment_id}/alerts"
         send_resolved = true
         http_config = {
           bearer_token = local.cc_auth_token
@@ -314,7 +314,7 @@ locals {
         }
         server = {
           domain              = local.cc_host
-          root_url            = "%(protocol)s://%(domain)s:%(http_port)s/tunnel/${var.environment.cluster_id}/grafana/"
+          root_url            = "%(protocol)s://%(domain)s:%(http_port)s/tunnel/${var.environment.environment_id}/grafana/"
           serve_from_sub_path = true
         }
         live = {
@@ -358,19 +358,21 @@ locals {
       enabled = lookup(local.kubeStateMetricsSpec, "enabled", true)
       collectors = distinct(concat([
         "certificatesigningrequests", "configmaps", "cronjobs", "daemonsets", "deployments",
-        "endpoints", "horizontalpodautoscalers", "verticalpodautoscalers", "ingresses", "jobs",
+        "endpoints", "horizontalpodautoscalers", "ingresses", "jobs",
         "leases", "limitranges", "mutatingwebhookconfigurations", "namespaces", "networkpolicies",
         "nodes", "persistentvolumeclaims", "persistentvolumes", "poddisruptionbudgets", "pods",
         "replicasets", "replicationcontrollers", "resourcequotas", "secrets", "services",
         "statefulsets", "storageclasses", "validatingwebhookconfigurations", "volumeattachments"
       ], lookup(local.kubeStateMetricsSpec, "collectors", [])))
       extraArgs = [
-        "--metric-labels-allowlist=pods=[*],nodes=[*],ingresses=[*]",
-        "--resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpoints,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments"
+        "--metric-labels-allowlist=pods=[*],nodes=[*],ingresses=[*]"
       ]
       # priorityClassName = "facets-critical"
       nodeSelector = local.nodeSelector
       tolerations  = local.tolerations
+      rbac = {
+        extraRules = []
+      }
     }
     "prometheus-node-exporter" = {
       nodeSelector = {

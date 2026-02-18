@@ -5,6 +5,11 @@ clouds:
 - gcp
 description: Workload Identity is the recommended way to access GCP services from
   Kubernetes. [Read more] (https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity).
+intentDetails:
+  type: Security & Identity
+  description: GCP Workload Identity for secure pod-to-cloud authentication
+  displayName: GCP Workload Identity
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/google_workload_identity.svg
 inputs:
   cloud_account:
     description: The GCP project where Pub/Sub topics will be created

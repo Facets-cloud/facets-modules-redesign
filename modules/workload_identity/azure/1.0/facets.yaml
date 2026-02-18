@@ -6,6 +6,11 @@ clouds:
 description: 'Creates and configures Microsoft Entra Workload Identity for AKS: user-assigned
   managed identity, federated identity credential, and annotated Kubernetes ServiceAccount
   for secure pod authentication without secrets.'
+intentDetails:
+  type: Security & Identity
+  description: Azure Workload Identity for secure pod-to-cloud authentication
+  displayName: Azure Workload Identity
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/azure_workload_identity.svg
 inputs:
   cloud_account:
     type: '@facets/azure_cloud_account'

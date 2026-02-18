@@ -14,10 +14,9 @@ locals {
   enable_deployment_actions  = local.enable_actions && local.spec_type == "application" ? 1 : 0
   enable_statefulset_actions = local.enable_actions && local.spec_type == "statefulset" ? 1 : 0
 
-  namespace   = lookup(var.instance.metadata, "namespace", null) == null ? var.environment.namespace : var.instance.metadata.namespace
-  annotations = lookup(var.instance.metadata, "annotations", {})
+  namespace   = var.environment.namespace
+  annotations = {}
   labels = merge(
-    lookup(var.instance.metadata, "labels", {}),
     length(local.iam_arns) > 0 ? { aadpodidbinding = azurerm_user_assigned_identity.service_user_iam.0.name } : {}
   )
   name          = lower(var.instance_name)

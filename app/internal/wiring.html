@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Module Wiring - Attribute Level</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f1117; color: #e0e0e0; }
+    .header { padding: 14px 24px; background: #1a1d27; border-bottom: 1px solid #2a2d3a; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .header h1 { font-size: 17px; color: #fff; white-space: nowrap; }
+    .search-box { flex: 1; min-width: 220px; position: relative; }
+    .search-box input {
+      width: 100%; padding: 8px 14px 8px 34px; background: #2a2d3a; border: 1px solid #3a3d4a;
+      border-radius: 8px; color: #fff; font-size: 13px; outline: none;
+    }
+    .search-box input:focus { border-color: #5b7fff; }
+    .search-box::before { content: "\1F50D"; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; }
+    .controls { display: flex; gap: 6px; flex-wrap: wrap; }
+    .ctrl-btn {
+      padding: 5px 12px; border: 1px solid #3a3d4a; border-radius: 6px; background: #2a2d3a;
+      color: #ccc; font-size: 11px; cursor: pointer; font-weight: 600; transition: all 0.15s;
+    }
+    .ctrl-btn:hover { border-color: #5b7fff; color: #fff; }
+    .ctrl-btn.active { background: #5b7fff; border-color: #5b7fff; color: #fff; }
+    .main { display: flex; height: calc(100vh - 56px); }
+    .sidebar {
+      width: 300px; min-width: 300px; border-right: 1px solid #2a2d3a; overflow-y: auto;
+      background: #13151d; padding: 0;
+    }
+    .sidebar-section { border-bottom: 1px solid #2a2d3a; }
+    .sidebar-section-title {
+      padding: 10px 14px; font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase;
+      letter-spacing: 0.5px; background: #1a1d27; cursor: pointer; display: flex; justify-content: space-between;
+      align-items: center; position: sticky; top: 0; z-index: 2;
+    }
+    .sidebar-section-title:hover { color: #aaa; }
+    .sidebar-section-title .count { color: #5b7fff; font-size: 10px; }
+    .module-item {
+      padding: 8px 14px; cursor: pointer; border-bottom: 1px solid #1e2130; transition: background 0.1s;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .module-item:hover { background: #1e2233; }
+    .module-item.selected { background: #1e2a44; border-left: 3px solid #5b7fff; }
+    .module-item .icon { width: 24px; height: 24px; border-radius: 4px; }
+    .module-item .info { flex: 1; min-width: 0; }
+    .module-item .name { font-size: 12px; font-weight: 600; color: #e0e0e0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .module-item .meta { font-size: 10px; color: #666; }
+    .module-item .badges { display: flex; gap: 3px; }
+    .badge {
+      padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 600;
+    }
+    .badge-out { background: #2a1a2a; color: #EF5350; border: 1px solid #4a2a3a; }
+    .badge-in { background: #1a2a3a; color: #42A5F5; border: 1px solid #2a3a5a; }
+    .badge-prov { background: #1a2a1a; color: #66BB6A; border: 1px solid #2a4a2a; }
+
+    .content { flex: 1; overflow-y: auto; padding: 20px; }
+
+    /* Module detail view */
+    .detail-card { background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
+    .detail-header {
+      padding: 16px 20px; border-bottom: 1px solid #2a2d3a; display: flex; align-items: center; gap: 14px;
+    }
+    .detail-header img { width: 36px; height: 36px; }
+    .detail-header .title { font-size: 18px; font-weight: 700; color: #fff; }
+    .detail-header .subtitle { font-size: 12px; color: #888; }
+    .detail-header .clouds { display: flex; gap: 4px; margin-left: auto; }
+    .cloud-tag { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; background: #2a2d3a; color: #aaa; }
+
+    /* Wiring diagram */
+    .wiring-container { padding: 20px; }
+    .wiring-section { margin-bottom: 24px; }
+    .wiring-section-title {
+      font-size: 13px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+    }
+    .wiring-section-title .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot-input { background: #42A5F5; }
+    .dot-output { background: #EF5350; }
+    .dot-provider { background: #66BB6A; }
+
+    /* Output box */
+    .output-box {
+      background: #1e1525; border: 1px solid #3a2a4a; border-radius: 8px; padding: 12px 16px;
+      margin-bottom: 8px; position: relative;
+    }
+    .output-box .output-name {
+      font-size: 12px; font-weight: 700; color: #EF5350; margin-bottom: 4px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .output-box .output-name .label {
+      padding: 1px 6px; border-radius: 3px; font-size: 9px; font-weight: 600;
+      background: #2a1a2a; color: #c77dba; border: 1px solid #4a2a4a;
+    }
+    .output-box .type-name { font-size: 11px; color: #c77dba; font-family: 'SF Mono', Menlo, monospace; }
+    .output-box .provider-row {
+      margin-top: 6px; display: flex; gap: 4px; flex-wrap: wrap;
+    }
+    .provider-tag {
+      padding: 2px 7px; border-radius: 3px; font-size: 9px; font-weight: 600;
+      background: #1a2a1a; color: #66BB6A; border: 1px solid #2a4a2a;
+    }
+    .output-attrs {
+      margin-top: 8px; padding-top: 8px; border-top: 1px solid #2a1a3a;
+    }
+    .output-attrs .attr-title { font-size: 10px; color: #888; margin-bottom: 4px; }
+    .output-attrs .attr-list { display: flex; flex-wrap: wrap; gap: 4px; }
+    .attr-tag {
+      padding: 2px 6px; border-radius: 3px; font-size: 10px; font-family: 'SF Mono', Menlo, monospace;
+      background: #1a1520; color: #a088b0; border: 1px solid #2a2030;
+    }
+
+    /* Input box */
+    .input-box {
+      background: #151e2a; border: 1px solid #2a3a5a; border-radius: 8px; padding: 12px 16px;
+      margin-bottom: 8px; cursor: pointer; transition: all 0.15s;
+    }
+    .input-box:hover { border-color: #42A5F5; background: #182540; }
+    .input-box .input-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
+    }
+    .input-box .input-name { font-size: 12px; font-weight: 700; color: #42A5F5; }
+    .input-box .optional-tag {
+      padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 600;
+      background: #2a2a1a; color: #FFB74D; border: 1px solid #4a4a2a;
+    }
+    .input-box .required-tag {
+      padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 600;
+      background: #1a2a3a; color: #42A5F5; border: 1px solid #2a3a5a;
+    }
+    .input-box .type-name { font-size: 11px; color: #6699cc; font-family: 'SF Mono', Menlo, monospace; }
+    .input-box .default-wiring {
+      margin-top: 4px; font-size: 10px; color: #556; font-family: 'SF Mono', Menlo, monospace;
+    }
+    .input-box .default-wiring .arrow { color: #5b7fff; }
+    .input-box .provider-row { margin-top: 6px; display: flex; gap: 4px; flex-wrap: wrap; }
+    .input-attrs {
+      margin-top: 8px; padding-top: 8px; border-top: 1px solid #1a2a40;
+    }
+    .input-attrs .attr-title { font-size: 10px; color: #888; margin-bottom: 4px; }
+    .input-attrs .attr-list { display: flex; flex-wrap: wrap; gap: 4px; }
+    .input-attr-tag {
+      padding: 2px 6px; border-radius: 3px; font-size: 10px; font-family: 'SF Mono', Menlo, monospace;
+      background: #10182a; color: #6699cc; border: 1px solid #1a2a40;
+    }
+    .iface-tag {
+      padding: 2px 6px; border-radius: 3px; font-size: 10px; font-family: 'SF Mono', Menlo, monospace;
+      background: #0a1a2a; color: #4fc3f7; border: 1px solid #1a3a5a;
+    }
+
+    /* Flow diagram */
+    .flow-diagram {
+      display: flex; align-items: stretch; gap: 0; margin: 20px 0; position: relative;
+    }
+    .flow-col {
+      flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0;
+    }
+    .flow-center {
+      width: 160px; min-width: 160px; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; position: relative;
+    }
+    .flow-module-box {
+      background: #1a2040; border: 2px solid #5b7fff; border-radius: 10px; padding: 14px 16px;
+      text-align: center; position: relative; z-index: 2;
+    }
+    .flow-module-box img { width: 32px; height: 32px; margin-bottom: 6px; }
+    .flow-module-box .name { font-size: 13px; font-weight: 700; color: #fff; }
+    .flow-module-box .flavor { font-size: 10px; color: #888; }
+    .flow-arrow-left, .flow-arrow-right {
+      position: absolute; top: 0; bottom: 0; width: 40px;
+    }
+    .flow-arrow-left { left: -40px; }
+    .flow-arrow-right { right: -40px; }
+
+    .flow-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; text-align: center; }
+    .flow-label-in { color: #42A5F5; }
+    .flow-label-out { color: #EF5350; }
+
+    /* Overview / stats page */
+    .overview { padding: 20px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .stat-card {
+      background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 8px; padding: 16px;
+    }
+    .stat-card .value { font-size: 28px; font-weight: 800; color: #5b7fff; }
+    .stat-card .label { font-size: 11px; color: #888; margin-top: 2px; }
+
+    /* Type hub view */
+    .type-hub { margin-top: 20px; }
+    .type-card {
+      background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 8px; padding: 14px 18px;
+      margin-bottom: 10px; cursor: pointer; transition: all 0.15s;
+    }
+    .type-card:hover { border-color: #5b7fff; }
+    .type-card .type-title {
+      font-size: 13px; font-weight: 700; color: #c77dba; font-family: 'SF Mono', Menlo, monospace;
+    }
+    .type-card .type-stats { font-size: 11px; color: #888; margin-top: 4px; display: flex; gap: 16px; }
+    .type-card .producers, .type-card .consumers { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+    .type-card .p-tag {
+      padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600;
+      background: #1e1525; color: #EF5350; border: 1px solid #3a2a4a;
+    }
+    .type-card .c-tag {
+      padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600;
+      background: #151e2a; color: #42A5F5; border: 1px solid #2a3a5a;
+    }
+    .type-card .attr-section { margin-top: 8px; padding-top: 8px; border-top: 1px solid #2a2d3a; }
+    .type-card .attr-section .attr-title { font-size: 10px; color: #888; margin-bottom: 4px; }
+    .type-card .attr-grid { display: flex; flex-wrap: wrap; gap: 4px; }
+    .attr-usage-tag {
+      padding: 2px 8px; border-radius: 3px; font-size: 10px; font-family: 'SF Mono', Menlo, monospace;
+      background: #10182a; color: #6699cc; border: 1px solid #1a2a40; display: flex; align-items: center; gap: 4px;
+    }
+    .attr-usage-tag .usage-count {
+      background: #2a3a5a; padding: 0 4px; border-radius: 2px; font-size: 9px; color: #42A5F5;
+    }
+
+    /* hidden */
+    .hidden { display: none !important; }
+
+    /* Tabs */
+    .tab-bar { display: flex; gap: 0; border-bottom: 1px solid #2a2d3a; background: #1a1d27; }
+    .tab {
+      padding: 10px 20px; font-size: 12px; font-weight: 600; color: #888; cursor: pointer;
+      border-bottom: 2px solid transparent; transition: all 0.15s;
+    }
+    .tab:hover { color: #ccc; }
+    .tab.active { color: #5b7fff; border-bottom-color: #5b7fff; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0f1117; }
+    ::-webkit-scrollbar-thumb { background: #2a2d3a; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3a3d4a; }
+
+    .empty-state {
+      text-align: center; padding: 60px 20px; color: #555;
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-state .title { font-size: 16px; color: #888; margin-bottom: 8px; }
+    .empty-state .desc { font-size: 12px; }
+
+    /* Attribute matrix */
+    .matrix-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .matrix-table th, .matrix-table td {
+      padding: 6px 10px; border: 1px solid #2a2d3a; text-align: left;
+    }
+    .matrix-table th { background: #1a1d27; color: #888; font-weight: 600; position: sticky; top: 0; z-index: 1; }
+    .matrix-table td { background: #13151d; }
+    .matrix-table tr:hover td { background: #1a1d27; }
+    .matrix-table .attr-cell { font-family: 'SF Mono', Menlo, monospace; color: #6699cc; }
+    .matrix-table .type-cell { font-family: 'SF Mono', Menlo, monospace; color: #c77dba; }
+    .matrix-table .module-cell { font-weight: 600; color: #e0e0e0; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Module Wiring</h1>
+  <div class="search-box">
+    <input type="text" id="search" placeholder="Search modules, types, attributes..." />
+  </div>
+  <div class="controls" id="view-tabs">
+    <button class="ctrl-btn active" data-view="modules">Modules</button>
+    <button class="ctrl-btn" data-view="types">Type Hub</button>
+    <button class="ctrl-btn" data-view="matrix">Attribute Matrix</button>
+    <button class="ctrl-btn" data-view="overview">Overview</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="sidebar" id="sidebar">
+    <!-- Populated by JS -->
+  </div>
+  <div class="content" id="content">
+    <div class="empty-state">
+      <div class="icon">&#x1F50C;</div>
+      <div class="title">Select a module to see its wiring</div>
+      <div class="desc">Click any module on the left to see its inputs, outputs, and attribute-level connections</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let DATA = null;
+let currentView = 'modules';
+let selectedModuleId = null;
+
+// Icon mapping
+const ICON_BASE = 'https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/';
+function iconUrl(intent) {
+  return ICON_BASE + intent + '.svg';
+}
+
+// Group mapping
+const GROUPS = {
+  'Cloud & Infrastructure': ['cloud_account','kubernetes_cluster','kubernetes_node_pool','karpenter','network'],
+  'Datastores': ['mongo','mysql','postgres','redis','kafka','pubsub','kafka_topic'],
+  'Kubernetes Resources': ['artifactories','config_map','helm','ingress','k8s_access_controls','k8s_resource','kubernetes_secret','service','k8s_callback'],
+  'Operators': ['cert_manager','eck_operator','gateway_api_crd','kubeblocks','kubeblocks_operator','nginx_gateway_fabric','strimzi_operator'],
+  'Monitoring & Observability': ['alert_rules','grafana_dashboards','monitoring','prometheus','vpa'],
+  'Security & Identity': ['wireguard_operator','wireguard_vpn','workload_identity','azure_workload_identity','google_workload_identity']
+};
+
+function getGroup(intent) {
+  const normalized = intent.replace(/-/g, '_');
+  for (const [group, intents] of Object.entries(GROUPS)) {
+    if (intents.includes(normalized)) return group;
+  }
+  return 'Other';
+}
+
+async function init() {
+  const resp = await fetch('wiring-data.json');
+  DATA = await resp.json();
+  renderSidebar();
+  setupSearch();
+  setupViewTabs();
+}
+
+function renderSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const grouped = {};
+
+  for (const m of DATA.modules) {
+    const group = getGroup(m.intent);
+    if (!grouped[group]) grouped[group] = [];
+    grouped[group].push(m);
+  }
+
+  const groupOrder = ['Cloud & Infrastructure','Datastores','Kubernetes Resources','Operators','Monitoring & Observability','Security & Identity','Other'];
+  let html = '';
+
+  for (const group of groupOrder) {
+    const modules = grouped[group];
+    if (!modules || modules.length === 0) continue;
+
+    html += `<div class="sidebar-section" data-group="${group}">
+      <div class="sidebar-section-title" onclick="toggleSection(this)">
+        ${group} <span class="count">${modules.length}</span>
+      </div>
+      <div class="sidebar-items">`;
+
+    for (const m of modules) {
+      const inCount = Object.keys(m.inputs).length;
+      const outCount = Object.keys(m.outputs).length;
+      const provCount = Object.values(m.outputs).filter(o => o.hasProviders).length;
+      const attrCount = Object.values(m.inputs).reduce((s, i) => s + i.attributesUsed.length, 0);
+
+      html += `<div class="module-item" data-id="${m.id}" onclick="selectModule('${m.id}')">
+        <img class="icon" src="${iconUrl(m.intent)}" onerror="this.style.display='none'" />
+        <div class="info">
+          <div class="name">${m.intent}</div>
+          <div class="meta">${m.flavor} &middot; ${m.clouds.join(', ')}</div>
+        </div>
+        <div class="badges">
+          <span class="badge badge-in" title="${inCount} inputs">${inCount}in</span>
+          <span class="badge badge-out" title="${outCount} outputs">${outCount}out</span>
+          ${attrCount > 0 ? `<span class="badge badge-prov" title="${attrCount} attributes used">${attrCount}a</span>` : ''}
+        </div>
+      </div>`;
+    }
+    html += '</div></div>';
+  }
+  sidebar.innerHTML = html;
+}
+
+function toggleSection(el) {
+  const items = el.nextElementSibling;
+  items.classList.toggle('hidden');
+}
+
+function selectModule(id) {
+  selectedModuleId = id;
+  document.querySelectorAll('.module-item').forEach(el => el.classList.remove('selected'));
+  const item = document.querySelector(`.module-item[data-id="${id}"]`);
+  if (item) item.classList.add('selected');
+
+  if (currentView === 'modules') renderModuleDetail(id);
+  else if (currentView === 'types') renderModuleDetail(id);
+}
+
+function renderModuleDetail(id) {
+  const m = DATA.modules.find(x => x.id === id);
+  if (!m) return;
+  const content = document.getElementById('content');
+
+  let html = `<div class="detail-card">
+    <div class="detail-header">
+      <img src="${iconUrl(m.intent)}" onerror="this.style.display='none'" />
+      <div>
+        <div class="title">${m.intent}</div>
+        <div class="subtitle">${m.flavor} / v${m.version}</div>
+      </div>
+      <div class="clouds">
+        ${m.clouds.map(c => `<span class="cloud-tag">${c}</span>`).join('')}
+      </div>
+    </div>
+    <div class="wiring-container">`;
+
+  // === FLOW DIAGRAM ===
+  html += `<div class="flow-diagram">
+    <div class="flow-col">
+      <div class="flow-label flow-label-in">INPUTS (${Object.keys(m.inputs).length})</div>`;
+
+  for (const [name, inp] of Object.entries(m.inputs)) {
+    const attrCount = inp.attributesUsed.length;
+    const ifaceCount = inp.interfacesUsed.length;
+    html += `<div class="input-box" onclick="navigateToProducer('${inp.type}', '${id}')">
+      <div class="input-header">
+        <span class="input-name">${name}</span>
+        ${inp.optional ? '<span class="optional-tag">optional</span>' : '<span class="required-tag">required</span>'}
+        ${inp.providers.length > 0 ? '<span class="badge badge-prov">providers</span>' : ''}
+      </div>
+      <div class="type-name">${inp.type}</div>`;
+
+    if (inp.default) {
+      html += `<div class="default-wiring"><span class="arrow">&#x2192;</span> auto-wires to <b>${inp.default.resource_type}/${inp.default.resource_name}</b></div>`;
+    }
+
+    if (inp.providers.length > 0) {
+      html += `<div class="provider-row">
+        ${inp.providers.map(p => `<span class="provider-tag">${p}</span>`).join('')}
+      </div>`;
+    }
+
+    if (attrCount > 0 || ifaceCount > 0) {
+      html += `<div class="input-attrs">`;
+      if (attrCount > 0) {
+        html += `<div class="attr-title">Attributes consumed (${attrCount}):</div>
+          <div class="attr-list">
+            ${inp.attributesUsed.map(a => `<span class="input-attr-tag">${a}</span>`).join('')}
+          </div>`;
+      }
+      if (ifaceCount > 0) {
+        html += `<div class="attr-title" style="margin-top:6px">Interfaces consumed (${ifaceCount}):</div>
+          <div class="attr-list">
+            ${inp.interfacesUsed.map(i => `<span class="iface-tag">${i}</span>`).join('')}
+          </div>`;
+      }
+      html += '</div>';
+    }
+
+    html += '</div>';
+  }
+
+  html += `</div>
+    <div class="flow-center">
+      <div class="flow-module-box">
+        <img src="${iconUrl(m.intent)}" onerror="this.style.display='none'" /><br/>
+        <div class="name">${m.intent}</div>
+        <div class="flavor">${m.flavor}</div>
+      </div>
+    </div>
+    <div class="flow-col">
+      <div class="flow-label flow-label-out">OUTPUTS (${Object.keys(m.outputs).length})</div>`;
+
+  for (const [name, out] of Object.entries(m.outputs)) {
+    html += `<div class="output-box">
+      <div class="output-name">
+        ${name}
+        <span class="label">${name === 'default' ? 'default' : 'named'}</span>
+        ${out.hasProviders ? '<span class="badge badge-prov">providers</span>' : ''}
+      </div>
+      <div class="type-name">${out.type}</div>`;
+
+    if (out.providers.length > 0) {
+      html += `<div class="provider-row">
+        ${out.providers.map(p => `<span class="provider-tag">${p}</span>`).join('')}
+      </div>`;
+    }
+
+    // Show output attributes from locals
+    const attrs = m.outputAttributes || {};
+    const ifaces = m.outputInterfaces || {};
+    if (Object.keys(attrs).length > 0) {
+      html += `<div class="output-attrs">
+        <div class="attr-title">Attributes produced (${Object.keys(attrs).length}):</div>
+        <div class="attr-list">
+          ${Object.keys(attrs).map(a => `<span class="attr-tag">${a}</span>`).join('')}
+        </div>
+      </div>`;
+    }
+    if (Object.keys(ifaces).length > 0) {
+      html += `<div class="output-attrs">
+        <div class="attr-title">Interfaces produced (${Object.keys(ifaces).length}):</div>
+        <div class="attr-list">
+          ${Object.keys(ifaces).map(i => `<span class="attr-tag">${i}</span>`).join('')}
+        </div>
+      </div>`;
+    }
+
+    // Show consumers of this output type
+    const consumers = findConsumers(out.type, id);
+    if (consumers.length > 0) {
+      html += `<div class="output-attrs">
+        <div class="attr-title">Consumed by (${consumers.length} modules):</div>
+        <div class="attr-list">
+          ${consumers.map(c => `<span class="input-attr-tag" style="cursor:pointer" onclick="selectModule('${c.id}')">${c.intent}/${c.flavor}</span>`).join('')}
+        </div>
+      </div>`;
+    }
+
+    html += '</div>';
+  }
+
+  html += '</div></div>';
+
+  // === Cross-flavor comparison ===
+  const sameFlavors = DATA.modules.filter(x => x.intent === m.intent && x.id !== m.id);
+  if (sameFlavors.length > 0) {
+    html += `<div class="wiring-section">
+      <div class="wiring-section-title">
+        <span class="dot dot-provider"></span>
+        Other flavors of <b>${m.intent}</b> (${sameFlavors.length})
+      </div>`;
+
+    for (const sf of sameFlavors) {
+      const outNames = Object.entries(sf.outputs).map(([n, o]) => `${n}:${o.type}`).join(', ');
+      html += `<div class="input-box" onclick="selectModule('${sf.id}')">
+        <div class="input-header">
+          <span class="input-name">${sf.flavor}</span>
+          <span class="cloud-tag">${sf.clouds.join(', ')}</span>
+        </div>
+        <div class="type-name">Outputs: ${outNames}</div>
+        <div class="default-wiring">Inputs: ${Object.keys(sf.inputs).join(', ')}</div>
+      </div>`;
+    }
+    html += '</div>';
+  }
+
+  html += '</div></div>';
+  content.innerHTML = html;
+}
+
+function findConsumers(outputType, excludeId) {
+  const consumers = [];
+  for (const m of DATA.modules) {
+    if (m.id === excludeId) continue;
+    for (const inp of Object.values(m.inputs)) {
+      if (inp.type === outputType) {
+        consumers.push(m);
+        break;
+      }
+    }
+  }
+  return consumers;
+}
+
+function findProducers(inputType) {
+  const producers = [];
+  for (const m of DATA.modules) {
+    for (const out of Object.values(m.outputs)) {
+      if (out.type === inputType) {
+        producers.push(m);
+        break;
+      }
+    }
+  }
+  return producers;
+}
+
+function navigateToProducer(type, currentId) {
+  const producers = findProducers(type);
+  if (producers.length === 1) {
+    selectModule(producers[0].id);
+  } else if (producers.length > 0) {
+    // Show in sidebar
+    // For now just select the first one that isn't current
+    const other = producers.find(p => p.id !== currentId) || producers[0];
+    selectModule(other.id);
+  }
+}
+
+// === TYPE HUB VIEW ===
+function renderTypeHub() {
+  const content = document.getElementById('content');
+
+  // Build type -> producers/consumers/attributes map
+  const typeMap = {};
+
+  for (const m of DATA.modules) {
+    // Producers
+    for (const [name, out] of Object.entries(m.outputs)) {
+      if (!typeMap[out.type]) typeMap[out.type] = { producers: [], consumers: [], attributes: {}, interfaces: {}, hasProviders: false, providers: [] };
+      typeMap[out.type].producers.push({ module: m, outputName: name, output: out });
+      if (out.hasProviders) {
+        typeMap[out.type].hasProviders = true;
+        typeMap[out.type].providers = [...new Set([...typeMap[out.type].providers, ...out.providers])];
+      }
+      // Output attributes
+      for (const attr of Object.keys(m.outputAttributes || {})) {
+        if (!typeMap[out.type].attributes[attr]) typeMap[out.type].attributes[attr] = { produced: 0, consumed: 0, producedBy: [], consumedBy: [] };
+        typeMap[out.type].attributes[attr].produced++;
+        typeMap[out.type].attributes[attr].producedBy.push(m.id);
+      }
+    }
+
+    // Consumers
+    for (const [name, inp] of Object.entries(m.inputs)) {
+      if (!typeMap[inp.type]) typeMap[inp.type] = { producers: [], consumers: [], attributes: {}, interfaces: {}, hasProviders: false, providers: [] };
+      typeMap[inp.type].consumers.push({ module: m, inputName: name, input: inp });
+
+      for (const attr of inp.attributesUsed) {
+        if (!typeMap[inp.type].attributes[attr]) typeMap[inp.type].attributes[attr] = { produced: 0, consumed: 0, producedBy: [], consumedBy: [] };
+        typeMap[inp.type].attributes[attr].consumed++;
+        typeMap[inp.type].attributes[attr].consumedBy.push(m.id);
+      }
+      for (const iface of inp.interfacesUsed) {
+        if (!typeMap[inp.type].interfaces[iface]) typeMap[inp.type].interfaces[iface] = { consumed: 0, consumedBy: [] };
+        typeMap[inp.type].interfaces[iface].consumed++;
+        typeMap[inp.type].interfaces[iface].consumedBy.push(m.id);
+      }
+    }
+  }
+
+  // Sort by consumer count
+  const types = Object.entries(typeMap).sort((a, b) => b[1].consumers.length - a[1].consumers.length);
+
+  let html = '<div class="overview"><h2 style="margin-bottom:16px;color:#fff;">Output Type Hub</h2>';
+  html += `<p style="color:#888;margin-bottom:20px;font-size:12px;">All ${types.length} output types (@facets/*) showing producers, consumers, and attribute-level usage</p>`;
+
+  const searchVal = document.getElementById('search').value.toLowerCase();
+
+  for (const [typeName, info] of types) {
+    if (searchVal && !typeName.toLowerCase().includes(searchVal)) continue;
+
+    html += `<div class="type-card">
+      <div class="type-title">${typeName}</div>
+      <div class="type-stats">
+        <span style="color:#EF5350">${info.producers.length} producer${info.producers.length !== 1 ? 's' : ''}</span>
+        <span style="color:#42A5F5">${info.consumers.length} consumer${info.consumers.length !== 1 ? 's' : ''}</span>
+        <span style="color:#6699cc">${Object.keys(info.attributes).length} attributes</span>
+        ${Object.keys(info.interfaces).length > 0 ? `<span style="color:#4fc3f7">${Object.keys(info.interfaces).length} interfaces</span>` : ''}
+        ${info.hasProviders ? `<span style="color:#66BB6A">providers: ${info.providers.join(', ')}</span>` : ''}
+      </div>
+      <div class="producers">
+        ${info.producers.map(p => `<span class="p-tag" style="cursor:pointer" onclick="selectModule('${p.module.id}');switchView('modules')">${p.module.intent}/${p.module.flavor} [${p.outputName}]</span>`).join('')}
+      </div>
+      <div class="consumers">
+        ${info.consumers.map(c => `<span class="c-tag" style="cursor:pointer" onclick="selectModule('${c.module.id}');switchView('modules')">${c.module.intent}/${c.module.flavor}</span>`).join('')}
+      </div>`;
+
+    // Attribute usage
+    const attrs = Object.entries(info.attributes).sort((a, b) => b[1].consumed - a[1].consumed);
+    if (attrs.length > 0) {
+      html += `<div class="attr-section">
+        <div class="attr-title">Attributes (consumed by N modules):</div>
+        <div class="attr-grid">
+          ${attrs.map(([attr, usage]) => `<span class="attr-usage-tag">${attr} <span class="usage-count">${usage.consumed}</span></span>`).join('')}
+        </div>
+      </div>`;
+    }
+
+    // Interface usage
+    const ifaces = Object.entries(info.interfaces);
+    if (ifaces.length > 0) {
+      html += `<div class="attr-section">
+        <div class="attr-title">Interfaces:</div>
+        <div class="attr-grid">
+          ${ifaces.map(([iface, usage]) => `<span class="attr-usage-tag" style="color:#4fc3f7">${iface} <span class="usage-count">${usage.consumed}</span></span>`).join('')}
+        </div>
+      </div>`;
+    }
+
+    html += '</div>';
+  }
+
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+// === ATTRIBUTE MATRIX VIEW ===
+function renderMatrix() {
+  const content = document.getElementById('content');
+  const searchVal = document.getElementById('search').value.toLowerCase();
+
+  // Build: for each output type, which attributes are consumed by which modules
+  const typeAttrs = {};
+  for (const m of DATA.modules) {
+    for (const [name, inp] of Object.entries(m.inputs)) {
+      if (!typeAttrs[inp.type]) typeAttrs[inp.type] = {};
+      for (const attr of inp.attributesUsed) {
+        if (!typeAttrs[inp.type][attr]) typeAttrs[inp.type][attr] = [];
+        typeAttrs[inp.type][attr].push({ module: m, inputName: name });
+      }
+      for (const iface of inp.interfacesUsed) {
+        const key = `[iface] ${iface}`;
+        if (!typeAttrs[inp.type][key]) typeAttrs[inp.type][key] = [];
+        typeAttrs[inp.type][key].push({ module: m, inputName: name });
+      }
+    }
+  }
+
+  // Sort types by number of attributes
+  const types = Object.entries(typeAttrs)
+    .filter(([t]) => !searchVal || t.toLowerCase().includes(searchVal))
+    .sort((a, b) => Object.keys(b[1]).length - Object.keys(a[1]).length);
+
+  let html = '<div class="overview"><h2 style="margin-bottom:16px;color:#fff;">Attribute Usage Matrix</h2>';
+  html += `<p style="color:#888;margin-bottom:20px;font-size:12px;">Which attributes from each @facets/* type are consumed by which modules</p>`;
+
+  for (const [typeName, attrs] of types) {
+    const sortedAttrs = Object.entries(attrs).sort((a, b) => b[1].length - a[1].length);
+    const allModules = [...new Set(sortedAttrs.flatMap(([, consumers]) => consumers.map(c => c.module.id)))];
+
+    html += `<div class="detail-card" style="margin-bottom:20px">
+      <div class="detail-header">
+        <div>
+          <div class="title" style="font-family:'SF Mono',Menlo,monospace;color:#c77dba;font-size:14px">${typeName}</div>
+          <div class="subtitle">${sortedAttrs.length} attributes/interfaces used by ${allModules.length} modules</div>
+        </div>
+      </div>
+      <div style="overflow-x:auto;padding:0">
+        <table class="matrix-table">
+          <thead><tr>
+            <th>Attribute</th>
+            <th>Used by (${allModules.length} modules)</th>
+          </tr></thead>
+          <tbody>`;
+
+    for (const [attr, consumers] of sortedAttrs) {
+      const isIface = attr.startsWith('[iface]');
+      html += `<tr>
+        <td class="attr-cell" style="${isIface ? 'color:#4fc3f7' : ''}">${attr}</td>
+        <td>${consumers.map(c =>
+          `<span class="c-tag" style="cursor:pointer;margin:1px" onclick="selectModule('${c.module.id}');switchView('modules')">${c.module.intent}/${c.module.flavor}</span>`
+        ).join(' ')}</td>
+      </tr>`;
+    }
+
+    html += '</tbody></table></div></div>';
+  }
+
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+// === OVERVIEW VIEW ===
+function renderOverview() {
+  const content = document.getElementById('content');
+
+  const totalInputs = DATA.modules.reduce((s, m) => s + Object.keys(m.inputs).length, 0);
+  const totalOutputs = DATA.modules.reduce((s, m) => s + Object.keys(m.outputs).length, 0);
+  const totalAttrs = DATA.modules.reduce((s, m) => s + Object.values(m.inputs).reduce((s2, i) => s2 + i.attributesUsed.length, 0), 0);
+  const totalIfaces = DATA.modules.reduce((s, m) => s + Object.values(m.inputs).reduce((s2, i) => s2 + i.interfacesUsed.length, 0), 0);
+  const providerOutputs = DATA.modules.reduce((s, m) => s + Object.values(m.outputs).filter(o => o.hasProviders).length, 0);
+  const multiOutput = DATA.modules.filter(m => Object.keys(m.outputs).length > 1);
+  const autoWired = DATA.modules.reduce((s, m) => s + Object.values(m.inputs).filter(i => i.default).length, 0);
+
+  const outputTypes = new Set();
+  const inputTypes = new Set();
+  DATA.modules.forEach(m => {
+    Object.values(m.outputs).forEach(o => outputTypes.add(o.type));
+    Object.values(m.inputs).forEach(i => inputTypes.add(i.type));
+  });
+
+  // Types that are produced but never consumed
+  const unconsumed = [...outputTypes].filter(t => !inputTypes.has(t));
+  // Types consumed but never produced
+  const unproduced = [...inputTypes].filter(t => !outputTypes.has(t));
+
+  let html = `<div class="overview">
+    <h2 style="margin-bottom:16px;color:#fff;">Wiring Overview</h2>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="value">${DATA.modules.length}</div><div class="label">Total Modules</div></div>
+      <div class="stat-card"><div class="value">${totalInputs}</div><div class="label">Total Inputs</div></div>
+      <div class="stat-card"><div class="value">${totalOutputs}</div><div class="label">Total Outputs</div></div>
+      <div class="stat-card"><div class="value">${outputTypes.size}</div><div class="label">Output Types</div></div>
+      <div class="stat-card"><div class="value">${inputTypes.size}</div><div class="label">Input Types</div></div>
+      <div class="stat-card"><div class="value">${totalAttrs}</div><div class="label">Attribute Usages</div></div>
+      <div class="stat-card"><div class="value">${totalIfaces}</div><div class="label">Interface Usages</div></div>
+      <div class="stat-card"><div class="value">${providerOutputs}</div><div class="label">Provider Outputs</div></div>
+      <div class="stat-card"><div class="value">${multiOutput.length}</div><div class="label">Multi-Output Modules</div></div>
+      <div class="stat-card"><div class="value">${autoWired}</div><div class="label">Auto-Wired Inputs</div></div>
+    </div>
+
+    <h3 style="margin-bottom:12px;color:#fff;">Multi-Output Modules (default + named)</h3>
+    <p style="color:#888;font-size:12px;margin-bottom:12px;">These modules produce multiple output types. The "attributes" output often carries provider configs (helm, kubernetes).</p>`;
+
+  for (const m of multiOutput) {
+    html += `<div class="type-card" onclick="selectModule('${m.id}');switchView('modules')">
+      <div class="type-title" style="color:#fff">${m.intent} / ${m.flavor}</div>
+      <div class="type-stats">
+        ${Object.entries(m.outputs).map(([name, out]) =>
+          `<span style="color:${name === 'default' ? '#EF5350' : '#c77dba'}">${name}: ${out.type}${out.hasProviders ? ' [+providers]' : ''}</span>`
+        ).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Unconsumed types
+  if (unconsumed.length > 0) {
+    html += `<h3 style="margin:20px 0 12px;color:#fff;">Output Types Never Consumed (${unconsumed.length})</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;">
+        ${unconsumed.sort().map(t => `<span class="attr-usage-tag" style="color:#FFB74D">${t}</span>`).join('')}
+      </div>`;
+  }
+
+  // Unproduced types
+  if (unproduced.length > 0) {
+    html += `<h3 style="margin:20px 0 12px;color:#fff;">Input Types Never Produced (${unproduced.length})</h3>
+      <p style="color:#888;font-size:12px;margin-bottom:8px;">These types are required as inputs but no module in this repo produces them</p>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;">
+        ${unproduced.sort().map(t => `<span class="attr-usage-tag" style="color:#FF7043">${t}</span>`).join('')}
+      </div>`;
+  }
+
+  // Most connected attributes
+  html += `<h3 style="margin:20px 0 12px;color:#fff;">Most Consumed Attributes</h3>`;
+
+  const attrUsage = {};
+  for (const m of DATA.modules) {
+    for (const [name, inp] of Object.entries(m.inputs)) {
+      for (const attr of inp.attributesUsed) {
+        const key = `${inp.type} . ${attr}`;
+        if (!attrUsage[key]) attrUsage[key] = 0;
+        attrUsage[key]++;
+      }
+    }
+  }
+  const topAttrs = Object.entries(attrUsage).sort((a, b) => b[1] - a[1]).slice(0, 30);
+
+  html += `<table class="matrix-table">
+    <thead><tr><th>Type . Attribute</th><th>Used by N modules</th></tr></thead>
+    <tbody>
+    ${topAttrs.map(([key, count]) => `<tr><td class="attr-cell">${key}</td><td>${count}</td></tr>`).join('')}
+    </tbody></table>`;
+
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+function switchView(view) {
+  currentView = view;
+  document.querySelectorAll('#view-tabs .ctrl-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`#view-tabs .ctrl-btn[data-view="${view}"]`).classList.add('active');
+
+  if (view === 'modules') {
+    document.getElementById('sidebar').style.display = '';
+    if (selectedModuleId) renderModuleDetail(selectedModuleId);
+    else document.getElementById('content').innerHTML = '<div class="empty-state"><div class="icon">&#x1F50C;</div><div class="title">Select a module to see its wiring</div></div>';
+  } else if (view === 'types') {
+    document.getElementById('sidebar').style.display = '';
+    renderTypeHub();
+  } else if (view === 'matrix') {
+    document.getElementById('sidebar').style.display = 'none';
+    renderMatrix();
+  } else if (view === 'overview') {
+    document.getElementById('sidebar').style.display = 'none';
+    renderOverview();
+  }
+}
+
+function setupViewTabs() {
+  document.querySelectorAll('#view-tabs .ctrl-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchView(btn.dataset.view));
+  });
+}
+
+function setupSearch() {
+  const input = document.getElementById('search');
+  input.addEventListener('input', () => {
+    const val = input.value.toLowerCase();
+
+    // Filter sidebar
+    document.querySelectorAll('.module-item').forEach(item => {
+      const id = item.dataset.id.toLowerCase();
+      const visible = !val || id.includes(val);
+      item.style.display = visible ? '' : 'none';
+    });
+
+    // Update section counts
+    document.querySelectorAll('.sidebar-section').forEach(sec => {
+      const visible = sec.querySelectorAll('.module-item:not([style*="display: none"])').length;
+      const count = sec.querySelector('.count');
+      if (count) count.textContent = visible;
+      sec.style.display = visible > 0 ? '' : 'none';
+    });
+
+    // If in type hub or matrix view, re-render
+    if (currentView === 'types') renderTypeHub();
+    if (currentView === 'matrix') renderMatrix();
+  });
+}
+
+init();
+</script>
+</body>
+</html>

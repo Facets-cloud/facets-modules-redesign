@@ -5,6 +5,11 @@ clouds:
 - gcp
 description: Creates and manages topics for GCP Managed Service for Apache Kafka with
   configurable partitions, replication, and retention policies
+intentDetails:
+  type: Datastores
+  description: Kafka topic management for GCP Managed Kafka
+  displayName: Kafka Topic
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kafka_topic.svg
 spec:
   title: GCP Managed Kafka Topic
   description: Configure Kafka topic with partitions, replication, and optional configurations

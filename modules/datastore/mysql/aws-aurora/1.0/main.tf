@@ -49,7 +49,7 @@ resource "aws_db_subnet_group" "aurora" {
   })
 
   lifecycle {
-    prevent_destroy = false # Disabled for testing
+    prevent_destroy = true
   }
 }
 
@@ -78,7 +78,7 @@ resource "aws_security_group" "aurora" {
   })
 
   lifecycle {
-    prevent_destroy = false # Disabled for testing
+    prevent_destroy = true
   }
 }
 
@@ -127,7 +127,7 @@ resource "aws_rds_cluster" "aurora" {
   })
 
   lifecycle {
-    prevent_destroy = false # Disabled for testing
+    prevent_destroy = true
 
     # Ignore changes that would cause replacement when importing
     # Note: Can't use conditional here, so we always ignore these for safety
@@ -161,7 +161,7 @@ resource "aws_rds_cluster_instance" "aurora_writer" {
   })
 
   lifecycle {
-    prevent_destroy = false # Disabled for testing
+    prevent_destroy = true
     ignore_changes = [
       identifier # Don't change the imported identifier
     ]
@@ -198,7 +198,7 @@ resource "aws_rds_cluster_instance" "aurora_readers" {
   })
 
   lifecycle {
-    prevent_destroy = false # Disabled for testing
+    prevent_destroy = true
     ignore_changes = [
       identifier # Don't change the identifier after creation/import
     ]

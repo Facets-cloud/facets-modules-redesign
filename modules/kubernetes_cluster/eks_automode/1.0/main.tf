@@ -23,10 +23,11 @@ module "eks" {
   cloudwatch_log_group_retention_in_days   = local.cloudwatch_log_group_retention_in_days
   cluster_service_ipv4_cidr                = local.cluster_service_ipv4_cidr
   tags                                     = local.tags
-  create_kms_key                           = true
-  enable_kms_key_rotation                  = true
+  create_kms_key                           = lookup(var.instance.spec.cluster, "enable_cluster_encryption", true)
+  enable_kms_key_rotation                  = lookup(var.instance.spec.cluster, "enable_cluster_encryption", true)
   cluster_addons                           = local.addons
   node_security_group_additional_rules     = local.node_security_group_additional_rules
+  node_iam_role_additional_policies        = local.needs_cloudwatch_iam_policy ? { CloudWatchAgentServerPolicy = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy" } : {}
 }
 
 resource "aws_security_group_rule" "cluster_primary_sg_ingress" {
@@ -39,8 +40,6 @@ resource "aws_security_group_rule" "cluster_primary_sg_ingress" {
   protocol          = each.value.protocol
   cidr_blocks       = each.value.cidr_blocks
   description       = lookup(each.value, "description", null)
-
-  depends_on = [module.eks]
 
   lifecycle {
     precondition {

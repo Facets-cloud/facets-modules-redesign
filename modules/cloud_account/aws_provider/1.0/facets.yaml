@@ -2,6 +2,11 @@ intent: cloud_account
 flavor: aws_provider
 version: '1.0'
 description: Module to configure and provision resources within a cloud account
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Configure and provision resources within an AWS cloud account
+  displayName: Cloud Account
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloud_account.svg
 clouds:
 - aws
 spec:

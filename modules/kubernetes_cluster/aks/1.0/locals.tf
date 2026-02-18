@@ -3,7 +3,6 @@ locals {
   name = module.name.name
 
   # Extract spec configurations
-  metadata = lookup(var.instance, "metadata", {})
   spec     = lookup(var.instance, "spec", {})
 
   # Cluster configuration

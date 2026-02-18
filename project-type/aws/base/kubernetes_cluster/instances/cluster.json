@@ -15,34 +15,36 @@
     }
   },
   "disabled": false,
-  "version": "1.0",
+  "version": "1.1",
   "spec": {
     "cluster_endpoint_private_access": true,
     "cluster_endpoint_public_access": true,
     "cluster_version": "1.34",
-    "enable_cluster_encryption": false,
+    "customer_managed_kms": true,
     "cluster_addons": {
       "additional_addons": {},
       "coredns": {
-        "enabled": false,
+        "enabled": true,
         "version": "latest"
       },
       "kube_proxy": {
-        "enabled": false,
+        "enabled": true,
         "version": "latest"
       },
       "vpc_cni": {
-        "enabled": false,
+        "enabled": true,
+        "version": "latest"
+      },
+      "metrics_server": {
+        "enabled": true,
         "version": "latest"
       }
     },
     "default_node_pool": {
       "capacity_type": "SPOT",
-      "desired_size": 1,
       "disk_size": 50,
       "instance_types": ["t3.medium"],
-      "max_size": 1,
-      "min_size": 1
+      "size": 2
     },
     "cluster_tags": {}
   },

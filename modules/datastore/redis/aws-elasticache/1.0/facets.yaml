@@ -5,6 +5,11 @@ clouds:
 - aws
 description: Managed Redis cache using AWS ElastiCache with security and high availability
   defaults
+intentDetails:
+  type: Datastores
+  description: AWS ElastiCache for Redis managed caching service
+  displayName: Redis
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/redis.svg
 spec:
   title: Redis AWS ElastiCache Cluster
   description: Managed Redis cache using AWS ElastiCache with security and high availability

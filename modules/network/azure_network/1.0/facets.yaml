@@ -1,9 +1,14 @@
 intent: network
 flavor: azure_network
-version: '1.0'
+version: '1.1'
 description: Creates an Azure Virtual Network with automatically calculated subnet
   sizes, including dedicated database subnets with proper delegation for PostgreSQL
   and MySQL Flexible Servers
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Azure Virtual Network with auto-calculated subnets and database delegation support
+  displayName: Network
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/network.svg
 clouds:
 - azure
 inputs:
@@ -94,7 +99,7 @@ outputs:
 sample:
   kind: network
   flavor: azure_network
-  version: '1.0'
+  version: '1.1'
   spec:
     vnet_cidr: 10.0.0.0/16
     region: centralindia

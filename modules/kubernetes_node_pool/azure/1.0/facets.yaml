@@ -2,6 +2,11 @@ intent: kubernetes_node_pool
 flavor: azure
 version: '1.0'
 description: Custom Azure Kubernetes Service node pool module
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Azure AKS node pool with auto-scaling and customizable VM sizes
+  displayName: Kubernetes Node Pool
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_node_pool.svg
 clouds:
 - azure
 inputs:
@@ -14,6 +19,12 @@ inputs:
     - helm
     - kubernetes
     - kubernetes-alpha
+  network_details:
+    type: '@facets/azure-network-details'
+    displayName: Network
+    default:
+      resource_type: network
+      resource_name: default
   cloud_account:
     type: '@facets/azure_cloud_account'
     displayName: Cloud Account
@@ -105,10 +116,6 @@ iac:
 sample:
   flavor: azure
   kind: kubernetes_node_pool
-  metadata:
-    tags:
-      managed-by: facets
-    annotations: {}
   disabled: true
   version: '1.0'
   spec:

@@ -1,0 +1,65 @@
+intent: gateway_api_crd
+flavor: default
+version: "1.0"
+description: Installs Kubernetes Gateway API CRDs for use with Gateway implementations like NGINX Gateway Fabric
+clouds:
+  - aws
+  - azure
+  - gcp
+  - kubernetes
+intentDetails:
+  type: Kubernetes Resources
+  description: Gateway API Custom Resource Definitions for Kubernetes
+  displayName: Gateway API CRD
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/gateway_api_crd.svg
+inputs:
+  kubernetes_details:
+    default:
+      resource_name: default
+      resource_type: kubernetes_cluster
+    displayName: Kubernetes Cluster
+    optional: false
+    providers:
+      - kubernetes
+      - kubernetes-alpha
+    type: "@facets/kubernetes-details"
+  kubernetes_node_pool_details:
+    type: '@facets/kubernetes_nodepool'
+    displayName: Node Pool
+    optional: false
+outputs:
+  default:
+    title: Gateway API CRD Details
+    type: "@facets/gateway_api_crd"
+spec:
+  title: Gateway API CRD Configuration
+  type: object
+  description: Configuration for Kubernetes Gateway API CRD installation
+  properties:
+    channel:
+      default: experimental
+      description: Channel determines which CRDs are installed. Experimental includes GRPCRoute.
+      enum:
+        - standard
+        - experimental
+      title: Installation Channel
+      type: string
+    version:
+      default: v1.4.1
+      description: Version of Gateway API CRDs to install
+      enum:
+        - v1.4.1
+        - v1.4.0
+        - v1.3.0
+        - v1.2.0
+      title: Gateway API Version
+      type: string
+  required: []
+sample:
+  disabled: true
+  flavor: default
+  kind: gateway_api_crd
+  spec:
+    channel: experimental
+    version: v1.4.1
+  version: "1.0"

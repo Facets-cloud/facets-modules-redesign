@@ -1,10 +1,15 @@
 intent: kubernetes_cluster
 flavor: eks_automode
-version: '1.0'
+version: '1.1'
 clouds:
   - aws
 title: EKS Cluster with Auto Mode support
 description: A Kubernetes EKS cluster module with auto mode enabled by default and all necessary configurations preset.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: AWS EKS cluster with auto mode enabled and all necessary configurations preset
+  displayName: Kubernetes Cluster
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_cluster.svg
 inputs:
   network_details:
     type: '@facets/aws-vpc-details'
@@ -21,6 +26,10 @@ inputs:
       - aws
 outputs:
   default:
+    type: '@facets/eks'
+    title: EKS Cluster Attributes
+    description: Additional EKS cluster attributes without provider configuration
+  attributes:
     type: '@facets/kubernetes-details'
     title: Kubernetes Cluster Output
     providers:
@@ -28,37 +37,33 @@ outputs:
         source: hashicorp/kubernetes
         version: 2.38.0
         attributes:
-          host: attributes.cluster_endpoint
-          cluster_ca_certificate: attributes.cluster_ca_certificate
+          host: cluster_endpoint
+          cluster_ca_certificate: cluster_ca_certificate
           exec:
-            api_version: attributes.kubernetes_provider_exec.api_version
-            command: attributes.kubernetes_provider_exec.command
-            args: attributes.kubernetes_provider_exec.args
+            api_version: kubernetes_provider_exec.api_version
+            command: kubernetes_provider_exec.command
+            args: kubernetes_provider_exec.args
       helm:
         source: hashicorp/helm
         version: 2.17.0
         attributes:
           kubernetes:
-            host: attributes.cluster_endpoint
-            cluster_ca_certificate: attributes.cluster_ca_certificate
+            host: cluster_endpoint
+            cluster_ca_certificate: cluster_ca_certificate
             exec:
-              api_version: attributes.kubernetes_provider_exec.api_version
-              command: attributes.kubernetes_provider_exec.command
-              args: attributes.kubernetes_provider_exec.args
+              api_version: kubernetes_provider_exec.api_version
+              command: kubernetes_provider_exec.command
+              args: kubernetes_provider_exec.args
       kubernetes-alpha:
         source: hashicorp/kubernetes-alpha
         version: 0.6.0
         attributes:
-          host: attributes.cluster_endpoint
-          cluster_ca_certificate: attributes.cluster_ca_certificate
+          host: cluster_endpoint
+          cluster_ca_certificate: cluster_ca_certificate
           exec:
-            api_version: attributes.kubernetes_provider_exec.api_version
-            command: attributes.kubernetes_provider_exec.command
-            args: attributes.kubernetes_provider_exec.args
-  attributes:
-    type: '@facets/eks'
-    title: EKS Cluster Attributes
-    description: Additional EKS cluster attributes without provider configuration
+            api_version: kubernetes_provider_exec.api_version
+            command: kubernetes_provider_exec.command
+            args: kubernetes_provider_exec.args
 spec:
   type: object
   x-ui-order:
@@ -112,6 +117,22 @@ spec:
                 - api
                 - audit
                 - authenticator
+                - controllerManager
+                - scheduler
+            container_insights_enabled:
+              type: boolean
+              title: Container Insights
+              description: Enable CloudWatch Container Insights via the amazon-cloudwatch-observability addon. See CloudWatch pricing for cost details.
+              default: false
+        enable_cluster_encryption:
+          type: boolean
+          title: Use Customer-Managed KMS Key
+          description: |
+            Enable encryption with customer-managed KMS keys for compliance and audit requirements.
+
+            Note: EKS Auto Mode automatically encrypts all secrets with AWS-owned keys (free).
+            Disable this if you don't need CloudTrail audit logs or compliance requirements (PCI-DSS, HIPAA).
+          default: true
         cluster_addons:
           type: object
           title: EKS Cluster Addons
@@ -178,9 +199,7 @@ spec:
 sample:
   kind: kubernetes_cluster
   flavor: eks_automode
-  version: '1.0'
-  metadata:
-    name: eks-cluster
+  version: '1.1'
   spec:
     cluster:
       cluster_endpoint_public_access: true

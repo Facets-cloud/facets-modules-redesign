@@ -1,7 +1,6 @@
 # First locals block - values needed for the external data source
 locals {
   spec          = lookup(var.instance, "spec", {})
-  metadata      = lookup(var.instance, "metadata", {})
   artifactories = lookup(local.spec, "artifactories", {})
   include_all   = lookup(local.spec, "include_all", length(local.artifactories) > 0 ? false : true)
 
@@ -21,9 +20,9 @@ data "external" "artifactory_fetcher" {
 
 # Second locals block - values that depend on the external data source
 locals {
-  name               = lookup(local.metadata, "name", var.instance_name)
-  namespace          = lookup(local.metadata, "namespace", lookup(var.environment, "namespace", "default"))
-  kubernetes_details = var.inputs.kubernetes_details.attributes
+  name               = var.instance_name
+  namespace          = lookup(var.environment, "namespace", "default")
+  kubernetes_details = var.inputs.kubernetes_details
 
   # Node pool configuration
   kubernetes_node_pool_details = lookup(var.inputs, "kubernetes_node_pool_details", {})
@@ -93,7 +92,7 @@ locals {
   registry_secret_objects = merge(local.ecr_secret_objects, local.dockerhub_secret_objects)
   registry_secrets_list   = flatten([for k, v in merge(local.registry_secret_objects) : v])
 
-  labels = merge(lookup(local.metadata, "labels", {}), { "secret-copier" = "yes" })
+  labels = { "secret-copier" = "yes" }
 
   labels_ecr = join(",", [for k, v in local.labels : "${k}=${v}"])
 }

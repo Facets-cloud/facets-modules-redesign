@@ -4,6 +4,11 @@ version: '1.0'
 description: Creates a Kubernetes-optimized AWS VPC with auto-calculated subnets across
   availability zones. Fixed allocation - Private (8K IPs/AZ), Public (256 IPs/AZ),
   Database (256 IPs/AZ)
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Kubernetes-optimized AWS VPC with auto-calculated subnets across availability zones
+  displayName: Network
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/network.svg
 clouds:
 - aws
 spec:

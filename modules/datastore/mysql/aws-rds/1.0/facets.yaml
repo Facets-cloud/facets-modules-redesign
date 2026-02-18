@@ -5,6 +5,11 @@ clouds:
 - aws
 description: Managed MySQL database instance on AWS RDS with high availability, automated
   backups, and read replicas
+intentDetails:
+  type: Datastores
+  description: AWS RDS MySQL managed database service
+  displayName: MySQL
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mysql.svg
 spec:
   title: MySQL RDS Database
   description: Managed MySQL database instance on AWS RDS with high availability,

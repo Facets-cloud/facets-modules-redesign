@@ -7,6 +7,11 @@ clouds:
 - gcp
 - kubernetes
 description: Elastic Cloud on Kubernetes (ECK) Operator deployed via Helm chart
+intentDetails:
+  type: Operators
+  description: Elastic Cloud on Kubernetes (ECK) Operator for managing Elasticsearch clusters
+  displayName: ECK Operator
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/eck-operator.svg
 spec:
   title: ECK Operator
   description: Installs and manages the ECK Operator using Helm

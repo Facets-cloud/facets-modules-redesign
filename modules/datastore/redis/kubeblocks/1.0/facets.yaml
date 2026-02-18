@@ -7,6 +7,11 @@ clouds:
 - azure
 - gcp
 description: Creates and manages Redis clusters using KubeBlocks operator v1.0.1
+intentDetails:
+  type: Datastores
+  description: KubeBlocks-managed Redis on Kubernetes
+  displayName: Redis
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/redis.svg
 inputs:
   kubeblocks_operator:
     type: '@facets/kubeblocks-operator'

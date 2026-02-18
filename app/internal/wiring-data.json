@@ -1,0 +1,4206 @@
+{
+  "modules": [
+    {
+      "id": "alert_rules/prometheus/1.0",
+      "intent": "alert_rules",
+      "flavor": "prometheus",
+      "version": "1.0",
+      "clouds": [
+        "kubernetes",
+        "aws",
+        "azure",
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/alert-rules",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_cluster": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "kubernetes",
+            "kubernetes-alpha",
+            "helm"
+          ],
+          "attributesUsed": [
+            "cluster_endpoint",
+            "cluster_name"
+          ],
+          "interfacesUsed": []
+        },
+        "prometheus": {
+          "type": "@facets/prometheus",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "namespace",
+            "prometheus_release",
+            "prometheus_url"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "prometheus_rule_name": "\"${local.name}-rules\"",
+        "namespace": "local.namespace",
+        "alert_group_names": "local.alert_group_names",
+        "prometheus_release": "local.prometheus_release"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "artifactories/standard/1.0",
+      "intent": "artifactories",
+      "flavor": "standard",
+      "version": "1.0",
+      "clouds": [
+        "gcp",
+        "kubernetes",
+        "azure",
+        "aws"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/artifactories",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "kubernetes",
+            "kubernetes-alpha",
+            "helm"
+          ],
+          "attributesUsed": [
+            "cluster_ca_certificate",
+            "cluster_endpoint",
+            "token"
+          ],
+          "interfacesUsed": []
+        },
+        "kubernetes_node_pool_details": {
+          "type": "@facets/kubernetes_nodepool",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "registry_secrets_list": "local.output_registry_secrets_list",
+        "registry_secret_objects": "local.output_registry_secret_objects"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "azure_workload_identity/azure/1.0",
+      "intent": "azure_workload_identity",
+      "flavor": "azure",
+      "version": "1.0",
+      "clouds": [
+        "azure"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/azure_workload_identity",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/azure_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "azurerm"
+          ],
+          "attributesUsed": [
+            "client_id",
+            "subscription_id",
+            "tenant_id"
+          ],
+          "interfacesUsed": []
+        },
+        "aks_cluster": {
+          "type": "@facets/azure_aks",
+          "optional": false,
+          "default": {
+            "resource_type": "kubernetes_cluster",
+            "resource_name": "default"
+          },
+          "providers": [
+            "kubernetes",
+            "kubernetes-alpha",
+            "helm"
+          ],
+          "attributesUsed": [
+            "client_certificate",
+            "client_key",
+            "cloud_provider",
+            "cluster_ca_certificate",
+            "cluster_endpoint",
+            "cluster_fqdn",
+            "cluster_id",
+            "cluster_location",
+            "cluster_name",
+            "cluster_private_fqdn",
+            "node_resource_group",
+            "oidc_issuer_url",
+            "resource_group_name",
+            "secrets"
+          ],
+          "interfacesUsed": [
+            "kubernetes"
+          ]
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {}
+    },
+    {
+      "id": "cert_manager/standard/1.1",
+      "intent": "cert_manager",
+      "flavor": "standard",
+      "version": "1.1",
+      "clouds": [
+        "aws",
+        "azure",
+        "gcp",
+        "kubernetes"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/cert_manager",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "prometheus_details": {
+          "type": "@facets/prometheus",
+          "optional": true,
+          "default": {
+            "resource_type": "prometheus",
+            "resource_name": "default"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "alertmanager_url",
+            "helm_release_id",
+            "prometheus_url"
+          ],
+          "interfacesUsed": []
+        },
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": {
+            "resource_type": "kubernetes_cluster",
+            "resource_name": "default"
+          },
+          "providers": [
+            "kubernetes",
+            "helm"
+          ],
+          "attributesUsed": [
+            "cloud_provider",
+            "cluster_endpoint",
+            "cluster_id",
+            "cluster_location",
+            "cluster_name"
+          ],
+          "interfacesUsed": [
+            "kubernetes"
+          ]
+        },
+        "kubernetes_node_pool_details": {
+          "type": "@facets/kubernetes_nodepool",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "node_class_name",
+            "node_pool_name",
+            "node_selector",
+            "taints"
+          ],
+          "interfacesUsed": []
+        },
+        "gateway_api_crd_details": {
+          "type": "@facets/gateway_api_crd",
+          "optional": true,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "channel",
+            "install_url",
+            "job_name",
+            "namespace",
+            "version"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "cluster_issuer_http": "\"letsencrypt-prod-http01\"",
+        "namespace": "local.cert_mgr_namespace",
+        "acme_email": "local.acme_email"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "cloud_account/aws_provider/1.0",
+      "intent": "cloud_account",
+      "flavor": "aws_provider",
+      "version": "1.0",
+      "clouds": [
+        "aws"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/aws_cloud_account",
+          "hasProviders": true,
+          "providers": [
+            "aws"
+          ]
+        }
+      },
+      "inputs": {},
+      "outputAttributes": {
+        "aws_iam_role": "sensitive(local.script_output.aws_iam_role)",
+        "session_name": "\"capillary-cloud-tf-${uuid()}\"",
+        "external_id": "sensitive(local.script_output.external_id)",
+        "aws_region": "local.script_output.aws_region",
+        "secrets": "["
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "cloud_account/azure_provider/1.0",
+      "intent": "cloud_account",
+      "flavor": "azure_provider",
+      "version": "1.0",
+      "clouds": [
+        "azure"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/azure_cloud_account",
+          "hasProviders": true,
+          "providers": [
+            "azurerm",
+            "azapi"
+          ]
+        }
+      },
+      "inputs": {},
+      "outputAttributes": {
+        "subscription_id": "sensitive(data.external.azure_fetch_cloud_secret.result[\"subscription_id\"])",
+        "client_id": "sensitive(data.external.azure_fetch_cloud_secret.result[\"client_id\"])",
+        "client_secret": "sensitive(data.external.azure_fetch_cloud_secret.result[\"client_secret\"])",
+        "tenant_id": "sensitive(data.external.azure_fetch_cloud_secret.result[\"tenant_id\"])",
+        "secrets": "["
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "cloud_account/gcp_provider/1.0",
+      "intent": "cloud_account",
+      "flavor": "gcp_provider",
+      "version": "1.0",
+      "clouds": [
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/gcp_cloud_account",
+          "hasProviders": true,
+          "providers": [
+            "google",
+            "google-beta"
+          ]
+        }
+      },
+      "inputs": {},
+      "outputAttributes": {
+        "project_id": "data.external.gcp_fetch_cloud_secret.result[\"project\"]",
+        "project": "data.external.gcp_fetch_cloud_secret.result[\"project\"] # Keep for backward compatibility",
+        "credentials": "sensitive(base64decode(data.external.gcp_fetch_cloud_secret.result[\"serviceAccountKey\"]))",
+        "region": "var.instance.spec.region",
+        "secrets": "["
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "config_map/k8s_standard/1.0",
+      "intent": "config_map",
+      "flavor": "k8s_standard",
+      "version": "1.0",
+      "clouds": [
+        "aws",
+        "azure",
+        "gcp",
+        "kubernetes"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/config_map",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": {
+            "resource_type": "kubernetes_cluster",
+            "resource_name": "default"
+          },
+          "providers": [
+            "kubernetes",
+            "kubernetes-alpha",
+            "helm"
+          ],
+          "attributesUsed": [
+            "cloud_provider",
+            "cluster_endpoint",
+            "cluster_id",
+            "cluster_location",
+            "cluster_name"
+          ],
+          "interfacesUsed": [
+            "kubernetes"
+          ]
+        }
+      },
+      "outputAttributes": {
+        "name": "lower(var.instance_name)",
+        "hash": "md5(jsonencode(merge(lookup(local.spec, \"data\", {}), lookup(local.spec, \"json_data\", {}))))"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "eck-operator/helm/1.0",
+      "intent": "eck-operator",
+      "flavor": "helm",
+      "version": "1.0",
+      "clouds": [
+        "aws",
+        "azure",
+        "gcp",
+        "kubernetes"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/eck-operator",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_cluster": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "kubernetes",
+            "helm"
+          ],
+          "attributesUsed": [],
+          "interfacesUsed": []
+        },
+        "node_pool": {
+          "type": "@facets/kubernetes_nodepool",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "node_class_name",
+            "node_pool_name",
+            "node_selector",
+            "taints"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "namespace": "local.namespace",
+        "release_name": "helm_release.eck_operator.name",
+        "chart_version": "helm_release.eck_operator.version",
+        "operator_name": "\"elastic-operator\"",
+        "repository": "local.repository",
+        "chart_name": "local.chart_name",
+        "webhook_enabled": "true",
+        "status": "helm_release.eck_operator.status",
+        "revision": "helm_release.eck_operator.metadata[0].revision"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "gateway_api_crd/default/1.0",
+      "intent": "gateway_api_crd",
+      "flavor": "default",
+      "version": "1.0",
+      "clouds": [
+        "aws",
+        "azure",
+        "gcp",
+        "kubernetes"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/gateway_api_crd",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": {
+            "resource_name": "default",
+            "resource_type": "kubernetes_cluster"
+          },
+          "providers": [
+            "kubernetes",
+            "kubernetes-alpha"
+          ],
+          "attributesUsed": [
+            "cloud_provider",
+            "cluster_endpoint",
+            "cluster_id",
+            "cluster_location",
+            "cluster_name"
+          ],
+          "interfacesUsed": [
+            "kubernetes"
+          ]
+        },
+        "kubernetes_node_pool_details": {
+          "type": "@facets/kubernetes_nodepool",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "node_class_name",
+            "node_pool_name",
+            "node_selector",
+            "taints"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "version": "local.version",
+        "channel": "local.channel",
+        "install_url": "local.install_url",
+        "job_name": "kubernetes_job_v1.gateway_api_crd_installer.metadata[0].name",
+        "namespace": "local.namespace"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "google_workload_identity/gcp/1.0",
+      "intent": "google_workload_identity",
+      "flavor": "gcp",
+      "version": "1.0",
+      "clouds": [
+        "gcp"
+      ],
+      "outputs": {},
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/gcp_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "google"
+          ],
+          "attributesUsed": [
+            "credentials",
+            "project_id",
+            "region"
+          ],
+          "interfacesUsed": []
+        },
+        "gke_cluster": {
+          "type": "@facets/gke",
+          "optional": false,
+          "default": {
+            "resource_type": "kubernetes_cluster",
+            "resource_name": "default"
+          },
+          "providers": [
+            "kubernetes",
+            "kubernetes-alpha",
+            "helm"
+          ],
+          "attributesUsed": [
+            "auto_upgrade",
+            "cloud_provider",
+            "cluster_ca_certificate",
+            "cluster_endpoint",
+            "cluster_id",
+            "cluster_ipv4_cidr",
+            "cluster_location",
+            "cluster_name",
+            "cluster_version",
+            "kubernetes_provider_exec",
+            "maintenance_policy_enabled",
+            "master_authorized_networks_config",
+            "network",
+            "pods_range_name",
+            "project_id",
+            "region",
+            "release_channel",
+            "secrets",
+            "services_range_name",
+            "subnetwork",
+            "workload_identity_config_workload_pool"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {}
+    },
+    {
+      "id": "grafana_dashboards/k8s/1.0",
+      "intent": "grafana_dashboards",
+      "flavor": "k8s",
+      "version": "1.0",
+      "clouds": [
+        "aws",
+        "azure",
+        "gcp",
+        "kubernetes"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/grafana_dashboards",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "kubernetes"
+          ],
+          "attributesUsed": [],
+          "interfacesUsed": []
+        },
+        "prometheus": {
+          "type": "@facets/prometheus",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "namespace"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "dashboard_count": "length(local.dashboards)",
+        "dashboard_names": "local.dashboard_names",
+        "configmap_names": "local.configmap_names",
+        "namespace": "local.grafana_namespace"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "helm/k8s_standard/1.0",
+      "intent": "helm",
+      "flavor": "k8s_standard",
+      "version": "1.0",
+      "clouds": [
+        "aws",
+        "azure",
+        "gcp",
+        "kubernetes"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/helm",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "prometheus_details": {
+          "type": "@facets/prometheus",
+          "optional": true,
+          "default": {
+            "resource_type": "prometheus",
+            "resource_name": "default"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "alertmanager_url",
+            "helm_release_id",
+            "prometheus_url"
+          ],
+          "interfacesUsed": []
+        },
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": {
+            "resource_type": "kubernetes_cluster",
+            "resource_name": "default"
+          },
+          "providers": [
+            "kubernetes",
+            "helm",
+            "kubernetes-alpha"
+          ],
+          "attributesUsed": [
+            "cloud_provider",
+            "cluster_endpoint",
+            "cluster_id",
+            "cluster_location",
+            "cluster_name"
+          ],
+          "interfacesUsed": [
+            "kubernetes"
+          ]
+        }
+      },
+      "outputAttributes": {
+        "release_name": "helm_release.external_helm_charts.name",
+        "values": "jsondecode(helm_release.external_helm_charts.metadata[0].values)"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "ingress/nginx_gateway_fabric/1.0",
+      "intent": "ingress",
+      "flavor": "nginx_gateway_fabric",
+      "version": "1.0",
+      "clouds": [
+        "aws",
+        "azure",
+        "gcp",
+        "kubernetes"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/ingress",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": {
+            "resource_type": "kubernetes_cluster",
+            "resource_name": "default"
+          },
+          "providers": [
+            "kubernetes",
+            "kubernetes-alpha",
+            "helm"
+          ],
+          "attributesUsed": [
+            "cloud_provider",
+            "cluster_endpoint",
+            "cluster_id",
+            "cluster_location",
+            "cluster_name",
+            "lb_service_record_type"
+          ],
+          "interfacesUsed": [
+            "kubernetes"
+          ]
+        },
+        "kubernetes_node_pool_details": {
+          "type": "@facets/kubernetes_nodepool",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "labels",
+            "node_selector",
+            "taints"
+          ],
+          "interfacesUsed": []
+        },
+        "artifactories": {
+          "type": "@facets/artifactories",
+          "optional": true,
+          "default": {
+            "resource_type": "artifactories",
+            "resource_name": "default"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "registry_secrets_list"
+          ],
+          "interfacesUsed": []
+        },
+        "cert_manager_details": {
+          "type": "@facets/cert_manager",
+          "optional": false,
+          "default": {
+            "resource_type": "cert_manager",
+            "resource_name": "default"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "acme_email",
+            "cluster_issuer_http"
+          ],
+          "interfacesUsed": []
+        },
+        "gateway_api_crd_details": {
+          "type": "@facets/gateway_api_crd",
+          "optional": false,
+          "default": {
+            "resource_type": "gateway_api_crd",
+            "resource_name": "default"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "channel",
+            "install_url",
+            "job_name",
+            "version"
+          ],
+          "interfacesUsed": []
+        },
+        "prometheus_details": {
+          "type": "@facets/prometheus",
+          "optional": true,
+          "default": {
+            "resource_type": "prometheus",
+            "resource_name": "default"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "alertmanager_url",
+            "helm_release_id",
+            "prometheus_url"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {
+        "connection_string": "\"https://${route.host}\"",
+        "host": "route.host",
+        "port": "443",
+        "secrets": "[]"
+      }
+    },
+    {
+      "id": "ingress/nginx_k8s/1.1",
+      "intent": "ingress",
+      "flavor": "nginx_k8s",
+      "version": "1.1",
+      "clouds": [
+        "aws",
+        "azure",
+        "gcp",
+        "kubernetes"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/ingress",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": {
+            "resource_type": "kubernetes_cluster",
+            "resource_name": "default"
+          },
+          "providers": [
+            "kubernetes",
+            "kubernetes-alpha",
+            "helm"
+          ],
+          "attributesUsed": [
+            "cloud_provider",
+            "cluster_endpoint",
+            "cluster_id",
+            "cluster_location",
+            "cluster_name",
+            "lb_service_record_type"
+          ],
+          "interfacesUsed": [
+            "kubernetes"
+          ]
+        },
+        "kubernetes_node_pool_details": {
+          "type": "@facets/kubernetes_nodepool",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "labels",
+            "node_selector",
+            "taints"
+          ],
+          "interfacesUsed": []
+        },
+        "artifactories": {
+          "type": "@facets/artifactories",
+          "optional": true,
+          "default": {
+            "resource_type": "artifactories",
+            "resource_name": "default"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "registry_secrets_list"
+          ],
+          "interfacesUsed": []
+        },
+        "cert_manager_details": {
+          "type": "@facets/cert_manager",
+          "optional": true,
+          "default": {
+            "resource_type": "cert_manager",
+            "resource_name": "default"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "cluster_issuer_dns",
+            "cluster_issuer_http"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {
+        "connection_string": "local.is_auth_enabled ? \"https://${local.username}:${local.password}@${lookup(rule, \"domain_prefix\", null) == null || lookup(rule, \"domain_prefix\", null) == \"\" ? \"${rule.domain}\" : \"${lookup(rule, \"domain_prefix\", null)}.${rule.domain}\"}\" : \"https://${lookup(rule, \"domain_prefix\", null) == null || lookup(rule, \"domain_prefix\", null) == \"\" ? \"${rule.domain}\" : \"${lookup(rule, \"domain_prefix\", null)}.${rule.domain}\"}\"",
+        "host": "lookup(rule, \"domain_prefix\", null) == null || lookup(rule, \"domain_prefix\", null) == \"\" ? \"${rule.domain}\" : \"${lookup(rule, \"domain_prefix\", null)}.${rule.domain}\"",
+        "port": "443",
+        "username": "local.username",
+        "password": "local.password",
+        "secrets": "local.is_auth_enabled ? [\"connection_string\", \"password\"] : []"
+      }
+    },
+    {
+      "id": "k8s_access_controls/k8s_standard/1.0",
+      "intent": "k8s_access_controls",
+      "flavor": "k8s_standard",
+      "version": "1.0",
+      "clouds": [
+        "aws",
+        "azure",
+        "gcp",
+        "kubernetes"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/k8s_access_controls",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": {
+            "resource_type": "kubernetes_cluster",
+            "resource_name": "default"
+          },
+          "providers": [
+            "kubernetes"
+          ],
+          "attributesUsed": [],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {}
+    },
+    {
+      "id": "k8s_callback/k8s_standard/1.1",
+      "intent": "k8s_callback",
+      "flavor": "k8s_standard",
+      "version": "1.1",
+      "clouds": [
+        "aws",
+        "azure",
+        "gcp",
+        "kubernetes"
+      ],
+      "outputs": {},
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "kubernetes"
+          ],
+          "attributesUsed": [
+            "cluster_arn",
+            "cluster_ca_certificate",
+            "cluster_endpoint",
+            "cluster_id",
+            "cluster_name",
+            "cluster_version",
+            "kubernetes_provider_exec",
+            "node_iam_role_arn",
+            "node_iam_role_name",
+            "node_security_group_id",
+            "oidc_issuer_url",
+            "oidc_provider",
+            "oidc_provider_arn"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {}
+    },
+    {
+      "id": "k8s_resource/k8s_standard/1.0",
+      "intent": "k8s_resource",
+      "flavor": "k8s_standard",
+      "version": "1.0",
+      "clouds": [
+        "aws",
+        "azure",
+        "gcp",
+        "kubernetes"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/k8s_resource",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": {
+            "resource_type": "kubernetes_cluster",
+            "resource_name": "default"
+          },
+          "providers": [
+            "kubernetes",
+            "kubernetes-alpha",
+            "helm"
+          ],
+          "attributesUsed": [
+            "cloud_provider",
+            "cluster_endpoint",
+            "cluster_id",
+            "cluster_location",
+            "cluster_name"
+          ],
+          "interfacesUsed": [
+            "kubernetes"
+          ]
+        }
+      },
+      "outputAttributes": {
+        "resource_name": "local.name",
+        "resource_namespace": "local.namespace"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "kafka/aws-msk/1.0",
+      "intent": "kafka",
+      "flavor": "aws-msk",
+      "version": "1.0",
+      "clouds": [
+        "aws"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/kafka",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "aws_cloud_account": {
+          "type": "@facets/aws_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "aws"
+          ],
+          "attributesUsed": [
+            "aws_iam_role",
+            "aws_region",
+            "external_id",
+            "session_name"
+          ],
+          "interfacesUsed": []
+        },
+        "vpc_details": {
+          "type": "@facets/aws-vpc-details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "availability_zones",
+            "private_subnet_ids",
+            "vpc_cidr_block",
+            "vpc_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {
+        "cluster": []
+      }
+    },
+    {
+      "id": "kafka/gcp-msk/1.0",
+      "intent": "kafka",
+      "flavor": "gcp-msk",
+      "version": "1.0",
+      "clouds": [
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/gcp-msk",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "gcp_cloud_account": {
+          "type": "@facets/gcp_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "google",
+            "google-beta"
+          ],
+          "attributesUsed": [
+            "project_id",
+            "region"
+          ],
+          "interfacesUsed": []
+        },
+        "vpc_network": {
+          "type": "@facets/gcp-network-details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "private_subnet_id",
+            "vpc_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "cluster_id": "google_managed_kafka_cluster.main.cluster_id",
+        "location": "google_managed_kafka_cluster.main.location",
+        "cluster_name": "local.cluster_name",
+        "connect_cluster_id": "local.connect_enabled ? google_managed_kafka_connect_cluster.main[0].connect_cluster_id : null",
+        "connect_cluster_location": "local.connect_enabled ? google_managed_kafka_connect_cluster.main[0].location : null",
+        "connect_cluster_state": "local.connect_enabled ? google_managed_kafka_connect_cluster.main[0].state : null",
+        "kafka_version": "local.kafka_version"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "kafka_topic/gcp-msk/1.0",
+      "intent": "kafka_topic",
+      "flavor": "gcp-msk",
+      "version": "1.0",
+      "clouds": [
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/gcp-kafka-topic",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "gcp_cloud_account": {
+          "type": "@facets/gcp_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "google",
+            "google-beta"
+          ],
+          "attributesUsed": [
+            "project_id",
+            "region"
+          ],
+          "interfacesUsed": []
+        },
+        "vpc_network": {
+          "type": "@facets/gcp-network-details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "private_subnet_id",
+            "vpc_id"
+          ],
+          "interfacesUsed": []
+        },
+        "kafka_cluster": {
+          "type": "@facets/gcp-msk",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "cluster_id",
+            "location"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "topic_id": "google_managed_kafka_topic.main.topic_id",
+        "topic_name": "google_managed_kafka_topic.main.name",
+        "partition_count": "google_managed_kafka_topic.main.partition_count",
+        "replication_factor": "google_managed_kafka_topic.main.replication_factor",
+        "cluster_id": "google_managed_kafka_topic.main.cluster",
+        "location": "google_managed_kafka_topic.main.location",
+        "configs": "google_managed_kafka_topic.main.configs"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "karpenter/default/1.0",
+      "intent": "karpenter",
+      "flavor": "default",
+      "version": "1.0",
+      "clouds": [
+        "aws"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/karpenter-details",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/aws_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "aws"
+          ],
+          "attributesUsed": [
+            "aws_account_id",
+            "aws_iam_role",
+            "aws_region",
+            "external_id",
+            "session_name"
+          ],
+          "interfacesUsed": []
+        },
+        "eks_details": {
+          "type": "@facets/eks",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "cluster_arn",
+            "cluster_ca_certificate",
+            "cluster_endpoint",
+            "cluster_id",
+            "cluster_name",
+            "cluster_version",
+            "kubernetes_provider_exec",
+            "node_security_group_id",
+            "oidc_issuer_url",
+            "oidc_provider",
+            "oidc_provider_arn"
+          ],
+          "interfacesUsed": []
+        },
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "helm",
+            "kubernetes",
+            "kubernetes-alpha"
+          ],
+          "attributesUsed": [],
+          "interfacesUsed": []
+        },
+        "network_details": {
+          "type": "@facets/aws-vpc-details",
+          "optional": false,
+          "default": {
+            "resource_name": "default",
+            "resource_type": "network"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "database_subnet_ids",
+            "private_subnet_ids",
+            "public_subnet_ids",
+            "vpc_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "karpenter_namespace": "local.karpenter_namespace",
+        "karpenter_service_account": "local.karpenter_service_account",
+        "karpenter_version": "var.instance.spec.karpenter_version",
+        "controller_role_arn": "aws_iam_role.karpenter_controller.arn",
+        "node_role_arn": "aws_iam_role.karpenter_node.arn",
+        "node_instance_profile_name": "aws_iam_instance_profile.karpenter_node.name",
+        "interruption_queue_name": "var.instance.spec.interruption_handling ? aws_sqs_queue.karpenter_interruption[0].name : \"\"",
+        "helm_release_id": "helm_release.karpenter.id",
+        "secrets": "[]"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "aws_alb_controller/standard/1.0",
+      "intent": "aws_alb_controller",
+      "flavor": "standard",
+      "version": "1.0",
+      "clouds": [
+        "aws"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/aws-alb-controller",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/aws_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "aws"
+          ],
+          "attributesUsed": [
+            "aws_account_id",
+            "aws_iam_role",
+            "aws_region",
+            "external_id",
+            "session_name"
+          ],
+          "interfacesUsed": []
+        },
+        "eks_details": {
+          "type": "@facets/eks",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "cluster_arn",
+            "cluster_ca_certificate",
+            "cluster_endpoint",
+            "cluster_id",
+            "cluster_name",
+            "cluster_version",
+            "kubernetes_provider_exec",
+            "node_security_group_id",
+            "oidc_issuer_url",
+            "oidc_provider",
+            "oidc_provider_arn"
+          ],
+          "interfacesUsed": []
+        },
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "helm",
+            "kubernetes",
+            "kubernetes-alpha"
+          ],
+          "attributesUsed": [],
+          "interfacesUsed": []
+        },
+        "network_details": {
+          "type": "@facets/aws-vpc-details",
+          "optional": false,
+          "default": {
+            "resource_name": "default",
+            "resource_type": "network"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "vpc_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "controller_namespace": "local.controller_namespace",
+        "controller_service_account": "local.controller_service_account",
+        "controller_version": "var.instance.spec.controller_version",
+        "controller_role_arn": "aws_iam_role.alb_controller.arn",
+        "helm_release_id": "helm_release.alb_controller.id",
+        "secrets": "[]"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "kubeblocks-operator/standard/1.0",
+      "intent": "kubeblocks-operator",
+      "flavor": "standard",
+      "version": "1.0",
+      "clouds": [
+        "kubernetes",
+        "aws",
+        "gcp",
+        "azure"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/kubeblocks-operator",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_cluster": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "kubernetes",
+            "helm"
+          ],
+          "attributesUsed": [
+            "cluster_name",
+            "legacy_outputs",
+            "region"
+          ],
+          "interfacesUsed": [
+            "kubernetes_cluster_ca_certificate",
+            "kubernetes_host",
+            "kubernetes_token"
+          ]
+        },
+        "node_pool": {
+          "type": "@facets/kubernetes_nodepool",
+          "optional": true,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "node_pool_id",
+            "node_pool_name",
+            "node_selector",
+            "taints"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "namespace": "local.namespace",
+        "version": "helm_release.kubeblocks.version",
+        "chart_version": "helm_release.kubeblocks.version",
+        "release_name": "helm_release.kubeblocks.name",
+        "release_id": "helm_release.kubeblocks.id"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "kubernetes_cluster/aks/1.0",
+      "intent": "kubernetes_cluster",
+      "flavor": "aks",
+      "version": "1.0",
+      "clouds": [
+        "azure"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/kubernetes-details",
+          "hasProviders": false,
+          "providers": []
+        },
+        "attributes": {
+          "type": "@facets/azure_aks",
+          "hasProviders": true,
+          "providers": [
+            "kubernetes",
+            "helm",
+            "kubernetes-alpha"
+          ]
+        }
+      },
+      "inputs": {
+        "network_details": {
+          "type": "@facets/azure-network-details",
+          "optional": false,
+          "default": {
+            "resource_type": "network",
+            "resource_name": "default"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "availability_zones",
+            "log_analytics_workspace_id",
+            "private_subnet_ids",
+            "public_subnet_ids",
+            "region",
+            "resource_group_name",
+            "vnet_id"
+          ],
+          "interfacesUsed": []
+        },
+        "cloud_account": {
+          "type": "@facets/azure_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "azurerm",
+            "azapi"
+          ],
+          "attributesUsed": [
+            "subscription_id",
+            "tenant_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "oidc_issuer_url": "module.k8scluster.oidc_issuer_url",
+        "cluster_id": "module.k8scluster.aks_id",
+        "cluster_name": "module.k8scluster.aks_name",
+        "cluster_fqdn": "module.k8scluster.cluster_fqdn",
+        "cluster_private_fqdn": "module.k8scluster.cluster_private_fqdn",
+        "cluster_endpoint": "module.k8scluster.host",
+        "cluster_location": "module.k8scluster.location",
+        "node_resource_group": "module.k8scluster.node_resource_group",
+        "resource_group_name": "var.inputs.network_details.attributes.resource_group_name",
+        "network_details": "var.inputs.network_details.attributes",
+        "cluster_ca_certificate": "base64decode(module.k8scluster.cluster_ca_certificate)",
+        "client_certificate": "base64decode(module.k8scluster.client_certificate)",
+        "client_key": "base64decode(module.k8scluster.client_key)",
+        "automatic_channel_upgrade": "var.instance.spec.auto_upgrade_settings.automatic_channel_upgrade",
+        "cloud_provider": "\"AZURE\"",
+        "secrets": "\"[\\\"client_key\\\", \\\"client_certificate\\\", \\\"cluster_ca_certificate\\\"]\""
+      },
+      "outputInterfaces": {
+        "kubernetes": []
+      }
+    },
+    {
+      "id": "kubernetes_cluster/eks_automode/1.0",
+      "intent": "kubernetes_cluster",
+      "flavor": "eks_automode",
+      "version": "1.0",
+      "clouds": [
+        "aws"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/kubernetes-details",
+          "hasProviders": true,
+          "providers": [
+            "kubernetes",
+            "helm",
+            "kubernetes-alpha"
+          ]
+        },
+        "attributes": {
+          "type": "@facets/eks",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "network_details": {
+          "type": "@facets/aws-vpc-details",
+          "optional": false,
+          "default": {
+            "resource_type": "network",
+            "resource_name": "default"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "private_subnet_ids",
+            "vpc_cidr_block",
+            "vpc_id"
+          ],
+          "interfacesUsed": []
+        },
+        "cloud_account": {
+          "type": "@facets/aws_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "aws"
+          ],
+          "attributesUsed": [
+            "aws_iam_role",
+            "aws_region",
+            "external_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "cluster_endpoint": "module.eks.cluster_endpoint",
+        "cluster_ca_certificate": "base64decode(module.eks.cluster_certificate_authority_data)",
+        "cluster_name": "module.eks.cluster_name",
+        "cluster_location": "local.cluster_location",
+        "cluster_version": "module.eks.cluster_version",
+        "cluster_arn": "module.eks.cluster_arn",
+        "cluster_id": "module.eks.cluster_id",
+        "oidc_issuer_url": "module.eks.cluster_oidc_issuer_url",
+        "oidc_provider": "module.eks.oidc_provider",
+        "oidc_provider_arn": "module.eks.oidc_provider_arn",
+        "node_iam_role_arn": "module.eks.node_iam_role_arn",
+        "node_iam_role_name": "module.eks.node_iam_role_name",
+        "node_security_group_id": "module.eks.node_security_group_id",
+        "cloud_provider": "\"AWS\"",
+        "kubernetes_provider_exec": [],
+        "secrets": "[\"cluster_ca_certificate\", \"kubernetes_provider_exec\"]"
+      },
+      "outputInterfaces": {
+        "kubernetes": []
+      }
+    },
+    {
+      "id": "kubernetes_cluster/eks_standard/1.0",
+      "intent": "kubernetes_cluster",
+      "flavor": "eks_standard",
+      "version": "1.0",
+      "clouds": [
+        "aws"
+      ],
+      "outputs": {
+        "attributes": {
+          "type": "@facets/kubernetes-details",
+          "hasProviders": true,
+          "providers": [
+            "helm",
+            "kubernetes",
+            "kubernetes-alpha"
+          ]
+        },
+        "default": {
+          "type": "@facets/eks",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/aws_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "aws"
+          ],
+          "attributesUsed": [
+            "aws_account_id",
+            "aws_iam_role",
+            "aws_region",
+            "external_id",
+            "session_name"
+          ],
+          "interfacesUsed": []
+        },
+        "network_details": {
+          "type": "@facets/aws-vpc-details",
+          "optional": false,
+          "default": {
+            "resource_name": "default",
+            "resource_type": "network"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "private_subnet_ids",
+            "public_subnet_ids",
+            "vpc_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "cluster_endpoint": "module.eks.cluster_endpoint",
+        "cluster_ca_certificate": "base64decode(module.eks.cluster_certificate_authority_data)",
+        "cluster_name": "module.eks.cluster_name",
+        "cluster_version": "module.eks.cluster_version",
+        "cluster_arn": "module.eks.cluster_arn",
+        "cluster_id": "module.eks.cluster_id",
+        "oidc_issuer_url": "module.eks.cluster_oidc_issuer_url",
+        "oidc_provider": "module.eks.oidc_provider",
+        "oidc_provider_arn": "module.eks.oidc_provider_arn",
+        "node_iam_role_arn": "try(module.eks.eks_managed_node_groups[\"system\"].iam_role_arn, \"\")",
+        "node_iam_role_name": "try(module.eks.eks_managed_node_groups[\"system\"].iam_role_name, \"\")",
+        "node_security_group_id": "module.eks.node_security_group_id",
+        "cluster_iam_role_arn": "module.eks.cluster_iam_role_arn",
+        "cluster_primary_security_group_id": "module.eks.cluster_primary_security_group_id",
+        "cluster_security_group_id": "module.eks.cluster_security_group_id",
+        "cloud_provider": "\"AWS\"",
+        "kubernetes_provider_exec": [],
+        "secrets": "[\"cluster_ca_certificate\", \"kubernetes_provider_exec\"]"
+      },
+      "outputInterfaces": {
+        "kubernetes": []
+      }
+    },
+    {
+      "id": "kubernetes_cluster/gke/1.0",
+      "intent": "kubernetes_cluster",
+      "flavor": "gke",
+      "version": "1.0",
+      "clouds": [
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/kubernetes-details",
+          "hasProviders": true,
+          "providers": [
+            "kubernetes",
+            "helm",
+            "kubernetes-alpha"
+          ]
+        },
+        "attributes": {
+          "type": "@facets/gke",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "network_details": {
+          "type": "@facets/gcp-network-details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [],
+          "interfacesUsed": []
+        },
+        "cloud_account": {
+          "type": "@facets/gcp_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "google",
+            "google-beta"
+          ],
+          "attributesUsed": [
+            "credentials",
+            "project_id",
+            "region"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "cluster_id": "google_container_cluster.primary.id",
+        "cluster_name": "google_container_cluster.primary.name",
+        "cluster_location": "google_container_cluster.primary.location",
+        "cluster_version": "google_container_cluster.primary.master_version",
+        "cloud_provider": "\"GCP\"",
+        "cluster_endpoint": "\"https://${google_container_cluster.primary.endpoint}\"",
+        "cluster_ca_certificate": "base64decode(google_container_cluster.primary.master_auth[0].cluster_ca_certificate)",
+        "kubernetes_provider_exec": [],
+        "project_id": "local.project_id",
+        "region": "local.region",
+        "network": "local.network",
+        "subnetwork": "local.subnetwork",
+        "pods_range_name": "local.pods_range_name",
+        "services_range_name": "local.services_range_name",
+        "auto_upgrade": "local.auto_upgrade",
+        "release_channel": "local.release_channel",
+        "cluster_ipv4_cidr": "google_container_cluster.primary.cluster_ipv4_cidr",
+        "master_authorized_networks_config": "local.whitelisted_cidrs",
+        "workload_identity_config_workload_pool": "\"${local.project_id}.svc.id.goog\"",
+        "maintenance_policy_enabled": "local.auto_upgrade",
+        "secrets": "\"[\\\"cluster_ca_certificate\\\"]\""
+      },
+      "outputInterfaces": {
+        "kubernetes": []
+      }
+    },
+    {
+      "id": "kubernetes_node_pool/azure/1.0",
+      "intent": "kubernetes_node_pool",
+      "flavor": "azure",
+      "version": "1.0",
+      "clouds": [
+        "azure"
+      ],
+      "outputs": {
+        "attributes": {
+          "type": "@facets/azure_aks_nodepool",
+          "hasProviders": false,
+          "providers": []
+        },
+        "default": {
+          "type": "@facets/kubernetes_nodepool",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/azure_aks",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "helm",
+            "kubernetes",
+            "kubernetes-alpha"
+          ],
+          "attributesUsed": [
+            "automatic_channel_upgrade",
+            "client_certificate",
+            "client_key",
+            "cloud_provider",
+            "cluster_ca_certificate",
+            "cluster_endpoint",
+            "cluster_fqdn",
+            "cluster_id",
+            "cluster_location",
+            "cluster_name",
+            "cluster_private_fqdn",
+            "network_details",
+            "node_resource_group",
+            "oidc_issuer_url",
+            "resource_group_name",
+            "secrets"
+          ],
+          "interfacesUsed": [
+            "kubernetes"
+          ]
+        },
+        "cloud_account": {
+          "type": "@facets/azure_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "azurerm"
+          ],
+          "attributesUsed": [
+            "client_id",
+            "client_secret",
+            "subscription_id",
+            "tenant_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "node_pool_name": "azurerm_kubernetes_cluster_node_pool.node_pool.name",
+        "node_pool_id": "azurerm_kubernetes_cluster_node_pool.node_pool.id",
+        "disk_size_gb": "azurerm_kubernetes_cluster_node_pool.node_pool.os_disk_size_gb",
+        "node_count": "azurerm_kubernetes_cluster_node_pool.node_pool.node_count",
+        "taints": "local.node_taints",
+        "node_selector": "local.node_labels"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "kubernetes_node_pool/eks_automode/1.0",
+      "intent": "kubernetes_node_pool",
+      "flavor": "eks_automode",
+      "version": "1.0",
+      "clouds": [
+        "aws"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/kubernetes_nodepool",
+          "hasProviders": false,
+          "providers": []
+        },
+        "attributes": {
+          "type": "@facets/aws_karpenter_nodepool",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/eks",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "helm",
+            "kubernetes",
+            "kubernetes-alpha"
+          ],
+          "attributesUsed": [],
+          "interfacesUsed": []
+        },
+        "network_details": {
+          "type": "@facets/aws-vpc-details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "availability_zones",
+            "internet_gateway_id",
+            "nat_gateway_ids",
+            "private_subnet_ids",
+            "public_subnet_ids",
+            "vpc_cidr_block",
+            "vpc_endpoint_dynamodb_id",
+            "vpc_endpoint_ecr_api_id",
+            "vpc_endpoint_ecr_dkr_id",
+            "vpc_endpoint_s3_id",
+            "vpc_endpoints_security_group_id",
+            "vpc_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "node_class_name": "local.node_class_name",
+        "node_pool_name": "local.node_pool_name",
+        "taints": "local.taints",
+        "node_selector": "local.labels"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "kubernetes_node_pool/gcp/1.0",
+      "intent": "kubernetes_node_pool",
+      "flavor": "gcp",
+      "version": "1.0",
+      "clouds": [
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/kubernetes_nodepool",
+          "hasProviders": false,
+          "providers": []
+        },
+        "attributes": {
+          "type": "@facets/gke_node_pool_details",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/gcp_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "google",
+            "google-beta"
+          ],
+          "attributesUsed": [
+            "credentials",
+            "project_id",
+            "region"
+          ],
+          "interfacesUsed": []
+        },
+        "network_details": {
+          "type": "@facets/gcp-network-details",
+          "optional": false,
+          "default": {
+            "resource_type": "network",
+            "resource_name": "default"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "database_subnet_cidrs",
+            "database_subnet_ids",
+            "firewall_rule_ids",
+            "gke_pods_range_name",
+            "nat_gateway_ids",
+            "private_services_connection_id",
+            "private_services_connection_status",
+            "private_services_peering_connection",
+            "private_services_range_address",
+            "private_services_range_id",
+            "private_services_range_name",
+            "private_subnet_cidrs",
+            "private_subnet_ids",
+            "project_id",
+            "public_subnet_cidrs",
+            "public_subnet_ids",
+            "region",
+            "router_ids",
+            "vpc_id",
+            "vpc_name",
+            "vpc_self_link",
+            "zones"
+          ],
+          "interfacesUsed": []
+        },
+        "kubernetes_details": {
+          "type": "@facets/gke",
+          "optional": false,
+          "default": {
+            "resource_type": "kubernetes_cluster",
+            "resource_name": "default"
+          },
+          "providers": [
+            "kubernetes",
+            "kubernetes-alpha",
+            "helm"
+          ],
+          "attributesUsed": [],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "node_pool_name": "google_container_node_pool.node_pool.name",
+        "node_pool_id": "google_container_node_pool.node_pool.id",
+        "topology_spread_key": "local.topology_spread_key",
+        "taints": "lookup(local.spec, \"taints\", [])",
+        "node_selector": "local.labels",
+        "service_account": "length(local.iam_roles) > 0 ? google_service_account.sa[0].email : null"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "kubernetes_node_pool/gcp_node_fleet/1.0",
+      "intent": "kubernetes_node_pool",
+      "flavor": "gcp_node_fleet",
+      "version": "1.0",
+      "clouds": [
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/kubernetes_nodepool",
+          "hasProviders": false,
+          "providers": []
+        },
+        "attributes": {
+          "type": "@facets/gke_node_pool_details",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/gcp_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "google",
+            "google-beta"
+          ],
+          "attributesUsed": [
+            "credentials",
+            "project_id",
+            "region"
+          ],
+          "interfacesUsed": []
+        },
+        "network_details": {
+          "type": "@facets/gcp-network-details",
+          "optional": false,
+          "default": {
+            "resource_type": "network",
+            "resource_name": "default"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "zones"
+          ],
+          "interfacesUsed": []
+        },
+        "kubernetes_details": {
+          "type": "@facets/gke",
+          "optional": false,
+          "default": {
+            "resource_type": "kubernetes_cluster",
+            "resource_name": "default"
+          },
+          "providers": [
+            "kubernetes",
+            "kubernetes-alpha",
+            "helm"
+          ],
+          "attributesUsed": [
+            "auto_upgrade",
+            "cloud_provider",
+            "cluster_ca_certificate",
+            "cluster_endpoint",
+            "cluster_id",
+            "cluster_ipv4_cidr",
+            "cluster_location",
+            "cluster_name",
+            "cluster_version",
+            "kubernetes_provider_exec",
+            "maintenance_policy_enabled",
+            "master_authorized_networks_config",
+            "network",
+            "pods_range_name",
+            "project_id",
+            "region",
+            "release_channel",
+            "secrets",
+            "services_range_name",
+            "subnetwork",
+            "workload_identity_config_workload_pool"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "topology_spread_key": "\"facets-cloud-fleet-${var.instance_name}\"",
+        "taints": "local.output_taints",
+        "node_selector": "local.labels",
+        "node_fleet_details": []
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "kubernetes_node_pool/karpenter/1.0",
+      "intent": "kubernetes_node_pool",
+      "flavor": "karpenter",
+      "version": "1.0",
+      "clouds": [
+        "aws"
+      ],
+      "outputs": {
+        "attributes": {
+          "type": "@facets/aws_karpenter_nodepool",
+          "hasProviders": false,
+          "providers": []
+        },
+        "default": {
+          "type": "@facets/kubernetes_nodepool",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/aws_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "aws"
+          ],
+          "attributesUsed": [
+            "aws_account_id",
+            "aws_iam_role",
+            "aws_region",
+            "external_id",
+            "session_name"
+          ],
+          "interfacesUsed": []
+        },
+        "karpenter_details": {
+          "type": "@facets/karpenter-details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "controller_role_arn",
+            "helm_release_id",
+            "karpenter_namespace",
+            "karpenter_service_account",
+            "node_instance_profile_name",
+            "node_role_arn"
+          ],
+          "interfacesUsed": []
+        },
+        "kubernetes_details": {
+          "type": "@facets/eks",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "helm",
+            "kubernetes",
+            "kubernetes-alpha"
+          ],
+          "attributesUsed": [
+            "cluster_arn",
+            "cluster_ca_certificate",
+            "cluster_endpoint",
+            "cluster_id",
+            "cluster_name",
+            "cluster_version",
+            "kubernetes_provider_exec",
+            "node_security_group_id",
+            "oidc_issuer_url",
+            "oidc_provider",
+            "oidc_provider_arn"
+          ],
+          "interfacesUsed": []
+        },
+        "network_details": {
+          "type": "@facets/aws-vpc-details",
+          "optional": false,
+          "default": {
+            "resource_name": "default",
+            "resource_type": "network"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "database_subnet_ids",
+            "private_subnet_ids",
+            "public_subnet_ids",
+            "vpc_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "node_pool_name": "\"${var.instance_name}-nodepool\"",
+        "node_class_name": "\"${var.instance_name}-nodeclass\"",
+        "taints": "[",
+        "key": "taint_key",
+        "value": "taint_config.value",
+        "effect": "taint_config.effect",
+        "node_selector": "lookup(var.instance.spec, \"labels\", {})"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "kubernetes_secret/k8s_standard/1.0",
+      "intent": "kubernetes_secret",
+      "flavor": "k8s_standard",
+      "version": "1.0",
+      "clouds": [
+        "aws",
+        "azure",
+        "gcp",
+        "kubernetes"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/kubernetes_secret",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": {
+            "resource_type": "kubernetes_cluster",
+            "resource_name": "default"
+          },
+          "providers": [
+            "kubernetes",
+            "kubernetes-alpha",
+            "helm"
+          ],
+          "attributesUsed": [
+            "cloud_provider",
+            "cluster_endpoint",
+            "cluster_id",
+            "cluster_location",
+            "cluster_name"
+          ],
+          "interfacesUsed": [
+            "kubernetes"
+          ]
+        }
+      },
+      "outputAttributes": {
+        "name": "lower(var.instance_name)",
+        "hash": "md5(jsonencode(merge(lookup(local.spec, \"data\", {}), lookup(local.spec, \"json_data\", {}))))"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "mongo/aws-documentdb/1.0",
+      "intent": "mongo",
+      "flavor": "aws-documentdb",
+      "version": "1.0",
+      "clouds": [
+        "aws"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/mongo",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "aws_provider": {
+          "type": "@facets/aws_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "aws"
+          ],
+          "attributesUsed": [
+            "aws_iam_role",
+            "aws_region",
+            "external_id",
+            "session_name"
+          ],
+          "interfacesUsed": []
+        },
+        "vpc_details": {
+          "type": "@facets/aws-vpc-details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "availability_zones",
+            "private_subnet_ids",
+            "vpc_cidr_block",
+            "vpc_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {
+        "writer": [],
+        "reader": [],
+        "cluster": []
+      }
+    },
+    {
+      "id": "mongo/cosmosdb/1.0",
+      "intent": "mongo",
+      "flavor": "cosmosdb",
+      "version": "1.0",
+      "clouds": [
+        "azure"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/mongo",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "azure_provider": {
+          "type": "@facets/azure_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "azurerm"
+          ],
+          "attributesUsed": [
+            "client_id",
+            "client_secret",
+            "subscription_id",
+            "tenant_id"
+          ],
+          "interfacesUsed": []
+        },
+        "network_details": {
+          "type": "@facets/azure-network-details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "availability_zones",
+            "default_security_group_id",
+            "nat_gateway_ids",
+            "nat_gateway_public_ip_ids",
+            "private_subnet_cidrs",
+            "private_subnet_ids",
+            "public_subnet_cidrs",
+            "public_subnet_ids",
+            "region",
+            "resource_group_id",
+            "resource_group_name",
+            "vnet_cidr_block",
+            "vnet_id",
+            "vnet_name"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {
+        "writer": [],
+        "reader": [],
+        "cluster": []
+      }
+    },
+    {
+      "id": "mongo/kubeblocks/1.0",
+      "intent": "mongo",
+      "flavor": "kubeblocks",
+      "version": "1.0",
+      "clouds": [
+        "kubernetes",
+        "aws",
+        "azure",
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/mongo",
+          "hasProviders": false,
+          "providers": []
+        },
+        "attributes": {
+          "type": "@facets/mongo_k8s",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubeblocks_operator": {
+          "type": "@facets/kubeblocks-operator",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "chart_version",
+            "namespace",
+            "release_id",
+            "version"
+          ],
+          "interfacesUsed": []
+        },
+        "kubernetes_cluster": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "kubernetes",
+            "helm"
+          ],
+          "attributesUsed": [
+            "cluster_name",
+            "region"
+          ],
+          "interfacesUsed": []
+        },
+        "node_pool": {
+          "type": "@facets/kubernetes_nodepool",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "node_pool_id",
+            "node_pool_name",
+            "node_selector",
+            "taints"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {}
+    },
+    {
+      "id": "monitoring/mongo/1.0",
+      "intent": "monitoring",
+      "flavor": "mongo",
+      "version": "1.0",
+      "clouds": [
+        "kubernetes",
+        "aws",
+        "azure",
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/monitoring-rules",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_cluster": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "kubernetes",
+            "kubernetes-alpha",
+            "helm"
+          ],
+          "attributesUsed": [
+            "cluster_endpoint",
+            "cluster_name"
+          ],
+          "interfacesUsed": []
+        },
+        "mongo": {
+          "type": "@facets/mongo",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [],
+          "interfacesUsed": [
+            "writer"
+          ]
+        },
+        "prometheus": {
+          "type": "@facets/prometheus",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "namespace",
+            "prometheus_release"
+          ],
+          "interfacesUsed": []
+        },
+        "node_pool": {
+          "type": "@facets/kubernetes_nodepool",
+          "optional": true,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "node_pool_id",
+            "node_pool_name",
+            "node_selector",
+            "taints"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "exporter_enabled": "local.enable_metrics",
+        "exporter_release": "local.enable_metrics ? helm_release.mongodb_exporter[0].name : \"\"",
+        "exporter_namespace": "local.mongo_namespace",
+        "exporter_chart": "local.enable_metrics ? \"prometheus-mongodb-exporter\" : \"\"",
+        "exporter_chart_version": "local.enable_metrics ? helm_release.mongodb_exporter[0].version : \"\"",
+        "service_monitor_enabled": "local.enable_metrics",
+        "prometheus_rule_name": "local.enable_alerts ? \"${local.name}-alerts\" : \"\"",
+        "prometheus_namespace": "local.prometheus_namespace",
+        "alerts_enabled": "local.enable_alerts",
+        "enabled_alert_count": "length(local.alert_rules)",
+        "rule_group_name": "\"${var.instance_name}-mongodb-alerts\"",
+        "mongodb_host": "local.mongo_host",
+        "mongodb_namespace": "local.mongo_namespace"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "mysql/aws-aurora/1.0",
+      "intent": "mysql",
+      "flavor": "aws-aurora",
+      "version": "1.0",
+      "clouds": [
+        "aws"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/mysql",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "aws_provider": {
+          "type": "@facets/aws_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "aws"
+          ],
+          "attributesUsed": [
+            "aws_iam_role",
+            "aws_region",
+            "external_id",
+            "session_name"
+          ],
+          "interfacesUsed": []
+        },
+        "vpc_details": {
+          "type": "@facets/aws-vpc-details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "availability_zones",
+            "private_subnet_ids",
+            "vpc_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {
+        "reader": [],
+        "writer": []
+      }
+    },
+    {
+      "id": "mysql/aws-rds/1.0",
+      "intent": "mysql",
+      "flavor": "aws-rds",
+      "version": "1.0",
+      "clouds": [
+        "aws"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/mysql",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "aws_cloud_account": {
+          "type": "@facets/aws_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "aws"
+          ],
+          "attributesUsed": [
+            "aws_iam_role",
+            "aws_region",
+            "external_id",
+            "session_name"
+          ],
+          "interfacesUsed": []
+        },
+        "vpc_details": {
+          "type": "@facets/aws-vpc-details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "availability_zones",
+            "private_subnet_ids",
+            "public_subnet_ids",
+            "vpc_cidr_block",
+            "vpc_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {
+        "reader": [],
+        "writer": []
+      }
+    },
+    {
+      "id": "mysql/azure-flexible-server/1.0",
+      "intent": "mysql",
+      "flavor": "azure-flexible-server",
+      "version": "1.0",
+      "clouds": [
+        "azure"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/mysql",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "azure_provider": {
+          "type": "@facets/azure_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "azurerm"
+          ],
+          "attributesUsed": [
+            "client_id",
+            "client_secret",
+            "subscription_id",
+            "tenant_id"
+          ],
+          "interfacesUsed": []
+        },
+        "network_details": {
+          "type": "@facets/azure-network-details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "availability_zones",
+            "database_mysql_subnet_id",
+            "mysql_dns_zone_id",
+            "private_subnet_ids",
+            "region",
+            "resource_group_name",
+            "vnet_cidr_block",
+            "vnet_id",
+            "vnet_name"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {
+        "reader": [],
+        "writer": []
+      }
+    },
+    {
+      "id": "mysql/gcp-cloudsql/1.0",
+      "intent": "mysql",
+      "flavor": "gcp-cloudsql",
+      "version": "1.0",
+      "clouds": [
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/mysql",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "gcp_provider": {
+          "type": "@facets/gcp_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "google"
+          ],
+          "attributesUsed": [
+            "credentials",
+            "project"
+          ],
+          "interfacesUsed": []
+        },
+        "network": {
+          "type": "@facets/gcp-network-details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "database_subnet_cidrs",
+            "database_subnet_ids",
+            "region",
+            "vpc_self_link"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {
+        "reader": [],
+        "writer": []
+      }
+    },
+    {
+      "id": "mysql/kubeblocks/1.0",
+      "intent": "mysql",
+      "flavor": "kubeblocks",
+      "version": "1.0",
+      "clouds": [
+        "kubernetes",
+        "aws",
+        "azure",
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/mysql",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubeblocks_operator": {
+          "type": "@facets/kubeblocks-operator",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "chart_version",
+            "namespace",
+            "release_id",
+            "version"
+          ],
+          "interfacesUsed": []
+        },
+        "kubernetes_cluster": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "kubernetes",
+            "helm"
+          ],
+          "attributesUsed": [
+            "cluster_name",
+            "region"
+          ],
+          "interfacesUsed": []
+        },
+        "node_pool": {
+          "type": "@facets/kubernetes_nodepool",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "node_pool_id",
+            "node_pool_name",
+            "node_selector",
+            "taints"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {
+        "writer": [],
+        "reader": []
+      }
+    },
+    {
+      "id": "network/aws_network/1.0",
+      "intent": "network",
+      "flavor": "aws_network",
+      "version": "1.0",
+      "clouds": [
+        "aws"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/aws-vpc-details",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/aws_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "aws"
+          ],
+          "attributesUsed": [
+            "aws_iam_role",
+            "aws_region",
+            "external_id",
+            "session_name"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "vpc_id": "aws_vpc.main.id",
+        "vpc_cidr_block": "aws_vpc.main.cidr_block",
+        "nat_gateway_ids": "values(aws_nat_gateway.main)[*].id",
+        "public_subnet_ids": "values(aws_subnet.public)[*].id",
+        "availability_zones": "local.selected_azs",
+        "private_subnet_ids": "values(aws_subnet.private)[*].id",
+        "database_subnet_ids": "values(aws_subnet.database)[*].id",
+        "database_subnet_group_name": "aws_db_subnet_group.database.name",
+        "internet_gateway_id": "aws_internet_gateway.main.id",
+        "vpc_endpoint_s3_id": "try(aws_vpc_endpoint.s3[0].id, null)",
+        "vpc_endpoint_dynamodb_id": "try(aws_vpc_endpoint.dynamodb[0].id, null)",
+        "vpc_endpoint_ecr_api_id": "try(aws_vpc_endpoint.ecr_api[0].id, null)",
+        "vpc_endpoint_ecr_dkr_id": "try(aws_vpc_endpoint.ecr_dkr[0].id, null)",
+        "vpc_endpoints_security_group_id": "try(aws_security_group.vpc_endpoints[0].id, null)"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "network/azure_network/1.1",
+      "intent": "network",
+      "flavor": "azure_network",
+      "version": "1.1",
+      "clouds": [
+        "azure"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/azure-network-details",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/azure_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "azurerm"
+          ],
+          "attributesUsed": [
+            "client_id",
+            "client_secret",
+            "subscription_id",
+            "tenant_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "resource_group_id": "azurerm_resource_group.main.id",
+        "resource_group_name": "azurerm_resource_group.main.name",
+        "vnet_id": "azurerm_virtual_network.main.id",
+        "vnet_name": "azurerm_virtual_network.main.name",
+        "vnet_cidr_block": "var.instance.spec.vnet_cidr",
+        "region": "azurerm_resource_group.main.location",
+        "availability_zones": "var.instance.spec.availability_zones",
+        "nat_gateway_ids": "values(azurerm_nat_gateway.main)[*].id",
+        "nat_gateway_public_ip_ids": "values(azurerm_public_ip.nat_gateway)[*].id",
+        "public_subnet_ids": "values(azurerm_subnet.public)[*].id",
+        "private_subnet_ids": "values(azurerm_subnet.private)[*].id",
+        "public_subnet_cidrs": "[for subnet in local.public_subnets : subnet.cidr_block]",
+        "private_subnet_cidrs": "[for subnet in local.private_subnets : subnet.cidr_block]",
+        "default_security_group_id": "azurerm_network_security_group.allow_all_default.id",
+        "database_general_subnet_id": "local.enable_general_database_subnet ? azurerm_subnet.database_subnets[0].id : null",
+        "database_general_subnet_name": "local.enable_general_database_subnet ? azurerm_subnet.database_subnets[0].name : null",
+        "database_general_subnet_cidr": "local.enable_general_database_subnet ? local.database_subnet_cidrs.general : null",
+        "database_postgresql_subnet_id": "local.enable_postgresql_flexible_subnet ? azurerm_subnet.database_flexibleserver_postgresql[0].id : null",
+        "database_postgresql_subnet_name": "local.enable_postgresql_flexible_subnet ? azurerm_subnet.database_flexibleserver_postgresql[0].name : null",
+        "database_postgresql_subnet_cidr": "local.enable_postgresql_flexible_subnet ? local.database_subnet_cidrs.postgresql : null",
+        "database_mysql_subnet_id": "local.enable_mysql_flexible_subnet ? azurerm_subnet.database_flexibleserver_mysql[0].id : null",
+        "database_mysql_subnet_name": "local.enable_mysql_flexible_subnet ? azurerm_subnet.database_flexibleserver_mysql[0].name : null",
+        "database_mysql_subnet_cidr": "local.enable_mysql_flexible_subnet ? local.database_subnet_cidrs.mysql : null",
+        "postgresql_dns_zone_id": "local.create_postgresql_dns_zone ? azurerm_private_dns_zone.postgresql[0].id : null",
+        "postgresql_dns_zone_name": "local.create_postgresql_dns_zone ? azurerm_private_dns_zone.postgresql[0].name : null",
+        "mysql_dns_zone_id": "local.create_mysql_dns_zone ? azurerm_private_dns_zone.mysql[0].id : null",
+        "mysql_dns_zone_name": "local.create_mysql_dns_zone ? azurerm_private_dns_zone.mysql[0].name : null"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "network/gcp_network/1.0",
+      "intent": "network",
+      "flavor": "gcp_network",
+      "version": "1.0",
+      "clouds": [
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/gcp-network-details",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/gcp_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "google"
+          ],
+          "attributesUsed": [
+            "credentials",
+            "project_id",
+            "region"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "vpc_id": "google_compute_network.vpc.id",
+        "vpc_name": "google_compute_network.vpc.name",
+        "vpc_self_link": "google_compute_network.vpc.self_link",
+        "region": "local.gcp_region",
+        "project_id": "local.gcp_project",
+        "zones": "local.selected_zones",
+        "private_subnet_id": "google_compute_subnetwork.private.id",
+        "private_subnet_name": "google_compute_subnetwork.private.name",
+        "private_subnet_cidr": "google_compute_subnetwork.private.ip_cidr_range",
+        "public_subnet_id": "google_compute_subnetwork.public.id",
+        "public_subnet_name": "google_compute_subnetwork.public.name",
+        "public_subnet_cidr": "google_compute_subnetwork.public.ip_cidr_range",
+        "database_subnet_id": "google_compute_subnetwork.database.id",
+        "database_subnet_name": "google_compute_subnetwork.database.name",
+        "database_subnet_cidr": "google_compute_subnetwork.database.ip_cidr_range",
+        "internal_lb_subnet_id": "google_compute_subnetwork.internal_lb.id",
+        "internal_lb_subnet_name": "google_compute_subnetwork.internal_lb.name",
+        "internal_lb_subnet_cidr": "google_compute_subnetwork.internal_lb.ip_cidr_range",
+        "gke_pods_range_name": "\"${local.name_prefix}-gke-pods\"",
+        "gke_pods_cidr": "local.gke_pods_subnet_cidr",
+        "gke_services_range_name": "\"${local.name_prefix}-gke-services\"",
+        "gke_services_cidr": "local.gke_services_subnet_cidr",
+        "router_id": "google_compute_router.router.id",
+        "router_name": "google_compute_router.router.name",
+        "nat_id": "google_compute_router_nat.nat.id",
+        "nat_name": "google_compute_router_nat.nat.name",
+        "google_services_network": "google_service_networking_connection.google_services.network",
+        "google_services_cidr": "\"${google_compute_global_address.google_services.address}/${google_compute_global_address.google_services.prefix_length}\"",
+        "database_subnet_ids": "[google_compute_subnetwork.database.id]",
+        "database_subnet_cidrs": "[google_compute_subnetwork.database.ip_cidr_range]",
+        "private_services_connection_id": "google_service_networking_connection.google_services.id",
+        "private_services_connection_status": "true",
+        "private_services_peering_connection": "google_service_networking_connection.google_services.peering",
+        "private_services_range_address": "google_compute_global_address.google_services.address",
+        "private_services_range_id": "google_compute_global_address.google_services.id",
+        "private_services_range_name": "google_compute_global_address.google_services.name",
+        "firewall_rule_ids": "compact([",
+        "network_tags": "local.network_tags",
+        "total_private_ips": "local.total_private_ips",
+        "total_public_ips": "local.total_public_ips",
+        "total_database_ips": "local.total_database_ips",
+        "total_gke_pod_ips": "local.total_gke_pods",
+        "total_gke_service_ips": "local.total_gke_services",
+        "reserved_ips": "local.reserved_ips"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "postgres/aws-aurora/1.0",
+      "intent": "postgres",
+      "flavor": "aws-aurora",
+      "version": "1.0",
+      "clouds": [
+        "aws"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/postgres",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "aws_provider": {
+          "type": "@facets/aws_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "aws"
+          ],
+          "attributesUsed": [
+            "aws_iam_role",
+            "aws_region",
+            "external_id",
+            "session_name"
+          ],
+          "interfacesUsed": []
+        },
+        "vpc_details": {
+          "type": "@facets/aws-vpc-details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "availability_zones",
+            "private_subnet_ids",
+            "vpc_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {
+        "reader": [],
+        "writer": []
+      }
+    },
+    {
+      "id": "postgres/aws-rds/1.0",
+      "intent": "postgres",
+      "flavor": "aws-rds",
+      "version": "1.0",
+      "clouds": [
+        "aws"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/postgres",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "aws_provider": {
+          "type": "@facets/aws_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "aws"
+          ],
+          "attributesUsed": [
+            "aws_iam_role",
+            "aws_region",
+            "external_id",
+            "session_name"
+          ],
+          "interfacesUsed": []
+        },
+        "vpc_details": {
+          "type": "@facets/aws-vpc-details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "private_subnet_ids",
+            "vpc_cidr_block",
+            "vpc_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {
+        "reader": [],
+        "writer": []
+      }
+    },
+    {
+      "id": "postgres/azure-flexible-server/1.0",
+      "intent": "postgres",
+      "flavor": "azure-flexible-server",
+      "version": "1.0",
+      "clouds": [
+        "azure"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/postgres",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "azure_provider": {
+          "type": "@facets/azure_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "azurerm"
+          ],
+          "attributesUsed": [
+            "client_id",
+            "client_secret",
+            "subscription_id",
+            "tenant_id"
+          ],
+          "interfacesUsed": []
+        },
+        "network_details": {
+          "type": "@facets/azure-network-details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "availability_zones",
+            "database_postgresql_subnet_cidr",
+            "database_postgresql_subnet_id",
+            "database_postgresql_subnet_name",
+            "postgresql_dns_zone_id",
+            "postgresql_dns_zone_name",
+            "private_subnet_ids",
+            "region",
+            "resource_group_name",
+            "vnet_cidr_block",
+            "vnet_id",
+            "vnet_name"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {
+        "reader": [],
+        "writer": []
+      }
+    },
+    {
+      "id": "postgres/gcp-cloudsql/1.0",
+      "intent": "postgres",
+      "flavor": "gcp-cloudsql",
+      "version": "1.0",
+      "clouds": [
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/postgres",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "gcp_provider": {
+          "type": "@facets/gcp_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "google"
+          ],
+          "attributesUsed": [
+            "credentials",
+            "project"
+          ],
+          "interfacesUsed": []
+        },
+        "network": {
+          "type": "@facets/gcp-network-details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "database_subnet_cidrs",
+            "database_subnet_ids",
+            "firewall_rule_ids",
+            "nat_gateway_ids",
+            "private_services_connection_id",
+            "private_services_connection_status",
+            "private_services_peering_connection",
+            "private_services_range_address",
+            "private_services_range_id",
+            "private_services_range_name",
+            "private_subnet_cidrs",
+            "private_subnet_ids",
+            "project_id",
+            "public_subnet_cidrs",
+            "public_subnet_ids",
+            "region",
+            "router_ids",
+            "vpc_id",
+            "vpc_name",
+            "vpc_self_link",
+            "zones"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {
+        "reader": [],
+        "writer": []
+      }
+    },
+    {
+      "id": "postgres/kubeblocks/1.0",
+      "intent": "postgres",
+      "flavor": "kubeblocks",
+      "version": "1.0",
+      "clouds": [
+        "kubernetes",
+        "aws",
+        "azure",
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/postgres",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubeblocks_operator": {
+          "type": "@facets/kubeblocks-operator",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "chart_version",
+            "namespace",
+            "release_id",
+            "version"
+          ],
+          "interfacesUsed": []
+        },
+        "kubernetes_cluster": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "kubernetes",
+            "helm"
+          ],
+          "attributesUsed": [
+            "cluster_name",
+            "region"
+          ],
+          "interfacesUsed": []
+        },
+        "node_pool": {
+          "type": "@facets/kubernetes_nodepool",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "node_pool_id",
+            "node_pool_name",
+            "node_selector",
+            "taints"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {
+        "writer": [],
+        "reader": []
+      }
+    },
+    {
+      "id": "prometheus/k8s_standard/1.1",
+      "intent": "prometheus",
+      "flavor": "k8s_standard",
+      "version": "1.1",
+      "clouds": [
+        "aws",
+        "azure",
+        "gcp",
+        "kubernetes"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/prometheus",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": {
+            "resource_type": "kubernetes_cluster",
+            "resource_name": "default"
+          },
+          "providers": [
+            "kubernetes",
+            "kubernetes-alpha",
+            "helm"
+          ],
+          "attributesUsed": [
+            "cloud_provider",
+            "cluster_endpoint",
+            "cluster_id",
+            "cluster_location",
+            "cluster_name"
+          ],
+          "interfacesUsed": [
+            "kubernetes"
+          ]
+        },
+        "kubernetes_node_pool_details": {
+          "type": "@facets/kubernetes_nodepool",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "node_class_name",
+            "node_pool_name",
+            "node_selector",
+            "taints"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "namespace": "local.namespace",
+        "prometheus_url": "\"http://${module.name.name}.${var.environment.namespace}.svc.cluster.local:9090\"",
+        "alertmanager_url": "\"http://${module.name.name}-alertmanager.${var.environment.namespace}.svc.cluster.local:9093\"",
+        "grafana_url": "\"http://${module.name.name}-grafana.${var.environment.namespace}.svc.cluster.local:80\"",
+        "helm_release_id": "helm_release.prometheus-operator.id",
+        "prometheus_release": "module.name.name",
+        "prometheus_service": "\"${module.name.name}-prometheus\"",
+        "alertmanager_service": "\"${module.name.name}-alertmanager\"",
+        "grafana_service": "\"${module.name.name}-grafana\""
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "pubsub/gcp/1.0",
+      "intent": "pubsub",
+      "flavor": "gcp",
+      "version": "1.0",
+      "clouds": [
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/pubsub",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/gcp_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "google"
+          ],
+          "attributesUsed": [
+            "credentials",
+            "project_id",
+            "region"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "publisher_role": "\"roles/pubsub.publisher\"",
+        "subscriber_role": "\"roles/pubsub.subscriber\"",
+        "project_id": "local.gcp_project"
+      },
+      "outputInterfaces": {
+        "default": []
+      }
+    },
+    {
+      "id": "redis/aws-elasticache/1.0",
+      "intent": "redis",
+      "flavor": "aws-elasticache",
+      "version": "1.0",
+      "clouds": [
+        "aws"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/redis",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "aws_provider": {
+          "type": "@facets/aws_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "aws"
+          ],
+          "attributesUsed": [
+            "aws_iam_role",
+            "aws_region",
+            "external_id",
+            "session_name"
+          ],
+          "interfacesUsed": []
+        },
+        "vpc_details": {
+          "type": "@facets/aws-vpc-details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "availability_zones",
+            "private_subnet_ids",
+            "vpc_cidr_block",
+            "vpc_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {
+        "cluster": []
+      }
+    },
+    {
+      "id": "redis/azure_cache_custom/1.0",
+      "intent": "redis",
+      "flavor": "azure_cache_custom",
+      "version": "1.0",
+      "clouds": [
+        "azure"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/redis",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "azure_provider": {
+          "type": "@facets/azure_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "azurerm"
+          ],
+          "attributesUsed": [
+            "client_id",
+            "client_secret",
+            "subscription_id",
+            "tenant_id"
+          ],
+          "interfacesUsed": []
+        },
+        "network_details": {
+          "type": "@facets/azure-network-details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "availability_zones",
+            "database_general_subnet_cidr",
+            "database_general_subnet_id",
+            "database_general_subnet_name",
+            "default_security_group_id",
+            "private_subnet_cidrs",
+            "private_subnet_ids",
+            "public_subnet_cidrs",
+            "public_subnet_ids",
+            "region",
+            "resource_group_id",
+            "resource_group_name",
+            "vnet_cidr_block",
+            "vnet_id",
+            "vnet_name"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {
+        "cluster": []
+      }
+    },
+    {
+      "id": "redis/gcp-memorystore/1.0",
+      "intent": "redis",
+      "flavor": "gcp-memorystore",
+      "version": "1.0",
+      "clouds": [
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/redis",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "gcp_provider": {
+          "type": "@facets/gcp_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "google"
+          ],
+          "attributesUsed": [
+            "credentials",
+            "project_id"
+          ],
+          "interfacesUsed": []
+        },
+        "network": {
+          "type": "@facets/gcp-network-details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "database_subnet_cidrs",
+            "database_subnet_ids",
+            "private_services_connection_id",
+            "private_services_connection_status",
+            "private_services_peering_connection",
+            "private_services_range_address",
+            "private_services_range_id",
+            "private_services_range_name",
+            "project_id",
+            "region",
+            "vpc_name",
+            "vpc_self_link"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "server_ca_certs": "sensitive(local.enable_tls ? google_redis_instance.main.server_ca_certs : [])",
+        "secrets": "[\"server_ca_certs\"]"
+      },
+      "outputInterfaces": {
+        "cluster": []
+      }
+    },
+    {
+      "id": "redis/kubeblocks/1.0",
+      "intent": "redis",
+      "flavor": "kubeblocks",
+      "version": "1.0",
+      "clouds": [
+        "kubernetes",
+        "aws",
+        "azure",
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/redis",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubeblocks_operator": {
+          "type": "@facets/kubeblocks-operator",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "chart_version",
+            "namespace",
+            "release_id",
+            "version"
+          ],
+          "interfacesUsed": []
+        },
+        "kubernetes_cluster": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "kubernetes",
+            "helm"
+          ],
+          "attributesUsed": [
+            "cluster_name",
+            "region"
+          ],
+          "interfacesUsed": []
+        },
+        "node_pool": {
+          "type": "@facets/kubernetes_nodepool",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "node_pool_id",
+            "node_pool_name",
+            "node_selector",
+            "taints"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {},
+      "outputInterfaces": {
+        "writer": [],
+        "reader": [],
+        "cluster": []
+      }
+    },
+    {
+      "id": "service/aws/1.0",
+      "intent": "service",
+      "flavor": "aws",
+      "version": "1.0",
+      "clouds": [
+        "aws"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/service",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/aws_cloud_account",
+          "optional": false,
+          "default": {
+            "resource_type": "cloud_account",
+            "resource_name": "default"
+          },
+          "providers": [
+            "aws"
+          ],
+          "attributesUsed": [
+            "aws_iam_role",
+            "aws_region",
+            "external_id",
+            "session_name"
+          ],
+          "interfacesUsed": []
+        },
+        "kubernetes_details": {
+          "type": "@facets/eks",
+          "optional": false,
+          "default": {
+            "resource_type": "kubernetes_cluster",
+            "resource_name": "default"
+          },
+          "providers": [
+            "kubernetes",
+            "kubernetes-alpha",
+            "helm"
+          ],
+          "attributesUsed": [],
+          "interfacesUsed": []
+        },
+        "kubernetes_node_pool_details": {
+          "type": "@facets/aws_karpenter_nodepool",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "node_class_name",
+            "node_pool_name",
+            "node_selector",
+            "taints"
+          ],
+          "interfacesUsed": []
+        },
+        "artifactories": {
+          "type": "@facets/artifactories",
+          "optional": true,
+          "default": {
+            "resource_type": "artifactories",
+            "resource_name": "default"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "registry_secret_objects",
+            "registry_secrets_list"
+          ],
+          "interfacesUsed": []
+        },
+        "vpa_details": {
+          "type": "@facets/vpa",
+          "optional": true,
+          "default": {
+            "resource_type": "vpa",
+            "resource_name": "default"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "admission_controller_enabled",
+            "helm_release_id",
+            "helm_release_name",
+            "namespace",
+            "recommender_enabled",
+            "updater_enabled",
+            "version"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "selector_labels": "module.app-helm-chart.selector_labels",
+        "namespace": "module.app-helm-chart.namespace",
+        "resource_type": "local.resource_type",
+        "resource_name": "local.resource_name",
+        "service_name": "var.instance_name",
+        "service_account_arn": "local.enable_irsa ? module.irsa.0.iam_role_arn : aws_iam_role.application-role.0.arn"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "service/azure/1.0",
+      "intent": "service",
+      "flavor": "azure",
+      "version": "1.0",
+      "clouds": [
+        "azure"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/service",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/azure_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "azurerm"
+          ],
+          "attributesUsed": [
+            "client_id",
+            "subscription_id",
+            "tenant_id"
+          ],
+          "interfacesUsed": []
+        },
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": {
+            "resource_type": "kubernetes_cluster",
+            "resource_name": "default"
+          },
+          "providers": [
+            "kubernetes",
+            "kubernetes-alpha",
+            "helm"
+          ],
+          "attributesUsed": [],
+          "interfacesUsed": []
+        },
+        "kubernetes_node_pool_details": {
+          "type": "@facets/azure_aks_nodepool",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "cluster_id",
+            "disk_size",
+            "node_count",
+            "node_pool_name",
+            "node_selector",
+            "taints"
+          ],
+          "interfacesUsed": []
+        },
+        "artifactories": {
+          "type": "@facets/artifactories",
+          "optional": true,
+          "default": {
+            "resource_type": "artifactories",
+            "resource_name": "default"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "registry_secrets_list"
+          ],
+          "interfacesUsed": []
+        },
+        "vpa_details": {
+          "type": "@facets/vpa",
+          "optional": true,
+          "default": {
+            "resource_type": "vpa",
+            "resource_name": "default"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "helm_release_id"
+          ],
+          "interfacesUsed": []
+        },
+        "network_details": {
+          "type": "@facets/azure-network-details",
+          "optional": false,
+          "default": {
+            "resource_type": "network",
+            "resource_name": "default"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "availability_zones",
+            "private_subnet_cidrs",
+            "private_subnet_ids",
+            "public_subnet_cidrs",
+            "public_subnet_ids",
+            "region",
+            "resource_group_id",
+            "resource_group_name",
+            "vnet_cidr_block",
+            "vnet_id",
+            "vnet_name"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "selector_labels": "module.app-helm-chart.selector_labels",
+        "namespace": "module.app-helm-chart.namespace",
+        "resource_type": "local.resource_type",
+        "resource_name": "local.resource_name",
+        "service_name": "var.instance_name"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "service/gcp/1.0",
+      "intent": "service",
+      "flavor": "gcp",
+      "version": "1.0",
+      "clouds": [
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/service",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "kubernetes",
+            "kubernetes-alpha",
+            "helm"
+          ],
+          "attributesUsed": [],
+          "interfacesUsed": []
+        },
+        "kubernetes_node_pool_details": {
+          "type": "@facets/gke_node_pool_details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [],
+          "interfacesUsed": []
+        },
+        "artifactories": {
+          "type": "@facets/artifactories",
+          "optional": true,
+          "default": {
+            "resource_type": "artifactories",
+            "resource_name": "default"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "registry_secret_objects",
+            "registry_secrets_list"
+          ],
+          "interfacesUsed": []
+        },
+        "vpa_details": {
+          "type": "@facets/vpa",
+          "optional": true,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "helm_release_id"
+          ],
+          "interfacesUsed": []
+        },
+        "gcp_cloud_account": {
+          "type": "@facets/gcp_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "google",
+            "google-beta"
+          ],
+          "attributesUsed": [
+            "project_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "selector_labels": "module.app-helm-chart.selector_labels",
+        "namespace": "module.app-helm-chart.namespace",
+        "resource_type": "local.resource_type",
+        "resource_name": "local.resource_name",
+        "service_name": "var.instance_name"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "strimzi-operator/helm/1.0",
+      "intent": "strimzi-operator",
+      "flavor": "helm",
+      "version": "1.0",
+      "clouds": [
+        "aws",
+        "azure",
+        "gcp",
+        "kubernetes"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/strimzi-operator",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_cluster": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "kubernetes",
+            "helm"
+          ],
+          "attributesUsed": [],
+          "interfacesUsed": []
+        },
+        "node_pool": {
+          "type": "@facets/kubernetes_nodepool",
+          "optional": true,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "node_class_name",
+            "node_pool_name",
+            "node_selector",
+            "taints"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "namespace": "local.namespace",
+        "release_name": "helm_release.strimzi_operator.name",
+        "chart_version": "helm_release.strimzi_operator.version",
+        "operator_name": "\"strimzi-cluster-operator\"",
+        "repository": "local.repository",
+        "chart_name": "local.chart_name",
+        "status": "helm_release.strimzi_operator.status",
+        "revision": "helm_release.strimzi_operator.metadata[0].revision"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "vpa/standard/1.0",
+      "intent": "vpa",
+      "flavor": "standard",
+      "version": "1.0",
+      "clouds": [
+        "aws",
+        "azure",
+        "gcp",
+        "kubernetes"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/vpa",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "prometheus_details": {
+          "type": "@facets/prometheus",
+          "optional": false,
+          "default": {
+            "resource_type": "prometheus",
+            "resource_name": "default"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "alertmanager_url",
+            "helm_release_id",
+            "prometheus_url"
+          ],
+          "interfacesUsed": []
+        },
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": {
+            "resource_type": "kubernetes_cluster",
+            "resource_name": "default"
+          },
+          "providers": [
+            "kubernetes",
+            "kubernetes-alpha",
+            "helm"
+          ],
+          "attributesUsed": [
+            "cloud_provider",
+            "cluster_endpoint",
+            "cluster_id",
+            "cluster_location",
+            "cluster_name"
+          ],
+          "interfacesUsed": [
+            "kubernetes"
+          ]
+        },
+        "kubernetes_node_pool_details": {
+          "type": "@facets/kubernetes_nodepool",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "node_class_name",
+            "node_pool_name",
+            "node_selector",
+            "taints"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "helm_release_id": "helm_release.vpa.id",
+        "helm_release_name": "helm_release.vpa.name",
+        "namespace": "local.vpa_namespace",
+        "version": "local.vpa_version",
+        "recommender_enabled": "local.recommender_enabled",
+        "updater_enabled": "local.updater_enabled",
+        "admission_controller_enabled": "local.admission_controller_enabled"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "wireguard-operator/standard/1.0",
+      "intent": "wireguard-operator",
+      "flavor": "standard",
+      "version": "1.0",
+      "clouds": [
+        "aws",
+        "azure",
+        "gcp",
+        "kubernetes"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/wireguard-details",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "kubernetes",
+            "helm"
+          ],
+          "attributesUsed": [
+            "cluster_name",
+            "legacy_outputs",
+            "region"
+          ],
+          "interfacesUsed": [
+            "kubernetes_cluster_ca_certificate",
+            "kubernetes_host",
+            "kubernetes_token"
+          ]
+        },
+        "node_pool": {
+          "type": "@facets/kubernetes_nodepool",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "node_pool_id",
+            "node_pool_name",
+            "node_selector",
+            "taints"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "release_name": "helm_release.wireguard_operator.name",
+        "namespace": "helm_release.wireguard_operator.namespace",
+        "chart": "helm_release.wireguard_operator.chart",
+        "version": "helm_release.wireguard_operator.version",
+        "status": "helm_release.wireguard_operator.status"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "wireguard-vpn/standard/1.0",
+      "intent": "wireguard-vpn",
+      "flavor": "standard",
+      "version": "1.0",
+      "clouds": [
+        "aws",
+        "azure",
+        "gcp",
+        "kubernetes"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/wireguard-vpn-details",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "kubernetes",
+            "helm"
+          ],
+          "attributesUsed": [
+            "cloud_provider",
+            "cluster_name",
+            "legacy_outputs",
+            "region"
+          ],
+          "interfacesUsed": [
+            "kubernetes_cluster_ca_certificate",
+            "kubernetes_host",
+            "kubernetes_token"
+          ]
+        },
+        "node_pool": {
+          "type": "@facets/kubernetes_nodepool",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "node_pool_id",
+            "node_pool_name",
+            "node_selector",
+            "taints"
+          ],
+          "interfacesUsed": []
+        },
+        "wireguard_operator": {
+          "type": "@facets/wireguard-details",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "chart",
+            "namespace",
+            "release_id",
+            "status",
+            "version"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "name": "var.instance_name",
+        "namespace": "local.namespace",
+        "mtu": "local.mtu",
+        "service_type": "local.service_type",
+        "enable_ip_forward": "local.enable_ip_forward",
+        "operator_namespace": "local.operator_namespace"
+      },
+      "outputInterfaces": {}
+    }
+  ],
+  "_metadata": {
+    "totalModules": 63,
+    "generatedFrom": "facets-modules-redesign/modules/",
+    "description": "Comprehensive wiring data model showing how modules connect at the attribute level"
+  }
+}

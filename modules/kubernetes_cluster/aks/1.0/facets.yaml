@@ -6,6 +6,11 @@ clouds:
 title: AKS Cluster with Auto-Upgrade Support
 description: A Kubernetes AKS cluster module with auto-upgrade enabled by default
   and all necessary configurations preset.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Azure AKS cluster with auto-upgrade enabled and all necessary configurations preset
+  displayName: Kubernetes Cluster
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_cluster.svg
 allow_skipping_module_on_selective_release: false
 spec:
   type: object
@@ -288,13 +293,12 @@ inputs:
     - azapi
 outputs:
   default:
+    type: '@facets/azure_aks'
+    title: AKS Cluster Attributes
+    description: Additional AKS cluster attributes without provider configuration
+  attributes:
     type: '@facets/kubernetes-details'
     title: Kubernetes Cluster Output
-    description: The output for the Kubernetes cluster
-  attributes:
-    type: '@facets/azure_aks'
-    title: Kubernetes Cluster Output
-    description: The output for the Kubernetes cluster
     providers:
       kubernetes:
         source: hashicorp/kubernetes
@@ -325,8 +329,6 @@ sample:
   kind: kubernetes_cluster
   flavor: aks
   version: '1.0'
-  metadata:
-    name: aks-cluster
   spec:
     cluster:
       cluster_endpoint_public_access_cidrs:

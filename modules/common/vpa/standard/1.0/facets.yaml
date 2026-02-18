@@ -3,6 +3,11 @@ flavor: standard
 version: '1.0'
 description: Deploys Vertical Pod Autoscaler (VPA) for automatic resource recommendations
   and right-sizing
+intentDetails:
+  type: Kubernetes Resources
+  description: Vertical Pod Autoscaler for automatic resource recommendations and right-sizing
+  displayName: VPA
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/vpa.svg
 clouds:
 - aws
 - azure
@@ -193,7 +198,6 @@ sample:
   kind: vpa
   flavor: standard
   disabled: false
-  metadata: {}
   version: '1.0'
   spec:
     version: 2.5.1

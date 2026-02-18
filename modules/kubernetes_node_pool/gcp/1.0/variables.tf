@@ -6,6 +6,7 @@ variable "instance" {
       min_node_count = 1
       max_node_count = 1
       disk_size      = 100
+      disk_type      = "pd-standard"
       taints         = []
       labels         = {}
     }
@@ -55,31 +56,34 @@ variable "inputs" {
       interfaces = optional(object({}), {})
     })
     kubernetes_details = optional(object({
-      auto_upgrade           = optional(bool)
-      cloud_provider         = optional(string)
-      cluster_ca_certificate = optional(string)
-      cluster_endpoint       = optional(string)
-      cluster_id             = optional(string)
-      cluster_ipv4_cidr      = optional(string)
-      cluster_location       = optional(string)
-      cluster_name           = optional(string)
-      cluster_version        = optional(string)
-      kubernetes_provider_exec = optional(object({
-        api_version = optional(string)
-        args        = optional(list(string))
-        command     = optional(string)
-      }))
-      maintenance_policy_enabled             = optional(bool)
-      master_authorized_networks_config      = optional(list(string))
-      network                                = optional(string)
-      pods_range_name                        = optional(string)
-      project_id                             = optional(string)
-      region                                 = optional(string)
-      release_channel                        = optional(string)
-      secrets                                = optional(string)
-      services_range_name                    = optional(string)
-      subnetwork                             = optional(string)
-      workload_identity_config_workload_pool = optional(string)
+      attributes = optional(object({
+        auto_upgrade           = optional(string)
+        cloud_provider         = optional(string)
+        cluster_ca_certificate = optional(string)
+        cluster_endpoint       = optional(string)
+        cluster_id             = optional(string)
+        cluster_ipv4_cidr      = optional(string)
+        cluster_location       = optional(string)
+        cluster_name           = optional(string)
+        cluster_version        = optional(string)
+        kubernetes_provider_exec = optional(object({
+          api_version = optional(string)
+          args        = optional(list(string))
+          command     = optional(string)
+        }))
+        maintenance_policy_enabled             = optional(string)
+        master_authorized_networks_config      = optional(list(string))
+        network                                = optional(string)
+        pods_range_name                        = optional(string)
+        project_id                             = optional(string)
+        region                                 = optional(string)
+        release_channel                        = optional(string)
+        secrets                                = optional(string)
+        services_range_name                    = optional(string)
+        subnetwork                             = optional(string)
+        workload_identity_config_workload_pool = optional(string)
+      }), {})
+      interfaces = optional(object({}), {})
     }), {})
   })
 }

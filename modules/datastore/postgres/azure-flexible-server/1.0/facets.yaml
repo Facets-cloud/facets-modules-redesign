@@ -5,6 +5,11 @@ clouds:
 - azure
 description: A developer-friendly PostgreSQL flexible server with secure defaults
   and restore capabilities
+intentDetails:
+  type: Datastores
+  description: Azure Database for PostgreSQL flexible server
+  displayName: PostgreSQL
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/postgres.svg
 spec:
   title: PostgreSQL Flexible Server on Azure
   description: A developer-friendly PostgreSQL flexible server with secure defaults

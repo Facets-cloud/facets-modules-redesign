@@ -6,6 +6,11 @@ clouds:
 title: GKE Cluster Control Plane
 description: Creates a GKE cluster control plane without default node pool. Use kubernetes_node_pool
   module to add node pools.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: GKE cluster control plane without default node pool for flexible node management
+  displayName: Kubernetes Cluster
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_cluster.svg
 spec:
   type: object
   properties:
@@ -29,7 +34,6 @@ spec:
       title: GKE Logging Components
       description: Configuration for GKE logging components. SYSTEM_COMPONENTS is
         required and enabled by default. Add other components as needed.
-      x-ui-toggle: true
       patternProperties:
         .*:
           type: object
@@ -74,6 +78,10 @@ inputs:
     - google-beta
 outputs:
   default:
+    type: '@facets/gke'
+    title: GKE Cluster Attributes
+    description: Additional GKE cluster attributes without provider configuration
+  attributes:
     type: '@facets/kubernetes-details'
     title: Kubernetes Cluster Output
     providers:
@@ -81,37 +89,33 @@ outputs:
         source: hashicorp/kubernetes
         version: 2.38.0
         attributes:
-          host: attributes.cluster_endpoint
-          cluster_ca_certificate: attributes.cluster_ca_certificate
+          host: cluster_endpoint
+          cluster_ca_certificate: cluster_ca_certificate
           exec:
-            api_version: attributes.kubernetes_provider_exec.api_version
-            command: attributes.kubernetes_provider_exec.command
-            args: attributes.kubernetes_provider_exec.args
+            api_version: kubernetes_provider_exec.api_version
+            command: kubernetes_provider_exec.command
+            args: kubernetes_provider_exec.args
       helm:
         source: hashicorp/helm
         version: 2.17.0
         attributes:
           kubernetes:
-            host: attributes.cluster_endpoint
-            cluster_ca_certificate: attributes.cluster_ca_certificate
+            host: cluster_endpoint
+            cluster_ca_certificate: cluster_ca_certificate
             exec:
-              api_version: attributes.kubernetes_provider_exec.api_version
-              command: attributes.kubernetes_provider_exec.command
-              args: attributes.kubernetes_provider_exec.args
+              api_version: kubernetes_provider_exec.api_version
+              command: kubernetes_provider_exec.command
+              args: kubernetes_provider_exec.args
       kubernetes-alpha:
         source: hashicorp/kubernetes-alpha
         version: 0.6.0
         attributes:
-          host: attributes.cluster_endpoint
-          cluster_ca_certificate: attributes.cluster_ca_certificate
+          host: cluster_endpoint
+          cluster_ca_certificate: cluster_ca_certificate
           exec:
-            api_version: attributes.kubernetes_provider_exec.api_version
-            command: attributes.kubernetes_provider_exec.command
-            args: attributes.kubernetes_provider_exec.args
-  attributes:
-    type: '@facets/gke'
-    title: GKE Cluster Attributes
-    description: Additional GKE cluster attributes without provider configuration
+            api_version: kubernetes_provider_exec.api_version
+            command: kubernetes_provider_exec.command
+            args: kubernetes_provider_exec.args
 sample:
   kind: kubernetes_cluster
   flavor: gke
@@ -123,4 +127,7 @@ sample:
     logging_components:
       system:
         name: SYSTEM_COMPONENTS
+        enabled: true
+      apiserver:
+        name: APISERVER
         enabled: true

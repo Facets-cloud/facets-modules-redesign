@@ -3,6 +3,11 @@ flavor: azure
 version: '1.0'
 description: Unified Azure cloud service module supporting deployment, cronjob, job,
   and statefulset workloads
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Deploy and manage containerized applications on Azure AKS
+  displayName: Service
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/service.svg
 clouds:
 - azure
 artifact_inputs:
@@ -55,14 +60,6 @@ inputs:
 outputs:
   default:
     type: '@facets/service'
-metadata:
-  title: Metadata of service
-  type: object
-  properties:
-    namespace:
-      type: string
-      title: Namespace
-      description: Namespace in which service should be deployed
 spec:
   title: AWS Cloud Service
   type: object
@@ -1634,9 +1631,6 @@ spec:
 sample:
   $schema: https://facets-cloud.github.io/facets-schemas/schemas/service/service.schema.json
   flavor: azure
-  metadata:
-    labels:
-      deliveryType: MANUAL
   kind: service
   disabled: true
   version: '1.0'

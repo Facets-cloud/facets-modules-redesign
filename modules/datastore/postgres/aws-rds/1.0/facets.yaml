@@ -5,6 +5,11 @@ clouds:
 - aws
 description: Managed PostgreSQL database using Amazon RDS with secure defaults and
   backup support
+intentDetails:
+  type: Datastores
+  description: AWS RDS PostgreSQL managed database service
+  displayName: PostgreSQL
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/postgres.svg
 spec:
   title: PostgreSQL RDS Database
   description: Managed PostgreSQL database using Amazon RDS with secure defaults and

@@ -1,0 +1,26 @@
+name: "@facets/gateway_api_crd"
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        version:
+          description: Gateway API version installed
+          type: string
+        channel:
+          description: Installation channel (standard or experimental)
+          type: string
+        install_url:
+          description: URL used to install the CRDs
+          type: string
+        job_name:
+          description: Name of the installer job
+          type: string
+        namespace:
+          description: Namespace where the job was created
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

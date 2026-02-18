@@ -6,6 +6,11 @@ clouds:
 description: Custom Azure Cache for Redis - A fully managed in-memory cache service
   built on open-source Redis, offering high performance and scalability for Azure
   applications.
+intentDetails:
+  type: Datastores
+  description: Azure Cache for Redis managed service
+  displayName: Redis
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/redis.svg
 spec:
   title: Custom Azure Cache for Redis
   description: Configure Azure Cache for Redis with developer-friendly settings

@@ -8,6 +8,11 @@ clouds:
 - gcp
 description: Creates and manages MySQL database clusters using KubeBlocks operator
   v1.0.1
+intentDetails:
+  type: Datastores
+  description: KubeBlocks-managed MySQL database on Kubernetes
+  displayName: MySQL
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mysql.svg
 inputs:
   kubeblocks_operator:
     type: '@facets/kubeblocks-operator'
@@ -61,7 +66,6 @@ spec:
       x-enum-descriptions:
         Delete: Delete pods and PVCs
         DoNotTerminate: Block cluster deletion
-        Halt: Delete pods but keep PVCs
         WipeOut: Delete everything including backups
     mysql_version:
       type: string

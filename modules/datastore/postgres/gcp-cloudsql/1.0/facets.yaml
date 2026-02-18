@@ -5,17 +5,22 @@ clouds:
 - gcp
 description: Managed PostgreSQL database using Google Cloud SQL with secure defaults
   and high availability
+intentDetails:
+  type: Datastores
+  description: Google Cloud SQL PostgreSQL managed database
+  displayName: PostgreSQL
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/postgres.svg
 spec:
   title: PostgreSQL CloudSQL Database
   description: Managed PostgreSQL database using Google Cloud SQL with secure defaults
     and high availability
   type: object
   x-ui-order:
-    - version_config
-    - sizing
-    - network_config
-    - restore_config
-    - imports
+  - version_config
+  - sizing
+  - network_config
+  - restore_config
+  - imports
   properties:
     version_config:
       type: object
@@ -50,7 +55,8 @@ spec:
         tier:
           type: string
           title: Instance Tier
-          description: Cloud SQL instance tier. PostgreSQL supports only shared-core or custom machine types.
+          description: Cloud SQL instance tier. PostgreSQL supports only shared-core
+            or custom machine types.
           enum:
           - db-f1-micro
           - db-g1-small
@@ -78,9 +84,9 @@ spec:
       title: Network Configuration
       x-ui-toggle: true
       x-ui-order:
-        - ipv4_enabled
-        - require_ssl
-        - authorized_networks
+      - ipv4_enabled
+      - require_ssl
+      - authorized_networks
       properties:
         ipv4_enabled:
           type: boolean
@@ -108,7 +114,8 @@ spec:
                 value:
                   type: string
                   title: CIDR Range
-                  description: CIDR notation (e.g., 0.0.0.0/0 for all, or specific IP/range)
+                  description: CIDR notation (e.g., 0.0.0.0/0 for all, or specific
+                    IP/range)
               required:
               - value
     restore_config:
@@ -148,7 +155,7 @@ spec:
           description: Master password for restored database (required when restoring)
           minLength: 8
           pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,}$
-          x-ui-error-message: "Password must be 8+ chars with valid characters."
+          x-ui-error-message: Password must be 8+ chars with valid characters.
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
             values:
@@ -176,7 +183,7 @@ spec:
           x-ui-visible-if:
             field: spec.imports.import_existing
             values:
-              - true
+            - true
         database_name:
           type: string
           title: Database Name
@@ -184,7 +191,7 @@ spec:
           x-ui-visible-if:
             field: spec.imports.import_existing
             values:
-              - true
+            - true
         user_name:
           type: string
           title: User Name
@@ -192,18 +199,18 @@ spec:
           x-ui-visible-if:
             field: spec.imports.import_existing
             values:
-              - true
+            - true
         master_password:
           type: string
           title: Master Password
           description: Master password for the imported resource (8+ characters)
           minLength: 8
           pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,}$
-          x-ui-error-message: "Password must be 8+ chars with valid characters."
+          x-ui-error-message: Password must be 8+ chars with valid characters.
           x-ui-visible-if:
             field: spec.imports.import_existing
             values:
-              - true
+            - true
   required:
   - version_config
   - sizing
@@ -236,7 +243,7 @@ inputs:
 outputs:
   default:
     type: '@facets/postgres'
-    title: PostgreSQL CloudSQL 
+    title: PostgreSQL CloudSQL
 iac:
   validated_files:
   - main.tf

@@ -1,8 +1,13 @@
 intent: prometheus
 flavor: k8s_standard
-version: '1.0'
+version: '1.1'
 description: Prometheus monitoring stack for Kubernetes with Grafana, Alertmanager,
   and kube-state-metrics
+intentDetails:
+  type: Monitoring & Observability
+  description: Prometheus monitoring stack for Kubernetes with Grafana and Alertmanager
+  displayName: Prometheus
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/prometheus.svg
 clouds:
 - aws
 - azure
@@ -449,10 +454,8 @@ spec:
 sample:
   $schema: https://facets-cloud.github.io/facets-schemas/schemas/prometheus/prometheus.schema.json
   flavor: k8s_standard
-  metadata:
-    namespace: default
   kind: prometheus
-  version: '1.0'
+  version: '1.1'
   disabled: true
   spec:
     enable_crds: true

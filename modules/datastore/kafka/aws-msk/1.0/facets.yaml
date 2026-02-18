@@ -5,6 +5,11 @@ clouds:
 - aws
 description: AWS Managed Streaming for Apache Kafka cluster with secure defaults and
   automatic scaling
+intentDetails:
+  type: Datastores
+  description: AWS Managed Streaming for Apache Kafka (MSK)
+  displayName: Kafka
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kafka.svg
 spec:
   title: AWS MSK Kafka Cluster
   description: AWS Managed Streaming for Apache Kafka cluster with secure defaults

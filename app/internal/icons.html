@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Facets Module Icons &amp; Cross-Cloud Matrix</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 40px; }
+    h1 { text-align: center; margin-bottom: 6px; color: #1a1a1a; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 30px; font-size: 14px; }
+    .section { margin-bottom: 40px; }
+    .section h2 {
+      color: #fff; margin-bottom: 16px; padding: 10px 16px; border-radius: 8px;
+      font-size: 16px; letter-spacing: 0.5px;
+    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    .card {
+      background: white; border-radius: 12px; padding: 18px; display: flex; gap: 14px; align-items: flex-start;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s;
+      border-left: 4px solid #ddd;
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+    .card .icon-box {
+      width: 52px; height: 52px; min-width: 52px; display: flex; align-items: center; justify-content: center;
+      background: #f8f9fa; border-radius: 10px; padding: 8px;
+    }
+    .card .icon-box img { max-width: 100%; max-height: 100%; }
+    .card .info { flex: 1; min-width: 0; }
+    .card .intent-name { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
+    .card .display-name { font-size: 12px; color: #888; margin-bottom: 6px; }
+    .card .type-badge {
+      font-size: 10px; padding: 2px 8px; border-radius: 10px; display: inline-block;
+      background: #f0f0f0; color: #555; margin-bottom: 8px; font-weight: 600; text-transform: uppercase;
+    }
+    .flavors-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .flavors-table th {
+      text-align: left; color: #999; font-weight: 600; padding: 3px 6px 3px 0;
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .flavors-table td { padding: 3px 6px 3px 0; color: #444; }
+    .cloud-tag {
+      display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 4px;
+      margin-right: 3px; margin-bottom: 2px; font-weight: 600;
+    }
+    .cloud-aws { background: #FFF3E0; color: #E65100; }
+    .cloud-gcp { background: #E3F2FD; color: #1565C0; }
+    .cloud-azure { background: #EDE7F6; color: #4527A0; }
+    .cloud-kubernetes { background: #E8F5E9; color: #2E7D32; }
+    .cloud-common { background: #F3E5F5; color: #6A1B9A; }
+
+    /* Section colors */
+    .section-core h2 { background: linear-gradient(135deg, #1565C0, #1976D2); }
+    .section-datastores h2 { background: linear-gradient(135deg, #2E7D32, #388E3C); }
+    .section-k8s h2 { background: linear-gradient(135deg, #6A1B9A, #7B1FA2); }
+    .section-operators h2 { background: linear-gradient(135deg, #E65100, #F57C00); }
+    .section-monitoring h2 { background: linear-gradient(135deg, #C62828, #D32F2F); }
+    .section-other h2 { background: linear-gradient(135deg, #455A64, #546E7A); }
+
+    .card-core { border-left-color: #1976D2; }
+    .card-datastores { border-left-color: #388E3C; }
+    .card-k8s { border-left-color: #7B1FA2; }
+    .card-operators { border-left-color: #F57C00; }
+    .card-monitoring { border-left-color: #D32F2F; }
+    .card-other { border-left-color: #546E7A; }
+
+    .stats { display: flex; gap: 20px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap; }
+    .stat-box {
+      background: white; border-radius: 10px; padding: 14px 24px; text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .stat-box .number { font-size: 28px; font-weight: 800; color: #1565C0; }
+    .stat-box .label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .filter-bar { text-align: center; margin-bottom: 24px; }
+    .filter-btn {
+      border: none; padding: 6px 16px; border-radius: 20px; margin: 4px; cursor: pointer;
+      font-size: 12px; font-weight: 600; background: #e0e0e0; color: #555; transition: all 0.2s;
+    }
+    .filter-btn.active { background: #1565C0; color: white; }
+    .filter-btn:hover { opacity: 0.8; }
+  </style>
+</head>
+<body>
+  <h1>Facets Module Icons &amp; Cross-Cloud Matrix</h1>
+  <p class="subtitle">All intents with flavors, clouds, and icon status</p>
+
+  <div class="stats">
+    <div class="stat-box"><div class="number">35</div><div class="label">Intents</div></div>
+    <div class="stat-box"><div class="number">63</div><div class="label">Total Modules</div></div>
+    <div class="stat-box"><div class="number">35</div><div class="label">Icons</div></div>
+    <div class="stat-box"><div class="number">3</div><div class="label">Clouds</div></div>
+  </div>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filterCloud('all')">All</button>
+    <button class="filter-btn" onclick="filterCloud('aws')">AWS</button>
+    <button class="filter-btn" onclick="filterCloud('gcp')">GCP</button>
+    <button class="filter-btn" onclick="filterCloud('azure')">Azure</button>
+    <button class="filter-btn" onclick="filterCloud('kubernetes')">Kubernetes</button>
+  </div>
+
+  <div id="content"></div>
+
+  <script>
+    const modules = {
+      "Cloud & Infrastructure": {
+        cssClass: "core",
+        intents: [
+          {
+            intent: "cloud_account", displayName: "Cloud Account", type: "Cloud & Infrastructure", icon: "cloud_account.svg",
+            flavors: [
+              { flavor: "aws_provider", clouds: ["aws"] },
+              { flavor: "gcp_provider", clouds: ["gcp"] },
+              { flavor: "azure_provider", clouds: ["azure"] },
+            ]
+          },
+          {
+            intent: "kubernetes_cluster", displayName: "Kubernetes Cluster", type: "Cloud & Infrastructure", icon: "kubernetes_cluster.svg",
+            flavors: [
+              { flavor: "eks_standard", clouds: ["aws"] },
+              { flavor: "eks_automode", clouds: ["aws"] },
+              { flavor: "gke", clouds: ["gcp"] },
+              { flavor: "aks", clouds: ["azure"] },
+            ]
+          },
+          {
+            intent: "kubernetes_node_pool", displayName: "Kubernetes Node Pool", type: "Cloud & Infrastructure", icon: "kubernetes_node_pool.svg",
+            flavors: [
+              { flavor: "karpenter", clouds: ["aws"] },
+              { flavor: "eks_automode", clouds: ["aws"] },
+              { flavor: "gcp", clouds: ["gcp"] },
+              { flavor: "gcp_node_fleet", clouds: ["gcp"] },
+              { flavor: "azure", clouds: ["azure"] },
+            ]
+          },
+          {
+            intent: "karpenter", displayName: "Karpenter", type: "Cloud & Infrastructure", icon: "karpenter.svg",
+            flavors: [
+              { flavor: "default", clouds: ["aws"] },
+            ]
+          },
+          {
+            intent: "aws_alb_controller", displayName: "AWS ALB Controller", type: "Cloud & Infrastructure", icon: "aws_alb_controller.svg",
+            flavors: [
+              { flavor: "standard", clouds: ["aws"] },
+            ]
+          },
+          {
+            intent: "network", displayName: "Network", type: "Cloud & Infrastructure", icon: "network.svg",
+            flavors: [
+              { flavor: "aws_network", clouds: ["aws"] },
+              { flavor: "gcp_network", clouds: ["gcp"] },
+              { flavor: "azure_network", clouds: ["azure"] },
+            ]
+          },
+          {
+            intent: "service", displayName: "Service", type: "Cloud & Infrastructure", icon: "service.svg",
+            flavors: [
+              { flavor: "aws", clouds: ["aws"] },
+              { flavor: "gcp", clouds: ["gcp"] },
+              { flavor: "azure", clouds: ["azure"] },
+            ]
+          },
+        ]
+      },
+      "Datastores": {
+        cssClass: "datastores",
+        intents: [
+          {
+            intent: "mongo", displayName: "MongoDB", type: "Datastores", icon: "mongo.svg",
+            flavors: [
+              { flavor: "kubeblocks", clouds: ["kubernetes", "aws", "azure", "gcp"] },
+              { flavor: "aws-documentdb", clouds: ["aws"] },
+              { flavor: "cosmosdb", clouds: ["azure"] },
+            ]
+          },
+          {
+            intent: "mysql", displayName: "MySQL", type: "Datastores", icon: "mysql.svg",
+            flavors: [
+              { flavor: "kubeblocks", clouds: ["kubernetes", "aws", "azure", "gcp"] },
+              { flavor: "aws-aurora", clouds: ["aws"] },
+              { flavor: "aws-rds", clouds: ["aws"] },
+              { flavor: "gcp-cloudsql", clouds: ["gcp"] },
+              { flavor: "flexible_server", clouds: ["azure"] },
+            ]
+          },
+          {
+            intent: "postgres", displayName: "PostgreSQL", type: "Datastores", icon: "postgres.svg",
+            flavors: [
+              { flavor: "kubeblocks", clouds: ["kubernetes", "aws", "azure", "gcp"] },
+              { flavor: "aws-aurora", clouds: ["aws"] },
+              { flavor: "aws-rds", clouds: ["aws"] },
+              { flavor: "gcp-cloudsql", clouds: ["gcp"] },
+              { flavor: "azure-flexible-server", clouds: ["azure"] },
+            ]
+          },
+          {
+            intent: "redis", displayName: "Redis", type: "Datastores", icon: "redis.svg",
+            flavors: [
+              { flavor: "kubeblocks", clouds: ["kubernetes", "aws", "azure", "gcp"] },
+              { flavor: "aws-elasticache", clouds: ["aws"] },
+              { flavor: "gcp-memorystore", clouds: ["gcp"] },
+              { flavor: "azure_cache_custom", clouds: ["azure"] },
+            ]
+          },
+          {
+            intent: "kafka", displayName: "Kafka", type: "Datastores", icon: "kafka.svg",
+            flavors: [
+              { flavor: "aws-msk", clouds: ["aws"] },
+              { flavor: "gcp-msk", clouds: ["gcp"] },
+            ]
+          },
+          {
+            intent: "kafka_topic", displayName: "Kafka Topic", type: "Datastores", icon: "kafka_topic.svg",
+            flavors: [
+              { flavor: "gcp-msk", clouds: ["gcp"] },
+            ]
+          },
+          {
+            intent: "pubsub", displayName: "Pub/Sub", type: "Datastores", icon: "pubsub.svg",
+            flavors: [
+              { flavor: "gcp", clouds: ["gcp"] },
+            ]
+          },
+        ]
+      },
+      "Kubernetes Resources": {
+        cssClass: "k8s",
+        intents: [
+          {
+            intent: "helm", displayName: "Helm", type: "Kubernetes Resources", icon: "helm.svg",
+            flavors: [
+              { flavor: "k8s_standard", clouds: ["aws", "azure", "gcp", "kubernetes"] },
+            ]
+          },
+          {
+            intent: "ingress", displayName: "Ingress", type: "Kubernetes Resources", icon: "ingress.svg",
+            flavors: [
+              { flavor: "nginx_k8s", clouds: ["aws", "azure", "gcp", "kubernetes"] },
+              { flavor: "nginx_gateway_fabric", clouds: ["aws", "azure", "gcp", "kubernetes"] },
+            ]
+          },
+          {
+            intent: "cert_manager", displayName: "Cert Manager", type: "Kubernetes Resources", icon: "cert_manager.svg",
+            flavors: [
+              { flavor: "standard", clouds: ["aws", "azure", "gcp", "kubernetes"] },
+            ]
+          },
+          {
+            intent: "config_map", displayName: "ConfigMap", type: "Kubernetes Resources", icon: "config_map.svg",
+            flavors: [
+              { flavor: "k8s_standard", clouds: ["aws", "azure", "gcp", "kubernetes"] },
+            ]
+          },
+          {
+            intent: "kubernetes_secret", displayName: "Secret", type: "Kubernetes Resources", icon: "kubernetes_secret.svg",
+            flavors: [
+              { flavor: "k8s_standard", clouds: ["aws", "azure", "gcp", "kubernetes"] },
+            ]
+          },
+          {
+            intent: "k8s_access_controls", displayName: "Access Controls", type: "Kubernetes Resources", icon: "k8s_access_controls.svg",
+            flavors: [
+              { flavor: "k8s_standard", clouds: ["aws", "azure", "gcp", "kubernetes"] },
+            ]
+          },
+          {
+            intent: "k8s_callback", displayName: "K8s Callback", type: "Kubernetes Resources", icon: "k8s_callback.svg",
+            flavors: [
+              { flavor: "k8s_standard", clouds: ["aws", "azure", "gcp", "kubernetes"] },
+            ]
+          },
+          {
+            intent: "k8s_resource", displayName: "K8s Resource", type: "Kubernetes Resources", icon: "k8s_resource.svg",
+            flavors: [
+              { flavor: "k8s_standard", clouds: ["aws", "azure", "gcp", "kubernetes"] },
+            ]
+          },
+          {
+            intent: "gateway_api_crd", displayName: "Gateway API CRD", type: "Kubernetes Resources", icon: "gateway_api_crd.svg",
+            flavors: [
+              { flavor: "default", clouds: ["aws", "azure", "gcp", "kubernetes"] },
+            ]
+          },
+          {
+            intent: "vpa", displayName: "VPA", type: "Kubernetes Resources", icon: "vpa.svg",
+            flavors: [
+              { flavor: "standard", clouds: ["aws", "azure", "gcp", "kubernetes"] },
+            ]
+          },
+          {
+            intent: "artifactories", displayName: "Artifactories", type: "Kubernetes Resources", icon: "artifactories.svg",
+            flavors: [
+              { flavor: "standard", clouds: ["gcp", "kubernetes", "azure", "aws"] },
+            ]
+          },
+        ]
+      },
+      "Operators": {
+        cssClass: "operators",
+        intents: [
+          {
+            intent: "kubeblocks-operator", displayName: "KubeBlocks Operator", type: "Operators", icon: "kubeblocks-operator.svg",
+            flavors: [
+              { flavor: "standard", clouds: ["kubernetes", "aws", "gcp", "azure"] },
+            ]
+          },
+          {
+            intent: "strimzi-operator", displayName: "Strimzi Operator", type: "Operators", icon: "strimzi-operator.svg",
+            flavors: [
+              { flavor: "helm", clouds: ["aws", "azure", "gcp", "kubernetes"] },
+            ]
+          },
+          {
+            intent: "eck-operator", displayName: "ECK Operator", type: "Operators", icon: "eck-operator.svg",
+            flavors: [
+              { flavor: "helm", clouds: ["aws", "azure", "gcp", "kubernetes"] },
+            ]
+          },
+          {
+            intent: "wireguard-operator", displayName: "WireGuard Operator", type: "Operators", icon: "wireguard-operator.svg",
+            flavors: [
+              { flavor: "standard", clouds: ["aws", "azure", "gcp", "kubernetes"] },
+            ]
+          },
+          {
+            intent: "wireguard-vpn", displayName: "WireGuard VPN Server", type: "Operators", icon: "wireguard-vpn.svg",
+            flavors: [
+              { flavor: "standard", clouds: ["aws", "azure", "gcp", "kubernetes"] },
+            ]
+          },
+        ]
+      },
+      "Monitoring & Observability": {
+        cssClass: "monitoring",
+        intents: [
+          {
+            intent: "prometheus", displayName: "Prometheus", type: "Monitoring & Observability", icon: "prometheus.svg",
+            flavors: [
+              { flavor: "k8s_standard", clouds: ["aws", "azure", "gcp", "kubernetes"] },
+            ]
+          },
+          {
+            intent: "grafana_dashboards", displayName: "Grafana Dashboards", type: "Monitoring & Observability", icon: "grafana_dashboards.svg",
+            flavors: [
+              { flavor: "k8s", clouds: ["aws", "azure", "gcp", "kubernetes"] },
+            ]
+          },
+          {
+            intent: "alert_rules", displayName: "Alert Rules", type: "Monitoring & Observability", icon: "alert_rules.svg",
+            flavors: [
+              { flavor: "prometheus", clouds: ["kubernetes", "aws", "azure", "gcp"] },
+            ]
+          },
+          {
+            intent: "monitoring", displayName: "MongoDB Monitoring", type: "Monitoring & Observability", icon: "monitoring.svg",
+            flavors: [
+              { flavor: "mongo", clouds: ["kubernetes", "aws", "azure", "gcp"] },
+            ]
+          },
+        ]
+      },
+      "Security & Identity": {
+        cssClass: "other",
+        intents: [
+          {
+            intent: "google_workload_identity", displayName: "GCP Workload Identity", type: "Security & Identity", icon: "google_workload_identity.svg",
+            flavors: [
+              { flavor: "gcp", clouds: ["gcp"] },
+            ]
+          },
+          {
+            intent: "azure_workload_identity", displayName: "Azure Workload Identity", type: "Security & Identity", icon: "azure_workload_identity.svg",
+            flavors: [
+              { flavor: "azure", clouds: ["azure"] },
+            ]
+          },
+        ]
+      },
+    };
+
+    const cloudColors = {
+      aws: "cloud-aws",
+      gcp: "cloud-gcp",
+      azure: "cloud-azure",
+      kubernetes: "cloud-kubernetes",
+      common: "cloud-common"
+    };
+
+    let currentFilter = "all";
+
+    function filterCloud(cloud) {
+      currentFilter = cloud;
+      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+      event.target.classList.add("active");
+      render();
+    }
+
+    function render() {
+      const content = document.getElementById("content");
+      content.innerHTML = "";
+
+      for (const [group, data] of Object.entries(modules)) {
+        const filteredIntents = data.intents.filter(intent => {
+          if (currentFilter === "all") return true;
+          return intent.flavors.some(f => f.clouds.includes(currentFilter));
+        });
+
+        if (filteredIntents.length === 0) continue;
+
+        const sectionDiv = document.createElement("div");
+        sectionDiv.className = `section section-${data.cssClass}`;
+
+        const flavorCount = filteredIntents.reduce((sum, i) => {
+          if (currentFilter === "all") return sum + i.flavors.length;
+          return sum + i.flavors.filter(f => f.clouds.includes(currentFilter)).length;
+        }, 0);
+
+        sectionDiv.innerHTML = `<h2>${group} <span style="opacity:0.7;font-size:12px;font-weight:400">${filteredIntents.length} intents / ${flavorCount} flavors</span></h2>`;
+
+        const grid = document.createElement("div");
+        grid.className = "grid";
+
+        for (const item of filteredIntents) {
+          const filteredFlavors = currentFilter === "all"
+            ? item.flavors
+            : item.flavors.filter(f => f.clouds.includes(currentFilter));
+
+          const card = document.createElement("div");
+          card.className = `card card-${data.cssClass}`;
+
+          let flavorsHtml = filteredFlavors.map(f => {
+            const cloudTags = f.clouds.map(c =>
+              `<span class="cloud-tag ${cloudColors[c] || ''}">${c}</span>`
+            ).join("");
+            return `<tr><td><strong>${f.flavor}</strong></td><td>${cloudTags}</td></tr>`;
+          }).join("");
+
+          card.innerHTML = `
+            <div class="icon-box"><img src="../../icons/${item.icon}" alt="${item.intent}"></div>
+            <div class="info">
+              <div class="intent-name">${item.intent}</div>
+              <div class="display-name">${item.displayName}</div>
+              <span class="type-badge">${item.type}</span>
+              <table class="flavors-table">
+                <thead><tr><th>Flavor</th><th>Clouds</th></tr></thead>
+                <tbody>${flavorsHtml}</tbody>
+              </table>
+            </div>
+          `;
+          grid.appendChild(card);
+        }
+
+        sectionDiv.appendChild(grid);
+        content.appendChild(sectionDiv);
+      }
+    }
+
+    render();
+  </script>
+</body>
+</html>

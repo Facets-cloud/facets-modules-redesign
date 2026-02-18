@@ -5,6 +5,11 @@ version: '1.0'
 depends_on: []
 input_type: instance
 description: Module to configure and provision resources within a cloud account
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Configure and provision resources within an Azure cloud account
+  displayName: Cloud Account
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloud_account.svg
 composition: {}
 conditional_on_intent: ''
 clouds:
