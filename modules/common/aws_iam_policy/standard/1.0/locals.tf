@@ -1,6 +1,7 @@
 # Module logic locals
 locals {
   spec = var.instance.spec
+  name = lookup(local.spec, "name", module.iam-policy-name.name)
 
   iam_policy = lookup(local.spec, "aws_iam_policy", {})
 
