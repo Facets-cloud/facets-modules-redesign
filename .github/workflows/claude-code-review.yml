@@ -1,25 +1,29 @@
-name: Claude Facets Module Validation
+name: Claude Code Review
 
 on:
   pull_request:
-    types: [opened]
-    paths:
-      - 'modules/**'
-      - 'outputs/**'
-      - 'rules.md'
-      - 'project-type/**'
+    types: [opened, synchronize, ready_for_review, reopened]
+    # Optional: Only run on specific file changes
+    # paths:
+    #   - "src/**/*.ts"
+    #   - "src/**/*.tsx"
+    #   - "src/**/*.js"
+    #   - "src/**/*.jsx"
 
 jobs:
-  claude-validate:
-    if: >-
-      (github.event.pull_request.author_association == 'MEMBER' ||
-       github.event.pull_request.author_association == 'OWNER') &&
-      !github.event.pull_request.head.repo.fork
+  claude-review:
+    # Optional: Filter by PR author
+    # if: |
+    #   github.event.pull_request.user.login == 'external-contributor' ||
+    #   github.event.pull_request.user.login == 'new-developer' ||
+    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
+
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     permissions:
       contents: read
-      pull-requests: write
+      pull-requests: read
+      issues: read
+      id-token: write
 
     steps:
       - name: Checkout repository
@@ -27,72 +31,14 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Install Raptor CLI
-        run: |
-          curl -L -o raptor https://github.com/Facets-cloud/raptor/releases/latest/download/raptor-linux-amd64
-          chmod +x raptor
-          sudo mv raptor /usr/local/bin/raptor
-
-      - name: Detect changed modules
-        id: detect
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          modules=$(gh pr diff --name-only | while read f; do
-            dir=$(dirname "$f")
-            while [ "$dir" != "." ]; do
-              [ -f "$dir/facets.yaml" ] && echo "$dir" && break
-              dir=$(dirname "$dir")
-            done
-          done | sort -u)
-          if [ -z "$modules" ]; then
-            echo "found=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "found=true" >> "$GITHUB_OUTPUT"
-            {
-              echo "list<<EOF"
-              echo "$modules"
-              echo "EOF"
-            } >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Run Claude Facets Validation
-        if: steps.detect.outputs.found == 'true'
-        env:
-          CONTROL_PLANE_URL: ${{ secrets.CONTROL_PLANE_URL }}
-          FACETS_USERNAME: ${{ secrets.FACETS_USERNAME }}
-          FACETS_TOKEN: ${{ secrets.FACETS_TOKEN }}
+      - name: Run Claude Code Review
+        id: claude-review
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          use_sticky_comment: true
-          plugin_marketplaces: |
-            https://github.com/Facets-cloud/claude-plugin
-          plugins: |
-            facets-plugin@facets-marketplace
-          claude_args: '--max-turns 30 --allowedTools "Bash(raptor:*),Bash(terraform:*),Bash(git:*),Bash(gh:*),Bash(cat:*),Bash(ls:*),Bash(file:*),Bash(head:*),Bash(tail:*),Bash(find:*),Bash(grep:*),Bash(awk:*),Bash(sed:*),Bash(wc:*),Bash(sort:*),Bash(uniq:*),Bash(diff:*),Bash(echo:*),Bash(pwd:*),Bash(which:*),Bash(jq:*),Bash(yq:*),Read,Grep,Glob,WebSearch"'
-          prompt: |
-            You are reviewing and validating Facets modules changed in this PR.
+          plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
+          plugins: 'code-review@claude-code-plugins'
+          prompt: '/code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
+          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
+          # or https://code.claude.com/docs/en/cli-reference for available options
 
-            The following modules were changed:
-            ${{ steps.detect.outputs.list }}
-
-            ## Validation process
-
-            First, invoke the /module-development skill to load Facets module development standards. Use this knowledge throughout your review for understanding module structure, conventions, spec schemas, output types, and Terraform patterns.
-
-            Then, use the /facets-modules-validate skill to validate each module above. Follow its full 6-step process:
-            1. Module detection — use the list above (already computed)
-            2. Read rules.md and all module files
-            3. Systematic rule-by-rule validation (PASS/FAIL/SKIP for every rule)
-            4. Raptor dry-run
-            5. Per-module report tables
-            6. New rule discovery
-
-            In addition to rules.md validation, perform a thorough review of the Terraform code itself. Check that resource configurations are valid and will work as intended, variable types and defaults are correct, references between resources are sound, conditionals and loops are logically correct, there are no hardcoded values that should be configurable, and there are no security concerns (overly permissive IAM, open security groups, unencrypted resources). Compare with sibling modules of the same intent to spot deviations from established patterns. Report code review findings in a separate **Code Review** section after the rules table, with severity levels: **Critical** (will break), **Warning** (potential issue), **Suggestion** (improvement).
-
-            ## Important constraints
-            - NEVER use `--skip-validation` with raptor
-            - If security scan fails, retry with `--skip-security-scan` but report findings in a table
-            - Be thorough and critical in both rule validation and code review, not lenient
-            - Report ALL rules (PASS, FAIL, or SKIP with reason) — do not skip rules silently
