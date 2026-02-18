@@ -23,7 +23,7 @@ resource "aws_efs_file_system" "efs-csi-driver" {
     Name = module.name.name
   }, lookup(local.spec, "tags", {}), var.environment.cloud_tags)
 
-  creation_token                  = null
+  creation_token                  = lookup(local.spec, "creation_token", null)
   encrypted                       = lookup(local.spec, "encrypted", true)
   kms_key_id                      = lookup(local.spec, "kms_key_id", null)
   performance_mode                = lookup(local.spec, "performance_mode", null)
