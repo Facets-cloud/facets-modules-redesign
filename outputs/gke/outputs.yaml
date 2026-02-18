@@ -82,5 +82,7 @@ properties:
                 command:
                   type: string
             secrets:
-              type: string
+              type: array
+              items:
+                type: string
 providers: []
