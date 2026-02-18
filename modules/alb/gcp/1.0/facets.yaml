@@ -36,8 +36,8 @@ spec:
   properties:
     domains:
       type: object
-      title: Domain Routing Rules
-      description: Map domains to CloudRun services with optional path-based routing
+      title: Domains
+      description: Configure domains and SSL certificates
       patternProperties:
         ^[a-zA-Z0-9_-]+$:
           type: object
@@ -49,35 +49,15 @@ spec:
               pattern: ^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$
               x-ui-placeholder: Enter domain (e.g., example.com)
               x-ui-error-message: Domain must be a valid DNS name
-            default_service:
-              type: string
-              title: Default Backend Service
-              description: CloudRun service name or reference for this domain
-              x-ui-output-type: '@outputs/cloudrun_service'
-              x-ui-placeholder: Select service or enter ${service.name.out.attributes.service_name}
-            paths:
-              type: object
-              title: Path-based Routing
-              description: Route specific paths to different services
-              patternProperties:
-                ^/.*$:
-                  type: object
-                  properties:
-                    service:
-                      type: string
-                      title: Backend Service
-                      description: CloudRun service name or reference
-                      x-ui-output-type: '@outputs/cloudrun_service'
-                    path_type:
-                      type: string
-                      title: Path Match Type
-                      enum:
-                      - PREFIX
-                      - EXACT
-                      default: PREFIX
-                      description: PREFIX matches /path/*, EXACT matches /path only
-                  required:
-                  - service
+            rules:
+              type: array
+              title: Routing Rules
+              description: List of rule names to apply to this domain
+              items:
+                type: string
+                x-ui-placeholder: Select or enter rule name
+              minItems: 1
+              x-ui-error-message: At least one rule must be specified
             certificate:
               type: object
               title: SSL Certificate
@@ -116,6 +96,51 @@ spec:
                     - existing
           required:
           - domain
+          - rules
+    rules:
+      type: object
+      title: Routing Rules
+      description: Define path-based routing rules that can be applied to domains
+      patternProperties:
+        ^[a-zA-Z0-9_-]+$:
+          type: object
+          properties:
+            default_service:
+              type: string
+              title: Default Backend Service
+              description: CloudRun service for unmatched paths
+              x-ui-output-type: '@outputs/cloudrun_service'
+              x-ui-placeholder: Select service or enter ${service.name.out.attributes.service_name}
+            paths:
+              type: array
+              title: Path Matchers
+              description: Route specific paths to different services
+              items:
+                type: object
+                properties:
+                  path:
+                    type: string
+                    title: Path Pattern
+                    description: URL path pattern (e.g., /api, /api/*, /admin)
+                    x-ui-placeholder: Enter path (e.g., /api/*)
+                  service:
+                    type: string
+                    title: Backend Service
+                    description: CloudRun service name or reference
+                    x-ui-output-type: '@outputs/cloudrun_service'
+                    x-ui-placeholder: Select service
+                  path_type:
+                    type: string
+                    title: Match Type
+                    enum:
+                    - PREFIX
+                    - EXACT
+                    default: PREFIX
+                    description: PREFIX matches /path/*, EXACT matches /path only
+                required:
+                - path
+                - service
+          required:
           - default_service
     global_config:
       type: object
@@ -231,8 +256,10 @@ spec:
           maximum: 3600
   required:
   - domains
+  - rules
   x-ui-order:
   - domains
+  - rules
   - global_config
   - advanced
 sample:
@@ -244,9 +271,28 @@ sample:
     domains:
       main:
         domain: example.com
-        default_service: api-service
+        rules:
+        - default
         certificate:
           mode: auto
+      api:
+        domain: api.example.com
+        rules:
+        - api-routes
+        certificate:
+          mode: auto
+    rules:
+      default:
+        default_service: web-service
+      api-routes:
+        default_service: api-service
+        paths:
+        - path: /v1/*
+          service: api-v1-service
+          path_type: PREFIX
+        - path: /v2/*
+          service: api-v2-service
+          path_type: PREFIX
     global_config:
       enable_cdn: false
       enable_iap: false

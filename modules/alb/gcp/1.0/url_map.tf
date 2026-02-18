@@ -1,12 +1,19 @@
 # URL Map for routing logic
 resource "google_compute_url_map" "lb" {
-  name            = local.name
-  project         = local.project_id
-  default_service = local.service_backends[values(var.instance.spec.domains)[0].default_service]
+  name    = local.name
+  project = local.project_id
+
+  # Default service from first domain's first rule
+  default_service = local.service_backends[
+    var.instance.spec.rules[
+      var.instance.spec.domains[keys(var.instance.spec.domains)[0]].rules[0]
+    ].default_service
+  ]
 
   # Use EXTERNAL_MANAGED for CloudRun serverless backends
   depends_on = [google_compute_backend_service.cloudrun]
 
+  # Host rules: one per domain
   dynamic "host_rule" {
     for_each = var.instance.spec.domains
     content {
@@ -15,23 +22,39 @@ resource "google_compute_url_map" "lb" {
     }
   }
 
+  # Path matchers: one per domain, combining all its rules
   dynamic "path_matcher" {
     for_each = var.instance.spec.domains
     content {
-      name            = "path-matcher-${replace(path_matcher.value.domain, ".", "-")}"
-      default_service = local.service_backends[path_matcher.value.default_service]
+      name = "path-matcher-${replace(path_matcher.value.domain, ".", "-")}"
 
+      # Default service from first rule of this domain
+      default_service = local.service_backends[
+        var.instance.spec.rules[path_matcher.value.rules[0]].default_service
+      ]
+
+      # Path rules: aggregate all paths from all rules for this domain
       dynamic "path_rule" {
-        for_each = lookup(path_matcher.value, "paths", {})
+        for_each = flatten([
+          for rule_name in path_matcher.value.rules : [
+            for path_config in lookup(var.instance.spec.rules[rule_name], "paths", []) : {
+              path      = path_config.path
+              service   = path_config.service
+              path_type = lookup(path_config, "path_type", "PREFIX")
+              rule_name = rule_name
+            }
+          ]
+        ])
         content {
-          paths   = [path_rule.key]
+          paths   = [path_rule.value.path]
           service = local.service_backends[path_rule.value.service]
 
+          # EXACT match type handling
           dynamic "route_action" {
             for_each = path_rule.value.path_type == "EXACT" ? [1] : []
             content {
               url_rewrite {
-                path_prefix_rewrite = path_rule.key
+                path_prefix_rewrite = path_rule.value.path
               }
             }
           }

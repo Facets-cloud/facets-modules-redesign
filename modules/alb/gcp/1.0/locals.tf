@@ -4,27 +4,38 @@ locals {
   region     = var.inputs.gcp_cloud_account.attributes.region
 
   # Parse CloudRun service references or use literal names
-  # Format: ${service.name.out.attributes.service_name} or literal "my-service"
+  # Extract all services from rules (default_service + path services)
   parsed_services = merge(
-    # Default services from domains
+    # Default services from all rules
     {
-      for key, config in var.instance.spec.domains :
-      config.domain => lookup(config, "default_service", "")
+      for rule_name, rule in var.instance.spec.rules :
+      "${rule_name}-default" => rule.default_service
     },
-    # Path-specific services from domains
-    flatten([
-      for key, config in var.instance.spec.domains : [
-        for path, path_config in lookup(config, "paths", {}) : {
-          "${config.domain}${path}" = path_config.service
-        }
-      ]
-    ])...
+    # Path-specific services from all rules
+    merge([
+      for rule_name, rule in var.instance.spec.rules : {
+        for idx, path_config in lookup(rule, "paths", []) :
+        "${rule_name}-${path_config.path}" => path_config.service
+      }
+    ]...)
   )
 
   # Extract unique service names for backend creation
   unique_services = distinct([
     for service in values(local.parsed_services) : service if service != ""
   ])
+
+  # Build domain-to-rules mapping for URL map configuration
+  domain_rules = {
+    for domain_key, domain_config in var.instance.spec.domains :
+    domain_config.domain => {
+      rules = [
+        for rule_name in domain_config.rules :
+        lookup(var.instance.spec.rules, rule_name, null)
+      ]
+      domain_key = domain_key
+    }
+  }
 
   # Certificate configuration per domain
   certificates = {
