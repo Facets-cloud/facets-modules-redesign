@@ -68,8 +68,38 @@ jobs:
 
             The /module-development skill is also available — use it as reference for module structure standards and conventions.
 
+            ## Step 3 — Terraform code review
+
+            Beyond rules.md validation, perform a thorough review of the actual Terraform code in each module. Check for:
+
+            **Correctness:**
+            - Are resource configurations valid and will they work as intended?
+            - Are variable types, defaults, and descriptions correct?
+            - Are references between resources correct (no dangling refs, correct attribute access)?
+            - Are provider-specific arguments valid for the resource types used?
+            - Are `for_each`, `count`, and dynamic blocks used correctly?
+
+            **Logic & design:**
+            - Does the module logic make sense for its stated intent/purpose?
+            - Are there redundant or dead code paths?
+            - Are conditionals and ternary expressions logically sound?
+            - Are locals computed correctly and used appropriately?
+            - Does the deep merge / default handling work as expected?
+
+            **Best practices:**
+            - Are there hardcoded values that should be configurable via spec?
+            - Are there security concerns (overly permissive IAM, open security groups, unencrypted resources)?
+            - Are resource dependencies implicit where they should be explicit (or vice versa)?
+            - Are outputs complete and useful for downstream consumers?
+
+            **Consistency with existing modules:**
+            - Compare with other modules of the same intent/flavor to spot deviations from established patterns
+            - Check if naming conventions match sibling modules
+
+            Report findings in a separate **Code Review** section after the rules table, with severity levels: **Critical** (will break), **Warning** (potential issue), **Suggestion** (improvement).
+
             ## Important constraints
             - NEVER use `--skip-validation` with raptor
             - If security scan fails, retry with `--skip-security-scan` but report findings in a table
-            - Be thorough and critical in rule validation, not lenient
+            - Be thorough and critical in both rule validation and code review, not lenient
             - Report ALL rules (PASS, FAIL, or SKIP with reason) — do not skip rules silently
