@@ -72,6 +72,17 @@ spec:
             containing only letters, numbers, and hyphens, and must not start or end
             with a hyphen
           x-ui-typeable: true
+          x-ui-api-source:
+            endpoint: "/cc-ui/v1/dropdown/stack/{{stackName}}/resources-info"
+            method: GET
+            params:
+              includeContent: false
+            labelKey: resourceName
+            valueKey: resourceName
+            valueTemplate: "${namespace.{{value}}.out.attributes.name}"
+            filterConditions:
+            - field: resourceType
+              value: namespace
         wait:
           type: boolean
           title: Wait
