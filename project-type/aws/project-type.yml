@@ -14,6 +14,8 @@ modules:
   # === AWS-Specific Modules ===
   - intent: cloud_account
     flavor: aws_provider
+  - intent: aws_iam_policy
+    flavor: standard
   - intent: kubernetes_cluster
     flavor: eks_standard
   - intent: kubernetes_cluster
