@@ -60,11 +60,7 @@ variable "instance" {
         oidc_providers   = optional(object({}), {})
       }))
       policies = object({})
+      tags     = optional(map(string), {})
     })
-    advanced = optional(object({
-      aws_iam_role = optional(object({
-        tags = optional(map(string), {})
-      }), {})
-    }), {})
   })
 }
