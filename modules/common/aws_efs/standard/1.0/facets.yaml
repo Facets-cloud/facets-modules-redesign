@@ -26,7 +26,7 @@ inputs:
     description: The VPC network details for EFS mount targets and security group
     optional: false
   kubernetes_details:
-    type: '@facets/kubernetes-details'
+    type: '@facets/eks'
     displayName: Kubernetes Cluster
     description: The Kubernetes cluster where the StorageClass will be created
     optional: false
