@@ -41,7 +41,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "node_pool" {
 
   mode                 = lookup(local.aks_advanced, "mode", "User")
   orchestrator_version = lookup(local.aks_advanced, "orchestrator_version", null)
-  vnet_subnet_id       = lookup(local.aks_advanced, "vnet_subnet_id", var.inputs.kubernetes_details.attributes.network_details.private_subnet_ids[0])
+  vnet_subnet_id       = lookup(local.aks_advanced, "vnet_subnet_id", var.inputs.network_details.attributes.private_subnet_ids[0])
   eviction_policy      = local.priority == "Spot" ? lookup(local.aks_advanced, "eviction_policy", "Delete") : null
 
   tags           = local.tags
