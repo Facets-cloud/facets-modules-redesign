@@ -1,4 +1,4 @@
-name: '@facets/gke'
+name: "@facets/gke"
 properties:
   type: object
   properties:
@@ -37,7 +37,9 @@ properties:
         maintenance_policy_enabled:
           type: string
         master_authorized_networks_config:
-          type: string
+          type: array
+          items:
+            type: string
         network:
           type: string
         pods_range_name:
