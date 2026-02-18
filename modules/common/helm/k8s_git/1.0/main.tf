@@ -18,8 +18,8 @@ locals {
   wait_enabled = lookup(local.wait_config, "wait", true)
   wait_timeout = lookup(local.wait_config, "timeout", 300)
 
-  # Git repository URL with authentication
-  git_url = "https://${local.git_username}:${local.git_token}@${local.git_base_url}/${local.git_owner}/${local.git_repository}.git"
+  # Git repository URL - include credentials only when token is provided
+  git_url = local.git_token != "" ? "https://${local.git_username}:${local.git_token}@${local.git_base_url}/${local.git_owner}/${local.git_repository}.git" : "https://${local.git_base_url}/${local.git_owner}/${local.git_repository}.git"
 
   # Local chart directory path
   local_chart_directory = "charts/${local.git_repository}"
