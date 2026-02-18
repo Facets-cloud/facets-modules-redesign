@@ -12,14 +12,14 @@ on:
 jobs:
   claude-validate:
     if: >-
-      github.event.pull_request.author_association == 'MEMBER' ||
-      github.event.pull_request.author_association == 'OWNER'
+      (github.event.pull_request.author_association == 'MEMBER' ||
+       github.event.pull_request.author_association == 'OWNER') &&
+      !github.event.pull_request.head.repo.fork
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
       issues: read
-      id-token: write
 
     steps:
       - name: Checkout repository
