@@ -7,6 +7,11 @@ clouds:
 - gcp
 - kubernetes
 description: Apache Kafka cluster deployed using Strimzi Kafka Operator with KRaft mode (no ZooKeeper)
+intentDetails:
+  type: Datastores
+  description: Apache Kafka cluster deployed using Strimzi Kafka Operator with KRaft mode (no ZooKeeper)
+  displayName: Kafka (Strimzi)
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules/master/icons/kafka.svg
 spec:
   title: Strimzi Kafka Cluster
   description: Apache Kafka cluster deployed using Strimzi Kafka Operator with KRaft mode

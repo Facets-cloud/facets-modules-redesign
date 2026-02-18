@@ -3,8 +3,8 @@ locals {
   scram_username = "${var.instance_name}-${local.admin_username}"
 
   output_attributes = {
-    cluster_name      = var.instance_name
-    kafka_version     = local.kafka_version
+    cluster_name  = var.instance_name
+    kafka_version = local.kafka_version
   }
 
   output_interfaces = {

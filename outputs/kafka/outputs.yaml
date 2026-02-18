@@ -4,6 +4,13 @@ properties:
   properties:
     attributes:
       type: object
+      properties:
+        cluster_name:
+          type: string
+          description: Name of the Kafka cluster
+        kafka_version:
+          type: string
+          description: Apache Kafka version deployed
     interfaces:
       type: object
       properties:
