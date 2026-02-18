@@ -1,0 +1,509 @@
+artifact_inputs:
+  primary:
+    artifact_type: docker_image
+    attribute_path: spec.container.image
+clouds:
+- gcp
+description: 'Google Cloud Run Gen 2 service with NVIDIA L4 GPU acceleration support.
+
+  Ideal for AI/ML inference workloads, model serving, and GPU-accelerated applications.
+
+  '
+flavor: gpu
+inputs:
+  gcp_provider:
+    description: GCP project and authentication configuration
+    displayName: GCP Cloud Account
+    optional: false
+    providers:
+    - google
+    type: '@facets/gcp_cloud_account'
+  network:
+    description: VPC network for private Cloud Run services
+    displayName: VPC Network
+    optional: true
+    type: '@facets/gcp-network-details'
+intent: cloudrun
+outputs:
+  attributes:
+    title: Cloud Run Attributes
+    type: '@facets/cloudrun_attributes'
+  default:
+    title: GPU Cloud Run Service
+    type: '@facets/cloudrun'
+sample:
+  disabled: false
+  flavor: gpu
+  kind: cloudrun
+  spec:
+    container:
+      port: '8080'
+      image: ${blueprint.self.artifacts.cloudrun-gpu-service}
+    gpu:
+      enabled: true
+      type: nvidia-l4
+      zonal_redundancy: false
+    health_checks:
+      liveness_probe:
+        enabled: false
+      startup_probe:
+        enabled: true
+        failure_threshold: 10
+        period: 60
+        port: '8080'
+        timeout: 30
+        type: tcp
+    ingress: ''
+    resources:
+      cpu: '20'
+      cpu_throttling: false
+      memory: 80Gi
+    scaling:
+      concurrency: 4
+      max_instances: 1
+      min_instances: 0
+    timeout: '600'
+    vpc_access:
+      enabled: false
+  version: '1.0'
+spec:
+  description: Configure your GPU-accelerated Cloud Run service
+  properties:
+    annotations:
+      description: Custom annotations for the Cloud Run service
+      title: Service Annotations
+      type: object
+      x-ui-yaml-editor: true
+    auth:
+      description: Configure public access to this Cloud Run service
+      properties:
+        allow_unauthenticated:
+          default: false
+          description: Allow unauthenticated access (allUsers). When enabled, anyone
+            can invoke the service.
+          title: Allow Unauthenticated Access
+          type: boolean
+      title: Authentication
+      type: object
+    container:
+      properties:
+        args:
+          description: Arguments to the entrypoint
+          items:
+            type: string
+          title: Arguments
+          type: array
+        command:
+          description: Entrypoint command override
+          items:
+            type: string
+          title: Command
+          type: array
+        image:
+          default: ${blueprint.self.artifacts.cloudrun-gpu-service}
+          description: Container image URI with GPU-enabled application
+          title: Container Image
+          type: string
+        port:
+          default: '8080'
+          description: Port the container listens on
+          title: Container Port
+          type: string
+      required:
+      - image
+      - port
+      title: Container Configuration
+      type: object
+    env:
+      description: Environment variables for the container
+      title: Environment Variables
+      type: object
+      x-ui-yaml-editor: true
+    gcs_volumes:
+      description: Mount GCS buckets as volumes using Cloud Storage FUSE. Ideal for
+        loading ML models, datasets, or storing outputs.
+      patternProperties:
+        ^[a-z][a-z0-9-]*$:
+          properties:
+            bucket:
+              description: Name of the GCS bucket to mount
+              title: GCS Bucket Name
+              type: string
+            mount_path:
+              description: Path inside the container where the bucket will be mounted
+                (e.g., /models)
+              title: Mount Path
+              type: string
+            read_only:
+              default: true
+              description: Mount the bucket as read-only (recommended for model weights)
+              title: Read Only
+              type: boolean
+          required:
+          - bucket
+          - mount_path
+          type: object
+      title: GCS Bucket Volumes
+      type: object
+    gpu:
+      description: NVIDIA L4 GPU acceleration settings
+      properties:
+        enabled:
+          default: true
+          description: Enable GPU acceleration (NVIDIA L4 with 24GB VRAM)
+          title: Enable GPU
+          type: boolean
+        type:
+          default: nvidia-l4
+          description: GPU accelerator type (nvidia-l4 is generally available, nvidia-rtx-pro-6000
+            requires early access)
+          enum:
+          - nvidia-l4
+          - nvidia-rtx-pro-6000
+          title: GPU Type
+          type: string
+          x-ui-visible-if:
+            field: spec.gpu.enabled
+            values:
+            - true
+        zonal_redundancy:
+          default: false
+          description: Reserve GPU capacity across multiple zones for availability
+            (additional cost)
+          title: GPU Zonal Redundancy
+          type: boolean
+          x-ui-visible-if:
+            field: spec.gpu.enabled
+            values:
+            - true
+      required:
+      - enabled
+      title: GPU Configuration
+      type: object
+    health_checks:
+      description: Configure startup and liveness probes
+      properties:
+        liveness_probe:
+          description: Check if the container is still running
+          properties:
+            enabled:
+              default: false
+              title: Enable Liveness Probe
+              type: boolean
+            failure_threshold:
+              default: 3
+              maximum: 100
+              minimum: 1
+              title: Failure Threshold
+              type: integer
+              x-ui-visible-if:
+                field: spec.health_checks.liveness_probe.enabled
+                values:
+                - true
+            initial_delay:
+              default: 0
+              title: Initial Delay (seconds)
+              type: integer
+              x-ui-visible-if:
+                field: spec.health_checks.liveness_probe.enabled
+                values:
+                - true
+            path:
+              default: /health/live
+              title: HTTP Path
+              type: string
+              x-ui-visible-if:
+              - field: spec.health_checks.liveness_probe.enabled
+                values:
+                - true
+              - field: spec.health_checks.liveness_probe.type
+                values:
+                - http
+            period:
+              default: 10
+              maximum: 240
+              minimum: 1
+              title: Period (seconds)
+              type: integer
+              x-ui-visible-if:
+                field: spec.health_checks.liveness_probe.enabled
+                values:
+                - true
+            port:
+              default: '8080'
+              title: Probe Port
+              type: string
+              x-ui-visible-if:
+                field: spec.health_checks.liveness_probe.enabled
+                values:
+                - true
+            timeout:
+              default: 1
+              maximum: 240
+              minimum: 1
+              title: Timeout (seconds)
+              type: integer
+              x-ui-visible-if:
+                field: spec.health_checks.liveness_probe.enabled
+                values:
+                - true
+            type:
+              default: http
+              enum:
+              - tcp
+              - http
+              title: Probe Type
+              type: string
+              x-ui-visible-if:
+                field: spec.health_checks.liveness_probe.enabled
+                values:
+                - true
+          title: Liveness Probe
+          type: object
+        startup_probe:
+          description: Check if the container has started successfully
+          properties:
+            enabled:
+              default: true
+              title: Enable Startup Probe
+              type: boolean
+            failure_threshold:
+              default: 10
+              description: Number of failures before marking unhealthy
+              maximum: 100
+              minimum: 1
+              title: Failure Threshold
+              type: integer
+              x-ui-visible-if:
+                field: spec.health_checks.startup_probe.enabled
+                values:
+                - true
+            initial_delay:
+              default: 0
+              description: Wait time before first probe
+              title: Initial Delay (seconds)
+              type: integer
+              x-ui-visible-if:
+                field: spec.health_checks.startup_probe.enabled
+                values:
+                - true
+            path:
+              default: /health/startup
+              description: Path for HTTP health check
+              title: HTTP Path
+              type: string
+              x-ui-visible-if:
+              - field: spec.health_checks.startup_probe.enabled
+                values:
+                - true
+              - field: spec.health_checks.startup_probe.type
+                values:
+                - http
+            period:
+              default: 60
+              description: Time between probes
+              maximum: 240
+              minimum: 1
+              title: Period (seconds)
+              type: integer
+              x-ui-visible-if:
+                field: spec.health_checks.startup_probe.enabled
+                values:
+                - true
+            port:
+              default: '8080'
+              description: Port to check (defaults to container port)
+              title: Probe Port
+              type: string
+              x-ui-visible-if:
+                field: spec.health_checks.startup_probe.enabled
+                values:
+                - true
+            timeout:
+              default: 30
+              description: Probe timeout duration
+              maximum: 240
+              minimum: 1
+              title: Timeout (seconds)
+              type: integer
+              x-ui-visible-if:
+                field: spec.health_checks.startup_probe.enabled
+                values:
+                - true
+            type:
+              default: tcp
+              enum:
+              - tcp
+              - http
+              title: Probe Type
+              type: string
+              x-ui-visible-if:
+                field: spec.health_checks.startup_probe.enabled
+                values:
+                - true
+          title: Startup Probe
+          type: object
+      title: Health Checks
+      type: object
+    ingress:
+      default: ''
+      description: Control which traffic can reach your service
+      enum:
+      - ''
+      - all
+      - internal
+      - internal-and-cloud-load-balancing
+      title: Ingress Traffic Control
+      type: string
+      x-ui-typeable: false
+    labels:
+      description: Labels for resource organization and billing
+      title: Resource Labels
+      type: object
+      x-ui-yaml-editor: true
+    resources:
+      description: CPU and memory allocation for the container
+      properties:
+        cpu:
+          default: '20'
+          description: Number of vCPU cores for RTX Pro 6000 GPU workloads
+          enum:
+          - '20'
+          - '22'
+          - '24'
+          - '26'
+          - '30'
+          title: CPU Cores
+          type: string
+        cpu_throttling:
+          default: false
+          description: When disabled, CPU always runs at full capacity (recommended
+            for GPU workloads)
+          title: Enable CPU Throttling
+          type: boolean
+        memory:
+          default: 80Gi
+          description: Memory allocation for RTX Pro 6000 GPU workloads
+          enum:
+          - 80Gi
+          - 96Gi
+          - 104Gi
+          - 128Gi
+          title: Memory
+          type: string
+        startup_cpu_boost:
+          default: false
+          description: Boost CPU during container startup to reduce cold start time
+          title: Startup CPU Boost
+          type: boolean
+      required:
+      - cpu
+      - memory
+      title: Resource Allocation
+      type: object
+    scaling:
+      description: Auto-scaling settings for the service
+      properties:
+        concurrency:
+          default: 4
+          description: Maximum concurrent requests per instance (lower values recommended
+            for GPU workloads)
+          maximum: 1000
+          minimum: 1
+          title: Concurrent Requests
+          type: integer
+        max_instances:
+          default: 1
+          description: Maximum number of instances to scale up to
+          maximum: 100
+          minimum: 1
+          title: Maximum Instances
+          type: integer
+        min_instances:
+          default: 0
+          description: Minimum number of instances (0 = scale to zero when idle)
+          maximum: 10
+          minimum: 0
+          title: Minimum Instances
+          type: integer
+      required:
+      - min_instances
+      - max_instances
+      - concurrency
+      title: Scaling Configuration
+      type: object
+    secrets:
+      description: Mount secrets from Google Secret Manager as environment variables
+      patternProperties:
+        ^[a-zA-Z0-9_-]+$:
+          properties:
+            secret_name:
+              description: Name of the secret in Secret Manager
+              title: Secret Name
+              type: string
+            version:
+              default: latest
+              description: Version of the secret (default is latest)
+              title: Secret Version
+              type: string
+          required:
+          - secret_name
+          type: object
+      title: Secret Manager Integration
+      type: object
+    service_account:
+      description: IAM service account for the Cloud Run service
+      title: Service Account Email
+      type: string
+      x-ui-placeholder: service-account@project.iam.gserviceaccount.com
+    timeout:
+      default: '600'
+      description: Maximum request duration in seconds (recommended 600s for GPU workloads)
+      title: Request Timeout
+      type: string
+    vpc_access:
+      description: Private network connectivity configuration
+      properties:
+        egress:
+          default: private-ranges-only
+          description: Route for outbound traffic
+          enum:
+          - private-ranges-only
+          - all-traffic
+          title: Egress Traffic
+          type: string
+          x-ui-visible-if:
+            field: spec.vpc_access.enabled
+            values:
+            - true
+        enabled:
+          default: false
+          description: Connect to resources in your VPC network
+          title: Enable VPC Access
+          type: boolean
+      title: VPC Access
+      type: object
+  required:
+  - container
+  - resources
+  - gpu
+  - scaling
+  title: GPU Cloud Run Configuration
+  type: object
+  x-ui-order:
+  - container
+  - env
+  - secrets
+  - gcs_volumes
+  - resources
+  - gpu
+  - scaling
+  - timeout
+  - ingress
+  - auth
+  - vpc_access
+  - health_checks
+  - service_account
+  - annotations
+  - labels
+version: '1.0'

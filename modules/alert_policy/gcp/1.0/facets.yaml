@@ -1,0 +1,218 @@
+intent: alert_policy
+flavor: gcp
+version: "1.0"
+clouds:
+  - gcp
+description: |
+  Create GCP Cloud Monitoring alert policies for proactive monitoring.
+  Supports metric-based alerts, log-based alerts, and uptime check alerts.
+  Ideal for Cloud Run Job monitoring (failures, queue depth, duration).
+
+inputs:
+  gcp_provider:
+    type: '@facets/gcp_cloud_account'
+    optional: false
+    displayName: GCP Cloud Account
+    description: GCP project and authentication configuration
+    providers:
+      - google
+  notification_channels:
+    type: '@facets/gcp_notification_channel_attributes'
+    optional: false
+    displayName: Notification Channels
+    description: Notification channels for alert delivery (required)
+
+sample:
+  kind: alert_policy
+  flavor: gcp
+  version: "1.0"
+  disabled: false
+  spec:
+    policies:
+      job-failure:
+        display_name: Cloud Run Job Failure Alert
+        severity: CRITICAL
+        condition:
+          type: metric_threshold
+          metric_type: run.googleapis.com/job/completed_task_attempt_count
+          filter: 'resource.type="cloud_run_job" AND metric.labels.result="failed"'
+          comparison: COMPARISON_GT
+          threshold: 0
+          duration: 60s
+          aggregation:
+            alignment_period: 60s
+            per_series_aligner: ALIGN_COUNT
+
+spec:
+  title: Alert Policy Configuration
+  description: Configure GCP Cloud Monitoring alert policies
+  type: object
+  properties:
+    policies:
+      type: object
+      title: Alert Policies
+      description: Define alert policies with conditions and notifications
+      patternProperties:
+        "^[a-z][a-z0-9-]*$":
+          type: object
+          properties:
+            display_name:
+              type: string
+              title: Display Name
+              description: Human-readable name for the alert policy
+            enabled:
+              type: boolean
+              title: Enabled
+              description: Whether the alert policy is enabled
+              default: true
+            severity:
+              type: string
+              title: Severity
+              description: Alert severity level
+              enum:
+                - CRITICAL
+                - ERROR
+                - WARNING
+              default: WARNING
+            documentation:
+              type: string
+              title: Documentation
+              description: Runbook or documentation content (supports markdown)
+              x-ui-textarea: true
+            condition:
+              type: object
+              title: Alert Condition
+              properties:
+                type:
+                  type: string
+                  title: Condition Type
+                  description: Type of condition
+                  enum:
+                    - metric_threshold
+                    - metric_absence
+                  default: metric_threshold
+                display_name:
+                  type: string
+                  title: Condition Name
+                  description: Name for this condition (defaults to policy name)
+                metric_type:
+                  type: string
+                  title: Metric Type
+                  description: "GCP metric type (e.g., run.googleapis.com/job/completed_task_attempt_count)"
+                filter:
+                  type: string
+                  title: Metric Filter
+                  description: "Filter expression (e.g., resource.type=\"cloud_run_job\")"
+                comparison:
+                  type: string
+                  title: Comparison
+                  description: Comparison operator for threshold
+                  enum:
+                    - COMPARISON_GT
+                    - COMPARISON_GE
+                    - COMPARISON_LT
+                    - COMPARISON_LE
+                    - COMPARISON_EQ
+                    - COMPARISON_NE
+                  default: COMPARISON_GT
+                  x-ui-visible-if:
+                    field: spec.policies.{{this}}.condition.type
+                    values:
+                      - metric_threshold
+                threshold:
+                  type: number
+                  title: Threshold Value
+                  description: Threshold value to compare against
+                  default: 0
+                  x-ui-visible-if:
+                    field: spec.policies.{{this}}.condition.type
+                    values:
+                      - metric_threshold
+                duration:
+                  type: string
+                  title: Duration
+                  description: "How long condition must be true (e.g., 60s, 300s)"
+                  default: "60s"
+                aggregation:
+                  type: object
+                  title: Aggregation
+                  description: How to aggregate metric data
+                  properties:
+                    alignment_period:
+                      type: string
+                      title: Alignment Period
+                      description: "Time period for alignment (e.g., 60s, 300s)"
+                      default: "60s"
+                    per_series_aligner:
+                      type: string
+                      title: Per-Series Aligner
+                      description: How to align each time series
+                      enum:
+                        - ALIGN_NONE
+                        - ALIGN_DELTA
+                        - ALIGN_RATE
+                        - ALIGN_COUNT
+                        - ALIGN_SUM
+                        - ALIGN_MEAN
+                        - ALIGN_MAX
+                        - ALIGN_MIN
+                        - ALIGN_PERCENTILE_99
+                        - ALIGN_PERCENTILE_95
+                        - ALIGN_PERCENTILE_50
+                      default: ALIGN_SUM
+                    cross_series_reducer:
+                      type: string
+                      title: Cross-Series Reducer
+                      description: How to combine multiple time series
+                      enum:
+                        - REDUCE_NONE
+                        - REDUCE_SUM
+                        - REDUCE_MEAN
+                        - REDUCE_MAX
+                        - REDUCE_MIN
+                        - REDUCE_COUNT
+                      default: REDUCE_SUM
+                    group_by_fields:
+                      type: array
+                      title: Group By Fields
+                      description: Fields to group by (e.g., resource.label.job_name)
+                      items:
+                        type: string
+              required:
+                - metric_type
+            combiner:
+              type: string
+              title: Condition Combiner
+              description: How multiple conditions are combined
+              enum:
+                - OR
+                - AND
+                - AND_WITH_MATCHING_RESOURCE
+              default: OR
+            auto_close:
+              type: string
+              title: Auto Close Duration
+              description: "Auto-close incidents after this duration (e.g., 86400s for 1 day)"
+              default: "86400s"
+            labels:
+              type: object
+              title: User Labels
+              description: Custom labels for the policy
+              x-ui-yaml-editor: true
+          required:
+            - display_name
+            - condition
+  required:
+    - policies
+  x-ui-order:
+    - policies
+
+outputs:
+  default:
+    type: '@facets/gcp_alert_policies'
+    title: GCP Alert Policies
+    mock:
+      attributes:
+        policy_ids: mock-string-value
+        policy_names: mock-string-value
+        project_id: mock-string-value
