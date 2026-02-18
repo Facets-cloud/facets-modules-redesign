@@ -2,6 +2,14 @@
 # Creates and manages PostgreSQL database clusters using KubeBlocks operator
 # REQUIRES: KubeBlocks operator must be deployed first (CRDs must exist)
 
+module "name" {
+  source        = "github.com/Facets-cloud/facets-utility-modules//name"
+  resource_name = var.instance_name
+  resource_type = "postgresql"
+  environment   = var.environment
+  limit         = 63
+  is_k8s        = true
+}
 
 # PostgreSQL Cluster with Embedded Backup Configuration
 # Using any-k8s-resource module to avoid plan-time CRD validation
@@ -159,7 +167,7 @@ module "postgresql_cluster" {
 # PodDisruptionBudget for PostgreSQL HA
 # maxUnavailable=1 ensures only 1 pod can be disrupted at a time
 # This maintains availability during node maintenance/upgrades
-resource "kubernetes_pod_disruption_budget" "postgresql_pdb" {
+resource "kubernetes_pod_disruption_budget_v1" "postgresql_pdb" {
   count = local.enable_pdb ? 1 : 0
 
   metadata {

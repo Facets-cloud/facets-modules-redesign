@@ -2,6 +2,14 @@
 # Creates and manages Redis clusters using KubeBlocks operator
 # REQUIRES: KubeBlocks operator must be deployed first (CRDs must exist)
 
+module "name" {
+  source        = "github.com/Facets-cloud/facets-utility-modules//name"
+  resource_name = var.instance_name
+  resource_type = "redis"
+  environment   = var.environment
+  limit         = 63
+  is_k8s        = true
+}
 
 # Redis Cluster with Embedded Backup Configuration
 # Using any-k8s-resource module to avoid plan-time CRD validation
@@ -307,7 +315,7 @@ module "redis_cluster" {
 # maxUnavailable=1 ensures only 1 pod can be disrupted at a time
 # This maintains availability during node maintenance/upgrades
 # Applies to both replication (Sentinel) and redis-cluster modes
-resource "kubernetes_pod_disruption_budget" "redis_pdb" {
+resource "kubernetes_pod_disruption_budget_v1" "redis_pdb" {
   count = local.enable_pdb ? 1 : 0
 
   metadata {

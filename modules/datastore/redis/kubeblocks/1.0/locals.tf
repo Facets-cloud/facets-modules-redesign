@@ -3,7 +3,7 @@
 
 locals {
   # Cluster configuration
-  cluster_name = var.instance_name # Using instance_name as cluster name
+  cluster_name = module.name.name
   namespace    = try(var.instance.spec.namespace_override, "") != "" ? var.instance.spec.namespace_override : var.environment.namespace
 
   # Mode-specific replica configuration

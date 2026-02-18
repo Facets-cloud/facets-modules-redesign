@@ -3,7 +3,7 @@
 
 locals {
   # Cluster configuration
-  cluster_name = var.instance_name # Use instance_name as cluster name
+  cluster_name = module.name.name
   namespace    = try(var.instance.spec.namespace_override, "") != "" ? var.instance.spec.namespace_override : var.environment.namespace
   replicas     = var.instance.spec.mode == "standalone" ? 1 : lookup(var.instance.spec, "replicas", 2)
 
