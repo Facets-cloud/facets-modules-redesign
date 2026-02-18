@@ -12,7 +12,7 @@ clouds:
 inputs:
   kubernetes_details:
     optional: true
-    type: '@facets/kubernetes-details'
+    type: '@facets/eks'
     providers:
     - kubernetes
     - kubernetes-alpha
