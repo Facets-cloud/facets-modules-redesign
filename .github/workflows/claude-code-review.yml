@@ -46,7 +46,7 @@ jobs:
             facets-plugin@facets-marketplace
           claude_args: '--max-turns 30 --allowedTools "Bash(raptor:*),Bash(terraform:*),Bash(git:*),Bash(gh:*),Bash(cat:*),Bash(ls:*),Bash(file:*),Bash(head:*),Bash(tail:*),Bash(curl:*),Bash(wget:*),Bash(find:*),Bash(grep:*),Bash(awk:*),Bash(sed:*),Bash(wc:*),Bash(sort:*),Bash(uniq:*),Bash(diff:*),Bash(echo:*),Bash(pwd:*),Bash(mkdir:*),Bash(cp:*),Bash(mv:*),Bash(chmod:*),Bash(which:*),Bash(env:*),Bash(jq:*),Bash(yq:*),Read,Write,Edit,Grep,Glob,WebSearch"'
           prompt: |
-            You are validating Facets modules changed in this PR.
+            You are reviewing and validating Facets modules changed in this PR.
 
             ## Step 1 — Detect changed modules
 
@@ -56,9 +56,11 @@ jobs:
             Print the list of modules that will be validated before proceeding.
             If no modules are found, comment "No module changes detected" and stop.
 
-            ## Step 2 — Validate each module
+            ## Step 2 — Review and validate each module
 
-            Use the /facets-modules-validate skill to validate each detected module. Follow its full 6-step process exactly:
+            First, invoke the /module-development skill to load Facets module development standards. Use this knowledge throughout your review for understanding module structure, conventions, spec schemas, output types, and Terraform patterns.
+
+            Then, use the /facets-modules-validate skill to validate each detected module. Follow its full 6-step process exactly:
             1. Module detection (already done in Step 1 — pass the list)
             2. Read rules.md and all module files
             3. Systematic rule-by-rule validation (PASS/FAIL/SKIP for every rule)
@@ -66,37 +68,7 @@ jobs:
             5. Per-module report tables
             6. New rule discovery
 
-            The /module-development skill is also available — use it as reference for module structure standards and conventions.
-
-            ## Step 3 — Terraform code review
-
-            Beyond rules.md validation, perform a thorough review of the actual Terraform code in each module. Check for:
-
-            **Correctness:**
-            - Are resource configurations valid and will they work as intended?
-            - Are variable types, defaults, and descriptions correct?
-            - Are references between resources correct (no dangling refs, correct attribute access)?
-            - Are provider-specific arguments valid for the resource types used?
-            - Are `for_each`, `count`, and dynamic blocks used correctly?
-
-            **Logic & design:**
-            - Does the module logic make sense for its stated intent/purpose?
-            - Are there redundant or dead code paths?
-            - Are conditionals and ternary expressions logically sound?
-            - Are locals computed correctly and used appropriately?
-            - Does the deep merge / default handling work as expected?
-
-            **Best practices:**
-            - Are there hardcoded values that should be configurable via spec?
-            - Are there security concerns (overly permissive IAM, open security groups, unencrypted resources)?
-            - Are resource dependencies implicit where they should be explicit (or vice versa)?
-            - Are outputs complete and useful for downstream consumers?
-
-            **Consistency with existing modules:**
-            - Compare with other modules of the same intent/flavor to spot deviations from established patterns
-            - Check if naming conventions match sibling modules
-
-            Report findings in a separate **Code Review** section after the rules table, with severity levels: **Critical** (will break), **Warning** (potential issue), **Suggestion** (improvement).
+            In addition to rules.md validation, perform a thorough review of the Terraform code itself. Check that resource configurations are valid and will work as intended, variable types and defaults are correct, references between resources are sound, conditionals and loops are logically correct, there are no hardcoded values that should be configurable, and there are no security concerns (overly permissive IAM, open security groups, unencrypted resources). Compare with sibling modules of the same intent to spot deviations from established patterns. Report code review findings in a separate **Code Review** section after the rules table, with severity levels: **Critical** (will break), **Warning** (potential issue), **Suggestion** (improvement).
 
             ## Important constraints
             - NEVER use `--skip-validation` with raptor
