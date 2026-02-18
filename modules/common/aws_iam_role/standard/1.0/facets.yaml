@@ -96,6 +96,11 @@ spec:
               pattern: ^arn:[a-zA-Z0-9-]+:[a-zA-Z0-9-]+:[a-zA-Z0-9-]*:[0-9]{12}:[a-zA-Z0-9-\/:_+=.@]+$
               x-ui-error-message: Invalid ARN format. Ensure it follows the pattern
                 <arn:partition:service:region:account-id:resource>
+    tags:
+      type: object
+      title: Tags
+      description: Additional tags to apply to the IAM role
+      x-ui-yaml-editor: true
   required:
   - policies
 sample:
@@ -108,11 +113,8 @@ sample:
     irsa:
       service_accounts:
         my_service_account:
-          name: my-service-account
+          name: default
           namespace: default
-      oidc_providers:
-        my_oidc:
-          arn: arn:aws:iam::123456789012:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/EXAMPLED539D4633E53DE1B716D3041E
     policies:
       external_policy:
         arn: arn:aws:iam::123456789012:policy/MyPolicy
