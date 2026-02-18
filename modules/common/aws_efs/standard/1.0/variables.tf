@@ -46,6 +46,7 @@ variable "inputs" {
         external_id  = optional(string)
         session_name = optional(string)
       })
+      interfaces = optional(object({}), {})
     })
     network_details = object({
       attributes = object({
@@ -53,15 +54,18 @@ variable "inputs" {
         vpc_cidr_block     = string
         private_subnet_ids = list(string)
       })
+      interfaces = optional(object({}), {})
     })
     kubernetes_details = object({
       attributes = optional(object({}))
+      interfaces = optional(object({}), {})
     })
     csi_driver = object({
       attributes = object({
         iam_role_arn    = string
         helm_release_id = string
       })
+      interfaces = optional(object({}), {})
     })
   })
   description = "Inputs from dependent modules"
