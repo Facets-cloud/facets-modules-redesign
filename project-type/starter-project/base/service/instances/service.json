@@ -1,0 +1,69 @@
+{
+  "flavor": "aws",
+  "kind": "service",
+  "disabled": true,
+  "version": "1.0",
+  "spec": {
+    "type": "application",
+    "enable_host_anti_affinity": false,
+    "restart_policy": "Always",
+    "pod_distribution_enabled": false,
+    "release": {
+      "strategy": {
+        "type": "RollingUpdate"
+      },
+      "image": "",
+      "image_pull_policy": "IfNotPresent"
+    },
+    "cloud_permissions": {
+      "aws": {
+        "enable_irsa": false
+      }
+    },
+    "runtime": {
+      "args": [],
+      "command": [],
+      "autoscaling": {
+        "scaling_on": "CPU",
+        "min": 1,
+        "max": 1,
+        "cpu_threshold": "50"
+      },
+      "ports": {
+        "ports1": {
+          "port": "8080",
+          "service_port": "8080",
+          "protocol": "tcp"
+        }
+      },
+      "size": {
+        "cpu": "300m",
+        "memory": "1Gi",
+        "cpu_limit": "1000m",
+        "memory_limit": "5Gi"
+      },
+      "health_checks": {
+        "readiness_check_type": "None",
+        "liveness_check_type": "None",
+        "startup_check_type": "None"
+      }
+    },
+    "env": {}
+  },
+  "inputs": {
+    "cloud_account": {
+      "resource_name": "cloud",
+      "resource_type": "cloud_account"
+    },
+    "kubernetes_details": {
+      "resource_name": "kubernetes-cluster",
+      "resource_type": "kubernetes_cluster"
+    },
+    "kubernetes_node_pool_details": {
+      "resource_name": "k8s-np",
+      "resource_type": "kubernetes_node_pool",
+      "output_name": "attributes"
+    }
+  },
+  "uiProps": {}
+}
