@@ -34,10 +34,11 @@ spec:
           title: PostgreSQL Version
           description: Version of the PostgreSQL database engine
           enum:
-          - '13.15'
-          - '14.12'
-          - '15.7'
-          default: '15.7'
+          - '14.21'
+          - '15.16'
+          - '16.12'
+          - '17.8'
+          default: '16.12'
         database_name:
           type: string
           title: Database Name
@@ -97,7 +98,7 @@ spec:
           title: Enable Deletion Protection
           description: Protect database from accidental deletion (recommended for
             production)
-          default: false
+          default: true
       required:
       - deletion_protection
     restore_config:
@@ -248,13 +249,13 @@ sample:
   disabled: true
   spec:
     version_config:
-      engine_version: '15.7'
+      engine_version: '16.12'
       database_name: postgres
     sizing:
       instance_class: db.t3.small
       allocated_storage: 100
       read_replica_count: 0
     security_config:
-      deletion_protection: false
+      deletion_protection: true
     restore_config:
       restore_from_backup: false

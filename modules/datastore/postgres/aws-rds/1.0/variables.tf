@@ -34,8 +34,8 @@ variable "instance" {
   })
 
   validation {
-    condition     = contains(["13.15", "14.12", "15.7"], var.instance.spec.version_config.engine_version)
-    error_message = "PostgreSQL version must be one of: 13.15, 14.12, 15.7"
+    condition     = contains(["14.21", "15.16", "16.12", "17.8"], var.instance.spec.version_config.engine_version)
+    error_message = "PostgreSQL version must be one of: 14.21, 15.16, 16.12, 17.8"
   }
 
   validation {
