@@ -38,6 +38,12 @@ locals {
     nat_id      = google_compute_router_nat.nat.id
     nat_name    = google_compute_router_nat.nat.name
 
+    # VPC Access Connector (for Cloud Run, Cloud Functions, App Engine)
+    vpc_connector_enabled   = local.vpc_connector_enabled
+    vpc_connector_id        = local.vpc_connector_enabled ? google_vpc_access_connector.connector[0].id : null
+    vpc_connector_name      = local.vpc_connector_enabled ? google_vpc_access_connector.connector[0].name : null
+    vpc_connector_self_link = local.vpc_connector_enabled ? google_vpc_access_connector.connector[0].self_link : null
+
     # Google Services Peering
     google_services_network = google_service_networking_connection.google_services.network
     google_services_cidr    = "${google_compute_global_address.google_services.address}/${google_compute_global_address.google_services.prefix_length}"

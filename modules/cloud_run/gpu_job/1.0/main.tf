@@ -42,7 +42,7 @@ locals {
   # VPC access
   vpc_access      = lookup(var.instance.spec, "vpc_access", null)
   network_details = lookup(var.inputs, "network_details", null)
-  vpc_connector   = local.network_details != null ? lookup(local.network_details.attributes, "vpc_connector", null) : null
+  vpc_connector   = local.network_details != null ? lookup(local.network_details.attributes, "vpc_connector_name", null) : null
 }
 
 # =============================================================================

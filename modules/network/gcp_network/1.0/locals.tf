@@ -17,6 +17,13 @@ locals {
   auto_select_zones = lookup(local.spec, "auto_select_zones", true)
   zones_spec        = lookup(local.spec, "zones", [])
 
+  # VPC Connector configuration
+  vpc_connector_config        = lookup(local.spec, "vpc_connector", {})
+  vpc_connector_enabled       = lookup(local.vpc_connector_config, "enabled", false)
+  vpc_connector_machine_type  = lookup(local.vpc_connector_config, "machine_type", "e2-micro")
+  vpc_connector_min_instances = lookup(local.vpc_connector_config, "min_instances", 2)
+  vpc_connector_max_instances = lookup(local.vpc_connector_config, "max_instances", 3)
+
   # GCP uses regional subnets, not zonal like AWS
   # We'll create regional subnets that span all zones
 
@@ -32,12 +39,14 @@ locals {
   # Database: /24 (256 IPs) - for Cloud SQL + managed databases
   # Internal LB: /24 (256 IPs) - for GKE internal load balancers
   # Google Services: /20 (4,096 IPs) - for managed services peering
+  # VPC Connector: /28 (16 IPs) - for Cloud Run/Functions VPC access
   vpc_prefix             = 16
   private_subnet_prefix  = 19 # 8,192 IPs
   public_subnet_prefix   = 24 # 256 IPs
   database_subnet_prefix = 24 # 256 IPs
   internal_lb_prefix     = 24 # 256 IPs for GKE LBs
   google_services_prefix = 20 # 4,096 IPs for managed services
+  vpc_connector_prefix   = 28 # 16 IPs for VPC connector
 
   # GKE secondary ranges (for pods and services)
   gke_pods_prefix     = 18 # 16,384 IPs for pods
@@ -51,9 +60,10 @@ locals {
   google_services_newbits = local.google_services_prefix - local.vpc_prefix # 20 - 16 = 4
   gke_pods_newbits        = local.gke_pods_prefix - local.vpc_prefix        # 18 - 16 = 2
   gke_services_newbits    = local.gke_services_prefix - local.vpc_prefix    # 20 - 16 = 4
+  vpc_connector_newbits   = local.vpc_connector_prefix - local.vpc_prefix   # 28 - 16 = 12
 
   # Create ordered list of newbits for cidrsubnets function
-  # Order: private, public, database, internal_lb, google_services, gke_pods, gke_services
+  # Order: private, public, database, internal_lb, google_services, gke_pods, gke_services, vpc_connector
   all_subnet_newbits = [
     local.private_newbits,
     local.public_newbits,
@@ -61,7 +71,8 @@ locals {
     local.internal_lb_newbits,
     local.google_services_newbits,
     local.gke_pods_newbits,
-    local.gke_services_newbits
+    local.gke_services_newbits,
+    local.vpc_connector_newbits
   ]
 
   # Generate all subnet CIDRs using cidrsubnets function - prevents overlaps
@@ -75,6 +86,7 @@ locals {
   google_services_subnet_cidr = local.all_subnet_cidrs[4] # /20
   gke_pods_subnet_cidr        = local.all_subnet_cidrs[5] # /18
   gke_services_subnet_cidr    = local.all_subnet_cidrs[6] # /20
+  vpc_connector_subnet_cidr   = local.all_subnet_cidrs[7] # /28
 
   # Calculate IP allocation summary
   total_private_ips  = 8192  # /19
