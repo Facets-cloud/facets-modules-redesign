@@ -1,0 +1,23 @@
+name: '@facets/cloudrun'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        service_name:
+          description: Name of the Cloud Run service
+          type: string
+        location:
+          description: GCP region where the service is deployed
+          type: string
+        url:
+          description: Public HTTPS URL of the Cloud Run service
+          type: string
+        max_instances:
+          description: Maximum number of service instances
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []
