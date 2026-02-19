@@ -26,8 +26,8 @@ inputs:
 intent: cloudrun
 intentDetails:
   type: Cloud & Infrastructure
-  description: GPU-accelerated serverless containers for AI/ML inference and model serving on GCP Cloud Run
-  displayName: Cloud Run GPU Service
+  description: Serverless containers and batch jobs on GCP Cloud Run. Supports CPU batch jobs for data processing and ETL, GPU services for AI/ML inference, and GPU batch jobs for video processing.
+  displayName: Cloud Run
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloudrun.svg
 outputs:
   attributes:
@@ -60,9 +60,9 @@ sample:
         type: tcp
     ingress: ''
     resources:
-      cpu: '20'
+      cpu: '8'
       cpu_throttling: false
-      memory: 80Gi
+      memory: 32Gi
     scaling:
       concurrency: 4
       max_instances: 1
@@ -367,12 +367,15 @@ spec:
       type: object
       x-ui-yaml-editor: true
     resources:
-      description: CPU and memory allocation for the container
+      description: CPU and memory allocation for the container. nvidia-l4 requires 4-8 CPU and 16-32 GiB. nvidia-rtx-pro-6000 requires 20-30 CPU and 80-128 GiB.
       properties:
         cpu:
-          default: '20'
-          description: Number of vCPU cores for RTX Pro 6000 GPU workloads
+          default: '8'
+          description: Number of vCPU cores. nvidia-l4 allows 4, 6, 8. nvidia-rtx-pro-6000 allows 20, 22, 24, 26, 30.
           enum:
+          - '4'
+          - '6'
+          - '8'
           - '20'
           - '22'
           - '24'
@@ -387,9 +390,11 @@ spec:
           title: Enable CPU Throttling
           type: boolean
         memory:
-          default: 80Gi
-          description: Memory allocation for RTX Pro 6000 GPU workloads
+          default: 32Gi
+          description: Memory allocation. nvidia-l4 allows 16Gi, 32Gi. nvidia-rtx-pro-6000 allows 80Gi, 96Gi, 104Gi, 128Gi.
           enum:
+          - 16Gi
+          - 32Gi
           - 80Gi
           - 96Gi
           - 104Gi

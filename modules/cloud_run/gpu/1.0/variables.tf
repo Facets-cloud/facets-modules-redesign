@@ -98,13 +98,21 @@ variable "instance" {
   description = "Cloud Run GPU service instance configuration"
 
   validation {
-    condition     = contains(["20", "22", "24", "26", "30"], var.instance.spec.resources.cpu)
-    error_message = "CPU must be one of: 20, 22, 24, 26, 30."
+    condition = (
+      (!try(var.instance.spec.gpu.enabled, true)) ||
+      (try(var.instance.spec.gpu.type, "") == "nvidia-l4" && contains(["4", "6", "8"], var.instance.spec.resources.cpu)) ||
+      (try(var.instance.spec.gpu.type, "") == "nvidia-rtx-pro-6000" && contains(["20", "22", "24", "26", "30"], var.instance.spec.resources.cpu))
+    )
+    error_message = "nvidia-l4 requires CPU 4, 6, or 8. nvidia-rtx-pro-6000 requires CPU 20, 22, 24, 26, or 30."
   }
 
   validation {
-    condition     = contains(["80Gi", "96Gi", "104Gi", "128Gi"], var.instance.spec.resources.memory)
-    error_message = "Memory must be one of: 80Gi, 96Gi, 104Gi, 128Gi."
+    condition = (
+      (!try(var.instance.spec.gpu.enabled, true)) ||
+      (try(var.instance.spec.gpu.type, "") == "nvidia-l4" && contains(["16Gi", "32Gi"], var.instance.spec.resources.memory)) ||
+      (try(var.instance.spec.gpu.type, "") == "nvidia-rtx-pro-6000" && contains(["80Gi", "96Gi", "104Gi", "128Gi"], var.instance.spec.resources.memory))
+    )
+    error_message = "nvidia-l4 requires memory 16Gi or 32Gi. nvidia-rtx-pro-6000 requires memory 80Gi, 96Gi, 104Gi, or 128Gi."
   }
 
   validation {

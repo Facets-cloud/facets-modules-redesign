@@ -29,8 +29,8 @@ inputs:
 intent: cloudrun
 intentDetails:
   type: Cloud & Infrastructure
-  description: GPU-accelerated serverless batch jobs for video processing and ML inference on GCP Cloud Run
-  displayName: Cloud Run GPU Job
+  description: Serverless containers and batch jobs on GCP Cloud Run. Supports CPU batch jobs for data processing and ETL, GPU services for AI/ML inference, and GPU batch jobs for video processing.
+  displayName: Cloud Run
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloudrun.svg
 sample:
     disabled: false

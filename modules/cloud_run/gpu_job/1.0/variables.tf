@@ -25,7 +25,7 @@ variable "instance" {
         max_retries  = optional(number, 3)
         task_timeout = optional(string, "3600s")
       }), {})
-      env     = optional(map(string), {})
+      env = optional(map(string), {})
       secrets = optional(list(object({
         env_var     = optional(string)
         secret_name = optional(string)

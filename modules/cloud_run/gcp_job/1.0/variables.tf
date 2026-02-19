@@ -21,7 +21,7 @@ variable "instance" {
         max_retries  = optional(number, 3)
         task_timeout = optional(string, "3600s")
       }), {})
-      env     = optional(map(string), {})
+      env = optional(map(string), {})
       secrets = optional(map(object({
         secret_name = string
         version     = optional(string, "latest")
@@ -57,8 +57,8 @@ variable "environment" {
 
 variable "cluster" {
   description = "Cluster configuration"
-  type    = object({})
-  default = {}
+  type        = object({})
+  default     = {}
 }
 
 # =============================================================================
