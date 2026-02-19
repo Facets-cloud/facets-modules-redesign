@@ -123,16 +123,6 @@ outputs:
   default:
     type: '@facets/gcp_notification_channels'
     title: GCP Notification Channels
-    mock:
-      attributes:
-        channel_ids: mock-string-value
-        channel_names: mock-string-value
-        project_id: mock-string-value
   attributes:
     type: '@facets/gcp_notification_channel_attributes'
     title: Notification Channel Attributes
-    mock:
-      attributes:
-        channel_ids: mock-string-value
-        channel_names: mock-string-value
-        project_id: mock-string-value

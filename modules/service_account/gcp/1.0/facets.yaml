@@ -16,16 +16,6 @@ inputs:
 intent: service_account
 outputs:
     default:
-        mock:
-            attributes:
-                private_key: mock-string-value
-                project_id: mock-string-value
-                secrets: mock-string-value
-                service_account_email: mock-string-value
-                service_account_id: mock-string-value
-                service_account_name: mock-string-value
-                unique_id: mock-string-value
-            interfaces: {}
         title: GCP Service Account
         type: '@facets/gcp_service_account'
 sample:

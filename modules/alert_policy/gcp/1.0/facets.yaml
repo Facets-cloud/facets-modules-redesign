@@ -211,8 +211,3 @@ outputs:
   default:
     type: '@facets/gcp_alert_policies'
     title: GCP Alert Policies
-    mock:
-      attributes:
-        policy_ids: mock-string-value
-        policy_names: mock-string-value
-        project_id: mock-string-value
