@@ -72,7 +72,7 @@ variable "inputs" {
           command     = optional(string)
         }))
         maintenance_policy_enabled             = optional(string)
-        master_authorized_networks_config      = optional(string)
+        master_authorized_networks_config      = optional(list(string))
         network                                = optional(string)
         pods_range_name                        = optional(string)
         project_id                             = optional(string)
