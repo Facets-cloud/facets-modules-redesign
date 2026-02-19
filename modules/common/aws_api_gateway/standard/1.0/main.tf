@@ -63,14 +63,14 @@ module "api_gateway" {
   ########################################
   # Stage
   ########################################
-  create_stage                = lookup(local.spec, "create_stage", true)
-  deploy_stage                = lookup(local.spec, "deploy_stage", true)
-  stage_name                  = lookup(local.spec, "stage_name", "$default")
-  stage_description           = lookup(local.spec, "stage_description", null)
-  stage_client_certificate_id = lookup(local.spec, "stage_client_certificate_id", null)
-  stage_variables             = lookup(local.spec, "stage_variables", {})
-  stage_tags                  = lookup(local.spec, "stage_tags", {})
-  stage_access_log_settings   = local.stage_access_log_settings
+  create_stage                 = lookup(local.spec, "create_stage", true)
+  deploy_stage                 = lookup(local.spec, "deploy_stage", true)
+  stage_name                   = lookup(local.spec, "stage_name", "$default")
+  stage_description            = lookup(local.spec, "stage_description", null)
+  stage_client_certificate_id  = lookup(local.spec, "stage_client_certificate_id", null)
+  stage_variables              = lookup(local.spec, "stage_variables", {})
+  stage_tags                   = lookup(local.spec, "stage_tags", {})
+  stage_access_log_settings    = local.stage_access_log_settings
   stage_default_route_settings = local.stage_default_route_settings
 
   ########################################
