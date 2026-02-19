@@ -46,32 +46,33 @@ variable "environment" {
 variable "inputs" {
   type = object({
     cloud_account = object({
-      attributes = object({
-        aws_region     = string
-        aws_account_id = string
-        aws_iam_role   = string
-        external_id    = optional(string)
-        session_name   = optional(string)
-      })
+      attributes = optional(object({
+        aws_region   = optional(string)
+        aws_iam_role = optional(string)
+        external_id  = optional(string)
+        session_name = optional(string)
+      }), {})
+      interfaces = optional(object({}), {})
     })
     kubernetes_details = object({
-      attributes = object({
-        cluster_endpoint       = string
-        cluster_ca_certificate = string
-        cluster_name           = string
-        cluster_version        = string
-        cluster_arn            = string
-        cluster_id             = string
-        oidc_issuer_url        = string
-        oidc_provider          = string
-        oidc_provider_arn      = string
-        node_security_group_id = string
-        kubernetes_provider_exec = object({
-          api_version = string
-          command     = string
-          args        = list(string)
-        })
-      })
+      attributes = optional(object({
+        cluster_endpoint       = optional(string)
+        cluster_ca_certificate = optional(string)
+        cluster_name           = optional(string)
+        cluster_version        = optional(string)
+        cluster_arn            = optional(string)
+        cluster_id             = optional(string)
+        oidc_issuer_url        = optional(string)
+        oidc_provider          = optional(string)
+        oidc_provider_arn      = optional(string)
+        node_security_group_id = optional(string)
+        kubernetes_provider_exec = optional(object({
+          api_version = optional(string)
+          command     = optional(string)
+          args        = optional(list(string))
+        }), {})
+      }), {})
+      interfaces = optional(object({}), {})
     })
   })
   description = "Inputs from dependent modules"
