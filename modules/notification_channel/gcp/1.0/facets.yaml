@@ -7,6 +7,12 @@ description: |
   Create GCP Cloud Monitoring notification channels for alerts.
   Supports Email, Slack, Webhook, and PagerDuty integrations.
 
+intentDetails:
+  type: Monitoring & Observability
+  description: Manage GCP Cloud Monitoring notification channels (email, Slack, webhook, PagerDuty) for alert routing.
+  displayName: Notification Channels
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/monitoring.svg
+
 inputs:
   gcp_provider:
     type: '@facets/gcp_cloud_account'
