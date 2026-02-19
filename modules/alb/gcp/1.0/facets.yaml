@@ -1,304 +1,317 @@
-intent: alb
-flavor: gcp
-version: '1.0'
-description: 'Creates a GCP Application Load Balancer with managed SSL certificates
-  for CloudRun services.
-
-  Supports path-based and host-based routing, CDN, Cloud Armor, and IAP integration.
-
-  '
 clouds:
-- gcp
+    - gcp
+description: |
+    Creates a GCP Application Load Balancer with managed SSL certificates for CloudRun services.
+
+    Supports subdomain routing via domain_prefix, path-based routing, CDN, Cloud Armor, and IAP integration.
+    Similar to nginx/traefik ingress pattern with base domains and rules with domain prefixes.
+flavor: gcp
 inputs:
-  gcp_cloud_account:
-    type: '@facets/gcp_cloud_account'
-    optional: false
-    displayName: GCP Cloud Account
-    description: GCP project and credentials for provisioning resources
-    providers:
-    - google
-  network:
-    type: '@facets/gcp-network-details'
-    optional: true
-    displayName: GCP Network
-    description: VPC network for private CloudRun services (optional)
+    gcp_cloud_account:
+        description: GCP project and credentials for provisioning resources
+        displayName: GCP Cloud Account
+        optional: false
+        providers:
+            - google
+        type: '@facets/gcp_cloud_account'
+    network:
+        description: VPC network for private CloudRun services (optional)
+        displayName: GCP Network
+        optional: true
+        type: '@facets/gcp-network-details'
+intent: alb
 outputs:
-  default:
-    type: '@outputs/alb'
-    title: Load Balancer
-  attributes.lb_ip_address:
-    type: '@outputs/ip_address'
-    title: Load Balancer IP Address
-spec:
-  title: ALB Configuration
-  description: Configure GCP Application Load Balancer for CloudRun services
-  type: object
-  properties:
-    domains:
-      type: object
-      title: Domains
-      description: Configure domains and SSL certificates
-      patternProperties:
-        ^[a-zA-Z0-9_-]+$:
-          type: object
-          properties:
-            domain:
-              type: string
-              title: Domain Name
-              description: Full domain name (e.g., example.com, api.example.com)
-              pattern: ^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$
-              x-ui-placeholder: Enter domain (e.g., example.com)
-              x-ui-error-message: Domain must be a valid DNS name
-            rules:
-              type: array
-              title: Routing Rules
-              description: List of rule names to apply to this domain
-              items:
-                type: string
-                x-ui-placeholder: Select or enter rule name
-              minItems: 1
-              x-ui-error-message: At least one rule must be specified
-            certificate:
-              type: object
-              title: SSL Certificate
-              x-ui-toggle: true
-              properties:
-                mode:
-                  type: string
-                  title: Certificate Mode
-                  enum:
-                  - auto
-                  - managed
-                  - existing
-                  default: auto
-                  description: 'auto: Create managed certificate from domain name
-
-                    managed: Create managed certificate with custom name
-
-                    existing: Reference existing certificate
-
-                    '
-                managed_cert_name:
-                  type: string
-                  title: Managed Certificate Name
-                  description: Custom name for managed certificate (mode=managed)
-                  x-ui-visible-if:
-                    field: spec.domains.{{this}}.certificate.mode
-                    values:
-                    - managed
-                existing_cert_name:
-                  type: string
-                  title: Existing Certificate Name
-                  description: Name of existing SSL certificate (mode=existing)
-                  x-ui-visible-if:
-                    field: spec.domains.{{this}}.certificate.mode
-                    values:
-                    - existing
-          required:
-          - domain
-          - rules
-    rules:
-      type: object
-      title: Routing Rules
-      description: Define path-based routing rules that can be applied to domains
-      patternProperties:
-        ^[a-zA-Z0-9_-]+$:
-          type: object
-          properties:
-            default_service:
-              type: string
-              title: Default Backend Service
-              description: CloudRun service for unmatched paths
-              x-ui-output-type: '@outputs/cloudrun_service'
-              x-ui-placeholder: Select service or enter ${service.name.out.attributes.service_name}
-            paths:
-              type: array
-              title: Path Matchers
-              description: Route specific paths to different services
-              items:
-                type: object
-                properties:
-                  path:
-                    type: string
-                    title: Path Pattern
-                    description: URL path pattern (e.g., /api, /api/*, /admin)
-                    x-ui-placeholder: Enter path (e.g., /api/*)
-                  service:
-                    type: string
-                    title: Backend Service
-                    description: CloudRun service name or reference
-                    x-ui-output-type: '@outputs/cloudrun_service'
-                    x-ui-placeholder: Select service
-                  path_type:
-                    type: string
-                    title: Match Type
-                    enum:
-                    - PREFIX
-                    - EXACT
-                    default: PREFIX
-                    description: PREFIX matches /path/*, EXACT matches /path only
-                required:
-                - path
-                - service
-          required:
-          - default_service
-    global_config:
-      type: object
-      title: Global Load Balancer Settings
-      x-ui-toggle: true
-      properties:
-        enable_cdn:
-          type: boolean
-          title: Enable Cloud CDN
-          default: false
-          description: Enable Cloud CDN for caching static content
-        cdn_policy:
-          type: object
-          title: CDN Policy
-          x-ui-visible-if:
-            field: spec.global_config.enable_cdn
-            values:
-            - true
-          properties:
-            cache_mode:
-              type: string
-              title: Cache Mode
-              enum:
-              - CACHE_ALL_STATIC
-              - USE_ORIGIN_HEADERS
-              - FORCE_CACHE_ALL
-              default: USE_ORIGIN_HEADERS
-            default_ttl:
-              type: integer
-              title: Default TTL (seconds)
-              default: 3600
-              minimum: 0
-            max_ttl:
-              type: integer
-              title: Max TTL (seconds)
-              default: 86400
-              minimum: 0
-        enable_iap:
-          type: boolean
-          title: Enable Identity-Aware Proxy
-          default: false
-          description: Enable IAP for authentication
-        iap_config:
-          type: object
-          title: IAP Configuration
-          x-ui-visible-if:
-            field: spec.global_config.enable_iap
-            values:
-            - true
-          properties:
-            oauth2_client_id:
-              type: string
-              title: OAuth2 Client ID
-              x-ui-secret-ref: true
-            oauth2_client_secret:
-              type: string
-              title: OAuth2 Client Secret
-              x-ui-secret-ref: true
-          required:
-          - oauth2_client_id
-          - oauth2_client_secret
-        security_policy:
-          type: string
-          title: Cloud Armor Security Policy
-          description: Name of Cloud Armor security policy (optional)
-        custom_headers:
-          type: object
-          title: Custom Request Headers
-          description: Headers to add to all backend requests
-          x-ui-yaml-editor: true
-        timeout_sec:
-          type: integer
-          title: Backend Timeout (seconds)
-          default: 30
-          minimum: 1
-          maximum: 3600
-    advanced:
-      type: object
-      title: Advanced Settings
-      x-ui-toggle: true
-      properties:
-        ip_address_name:
-          type: string
-          title: Reserved IP Address Name
-          description: Name of existing global static IP (optional)
-        enable_http:
-          type: boolean
-          title: Enable HTTP (Port 80)
-          default: true
-          description: Enable HTTP listener (redirects to HTTPS if SSL configured)
-        http_redirect:
-          type: boolean
-          title: HTTP to HTTPS Redirect
-          default: true
-          description: Redirect HTTP traffic to HTTPS
-          x-ui-visible-if:
-            field: spec.advanced.enable_http
-            values:
-            - true
-        session_affinity:
-          type: string
-          title: Session Affinity
-          enum:
-          - NONE
-          - CLIENT_IP
-          - GENERATED_COOKIE
-          default: NONE
-        connection_draining_timeout:
-          type: integer
-          title: Connection Draining Timeout (seconds)
-          default: 300
-          minimum: 0
-          maximum: 3600
-  required:
-  - domains
-  - rules
-  x-ui-order:
-  - domains
-  - rules
-  - global_config
-  - advanced
+    default:
+        mock:
+            attributes:
+                lb_ip_address: mock-string-value
+                lb_name: mock-string-value
+            interfaces: {}
+        title: Load Balancer
+        type: '@outputs/alb'
 sample:
-  kind: alb
-  flavor: gcp
-  version: '1.0'
-  disabled: false
-  spec:
-    domains:
-      main:
-        domain: example.com
+    disabled: false
+    flavor: gcp
+    kind: alb
+    spec:
+        advanced:
+            connection_draining_timeout: 300
+            enable_http: true
+            http_redirect: true
+            session_affinity: NONE
+        domains:
+            main:
+                certificate:
+                    mode: auto
+                domain: example.com
+                equivalent_prefixes: []
+        global_config:
+            enable_cdn: false
+            enable_iap: false
+            timeout_sec: 30
         rules:
-        - default
-        certificate:
-          mode: auto
-      api:
-        domain: api.example.com
+            admin:
+                domain_key: main
+                domain_prefix: admin
+                path: /
+                service: admin-service
+            api:
+                domain_prefix: api
+                path: /
+                service: api-service
+            app:
+                domain_prefix: app
+                path: /
+                service: app-service
+            default:
+                domain_prefix: '*'
+                path: /
+                service: web-service
+    version: "1.0"
+spec:
+    description: Configure GCP Application Load Balancer for CloudRun services
+    properties:
+        advanced:
+            properties:
+                connection_draining_timeout:
+                    default: 300
+                    maximum: 3600
+                    minimum: 0
+                    title: Connection Draining Timeout (seconds)
+                    type: integer
+                enable_http:
+                    default: true
+                    description: Enable HTTP listener (redirects to HTTPS if SSL configured)
+                    title: Enable HTTP (Port 80)
+                    type: boolean
+                http_redirect:
+                    default: true
+                    description: Redirect HTTP traffic to HTTPS
+                    title: HTTP to HTTPS Redirect
+                    type: boolean
+                    x-ui-visible-if:
+                        field: spec.advanced.enable_http
+                        values:
+                            - true
+                ip_address_name:
+                    description: Name of existing global static IP (optional)
+                    title: Reserved IP Address Name
+                    type: string
+                session_affinity:
+                    default: NONE
+                    enum:
+                        - NONE
+                        - CLIENT_IP
+                        - GENERATED_COOKIE
+                    title: Session Affinity
+                    type: string
+            title: Advanced Settings
+            type: object
+            x-ui-toggle: true
+        domains:
+            description: |
+                Configure base domains. Rules will create subdomains using domain_prefix.
+                Example: domain "example.com" + rule with domain_prefix "api" = "api.example.com"
+            patternProperties:
+                ^[a-zA-Z0-9_-]+$:
+                    properties:
+                        certificate:
+                            properties:
+                                existing_cert_name:
+                                    description: Name of existing SSL certificate (mode=existing or wildcard)
+                                    title: Existing Certificate Name
+                                    type: string
+                                    x-ui-visible-if:
+                                        field: spec.domains.{{this}}.certificate.mode
+                                        values:
+                                            - existing
+                                            - wildcard
+                                managed_cert_name:
+                                    description: Custom name for managed certificate (mode=managed)
+                                    title: Managed Certificate Name
+                                    type: string
+                                    x-ui-visible-if:
+                                        field: spec.domains.{{this}}.certificate.mode
+                                        values:
+                                            - managed
+                                mode:
+                                    default: auto
+                                    description: |
+                                        auto: Create managed certificate per host
+                                        managed: Create managed certificate with custom name
+                                        existing: Reference existing certificate
+                                        wildcard: Use wildcard certificate for all subdomains
+                                    enum:
+                                        - auto
+                                        - managed
+                                        - existing
+                                        - wildcard
+                                    title: Certificate Mode
+                                    type: string
+                            title: SSL Certificate
+                            type: object
+                            x-ui-toggle: true
+                        domain:
+                            description: Base domain name (e.g., example.com)
+                            pattern: ^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$
+                            title: Domain Name
+                            type: string
+                            x-ui-error-message: Domain must be a valid DNS name
+                            x-ui-placeholder: Enter domain (e.g., example.com)
+                        equivalent_prefixes:
+                            default: []
+                            description: |
+                                Domain prefixes that should resolve to bare domain (no subdomain).
+                                If a rule's domain_prefix matches one of these, it routes to bare domain.
+                            items:
+                                type: string
+                            title: Equivalent Prefixes
+                            type: array
+                    required:
+                        - domain
+                    type: object
+            title: Domains
+            type: object
+        global_config:
+            properties:
+                cdn_policy:
+                    properties:
+                        cache_mode:
+                            default: USE_ORIGIN_HEADERS
+                            enum:
+                                - CACHE_ALL_STATIC
+                                - USE_ORIGIN_HEADERS
+                                - FORCE_CACHE_ALL
+                            title: Cache Mode
+                            type: string
+                        default_ttl:
+                            default: 3600
+                            minimum: 0
+                            title: Default TTL (seconds)
+                            type: integer
+                        max_ttl:
+                            default: 86400
+                            minimum: 0
+                            title: Max TTL (seconds)
+                            type: integer
+                    title: CDN Policy
+                    type: object
+                    x-ui-visible-if:
+                        field: spec.global_config.enable_cdn
+                        values:
+                            - true
+                custom_headers:
+                    description: Headers to add to all backend requests
+                    title: Custom Request Headers
+                    type: object
+                    x-ui-yaml-editor: true
+                enable_cdn:
+                    default: false
+                    description: Enable Cloud CDN for caching static content
+                    title: Enable Cloud CDN
+                    type: boolean
+                enable_iap:
+                    default: false
+                    description: Enable IAP for authentication
+                    title: Enable Identity-Aware Proxy
+                    type: boolean
+                iap_config:
+                    properties:
+                        oauth2_client_id:
+                            title: OAuth2 Client ID
+                            type: string
+                            x-ui-secret-ref: true
+                        oauth2_client_secret:
+                            title: OAuth2 Client Secret
+                            type: string
+                            x-ui-secret-ref: true
+                    required:
+                        - oauth2_client_id
+                        - oauth2_client_secret
+                    title: IAP Configuration
+                    type: object
+                    x-ui-visible-if:
+                        field: spec.global_config.enable_iap
+                        values:
+                            - true
+                security_policy:
+                    description: Name of Cloud Armor security policy (optional)
+                    title: Cloud Armor Security Policy
+                    type: string
+                timeout_sec:
+                    default: 30
+                    maximum: 3600
+                    minimum: 1
+                    title: Backend Timeout (seconds)
+                    type: integer
+            title: Global Load Balancer Settings
+            type: object
+            x-ui-toggle: true
         rules:
-        - api-routes
-        certificate:
-          mode: auto
-    rules:
-      default:
-        default_service: web-service
-      api-routes:
-        default_service: api-service
-        paths:
-        - path: /v1/*
-          service: api-v1-service
-          path_type: PREFIX
-        - path: /v2/*
-          service: api-v2-service
-          path_type: PREFIX
-    global_config:
-      enable_cdn: false
-      enable_iap: false
-      timeout_sec: 30
-    advanced:
-      enable_http: true
-      http_redirect: true
-      session_affinity: NONE
-      connection_draining_timeout: 300
+            description: |
+                Define routing rules with domain_prefix for subdomain creation.
+                Global rules (no domain_key) apply to ALL domains.
+                Domain-specific rules (with domain_key) apply only to that domain.
+            patternProperties:
+                ^[a-zA-Z0-9_-]+$:
+                    properties:
+                        domain_key:
+                            description: |
+                                If set, this rule only applies to the specified domain key.
+                                Leave empty to apply rule to ALL domains (global rule).
+                            title: Domain Key (Optional)
+                            type: string
+                            x-ui-placeholder: Leave empty for global rule
+                        domain_prefix:
+                            default: '*'
+                            description: |
+                                Subdomain prefix. Creates {prefix}.{domain}.
+                                Use "*" or empty for bare domain routing.
+                            title: Domain Prefix (Subdomain)
+                            type: string
+                            x-ui-placeholder: e.g., api, app, admin (or * for bare domain)
+                        path:
+                            default: /
+                            description: URL path for routing (e.g., /, /api, /admin)
+                            title: Path
+                            type: string
+                            x-ui-placeholder: Enter path (e.g., /api)
+                        path_type:
+                            default: PREFIX
+                            description: PREFIX matches /path/*, EXACT matches /path only
+                            enum:
+                                - PREFIX
+                                - EXACT
+                            title: Match Type
+                            type: string
+                        priority:
+                            default: 100
+                            description: |
+                                Lower number = higher priority. Rules with same host sorted by priority.
+                                Default is 100.
+                            maximum: 10000
+                            minimum: 1
+                            title: Priority
+                            type: integer
+                        service:
+                            description: CloudRun service name or reference
+                            title: Backend Service
+                            type: string
+                            x-ui-output-type: '@outputs/cloudrun_service'
+                            x-ui-placeholder: Select service or enter ${service.name.out.attributes.service_name}
+                    required:
+                        - service
+                    type: object
+            title: Routing Rules
+            type: object
+    required:
+        - domains
+        - rules
+    title: ALB Configuration
+    type: object
+    x-ui-order:
+        - domains
+        - rules
+        - global_config
+        - advanced
+version: "1.0"

@@ -1,256 +1,192 @@
-# Ingress Module for GCP CloudRun
+# ALB Module for GCP CloudRun
 
-Creates a GCP Application Load Balancer with managed SSL certificates for routing traffic to CloudRun services.
+Creates a GCP Application Load Balancer with managed SSL certificates for routing traffic to CloudRun services. Uses a domain_prefix pattern similar to nginx/traefik ingress for subdomain routing.
 
 ## Features
 
-- **Host-based routing**: Route different domains to different CloudRun services
-- **Path-based routing**: Route URL paths to different services (e.g., `/api` → api-service, `/web` → web-service)
-- **Managed SSL certificates**: Automatic SSL certificate provisioning via Google-managed certificates
+- **Subdomain routing via domain_prefix**: Create subdomains like `api.example.com` using `domain_prefix: api`
+- **Global and domain-specific rules**: Rules can apply to all domains or only specific ones
+- **Path-based routing**: Route URL paths to different services (e.g., `/api` → api-service)
+- **Managed SSL certificates**: Automatic SSL certificate provisioning per host
+- **equivalent_prefixes**: Map prefixes to bare domain (e.g., `www` → bare domain)
 - **Cloud CDN**: Optional CDN for caching static content
 - **Identity-Aware Proxy (IAP)**: Optional authentication layer
 - **Cloud Armor**: Security policy integration
 - **HTTP to HTTPS redirect**: Automatic redirect from HTTP to HTTPS
-- **Custom headers**: Add custom headers to backend requests
-- **Session affinity**: Support for sticky sessions
+
+## Domain Prefix Pattern
+
+This module follows the same pattern as nginx/traefik ingress:
+
+```
+domains:
+  main:
+    domain: example.com  ← Base domain
+
+rules:
+  api:
+    domain_prefix: api   ← Creates api.example.com
+    service: api-service
+```
+
+### Rule Types
+
+| Rule Type | Example | Description |
+|-----------|---------|-------------|
+| **Global rule** | `domain_prefix: api` (no domain_key) | Creates subdomain for ALL domains |
+| **Domain-specific rule** | `domain_prefix: admin, domain_key: main` | Creates subdomain only for specified domain |
+| **Bare domain rule** | `domain_prefix: "*"` | Routes to bare domain (example.com) |
 
 ## Architecture
 
 ```
-Internet → Global Load Balancer (IP) → URL Map (routing rules) → Backend Services → CloudRun Services
+Internet → Global Load Balancer (IP) → URL Map (host + path rules) → Backend Services → CloudRun
                 ↓
-           SSL Certificates (Google-managed)
+           SSL Certificates (one per computed host)
 ```
 
-**Components Created:**
-- Global static IP address
-- Managed SSL certificates (one per domain)
-- Backend services with serverless NEGs
-- URL map with host and path rules
-- HTTPS target proxy
-- HTTP target proxy (optional, for redirect)
-- Global forwarding rules (HTTPS + optional HTTP)
-
-## Prerequisites
-
-### Required Output Types
-
-Before uploading this module, ensure these output types exist in your project type:
-
-1. **`@facets/gcp_cloud_account`** - GCP provider configuration
-   ```json
-   {
-     "properties": {
-       "type": "object",
-       "properties": {
-         "attributes": {
-           "type": "object",
-           "properties": {
-             "project_id": { "type": "string" },
-             "region": { "type": "string" }
-           }
-         }
-       }
-     },
-     "providers": [
-       {
-         "name": "google",
-         "source": "hashicorp/google",
-         "version": "5.0.0"
-       }
-     ]
-   }
-   ```
-
-2. **`@outputs/cloudrun_service`** - CloudRun service outputs (for x-ui-output-type)
-   ```json
-   {
-     "properties": {
-       "type": "object",
-       "properties": {
-         "attributes": {
-           "type": "object",
-           "properties": {
-             "service_name": { "type": "string" },
-             "service_url": { "type": "string" }
-           }
-         }
-       }
-     },
-     "providers": []
-   }
-   ```
-
-3. **`@outputs/ingress`** - Ingress outputs (this module's default output)
-   ```json
-   {
-     "properties": {
-       "type": "object",
-       "properties": {
-         "attributes": {
-           "type": "object",
-           "properties": {
-             "lb_name": { "type": "string" },
-             "lb_ip_address": { "type": "string" },
-             "lb_ip_name": { "type": "string" },
-             "url_map_id": { "type": "string" },
-             "domains": {
-               "type": "array",
-               "items": { "type": "string" }
-             },
-             "https_url": { "type": "string" }
-           }
-         },
-         "interfaces": {
-           "type": "object",
-           "properties": {
-             "https": {
-               "type": "object",
-               "properties": {
-                 "host": { "type": "string" },
-                 "port": { "type": "string" },
-                 "protocol": { "type": "string" },
-                 "url": { "type": "string" },
-                 "ip_address": { "type": "string" }
-               }
-             }
-           }
-         }
-       }
-     },
-     "providers": []
-   }
-   ```
-
-4. **`@outputs/ip_address`** - IP address output (for nested output)
-   ```json
-   {
-     "properties": {
-       "type": "object",
-       "properties": {
-         "attributes": {
-           "type": "object",
-           "properties": {
-             "ip_address": { "type": "string" }
-           }
-         }
-       }
-     },
-     "providers": []
-   }
-   ```
-
-5. **`@facets/gcp_network`** - Optional GCP network details
-   ```json
-   {
-     "properties": {
-       "type": "object",
-       "properties": {
-         "attributes": {
-           "type": "object",
-           "properties": {
-             "network_name": { "type": "string" },
-             "network_id": { "type": "string" },
-             "subnetwork_name": { "type": "string" }
-           }
-         }
-       }
-     },
-     "providers": []
-   }
-   ```
-
-## Module Structure
-
-```
-ingress-gcp/
-├── facets.yaml              # Module metadata and spec schema
-├── variables.tf             # Terraform variable declarations
-├── locals.tf                # Local variables and computed values
-├── ip_address.tf            # Global static IP address
-├── certificates.tf          # SSL certificate management
-├── backend_services.tf      # Backend services and serverless NEGs
-├── url_map.tf               # URL map with routing rules
-├── target_proxies.tf        # HTTP/HTTPS target proxies
-├── forwarding_rules.tf      # Global forwarding rules
-├── outputs.tf               # Output attributes and interfaces
-├── versions.tf              # Terraform version constraint
-└── README.md                # This file
-```
-
-## Usage Example
-
-### Simple Single Domain
+**What gets created from configuration:**
 
 ```yaml
-kind: ingress
-flavor: gcp
-version: "1.0"
-metadata:
-  name: api-lb
-spec:
-  domains:
-    api.example.com:
-      default_service: "${service.api.out.attributes.service_name}"
-      certificate:
-        mode: auto  # Auto-creates managed certificate
+domains:
+  main:
+    domain: example.com
+
+rules:
+  default: { domain_prefix: "*", service: web }
+  api: { domain_prefix: api, service: api }
+  admin: { domain_prefix: admin, domain_key: main, service: admin }
 ```
 
-### Multi-Domain with Path Routing
+Creates these hosts:
+- `example.com` → web-service
+- `api.example.com` → api-service
+- `admin.example.com` → admin-service (domain-specific)
+
+## Usage Examples
+
+### Simple Single Domain with Subdomain
 
 ```yaml
-kind: ingress
+kind: alb
 flavor: gcp
 version: "1.0"
-metadata:
-  name: multi-service-lb
 spec:
   domains:
-    example.com:
-      default_service: "${service.frontend.out.attributes.service_name}"
-      paths:
-        /api:
-          service: "${service.api.out.attributes.service_name}"
-          path_type: PREFIX
-        /admin:
-          service: "${service.admin.out.attributes.service_name}"
-          path_type: PREFIX
+    main:
+      domain: example.com
       certificate:
         mode: auto
 
-    api.example.com:
-      default_service: "${service.api.out.attributes.service_name}"
-      certificate:
-        mode: managed
-        managed_cert_name: api-example-cert
+  rules:
+    # Bare domain (example.com) → frontend
+    web:
+      domain_prefix: "*"
+      service: frontend-service
+      path: "/"
+
+    # api.example.com → API service
+    api:
+      domain_prefix: api
+      service: api-service
+      path: "/"
 ```
 
-### With CDN and IAP
+### Multi-Domain with Global and Domain-Specific Rules
 
 ```yaml
-kind: ingress
+kind: alb
 flavor: gcp
 version: "1.0"
-metadata:
-  name: secure-lb
 spec:
   domains:
-    app.example.com:
-      default_service: "${service.app.out.attributes.service_name}"
+    primary:
+      domain: example.com
+      equivalent_prefixes:
+        - www  # www.example.com → example.com
       certificate:
         mode: auto
+
+    secondary:
+      domain: myapp.io
+      certificate:
+        mode: auto
+
+  rules:
+    # GLOBAL RULES - Apply to ALL domains
+
+    # Bare domain routing
+    default:
+      domain_prefix: "*"
+      service: web-service
+      path: "/"
+
+    # API subdomain for all domains
+    # api.example.com + api.myapp.io
+    api:
+      domain_prefix: api
+      service: api-service
+      path: "/"
+
+    # DOMAIN-SPECIFIC RULES
+
+    # admin.example.com only (not admin.myapp.io)
+    admin:
+      domain_prefix: admin
+      domain_key: primary  # Only for 'primary' domain
+      service: admin-service
+      path: "/"
+
+    # blog.myapp.io only (not blog.example.com)
+    blog:
+      domain_prefix: blog
+      domain_key: secondary  # Only for 'secondary' domain
+      service: blog-service
+      path: "/"
+```
+
+### With CDN, IAP, and Path Routing
+
+```yaml
+kind: alb
+flavor: gcp
+version: "1.0"
+spec:
+  domains:
+    main:
+      domain: app.example.com
+      certificate:
+        mode: auto
+
+  rules:
+    default:
+      domain_prefix: "*"
+      service: frontend-service
+      path: "/"
+
+    api:
+      domain_prefix: api
+      service: api-service
+      path: "/"
+
+    # Multiple paths on same subdomain
+    api-v2:
+      domain_prefix: api
+      service: api-v2-service
+      path: "/v2/*"
+      path_type: PREFIX
+      priority: 50  # Higher priority than api rule
 
   global_config:
     enable_cdn: true
     cdn_policy:
       cache_mode: CACHE_ALL_STATIC
       default_ttl: 3600
-      max_ttl: 86400
 
     enable_iap: true
     iap_config:
-      oauth2_client_id: "${blueprint.self.secrets.IAP_CLIENT_ID}"
-      oauth2_client_secret: "${blueprint.self.secrets.IAP_CLIENT_SECRET}"
+      oauth2_client_id: "${secrets.IAP_CLIENT_ID}"
+      oauth2_client_secret: "${secrets.IAP_CLIENT_SECRET}"
 
     security_policy: "my-cloud-armor-policy"
     timeout_sec: 60
@@ -261,183 +197,84 @@ spec:
     session_affinity: CLIENT_IP
 ```
 
-### Manual Service Names
-
-```yaml
-kind: ingress
-flavor: gcp
-version: "1.0"
-metadata:
-  name: manual-lb
-spec:
-  domains:
-    example.com:
-      default_service: "my-cloudrun-service"  # Literal service name
-      paths:
-        /api:
-          service: "api-service"  # Literal service name
-      certificate:
-        mode: existing
-        existing_cert_name: "existing-ssl-cert"
-```
-
 ## Configuration Reference
+
+### Domain Options
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `domain` | string | Base domain name (e.g., example.com) |
+| `equivalent_prefixes` | array | Prefixes that resolve to bare domain (e.g., ["www"]) |
+| `certificate.mode` | string | `auto`, `managed`, `existing`, or `wildcard` |
+| `certificate.managed_cert_name` | string | Custom cert name (mode=managed) |
+| `certificate.existing_cert_name` | string | Existing cert name (mode=existing/wildcard) |
+
+### Rule Options
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `domain_prefix` | string | `"*"` | Subdomain prefix. `"*"` or `""` = bare domain |
+| `domain_key` | string | (empty) | If set, rule only applies to this domain |
+| `service` | string | required | CloudRun service name |
+| `path` | string | `"/"` | URL path for routing |
+| `path_type` | string | `PREFIX` | `PREFIX` or `EXACT` |
+| `priority` | integer | `100` | Lower = higher priority |
 
 ### Certificate Modes
 
-| Mode | Description | Use Case |
-|------|-------------|----------|
-| `auto` | Auto-creates managed certificate from domain name | Default, simplest option |
-| `managed` | Creates managed certificate with custom name | When you need specific cert names |
-| `existing` | References existing SSL certificate | When cert is managed elsewhere |
+| Mode | Description |
+|------|-------------|
+| `auto` | Auto-creates managed certificate from domain name |
+| `managed` | Creates managed certificate with custom name |
+| `existing` | References existing SSL certificate |
+| `wildcard` | Uses wildcard certificate for all subdomains |
 
 ### Path Types
 
-| Type | Behavior | Example |
-|------|----------|---------|
-| `PREFIX` | Matches path and all sub-paths | `/api` matches `/api`, `/api/v1`, `/api/users` |
-| `EXACT` | Matches only exact path | `/api` matches only `/api` |
+| Type | Behavior |
+|------|----------|
+| `PREFIX` | Matches path and all sub-paths (`/api` matches `/api`, `/api/v1`) |
+| `EXACT` | Matches only exact path (`/api` matches only `/api`) |
 
-### CDN Cache Modes
+## Module Structure
 
-| Mode | Description |
-|------|-------------|
-| `CACHE_ALL_STATIC` | Cache static content based on content type |
-| `USE_ORIGIN_HEADERS` | Respect Cache-Control headers from CloudRun |
-| `FORCE_CACHE_ALL` | Force cache all responses regardless of headers |
-
-### Session Affinity Options
-
-| Option | Description |
-|--------|-------------|
-| `NONE` | No session affinity (default) |
-| `CLIENT_IP` | Route same client IP to same backend |
-| `GENERATED_COOKIE` | Use generated cookie for affinity |
-
-## Deployment Workflow
-
-### 1. Create Output Types (if needed)
-
-```bash
-# Create CloudRun service output type
-raptor create output-type @outputs/cloudrun_service -f cloudrun_service_schema.json
-
-# Create ingress output type
-raptor create output-type @outputs/ingress -f ingress_schema.json
-
-# Create IP address output type
-raptor create output-type @outputs/ip_address -f ip_address_schema.json
 ```
-
-### 2. Upload Module
-
-```bash
-cd ingress-gcp
-
-# Validate module structure
-raptor create iac-module -f . --dry-run
-
-# Upload as PREVIEW (for testing)
-raptor create iac-module -f . --auto-create
-```
-
-### 3. Test in Preview Project
-
-Create a test blueprint with CloudRun services and the ingress:
-
-```yaml
-# test-blueprint.yaml
-resources:
-  - kind: service
-    flavor: cloudrun
-    version: "1.0"
-    metadata:
-      name: api
-    spec:
-      image: gcr.io/my-project/api:latest
-      region: us-central1
-
-  - kind: service
-    flavor: cloudrun
-    version: "1.0"
-    metadata:
-      name: frontend
-    spec:
-      image: gcr.io/my-project/frontend:latest
-      region: us-central1
-
-  - kind: ingress
-    flavor: gcp
-    version: "1.0"
-    metadata:
-      name: lb
-    spec:
-      domains:
-        example.com:
-          default_service: "${service.frontend.out.attributes.service_name}"
-          paths:
-            /api:
-              service: "${service.api.out.attributes.service_name}"
-          certificate:
-            mode: auto
-```
-
-Deploy and test:
-
-```bash
-# Apply blueprint
-raptor apply -f test-blueprint.yaml -p test-project --dry-run
-
-# Create release
-raptor create release -p test-project -e dev --plan -w
-
-# Check logs
-raptor logs release -p test-project -e dev -f <RELEASE_ID>
-```
-
-### 4. Publish Module
-
-```bash
-raptor publish iac-module ingress/gcp/1.0
+alb-gcp/
+├── facets.yaml              # Module metadata and spec schema
+├── variables.tf             # Terraform variable declarations
+├── locals.tf                # Domain prefix computation and rule processing
+├── ip_address.tf            # Global static IP address
+├── certificates.tf          # SSL certificate management (per host)
+├── backend_services.tf      # Backend services and serverless NEGs
+├── url_map.tf               # URL map with computed host rules
+├── target_proxies.tf        # HTTP/HTTPS target proxies
+├── forwarding_rules.tf      # Global forwarding rules
+├── outputs.tf               # Output attributes and interfaces
+└── examples/                # Example configurations
 ```
 
 ## DNS Configuration
 
-After deployment, configure DNS records:
+After deployment, configure DNS A records for each computed host:
 
-1. Get the load balancer IP:
-   ```bash
-   raptor get resource-outputs -p myproject -e prod ingress/lb
-   ```
+```bash
+# Get the load balancer IP
+raptor get resource-outputs -p myproject -e prod alb/my-lb
+```
 
-2. Create DNS A records pointing to the IP:
-   ```
-   example.com         A    <LB_IP_ADDRESS>
-   api.example.com     A    <LB_IP_ADDRESS>
-   ```
+Create DNS records:
+```
+example.com         A    <LB_IP_ADDRESS>
+api.example.com     A    <LB_IP_ADDRESS>
+admin.example.com   A    <LB_IP_ADDRESS>
+```
 
-3. Wait for DNS propagation (typically 5-60 minutes)
-
-4. Wait for managed SSL certificate provisioning (typically 15-30 minutes)
-
-## Certificate Provisioning Notes
-
-**Google-managed certificates require:**
-1. DNS A record pointing to the load balancer IP
-2. Domain must be publicly accessible
-3. Provisioning time: 15-30 minutes after DNS propagation
-4. Certificate status can be checked in GCP Console → Load Balancing → Certificates
-
-**Certificate validation fails if:**
-- DNS records are not configured correctly
-- Domain is not publicly reachable
-- Firewall rules block Google's validation servers
+**Note:** Managed SSL certificates require DNS to be configured before they can provision (15-30 minutes after DNS propagation).
 
 ## Troubleshooting
 
 ### Certificate Provisioning Fails
 
-Check certificate status:
 ```bash
 gcloud compute ssl-certificates describe <CERT_NAME> --global
 ```
@@ -445,66 +282,42 @@ gcloud compute ssl-certificates describe <CERT_NAME> --global
 Common issues:
 - DNS not configured correctly
 - Domain not publicly accessible
-- Previous certificate provisioning in progress (wait 24 hours)
-
-### Backend Service Unhealthy
-
-Check CloudRun service:
-```bash
-gcloud run services describe <SERVICE_NAME> --region=<REGION>
-```
-
-Common issues:
-- CloudRun service not deployed
-- Service in wrong region
-- IAM permissions missing (Load Balancer needs Cloud Run Invoker role)
+- Previous certificate provisioning in progress
 
 ### 404 Not Found
 
-Check URL map configuration:
+Check computed hosts and URL map:
 ```bash
 gcloud compute url-maps describe <URL_MAP_NAME>
 ```
 
 Common issues:
-- Path matching incorrect (PREFIX vs EXACT)
-- Service name reference incorrect
-- Default service not configured
+- Rule's domain_prefix not matching expected subdomain
+- Service name incorrect
+- Path matching (PREFIX vs EXACT) misconfigured
 
-## Security Best Practices
+## Migration from Old Structure
 
-1. **Always use HTTPS**: Enable `http_redirect: true` to redirect HTTP → HTTPS
-2. **Enable IAP**: For internal applications, enable Identity-Aware Proxy
-3. **Use Cloud Armor**: Add security policies for DDoS protection and WAF rules
-4. **Restrict CloudRun ingress**: Set CloudRun services to `internal-and-cloud-load-balancing`
-5. **Use custom headers**: Add `X-Forwarded-For` and authentication headers
+**Old structure (explicit domains):**
+```yaml
+domains:
+  api.example.com:
+    default_service: api-service
+```
 
-## Cost Considerations
+**New structure (domain_prefix):**
+```yaml
+domains:
+  main:
+    domain: example.com
 
-**Pricing components:**
-- Global load balancer forwarding rules: ~$18/month per rule
-- Managed SSL certificates: Free (up to 100 certificates)
-- Backend service: ~$0.008 per GB of egress
-- Cloud CDN (if enabled): ~$0.08 per GB
-- Cloud Armor (if enabled): ~$5/month base + per-rule fees
+rules:
+  api:
+    domain_prefix: api
+    service: api-service
+```
 
-**Cost optimization:**
-- Use fewer forwarding rules (combine domains with host-based routing)
-- Enable CDN to reduce origin traffic
-- Use path-based routing to minimize backend services
-
-## Limitations
-
-1. **CloudRun regions**: Backend services must be in the same region as CloudRun services (configure in cloud_account input)
-2. **Certificate limit**: 100 managed certificates per project
-3. **Domain verification**: Domains must be publicly accessible for certificate provisioning
-4. **Path matching**: GCP URL maps support up to 100 path rules per path matcher
-5. **Timeout**: Maximum backend timeout is 3600 seconds (1 hour)
-
-## References
-
-- [GCP Load Balancing Documentation](https://cloud.google.com/load-balancing/docs)
-- [CloudRun Load Balancer Integration](https://cloud.google.com/run/docs/mapping-custom-domains)
-- [Managed SSL Certificates](https://cloud.google.com/load-balancing/docs/ssl-certificates/google-managed-certs)
-- [Cloud CDN Documentation](https://cloud.google.com/cdn/docs)
-- [Cloud Armor Documentation](https://cloud.google.com/armor/docs)
+Both create `api.example.com` → `api-service`, but the new structure:
+- Allows global rules across multiple domains
+- Supports domain-specific rules via `domain_key`
+- Follows nginx/traefik ingress patterns

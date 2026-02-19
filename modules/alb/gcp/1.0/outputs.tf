@@ -1,32 +1,21 @@
+# Output attributes and interfaces
+
 locals {
+  # First host for primary URLs (usually the bare domain)
+  primary_host = length(local.unique_hosts) > 0 ? local.unique_hosts[0] : ""
+
   output_attributes = {
-    lb_name          = local.name
-    lb_ip_address    = local.lb_ip_address
-    lb_ip_name       = local.lb_ip_name
-    url_map_id       = google_compute_url_map.lb.id
-    https_proxy_id   = google_compute_target_https_proxy.lb.id
-    http_proxy_id    = local.enable_http ? google_compute_target_http_proxy.lb[0].id : ""
-    domains          = [for k, v in var.instance.spec.domains : v.domain]
-    certificates     = keys(local.managed_certs)
-    backend_services = keys(local.service_backends)
-    https_url        = "https://${values(var.instance.spec.domains)[0].domain}"
-    http_url         = local.enable_http ? "http://${values(var.instance.spec.domains)[0].domain}" : ""
+    lb_name       = local.name
+    lb_ip_address = local.lb_ip_address
   }
 
+  # Output interfaces per rule (matching nginx ingress pattern)
+  # Each rule_key maps to an interface with host, port, connection_string
   output_interfaces = {
-    https = {
-      host       = values(var.instance.spec.domains)[0].domain
-      port       = "443"
-      protocol   = "https"
-      url        = "https://${values(var.instance.spec.domains)[0].domain}"
-      ip_address = local.lb_ip_address
+    for rule_key, rule in local.rules_by_host : rule_key => {
+      connection_string = "https://${rule.host}"
+      host              = rule.host
+      port              = 443
     }
-    http = local.enable_http ? {
-      host       = values(var.instance.spec.domains)[0].domain
-      port       = "80"
-      protocol   = "http"
-      url        = "http://${values(var.instance.spec.domains)[0].domain}"
-      ip_address = local.lb_ip_address
-    } : null
   }
 }
