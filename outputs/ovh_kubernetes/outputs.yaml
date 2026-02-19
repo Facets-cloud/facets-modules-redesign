@@ -56,4 +56,21 @@ properties:
               type: string
             client_key:
               type: string
-providers: []
+providers:
+  - name: kubernetes
+    source: hashicorp/kubernetes
+    version: 2.23.0
+    attributes:
+      host: cluster_endpoint
+      cluster_ca_certificate: cluster_ca_certificate
+      client_certificate: client_certificate
+      client_key: client_key
+  - name: helm
+    source: hashicorp/helm
+    version: 2.11.0
+    attributes:
+      kubernetes:
+        host: cluster_endpoint
+        cluster_ca_certificate: cluster_ca_certificate
+        client_certificate: client_certificate
+        client_key: client_key

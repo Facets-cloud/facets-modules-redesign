@@ -34,3 +34,8 @@ providers:
   - name: ovh
     source: "ovh/ovh"
     version: "2.7.0"
+    attributes:
+      endpoint: attributes.endpoint
+      application_key: attributes.application_key
+      application_secret: attributes.application_secret
+      consumer_key: attributes.consumer_key
