@@ -1,0 +1,82 @@
+intent: pvc
+flavor: k8s_standard
+version: '1.0'
+description: Create and manage Kubernetes Persistent Volume Claims for stateful workloads
+intentDetails:
+  type: Kubernetes
+  description: Create and manage Kubernetes Persistent Volume Claims for stateful workloads
+  displayName: Persistent Volume Claim
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/pvc.svg
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+inputs:
+  kubernetes_details:
+    optional: false
+    type: '@facets/kubernetes-details'
+    displayName: Kubernetes Cluster
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+    - kubernetes
+    - helm
+spec:
+  title: Persistent Volume Claim
+  type: object
+  properties:
+    size:
+      type: object
+      title: Size
+      description: Size of the Persistent Volume Claim
+      properties:
+        volume:
+          type: string
+          title: Volume Size
+          description: The size of the volume
+          minLength: 1
+          pattern: ^[0-9]+[MGT]i$
+          default: 5Gi
+          x-ui-placeholder: "e.g. '10Gi' or '50Gi'"
+          x-ui-error-message: "Volume must be specified in the correct format (e.g. '10Gi' or '50Gi')"
+      required:
+      - volume
+    storage_class_name:
+      type: string
+      title: Storage Class Name
+      description: Kubernetes storage class to use. Leave empty to use the cluster default.
+    access_modes:
+      type: array
+      title: Access Modes
+      description: List of access modes for the PVC
+      items:
+        type: string
+        enum:
+        - ReadWriteOnce
+        - ReadWriteMany
+        - ReadWriteOncePod
+        - ReadOnlyMany
+      default:
+      - ReadWriteOnce
+  required:
+  - size
+  x-ui-order:
+  - size
+  - access_modes
+  - storage_class_name
+outputs:
+  default:
+    type: '@facets/pvc'
+    title: Persistent Volume Claim Details
+sample:
+  kind: pvc
+  flavor: k8s_standard
+  version: '1.0'
+  disabled: false
+  spec:
+    size:
+      volume: 5Gi
+    access_modes:
+    - ReadWriteOnce

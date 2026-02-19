@@ -260,6 +260,12 @@
             ]
           },
           {
+            intent: "pvc", displayName: "Persistent Volume Claim", type: "Kubernetes Resources", icon: "pvc.svg",
+            flavors: [
+              { flavor: "k8s_standard", clouds: ["aws", "azure", "gcp", "kubernetes"] },
+            ]
+          },
+          {
             intent: "k8s_access_controls", displayName: "Access Controls", type: "Kubernetes Resources", icon: "k8s_access_controls.svg",
             flavors: [
               { flavor: "k8s_standard", clouds: ["aws", "azure", "gcp", "kubernetes"] },

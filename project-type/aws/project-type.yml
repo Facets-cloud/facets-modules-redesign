@@ -80,6 +80,8 @@ modules:
     flavor: standard
   - intent: kubernetes_secret
     flavor: k8s_standard
+  - intent: pvc
+    flavor: k8s_standard
   - intent: monitoring
     flavor: mongo
   - intent: prometheus
