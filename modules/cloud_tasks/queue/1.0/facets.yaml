@@ -19,14 +19,14 @@ inputs:
     providers:
       - google
   cloudrun:
-    type: '@outputs/cloudrun'
+    type: '@facets/cloudrun'
     optional: false
     displayName: Cloud Run Service
     description: Target Cloud Run service for task dispatch. Queue reads max_instances for concurrency.
 
 outputs:
   default:
-    type: "@outputs/cloud_tasks"
+    type: "@facets/cloud_tasks"
     title: Cloud Tasks Queue
 
 sample:
