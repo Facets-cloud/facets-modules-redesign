@@ -13,12 +13,11 @@ locals {
 
   # Prometheus details - optional input, extract helm_release_id if available
   prometheus_release_id = var.inputs.prometheus_details != null ? lookup(
-    lookup(var.inputs.prometheus_details, "attributes", {}),
-    "prometheus_release_id", ""
+    var.inputs.prometheus_details.attributes, "helm_release_id", ""
   ) : ""
 
   # Nodepool configuration from inputs
-  nodepool_config      = lookup(var.inputs.kubernetes_node_pool_details, "attributes", {})
+  nodepool_config      = var.inputs.kubernetes_node_pool_details.attributes
   nodepool_tolerations = lookup(local.nodepool_config, "taints", [])
   nodepool_labels      = lookup(local.nodepool_config, "node_selector", {})
 

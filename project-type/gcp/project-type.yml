@@ -83,6 +83,8 @@ modules:
     flavor: standard
   - intent: wireguard-vpn
     flavor: standard
+  - intent: keda
+    flavor: standard
 
   # Kubeblocks Self-hosted Datastores
   - intent: mongo

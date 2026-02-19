@@ -3,6 +3,11 @@ clouds:
     - kubernetes
     - azure
     - gcp
+intentDetails:
+    type: Operators
+    description: Deploys KEDA event-driven autoscaler for Kubernetes workloads
+    displayName: KEDA
+    iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/keda.svg
 description: |
     Deploys KEDA (Kubernetes Event-Driven Autoscaling) via Helm chart.
     Enables event-driven autoscaling for Kubernetes workloads with support
