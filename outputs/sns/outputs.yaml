@@ -1,0 +1,38 @@
+name: '@facets/sns'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        topic_name:
+          description: SNS topic name
+          type: string
+        topic_arn:
+          description: SNS topic ARN
+          type: string
+        region:
+          description: AWS region where topic is located
+          type: string
+        is_fifo:
+          description: Whether the topic is a FIFO topic
+          type: boolean
+        dlq_queue_name:
+          description: Dead letter queue name (empty if DLQ not enabled)
+          type: string
+        dlq_queue_url:
+          description: Dead letter queue URL (empty if DLQ not enabled)
+          type: string
+        dlq_queue_arn:
+          description: Dead letter queue ARN (empty if DLQ not enabled)
+          type: string
+        producer_policy_arn:
+          description: IAM policy ARN for publishing messages (for IRSA)
+          type: string
+        consumer_policy_arn:
+          description: IAM policy ARN for subscribing to messages (for IRSA)
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []
