@@ -1,0 +1,21 @@
+name: '@facets/aws-efs-csi-driver'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        iam_role_arn:
+          description: The ARN of the IAM role used by the EFS CSI controller (IRSA)
+          type: string
+        helm_release_id:
+          description: The Helm release ID of the EFS CSI Driver deployment
+          type: string
+        secrets:
+          type: array
+          items:
+            type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

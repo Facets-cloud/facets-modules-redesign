@@ -26,10 +26,14 @@ modules:
     flavor: default
   - intent: aws_alb_controller
     flavor: standard
+  - intent: aws_efs_csi_driver
+    flavor: standard
   - intent: network
     flavor: aws_network
   - intent: service
     flavor: aws
+  - intent: aws_efs_csi_driver
+    flavor: standard
 
   # === AWS Datastore Modules ===
   - intent: kafka
