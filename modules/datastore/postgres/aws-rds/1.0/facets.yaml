@@ -34,10 +34,11 @@ spec:
           title: PostgreSQL Version
           description: Version of the PostgreSQL database engine
           enum:
-          - '13.15'
-          - '14.12'
-          - '15.7'
-          default: '15.7'
+          - '14.21'
+          - '15.16'
+          - '16.12'
+          - '17.8'
+          default: '16.12'
         database_name:
           type: string
           title: Database Name
@@ -248,7 +249,7 @@ sample:
   disabled: true
   spec:
     version_config:
-      engine_version: '15.7'
+      engine_version: '16.12'
       database_name: postgres
     sizing:
       instance_class: db.t3.small
