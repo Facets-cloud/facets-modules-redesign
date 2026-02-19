@@ -1,0 +1,207 @@
+clouds:
+    - gcp
+description: Creates a GKE-optimized GCP VPC with auto-calculated subnets. Fixed allocation - Private (8K IPs), Public (256 IPs), Database (256 IPs), plus GKE secondary ranges
+flavor: gcp-vpc
+iac:
+    validated_files:
+        - main.tf
+        - variables.tf
+inputs:
+    cloud_account:
+        description: The GCP Cloud Account where the VPC will be created (with region support)
+        displayName: GCP Cloud Account
+        optional: false
+        providers:
+            - google
+        type: '@facets/gcp_cloud_account'
+intent: network
+outputs:
+    default:
+        mock:
+            attributes:
+                database_subnet_cidr: mock-string-value
+                database_subnet_cidrs: []
+                database_subnet_id: mock-string-value
+                database_subnet_ids: []
+                database_subnet_name: mock-string-value
+                firewall_rule_ids: mock-string-value
+                gke_pods_cidr: mock-string-value
+                gke_pods_range_name: mock-string-value
+                gke_services_cidr: mock-string-value
+                gke_services_range_name: mock-string-value
+                google_services_cidr: mock-string-value
+                google_services_network: mock-string-value
+                internal_lb_subnet_cidr: mock-string-value
+                internal_lb_subnet_id: mock-string-value
+                internal_lb_subnet_name: mock-string-value
+                nat_id: mock-string-value
+                nat_name: mock-string-value
+                network_tags: mock-string-value
+                private_services_connection_id: mock-string-value
+                private_services_connection_status: mock-string-value
+                private_services_peering_connection: mock-string-value
+                private_services_range_address: mock-string-value
+                private_services_range_id: mock-string-value
+                private_services_range_name: mock-string-value
+                private_subnet_cidr: mock-string-value
+                private_subnet_id: mock-string-value
+                private_subnet_name: mock-string-value
+                project_id: mock-string-value
+                public_subnet_cidr: mock-string-value
+                public_subnet_id: mock-string-value
+                public_subnet_name: mock-string-value
+                region: mock-string-value
+                reserved_ips: mock-string-value
+                router_id: mock-string-value
+                router_name: mock-string-value
+                total_database_ips: mock-string-value
+                total_gke_pod_ips: mock-string-value
+                total_gke_service_ips: mock-string-value
+                total_private_ips: mock-string-value
+                total_public_ips: mock-string-value
+                vpc_connector_enabled: mock-string-value
+                vpc_connector_id: mock-string-value
+                vpc_connector_name: mock-string-value
+                vpc_connector_self_link: mock-string-value
+                vpc_id: mock-string-value
+                vpc_name: mock-string-value
+                vpc_self_link: mock-string-value
+                zones: mock-string-value
+            interfaces: {}
+        type: '@facets/gcp-network-details'
+sample:
+    flavor: gcp-vpc
+    kind: network
+    spec:
+        auto_select_zones: true
+        enable_flow_logs: false
+        firewall_rules:
+            allow_http: false
+            allow_https: true
+            allow_icmp: true
+            allow_internal: true
+            allow_ssh: true
+        vpc_cidr: 10.0.0.0/16
+        vpc_connector:
+            enabled: false
+    version: "1.0"
+spec:
+    properties:
+        auto_select_zones:
+            default: true
+            description: Automatically select 3 zones from the region
+            title: Auto Select Zones
+            type: boolean
+        enable_flow_logs:
+            default: false
+            description: Enable flow logs for network monitoring and security analysis
+            title: Enable VPC Flow Logs
+            type: boolean
+        firewall_rules:
+            description: Configure VPC firewall rules for traffic control
+            properties:
+                allow_http:
+                    default: false
+                    description: Allow HTTP access from the internet to instances with network tag 'http-server'
+                    title: Allow HTTP Access
+                    type: boolean
+                allow_https:
+                    default: true
+                    description: Allow HTTPS access from the internet to instances with network tag 'https-server'
+                    title: Allow HTTPS Access
+                    type: boolean
+                allow_icmp:
+                    default: true
+                    description: Allow ICMP (ping) traffic within the VPC
+                    title: Allow ICMP
+                    type: boolean
+                allow_internal:
+                    default: true
+                    description: Allow all traffic between subnets within the VPC
+                    title: Allow Internal Traffic
+                    type: boolean
+                allow_ssh:
+                    default: true
+                    description: Allow SSH access from the internet to instances with network tag 'ssh-access'
+                    title: Allow SSH Access
+                    type: boolean
+            title: Firewall Rules Configuration
+            type: object
+            x-ui-toggle: true
+        labels:
+            description: Optional additional labels to apply to all VPC resources. These will be merged with the standard environment labels.
+            title: Additional Labels
+            type: object
+            x-ui-yaml-editor: true
+        vpc_cidr:
+            default: 10.0.0.0/16
+            description: CIDR block for the VPC (must be /16 for optimal GKE workloads)
+            pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}/16$
+            title: VPC CIDR Block
+            type: string
+            x-ui-error-message: VPC CIDR must be a /16 block (e.g., 10.0.0.0/16)
+            x-ui-overrides-only: true
+            x-ui-placeholder: 10.0.0.0/16
+        vpc_connector:
+            description: VPC Access Connector for Cloud Run, Cloud Functions, and App Engine
+            properties:
+                enabled:
+                    default: false
+                    description: Create a VPC Access Connector for serverless services
+                    title: Enable VPC Connector
+                    type: boolean
+                machine_type:
+                    default: e2-micro
+                    description: Machine type for connector instances
+                    enum:
+                        - f1-micro
+                        - e2-micro
+                        - e2-standard-4
+                    title: Machine Type
+                    type: string
+                    x-ui-visible-if:
+                        field: spec.vpc_connector.enabled
+                        values:
+                            - true
+                max_instances:
+                    default: 3
+                    description: Maximum number of connector instances (3-10)
+                    maximum: 10
+                    minimum: 3
+                    title: Max Instances
+                    type: integer
+                    x-ui-visible-if:
+                        field: spec.vpc_connector.enabled
+                        values:
+                            - true
+                min_instances:
+                    default: 2
+                    description: Minimum number of connector instances (2-9)
+                    maximum: 9
+                    minimum: 2
+                    title: Min Instances
+                    type: integer
+                    x-ui-visible-if:
+                        field: spec.vpc_connector.enabled
+                        values:
+                            - true
+            title: VPC Connector Configuration
+            type: object
+            x-ui-toggle: true
+        zones:
+            description: List of zones to use (2-5 zones supported). Only used when auto_select_zones is false
+            items:
+                type: string
+            maxItems: 5
+            minItems: 2
+            title: Zones
+            type: array
+            x-ui-overrides-only: true
+            x-ui-visible-if:
+                field: spec.auto_select_zones
+                values:
+                    - false
+    required:
+        - vpc_cidr
+    type: object
+version: "1.0"

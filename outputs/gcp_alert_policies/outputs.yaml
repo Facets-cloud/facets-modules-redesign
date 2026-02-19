@@ -1,0 +1,24 @@
+name: '@facets/gcp_alert_policies'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        project_id:
+          description: GCP project ID where the alert policies are created
+          type: string
+        policy_ids:
+          description: Map of policy key to GCP alert policy resource ID
+          type: object
+          additionalProperties:
+            type: string
+        policy_names:
+          description: Map of policy key to GCP alert policy resource name
+          type: object
+          additionalProperties:
+            type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

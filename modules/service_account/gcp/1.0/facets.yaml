@@ -1,7 +1,14 @@
 clouds:
     - gcp
 description: Module to create and manage GCP service accounts with IAM role bindings
-flavor: gcp_provider
+flavor: gcp
+
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Create and manage GCP service accounts with fine-grained IAM role bindings across project, storage, BigQuery, Pub/Sub, Secret Manager, KMS, Artifact Registry, Cloud Run, and Cloud Tasks resources.
+  displayName: GCP Service Account
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloud_account.svg
+
 iac:
     validated_files:
         - variables.tf
@@ -20,7 +27,7 @@ outputs:
         type: '@facets/gcp_service_account'
 sample:
     disabled: false
-    flavor: gcp_provider
+    flavor: gcp
     kind: service_account
     spec:
         description: Service account for application access

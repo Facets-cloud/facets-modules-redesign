@@ -1,0 +1,29 @@
+name: '@facets/gcp_service_account'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        service_account_id:
+          description: The account ID (short name) of the service account
+          type: string
+        service_account_email:
+          description: Full email address of the service account
+          type: string
+        service_account_name:
+          description: Full resource name of the service account
+          type: string
+        unique_id:
+          description: GCP-assigned unique numeric ID for the service account
+          type: string
+        project_id:
+          description: GCP project ID where the service account was created
+          type: string
+        private_key:
+          description: Base64-encoded private key JSON (only populated if create_key is true)
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

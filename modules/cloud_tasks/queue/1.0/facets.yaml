@@ -10,6 +10,12 @@ description: |
   Automatically enables Cloud Tasks API.
   Note: Cloud Tasks not available in all regions (e.g., not in asia-south2/Delhi).
 
+intentDetails:
+  type: Cloud & Infrastructure
+  description: GCP Cloud Tasks queue for async job dispatch to Cloud Run with queue-level HTTP target and OIDC auth pre-configured.
+  displayName: Cloud Tasks Queue
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloudrun.svg
+
 inputs:
   cloud_account:
     type: '@facets/gcp_cloud_account'
