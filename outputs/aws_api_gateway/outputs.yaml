@@ -1,0 +1,38 @@
+name: '@facets/aws_api_gateway'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        api_id:
+          description: The ID of the API Gateway v2 API
+          type: string
+        api_arn:
+          description: The ARN of the API Gateway v2 API
+          type: string
+        api_endpoint:
+          description: The URI of the API Gateway (invoke URL without stage)
+          type: string
+        invoke_url:
+          description: The default invoke URL for the deployed stage
+          type: string
+        execution_arn:
+          description: The ARN prefix for use with Lambda permissions
+          type: string
+        stage_id:
+          description: The ID of the default stage
+          type: string
+        stage_arn:
+          description: The ARN of the default stage
+          type: string
+        protocol_type:
+          description: The API protocol type (HTTP or WEBSOCKET)
+          type: string
+        name:
+          description: The name of the API Gateway
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []
