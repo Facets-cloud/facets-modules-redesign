@@ -40,8 +40,8 @@ variable "inputs" {
         cluster_name     = optional(string)
         cluster_location = optional(string)
         cluster_endpoint = optional(string)
-      }), {})
-      interfaces = optional(object({}), {})
+      }))
+      interfaces = optional(object({}))
     })
     kubernetes_node_pool_details = object({
       attributes = optional(object({
@@ -53,16 +53,16 @@ variable "inputs" {
           effect = string
         })), [])
         node_selector = optional(map(string), {})
-      }), {})
-      interfaces = optional(object({}), {})
+      }))
+      interfaces = optional(object({}))
     })
     prometheus_details = optional(object({
       attributes = optional(object({
         alertmanager_url = optional(string)
         helm_release_id  = optional(string)
         prometheus_url   = optional(string)
-      }), {})
-      interfaces = optional(object({}), {})
+      }))
+      interfaces = optional(object({}))
     }))
   })
 }
