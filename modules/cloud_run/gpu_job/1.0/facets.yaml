@@ -27,6 +27,11 @@ inputs:
         optional: true
         type: '@facets/gcp-network-details'
 intent: cloudrun
+intentDetails:
+  type: Cloud & Infrastructure
+  description: GPU-accelerated serverless batch jobs for video processing and ML inference on GCP Cloud Run
+  displayName: Cloud Run GPU Job
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloudrun.svg
 sample:
     disabled: false
     flavor: gpu-job

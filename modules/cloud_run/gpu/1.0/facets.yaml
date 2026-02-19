@@ -24,6 +24,11 @@ inputs:
     optional: true
     type: '@facets/gcp-network-details'
 intent: cloudrun
+intentDetails:
+  type: Cloud & Infrastructure
+  description: GPU-accelerated serverless containers for AI/ML inference and model serving on GCP Cloud Run
+  displayName: Cloud Run GPU Service
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloudrun.svg
 outputs:
   attributes:
     title: Cloud Run Attributes
