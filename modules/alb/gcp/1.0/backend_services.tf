@@ -2,8 +2,8 @@
 resource "google_compute_region_network_endpoint_group" "cloudrun" {
   for_each = local.services_map
 
-  # Use rule_key (each.key) for stable naming
-  name                  = "${local.name}-${substr(md5(each.key), 0, 8)}"
+  # Name derived from rule_key + service name, last 8 chars of md5 for uniqueness
+  name                  = "${local.name}-${substr(md5("${each.key}-${each.value}"), 24, 8)}"
   project               = local.project_id
   region                = local.region
   network_endpoint_type = "SERVERLESS"
@@ -17,8 +17,8 @@ resource "google_compute_region_network_endpoint_group" "cloudrun" {
 resource "google_compute_backend_service" "cloudrun" {
   for_each = local.services_map
 
-  # Use rule_key (each.key) for stable naming
-  name                            = "${local.name}-${substr(md5(each.key), 0, 8)}"
+  # Name derived from rule_key + service name, last 8 chars of md5 for uniqueness
+  name                            = "${local.name}-${substr(md5("${each.key}-${each.value}"), 24, 8)}"
   project                         = local.project_id
   protocol                        = "HTTP"
   port_name                       = "http"
