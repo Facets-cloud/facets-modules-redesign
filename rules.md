@@ -660,7 +660,7 @@ intentDetails:
 
 **Valid `intentDetails.type` values:**
 - `Cloud & Infrastructure`
-- `Managed Datastores`
+- `Datastores`
 - `Kubernetes`
 - `Monitoring & Observability`
 - `Operators`
