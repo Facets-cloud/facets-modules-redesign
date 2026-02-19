@@ -325,10 +325,12 @@ spec:
       type: object
       title: Stage Variables
       description: A map that defines the stage variables for the stage
+      x-ui-yaml-editor: true
     stage_tags:
       type: object
       title: Stage Tags
       description: Additional tags to assign to the stage resource
+      x-ui-yaml-editor: true
 
     stage_access_log_settings:
       type: object
@@ -400,6 +402,7 @@ spec:
           type: object
           title: Log Group Tags
           description: Additional tags for the CloudWatch log group
+          x-ui-yaml-editor: true
           x-ui-visible-if:
             field: spec.stage_access_log_settings.create_log_group
 
@@ -457,6 +460,7 @@ spec:
       type: object
       title: VPC Link Tags
       description: Additional tags to add to all VPC links
+      x-ui-yaml-editor: true
 
     ########################################
     # Authorizers
@@ -545,7 +549,7 @@ spec:
             - authorizer_type
 
     ########################################
-    # Routes & Integrations
+    # Routes and Integrations
     ########################################
     create_routes_and_integrations:
       type: boolean
@@ -554,7 +558,7 @@ spec:
       default: true
     routes:
       type: object
-      title: Routes & Integrations
+      title: Routes and Integrations
       description: Map of API gateway routes. Key is the route key (e.g. "GET /items", "$default")
       patternProperties:
         ^[a-zA-Z0-9_./ $-]*$:
