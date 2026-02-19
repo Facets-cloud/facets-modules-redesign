@@ -8,6 +8,12 @@ description: |
   Supports metric-based alerts, log-based alerts, and uptime check alerts.
   Ideal for Cloud Run Job monitoring (failures, queue depth, duration).
 
+intentDetails:
+  type: Monitoring & Observability
+  description: Configure GCP Cloud Monitoring alert policies for metrics, logs, and uptime checks across Cloud Run and other workloads.
+  displayName: Alert Policies
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/alert_policy.svg
+
 inputs:
   gcp_provider:
     type: '@facets/gcp_cloud_account'
