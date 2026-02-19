@@ -67,13 +67,13 @@ variable "instance" {
       ########################################
       # Stage
       ########################################
-      create_stage               = optional(bool, true)
-      deploy_stage               = optional(bool, true)
-      stage_name                 = optional(string, "$default")
-      stage_description          = optional(string)
+      create_stage                = optional(bool, true)
+      deploy_stage                = optional(bool, true)
+      stage_name                  = optional(string, "$default")
+      stage_description           = optional(string)
       stage_client_certificate_id = optional(string)
-      stage_variables            = optional(map(string), {})
-      stage_tags                 = optional(map(string), {})
+      stage_variables             = optional(map(string), {})
+      stage_tags                  = optional(map(string), {})
 
       stage_access_log_settings = optional(object({
         create_log_group            = optional(bool, true)
