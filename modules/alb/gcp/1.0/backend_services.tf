@@ -1,21 +1,23 @@
 # Serverless Network Endpoint Groups for CloudRun services
 resource "google_compute_region_network_endpoint_group" "cloudrun" {
-  for_each = toset(local.unique_services)
+  for_each = local.services_map
 
+  # Use rule_key (each.key) for stable naming
   name                  = "${local.name}-${substr(md5(each.key), 0, 8)}"
   project               = local.project_id
   region                = local.region
   network_endpoint_type = "SERVERLESS"
 
   cloud_run {
-    service = each.key
+    service = each.value # The resolved CloudRun service name
   }
 }
 
 # Backend services for each CloudRun service
 resource "google_compute_backend_service" "cloudrun" {
-  for_each = toset(local.unique_services)
+  for_each = local.services_map
 
+  # Use rule_key (each.key) for stable naming
   name                            = "${local.name}-${substr(md5(each.key), 0, 8)}"
   project                         = local.project_id
   protocol                        = "HTTP"
@@ -51,12 +53,17 @@ resource "google_compute_backend_service" "cloudrun" {
   }
 
   security_policy = lookup(local.global_config, "security_policy", null)
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 locals {
-  # Map service names to backend service IDs
+  # Map rule_key to backend service IDs
+  # URL map looks up backend by rule_key
   service_backends = {
-    for service in local.unique_services :
-    service => google_compute_backend_service.cloudrun[service].id
+    for rule_key, service in local.services_map :
+    rule_key => google_compute_backend_service.cloudrun[rule_key].id
   }
 }
