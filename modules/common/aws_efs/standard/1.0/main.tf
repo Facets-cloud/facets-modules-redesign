@@ -63,7 +63,7 @@ resource "aws_efs_mount_target" "efs-csi-driver" {
   security_groups = [aws_security_group.efs-csi-driver.id]
 }
 
-resource "kubernetes_storage_class" "efs-csi-drive-sc" {
+resource "kubernetes_storage_class_v1" "efs-csi-drive-sc" {
   metadata {
     name = local.instance_name
     annotations = {

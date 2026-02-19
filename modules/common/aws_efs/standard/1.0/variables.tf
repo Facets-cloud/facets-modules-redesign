@@ -40,31 +40,31 @@ variable "instance" {
 variable "inputs" {
   type = object({
     cloud_account = object({
-      attributes = object({
-        aws_region   = string
-        aws_iam_role = string
+      attributes = optional(object({
+        aws_region   = optional(string)
+        aws_iam_role = optional(string)
         external_id  = optional(string)
         session_name = optional(string)
-      })
+      }), {})
       interfaces = optional(object({}), {})
     })
     network_details = object({
-      attributes = object({
-        vpc_id             = string
-        vpc_cidr_block     = string
-        private_subnet_ids = list(string)
-      })
+      attributes = optional(object({
+        vpc_id             = optional(string)
+        vpc_cidr_block     = optional(string)
+        private_subnet_ids = optional(list(string))
+      }), {})
       interfaces = optional(object({}), {})
     })
     kubernetes_details = object({
-      attributes = optional(object({}))
+      attributes = optional(object({}), {})
       interfaces = optional(object({}), {})
     })
     csi_driver = object({
-      attributes = object({
-        iam_role_arn    = string
-        helm_release_id = string
-      })
+      attributes = optional(object({
+        iam_role_arn    = optional(string)
+        helm_release_id = optional(string)
+      }), {})
       interfaces = optional(object({}), {})
     })
   })
