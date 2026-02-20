@@ -395,6 +395,12 @@ terraform {
 }
 ```
 
+**How provider injection works — module-scoped, not output-scoped:**
+
+Providers are determined by the *source module*, not by which specific output type the consuming module declares as its input type. If a source module exposes providers on *any* of its outputs (e.g., `@facets/kubernetes-details` on the `attributes` output), those providers are available to any consuming module that wires to *any* output of that source module (e.g., `@facets/eks` on the `default` output).
+
+This means: you do not need to pick a specific output type just to get provider injection. Pick the output type that best matches the **data contract** you need; provider availability follows automatically from the source module.
+
 ---
 
 ### RULE-014: All referenced variables must be declared

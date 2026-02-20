@@ -1,0 +1,22 @@
+{
+  "kind": "storage_class",
+  "flavor": "aws_ebs",
+  "version": "1.0",
+  "disabled": true,
+  "spec": {
+    "name": "gp3",
+    "volume_type": "gp3",
+    "is_default": true,
+    "encrypted": true,
+    "throughput": 125,
+    "reclaim_policy": "Delete",
+    "volume_binding_mode": "WaitForFirstConsumer",
+    "allow_volume_expansion": true
+  },
+  "inputs": {
+    "kubernetes_cluster": {
+      "resource_name": "cluster",
+      "resource_type": "kubernetes_cluster"
+    }
+  }
+}

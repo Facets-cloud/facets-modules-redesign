@@ -1,0 +1,123 @@
+intent: storage_class
+flavor: aws_ebs
+version: '1.0'
+description: Creates a Kubernetes StorageClass for AWS EBS volumes with configurable volume type and default class settings
+intentDetails:
+  type: Infrastructure
+  description: Kubernetes StorageClass for AWS EBS dynamic volume provisioning
+  displayName: StorageClass
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/storage_class.svg
+clouds:
+- aws
+inputs:
+  kubernetes_cluster:
+    type: '@facets/eks'
+    description: Kubernetes cluster for StorageClass creation
+    displayName: Kubernetes Cluster
+    optional: false
+    providers:
+    - kubernetes
+outputs:
+  default:
+    type: '@facets/storage-class'
+    title: StorageClass Details
+spec:
+  type: object
+  title: StorageClass Configuration
+  description: Configure AWS EBS StorageClass for dynamic volume provisioning
+  properties:
+    name:
+      type: string
+      title: StorageClass Name
+      description: Name of the StorageClass resource
+      default: gp3
+      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+    volume_type:
+      type: string
+      title: EBS Volume Type
+      description: AWS EBS volume type for persistent volumes
+      default: gp3
+      enum:
+      - gp2
+      - gp3
+      - io1
+      - io2
+      - st1
+      - sc1
+    is_default:
+      type: boolean
+      title: Set as Default StorageClass
+      description: Mark this StorageClass as the default for the cluster. Only one StorageClass should be default.
+      default: true
+    iops:
+      type: integer
+      title: IOPS
+      description: 'Provisioned IOPS for io1/io2 volumes. Range: 100-64000 for io1, 100-256000 for io2. Not applicable for gp2/gp3/st1/sc1.'
+      minimum: 100
+      maximum: 256000
+      x-ui-visible-if:
+        field: spec.volume_type
+        values: ["io1","io2"]
+    throughput:
+      type: integer
+      title: Throughput (MB/s)
+      description: 'Provisioned throughput for gp3 volumes in MB/s. Range: 125-1000. Not applicable for other volume types.'
+      default: 125
+      minimum: 125
+      maximum: 1000
+      x-ui-visible-if:
+        field: spec.volume_type
+        values: ["gp3"]
+    encrypted:
+      type: boolean
+      title: Enable Encryption
+      description: Enable EBS volume encryption at rest
+      default: true
+    reclaim_policy:
+      type: string
+      title: Reclaim Policy
+      description: What happens to PersistentVolumes when their claim is deleted
+      default: Delete
+      enum:
+      - Delete
+      - Retain
+    volume_binding_mode:
+      type: string
+      title: Volume Binding Mode
+      description: Controls when volume binding and dynamic provisioning should occur
+      default: WaitForFirstConsumer
+      enum:
+      - Immediate
+      - WaitForFirstConsumer
+    allow_volume_expansion:
+      type: boolean
+      title: Allow Volume Expansion
+      description: Enable resizing PersistentVolumeClaims after creation
+      default: true
+  required:
+  - name
+  - volume_type
+  x-ui-order:
+  - name
+  - volume_type
+  - is_default
+  - encrypted
+  - iops
+  - throughput
+  - reclaim_policy
+  - volume_binding_mode
+  - allow_volume_expansion
+sample:
+  kind: storage_class
+  flavor: aws_ebs
+  version: '1.0'
+  disabled: false
+  spec:
+    name: gp3
+    volume_type: gp3
+    is_default: true
+    encrypted: true
+    throughput: 125
+    reclaim_policy: Delete
+    volume_binding_mode: WaitForFirstConsumer
+    allow_volume_expansion: true
