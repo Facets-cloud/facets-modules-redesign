@@ -27,6 +27,7 @@ variable "instance" {
         cpu               = optional(string, "1000m")
         memory            = optional(string, "512Mi")
         startup_cpu_boost = optional(bool, false)
+        cpu_idle          = optional(bool)
         }), {
         cpu               = "1000m"
         memory            = "512Mi"
@@ -64,6 +65,9 @@ variable "instance" {
 
       annotations = optional(map(string), {})
       labels      = optional(map(string), {})
+
+      # Deletion protection - defaults to true for safety
+      deletion_protection = optional(bool, true)
 
       health_checks = optional(object({
         startup_probe = optional(object({
@@ -117,13 +121,16 @@ variable "inputs" {
         project_id = string
         region     = string
       })
+      interfaces = optional(object({}), {})
     })
     network = optional(object({
-      attributes = object({
-        vpc_id             = string
+      attributes = optional(object({
+        vpc_id             = optional(string)
+        vpc_name           = optional(string)
         vpc_connector_id   = optional(string)
         vpc_connector_name = optional(string)
-      })
+      }), {})
+      interfaces = optional(object({}), {})
     }))
   })
   description = "Dependencies from other modules"

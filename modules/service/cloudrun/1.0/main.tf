@@ -7,28 +7,6 @@ module "name" {
   globally_unique = false
 }
 
-locals {
-  service_name = module.name.name
-  location     = var.inputs.gcp_provider.attributes.region
-  project_id   = var.inputs.gcp_provider.attributes.project_id
-
-  # Merge environment cloud tags with instance labels
-  all_labels = merge(
-    var.environment.cloud_tags,
-    lookup(var.instance.spec, "labels", {})
-  )
-
-  # VPC connector configuration
-  vpc_connector = (
-    var.inputs.network != null &&
-    lookup(var.instance.spec.vpc_access, "enabled", false)
-  ) ? lookup(var.inputs.network.attributes, "vpc_connector_name", null) : null
-
-  # Health check probes
-  startup_probe_enabled  = lookup(var.instance.spec.health_checks.startup_probe, "enabled", false)
-  liveness_probe_enabled = lookup(var.instance.spec.health_checks.liveness_probe, "enabled", false)
-}
-
 # Cloud Run Service
 resource "google_cloud_run_v2_service" "this" {
   name     = local.service_name
@@ -38,10 +16,11 @@ resource "google_cloud_run_v2_service" "this" {
   labels      = local.all_labels
   annotations = lookup(var.instance.spec, "annotations", {})
 
-  # Ingress configuration - handle empty string and transform values
-  ingress = lookup(var.instance.spec, "ingress", "") == "" ? "" : "INGRESS_TRAFFIC_${upper(replace(lookup(var.instance.spec, "ingress", "all"), "-", "_"))}"
+  # Ingress configuration
+  ingress = local.ingress_value
 
-  deletion_protection = false
+  # Deletion protection - configurable with secure default
+  deletion_protection = local.deletion_protection
 
   template {
     # Scaling configuration
@@ -128,7 +107,7 @@ resource "google_cloud_run_v2_service" "this" {
           cpu    = lookup(var.instance.spec.resources, "cpu", "1000m")
           memory = lookup(var.instance.spec.resources, "memory", "512Mi")
         }
-        cpu_idle          = lookup(var.instance.spec.scaling, "min_instances", 0) == 0
+        cpu_idle          = local.cpu_idle
         startup_cpu_boost = lookup(var.instance.spec.resources, "startup_cpu_boost", false)
       }
 
