@@ -55,6 +55,9 @@ spec:
       description: 'Provisioned IOPS for io1/io2 volumes. Range: 100-64000 for io1, 100-256000 for io2. Not applicable for gp2/gp3/st1/sc1.'
       minimum: 100
       maximum: 256000
+      x-ui-visible-if:
+        field: volume_type
+        values: ["io1", "io2"]
     throughput:
       type: integer
       title: Throughput (MB/s)
@@ -62,6 +65,9 @@ spec:
       default: 125
       minimum: 125
       maximum: 1000
+      x-ui-visible-if:
+        field: volume_type
+        values: ["gp3"]
     encrypted:
       type: boolean
       title: Enable Encryption
