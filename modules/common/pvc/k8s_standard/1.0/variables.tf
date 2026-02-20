@@ -1,17 +1,31 @@
 variable "instance" {
-  type    = any
-  default = {}
+  description = "Instance configuration from facets.yaml spec"
+  type = object({
+    kind     = string
+    flavor   = string
+    version  = string
+    metadata = map(string)
+    spec = object({
+      size = object({
+        volume = string
+      })
+      access_modes       = optional(list(string), ["ReadWriteOnce"])
+      storage_class_name = optional(string)
+    })
+  })
 }
 
 variable "instance_name" {
-  type    = string
+  type = string
 }
 
 variable "environment" {
-  type = any
-  default = {
-    namespace = "default"
-  }
+  type = object({
+    name        = string
+    unique_name = string
+    namespace   = string
+    cloud_tags  = map(string)
+  })
 }
 
 variable "inputs" {

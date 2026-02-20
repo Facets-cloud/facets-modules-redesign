@@ -17,7 +17,7 @@ module "pvc" {
   access_modes       = local.access_modes
   volume_size        = local.volume_size
   provisioned_for    = module.name.name
-  instance_name      = lookup(var.instance_name, "name", module.name.name)
+  instance_name      = var.instance_name
   kind               = "pvc"
   cloud_tags         = var.environment.cloud_tags
   storage_class_name = local.storage_class_name
