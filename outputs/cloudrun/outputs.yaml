@@ -16,7 +16,7 @@ properties:
           type: string
         max_instances:
           description: Maximum number of service instances
-          type: string
+          type: number
     interfaces:
       type: object
       properties:
