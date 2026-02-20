@@ -21,6 +21,9 @@ locals {
         labels = {
           "strimzi.io/cluster" = local.cluster_name
         }
+        annotations = {
+          "kafka-cluster" = local.cluster_name
+        }
       }
       spec = merge(
         {
