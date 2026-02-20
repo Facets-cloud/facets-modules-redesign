@@ -11,7 +11,7 @@ clouds:
 - aws
 inputs:
   kubernetes_cluster:
-    type: '@facets/kubernetes-details'
+    type: '@facets/eks'
     description: Kubernetes cluster for StorageClass creation
     displayName: Kubernetes Cluster
     optional: false
