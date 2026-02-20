@@ -1,0 +1,26 @@
+name: '@facets/keda'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        id:
+          description: Unique identifier for the KEDA Helm release
+          type: string
+        release_name:
+          description: Helm release name for KEDA
+          type: string
+        namespace:
+          description: Kubernetes namespace where KEDA is deployed
+          type: string
+        chart_version:
+          description: KEDA Helm chart version
+          type: string
+        release_status:
+          description: Status of the KEDA Helm release
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []
