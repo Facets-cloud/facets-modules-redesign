@@ -5,6 +5,7 @@ locals {
   output_attributes = {
     cluster_name  = var.instance_name
     kafka_version = local.kafka_version
+    namespace     = local.namespace
   }
 
   output_interfaces = {
