@@ -1,0 +1,24 @@
+name: '@facets/kafka-topic'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        namespace:
+          type: string
+        cluster_name:
+          type: string
+    interfaces:
+      type: object
+      properties:
+        topics:
+          type: object
+          properties:
+            topic_name:
+              type: string
+            partitions:
+              type: number
+            replicas:
+              type: number
+providers: []

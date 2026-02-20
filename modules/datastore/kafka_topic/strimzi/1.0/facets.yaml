@@ -1,0 +1,95 @@
+intent: kafka_topic
+flavor: strimzi
+version: '1.0'
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+description: Kafka topics managed by Strimzi Topic Operator
+intentDetails:
+  type: Datastores
+  description: Kafka topic management for Strimzi-managed clusters
+  displayName: Kafka Topic
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kafka_topic.svg
+spec:
+  title: Strimzi Kafka Topics
+  description: Define one or more Kafka topics to be created on the target cluster
+  type: object
+  properties:
+    topics:
+      type: object
+      title: Topics Configuration
+      description: Define one or more Kafka topics. Each key is the topic identifier.
+      patternProperties:
+        "^[a-zA-Z0-9._-]+$":
+          type: object
+          title: Kafka Topic
+          description: Configuration for a single Kafka topic
+          properties:
+            partitions:
+              type: number
+              title: Partitions
+              description: Number of partitions for this topic
+              default: 1
+              minimum: 1
+            replicas:
+              type: number
+              title: Replication Factor
+              description: Number of replicas for each partition across brokers. NOTE - changing this on an existing topic requires Cruise Control enabled on the Kafka cluster; otherwise the change will be rejected by the Strimzi Topic Operator.
+              default: 1
+              minimum: 1
+              maximum: 9
+            config:
+              type: object
+              title: Topic Configuration
+              description: Additional topic-level Kafka configuration overrides (e.g., retention.ms, cleanup.policy, compression.type)
+              x-ui-yaml-editor: true
+          required:
+          - partitions
+          - replicas
+  required:
+  - topics
+
+inputs:
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Target Kubernetes cluster providing the kubernetes and helm providers
+    providers:
+    - kubernetes
+    - helm
+  kafka_cluster:
+    type: '@facets/kafka'
+    optional: false
+    displayName: Kafka Cluster
+    description: Target Strimzi Kafka cluster where topics will be created
+
+outputs:
+  default:
+    type: '@facets/kafka-topic'
+    title: Kafka Topics
+
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+  - outputs.tf
+
+sample:
+  kind: kafka_topic
+  flavor: strimzi
+  version: '1.0'
+  disabled: false
+  spec:
+    topics:
+      orders-events:
+        partitions: 3
+        replicas: 1
+        config: {}
+      user-notifications:
+        partitions: 6
+        replicas: 1
+        config: {}
