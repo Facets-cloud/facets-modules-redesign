@@ -1,5 +1,5 @@
 locals {
-  name       = "${var.instance_name}-${var.environment.unique_name}"
+  name       = module.name.name
   project_id = var.inputs.gcp_cloud_account.attributes.project_id
   region     = var.inputs.gcp_cloud_account.attributes.region
 
