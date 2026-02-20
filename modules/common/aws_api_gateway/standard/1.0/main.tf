@@ -9,8 +9,8 @@ module "apigateway-name" {
 }
 
 module "api_gateway" {
-  source  = "terraform-aws-modules/apigateway-v2/aws"
-  version = "6.1.0"
+  source  = "./terraform-aws-apigateway-v2"
+
 
   ########################################
   # API Gateway
