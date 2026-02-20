@@ -4,23 +4,26 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
+      # Domain configuration
       domains = map(object({
-        domain = string
-        rules  = list(string)
+        domain              = string
+        equivalent_prefixes = optional(list(string), [])
         certificate = optional(object({
           mode               = optional(string, "auto")
           managed_cert_name  = optional(string)
           existing_cert_name = optional(string)
-        }))
+        }), { mode = "auto" })
       }))
+      # Routing rules
       rules = map(object({
-        default_service = string
-        paths = optional(list(object({
-          path      = string
-          service   = string
-          path_type = optional(string, "PREFIX")
-        })), [])
+        domain_key    = optional(string, "")
+        domain_prefix = optional(string, "*")
+        service       = string
+        path          = optional(string, "/")
+        path_type     = optional(string, "PREFIX")
+        priority      = optional(number, 100)
       }))
+      # Global load balancer settings
       global_config = optional(object({
         enable_cdn = optional(bool, false)
         cdn_policy = optional(object({
@@ -36,18 +39,19 @@ variable "instance" {
         security_policy = optional(string)
         custom_headers  = optional(map(string), {})
         timeout_sec     = optional(number, 30)
-        }), {
+      }), {
         enable_cdn  = false
         enable_iap  = false
         timeout_sec = 30
       })
+      # Advanced settings
       advanced = optional(object({
         ip_address_name             = optional(string)
         enable_http                 = optional(bool, true)
         http_redirect               = optional(bool, true)
         session_affinity            = optional(string, "NONE")
         connection_draining_timeout = optional(number, 300)
-        }), {
+      }), {
         enable_http                 = true
         http_redirect               = true
         session_affinity            = "NONE"
@@ -66,13 +70,10 @@ variable "instance" {
 
   validation {
     condition = alltrue([
-      for domain, config in var.instance.spec.domains :
-      alltrue([
-        for path, path_config in lookup(config, "paths", {}) :
-        startswith(path, "/")
-      ])
+      for rule_key, rule in var.instance.spec.rules :
+      startswith(lookup(rule, "path", "/"), "/")
     ])
-    error_message = "All paths must start with '/'."
+    error_message = "All rule paths must start with '/'."
   }
 }
 
@@ -96,13 +97,15 @@ variable "inputs" {
         project_id = string
         region     = string
       })
+      interfaces = optional(object({}), {})
     })
     network = optional(object({
-      attributes = object({
-        vpc_name      = string
-        vpc_id        = string
-        vpc_self_link = string
-      })
+      attributes = optional(object({
+        vpc_name      = optional(string)
+        vpc_id        = optional(string)
+        vpc_self_link = optional(string)
+      }), {})
+      interfaces = optional(object({}), {})
     }))
   })
 }
