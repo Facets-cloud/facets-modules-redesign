@@ -19,6 +19,10 @@ locals {
   nodepool_attributes  = lookup(var.inputs.kubernetes_node_pool_details, "attributes", {})
   nodepool_tolerations = lookup(local.nodepool_attributes, "taints", [])
   nodepool_labels      = lookup(local.nodepool_attributes, "node_selector", {})
+  
+  #kubernetes details inputs attributes 
+  kubernetes_details = lookup(var.inputs, "kubernetes_details", {})
+  kubernetes_attributes = lookup(local.kubernetes_details, "attributes", {})
 
   # Use nodepool configuration for tolerations and node selectors
   tolerations    = local.nodepool_tolerations
