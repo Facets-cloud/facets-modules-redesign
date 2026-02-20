@@ -55,6 +55,7 @@ spec:
       type: object
       title: Helm Values
       description: Additional Helm values to override defaults
+      x-ui-yaml-editor: true
   required:
   - resources
 inputs:

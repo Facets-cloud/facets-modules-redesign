@@ -8,7 +8,6 @@ locals {
     repository    = local.repository
     chart_name    = local.chart_name
     status        = helm_release.strimzi_operator.status
-    revision      = tostring(helm_release.strimzi_operator.metadata.revision)
   }
   output_interfaces = {}
 }
