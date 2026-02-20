@@ -21,7 +21,7 @@ inputs:
         providers:
             - kubernetes
             - helm
-        type: '@facets/eks'
+        type: '@facets/kubernetes-details'
     kubernetes_node_pool_details:
         description: Node pool for KEDA operator deployment
         displayName: Node Pool
