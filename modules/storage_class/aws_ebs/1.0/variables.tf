@@ -1,9 +1,6 @@
 variable "instance" {
   description = "Instance configuration from facets.yaml spec"
   type = object({
-    kind    = string
-    flavor  = string
-    version = string
     spec = object({
       name                   = string
       volume_type            = string
