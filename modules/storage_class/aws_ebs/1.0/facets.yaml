@@ -56,8 +56,8 @@ spec:
       minimum: 100
       maximum: 256000
       x-ui-visible-if:
-        field: volume_type
-        values: ["io1", "io2"]
+        field: spec.volume_type
+        values: ["io1","io2"]
     throughput:
       type: integer
       title: Throughput (MB/s)
@@ -66,7 +66,7 @@ spec:
       minimum: 125
       maximum: 1000
       x-ui-visible-if:
-        field: volume_type
+        field: spec.volume_type
         values: ["gp3"]
     encrypted:
       type: boolean
