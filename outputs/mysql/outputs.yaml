@@ -19,7 +19,7 @@ properties:
             password:
               type: string
             port:
-              type: string
+              type: number
             secrets:
               type: array
               items:
@@ -38,7 +38,7 @@ properties:
             password:
               type: string
             port:
-              type: string
+              type: number
             secrets:
               type: array
               items:
