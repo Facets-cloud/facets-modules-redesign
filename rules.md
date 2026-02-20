@@ -397,6 +397,11 @@ terraform {
 
 ---
 
+> **FYI — Provider injection is module-scoped, not output-scoped:**
+> Providers are determined by the *source module*, not by which specific output type the consuming module declares as its input type. If a module exposes providers on *any* of its outputs (e.g., `@facets/kubernetes-details` on the `attributes` output), those providers are available to any consuming module that wires to *any* output of that source module (e.g., `@facets/eks` on the `default` output). You do not need to pick a specific output type just to get provider injection — pick the output type that best matches the data contract you need.
+
+---
+
 ### RULE-014: All referenced variables must be declared
 
 Every variable referenced in Terraform code must be declared in `variables.tf`. Platform-injected variables like `var.cc_metadata`, `var.cluster`, `var.baseinfra` do not exist in modules — use `var.instance` and `var.inputs` instead.
