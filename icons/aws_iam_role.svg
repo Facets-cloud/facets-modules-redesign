@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="80px" height="80px" viewBox="0 0 80 80" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Arch_AWS-Identity-and-Access-Management-Roles_64</title>
+    <defs>
+        <linearGradient x1="0%" y1="100%" x2="100%" y2="0%" id="linearGradient-1">
+            <stop stop-color="#BD0816" offset="0%"></stop>
+            <stop stop-color="#FF5252" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g fill="url(#linearGradient-1)">
+            <rect x="0" y="0" width="80" height="80"></rect>
+        </g>
+        <path d="M40 14C26.745 14 16 24.745 16 38C16 51.255 26.745 62 40 62C53.255 62 64 51.255 64 38C64 24.745 53.255 14 40 14ZM40 16C52.15 16 62 25.85 62 38C62 50.15 52.15 60 40 60C27.85 60 18 50.15 18 38C18 25.85 27.85 16 40 16ZM40 22C35.582 22 32 25.582 32 30C32 34.418 35.582 38 40 38C44.418 38 48 34.418 48 30C48 25.582 44.418 22 40 22ZM40 24C43.314 24 46 26.686 46 30C46 33.314 43.314 36 40 36C36.686 36 34 33.314 34 30C34 26.686 36.686 24 40 24ZM40 40C32.268 40 26 43.134 26 47V50H54V47C54 43.134 47.732 40 40 40ZM40 42C46.617 42 52 44.686 52 47V48H28V47C28 44.686 33.383 42 40 42Z" fill="#FFFFFF"></path>
+    </g>
+</svg>
