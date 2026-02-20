@@ -7,9 +7,9 @@ locals {
   output_interfaces = {
     topics = {
       for key, topic in local.spec : key => {
-        topic_name = key
-        partitions = topic.partitions
-        replicas   = topic.replicas
+        topic_name         = key
+        partitions         = topic.partitions
+        replication_factor = topic.replication_factor
       }
     }
   }

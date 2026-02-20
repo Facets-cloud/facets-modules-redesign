@@ -19,6 +19,6 @@ properties:
               type: string
             partitions:
               type: number
-            replicas:
+            replication_factor:
               type: number
 providers: []

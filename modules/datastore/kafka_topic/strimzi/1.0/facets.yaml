@@ -33,13 +33,12 @@ spec:
               description: Number of partitions for this topic
               default: 1
               minimum: 1
-            replicas:
+            replication_factor:
               type: number
               title: Replication Factor
               description: Number of replicas for each partition across brokers. NOTE - changing this on an existing topic requires Cruise Control enabled on the Kafka cluster; otherwise the change will be rejected by the Strimzi Topic Operator.
               default: 1
               minimum: 1
-              maximum: 9
             config:
               type: object
               title: Topic Configuration
@@ -47,7 +46,7 @@ spec:
               x-ui-yaml-editor: true
           required:
           - partitions
-          - replicas
+          - replication_factor
   required:
   - topics
 
@@ -87,9 +86,9 @@ sample:
     topics:
       orders-events:
         partitions: 3
-        replicas: 1
+        replication_factor: 1
         config: {}
       user-notifications:
         partitions: 6
-        replicas: 1
+        replication_factor: 1
         config: {}

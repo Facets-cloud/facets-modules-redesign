@@ -24,10 +24,10 @@ locals {
       }
       spec = merge(
         {
-          partitions = lookup(topic, "partitions", 1)
-          replicas   = lookup(topic, "replicas", 1)
+          partitions = topic.partitions
+          replicas   = topic.replication_factor
         },
-        length(lookup(topic, "config", {})) > 0 ? { config = lookup(topic, "config", {}) } : {}
+        length(topic.config) > 0 ? { config = topic.config } : {}
       )
     }
   }

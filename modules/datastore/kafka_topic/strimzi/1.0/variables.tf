@@ -1,11 +1,23 @@
 variable "instance" {
-  description = "Kafka topics configuration"
-  type        = any
+  description = "Kafka topics configuration from facets.yaml spec"
+  type = object({
+    kind     = string
+    flavor   = string
+    version  = string
+    metadata = map(string)
+    spec = object({
+      topics = map(object({
+        partitions         = number
+        replication_factor = number
+        config             = optional(map(string), {})
+      }))
+    })
+  })
 
   validation {
     condition = alltrue([
       for key, topic in var.instance.spec.topics :
-      lookup(topic, "partitions", 1) >= 1
+      topic.partitions >= 1
     ])
     error_message = "Each topic must have at least 1 partition."
   }
@@ -13,9 +25,9 @@ variable "instance" {
   validation {
     condition = alltrue([
       for key, topic in var.instance.spec.topics :
-      lookup(topic, "replicas", 1) >= 1 && lookup(topic, "replicas", 1) <= 9
+      topic.replication_factor >= 1
     ])
-    error_message = "Each topic must have replicas between 1 and 9."
+    error_message = "Each topic must have at least 1 replication_factor."
   }
 }
 
