@@ -74,12 +74,6 @@ properties:
           type: array
           items:
             type: string
-        vpc_connector_id:
-          description: The ID of the VPC Access Connector for serverless services
-          type: string
-        vpc_connector_name:
-          description: The name of the VPC Access Connector for serverless services
-          type: string
         vpc_id:
           description: The ID of the VPC
           type: string

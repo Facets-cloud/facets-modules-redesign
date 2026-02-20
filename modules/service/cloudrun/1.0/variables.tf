@@ -54,8 +54,9 @@ variable "instance" {
       })
 
       vpc_access = optional(object({
-        enabled = optional(bool, false)
-        egress  = optional(string, "private-ranges-only")
+        enabled   = optional(bool, false)
+        connector = optional(string)
+        egress    = optional(string, "private-ranges-only")
         }), {
         enabled = false
         egress  = "private-ranges-only"
@@ -125,10 +126,8 @@ variable "inputs" {
     })
     network = optional(object({
       attributes = optional(object({
-        vpc_id             = optional(string)
-        vpc_name           = optional(string)
-        vpc_connector_id   = optional(string)
-        vpc_connector_name = optional(string)
+        vpc_id   = optional(string)
+        vpc_name = optional(string)
       }), {})
       interfaces = optional(object({}), {})
     }))

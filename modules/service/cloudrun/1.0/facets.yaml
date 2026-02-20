@@ -22,7 +22,7 @@ inputs:
       - google
     type: '@facets/gcp_cloud_account'
   network:
-    description: VPC network for private Cloud Run services (must include vpc_connector_name)
+    description: VPC network details (optional, for reference only)
     displayName: VPC Network
     optional: true
     type: '@facets/gcp-network-details'
@@ -359,6 +359,14 @@ spec:
       type: string
     vpc_access:
       properties:
+        connector:
+          description: VPC Access Connector name (e.g., projects/PROJECT/locations/REGION/connectors/CONNECTOR)
+          title: VPC Connector
+          type: string
+          x-ui-visible-if:
+            field: spec.vpc_access.enabled
+            values:
+              - true
         egress:
           default: private-ranges-only
           description: Route egress traffic through VPC

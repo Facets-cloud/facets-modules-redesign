@@ -9,11 +9,10 @@ locals {
     lookup(var.instance.spec, "labels", {})
   )
 
-  # VPC connector configuration - use vpc_connector_name from network attributes if available
+  # VPC connector configuration - read from spec.vpc_access.connector
   vpc_connector = (
-    var.inputs.network != null &&
     lookup(var.instance.spec.vpc_access, "enabled", false)
-  ) ? lookup(lookup(var.inputs.network, "attributes", {}), "vpc_connector_name", null) : null
+  ) ? lookup(var.instance.spec.vpc_access, "connector", null) : null
 
   # Health check probes
   startup_probe_enabled  = lookup(var.instance.spec.health_checks.startup_probe, "enabled", false)
