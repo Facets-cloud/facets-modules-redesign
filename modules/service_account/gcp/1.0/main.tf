@@ -1,14 +1,22 @@
-locals {
-  # Generate unique service account ID
-  sa_id = "${var.instance_name}-${var.environment.unique_name}"
+# =============================================================================
+# NAME MODULE - Ensure service account ID respects 30-character limit
+# =============================================================================
 
-  # Service account ID must be between 6 and 30 characters
-  # and can only contain lowercase alphanumeric characters and hyphens
-  sa_account_id = substr(
-    replace(lower(local.sa_id), "/[^a-z0-9-]/", "-"),
-    0,
-    30
-  )
+module "name" {
+  source        = "github.com/Facets-cloud/facets-utility-modules//name"
+  environment   = var.environment
+  limit         = 30
+  resource_name = var.instance_name
+  resource_type = "service_account"
+}
+
+# =============================================================================
+# LOCAL COMPUTATIONS
+# =============================================================================
+
+locals {
+  # Service account ID from name module (handles 30-char limit and lowercase alphanumeric)
+  sa_account_id = module.name.name
 
   # Default region from cloud account
   default_region = var.inputs.cloud_account.attributes.region

@@ -1,11 +1,23 @@
 # =============================================================================
+# NAME MODULE - Ensure Cloud Run job name respects 63-character limit
+# =============================================================================
+
+module "name" {
+  source        = "github.com/Facets-cloud/facets-utility-modules//name"
+  environment   = var.environment
+  limit         = 63
+  resource_name = var.instance_name
+  resource_type = "cloudrun"
+}
+
+# =============================================================================
 # LOCAL COMPUTATIONS
 # =============================================================================
 
 locals {
   project_id = var.inputs.gcp_provider.attributes.project_id
   region     = var.inputs.gcp_provider.attributes.region
-  job_name   = "${var.instance_name}-${var.environment.unique_name}"
+  job_name   = module.name.name
 
   # Merge environment cloud tags with instance labels
   all_labels = merge(

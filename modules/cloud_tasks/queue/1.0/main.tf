@@ -1,4 +1,16 @@
 # =============================================================================
+# NAME MODULE - Ensure Cloud Tasks queue name respects 100-character limit
+# =============================================================================
+
+module "name" {
+  source        = "github.com/Facets-cloud/facets-utility-modules//name"
+  environment   = var.environment
+  limit         = 100
+  resource_name = var.instance_name
+  resource_type = "cloud_tasks_queue"
+}
+
+# =============================================================================
 # LOCAL COMPUTATIONS
 # =============================================================================
 
@@ -11,7 +23,7 @@ locals {
   # Cloud Run location (for IAM binding - may differ from queue region)
   cloudrun_location = var.inputs.cloudrun.attributes.location
 
-  queue_name = "${var.instance_name}-${var.environment.unique_name}"
+  queue_name = module.name.name
 
   # Target URL for Cloud Run service
   target_url  = var.inputs.cloudrun.attributes.url
