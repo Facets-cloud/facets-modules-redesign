@@ -26,11 +26,11 @@ resource "kubernetes_storage_class_v1" "storage_class" {
       encrypted = tostring(lookup(var.instance.spec, "encrypted", true))
     },
     # Add iops for io1/io2 volumes if specified
-    try(var.instance.spec.iops, null) != null && contains(["io1", "io2"], var.instance.spec.volume_type) ? {
+    var.instance.spec.iops != null && contains(["io1", "io2"], var.instance.spec.volume_type) ? {
       iops = tostring(var.instance.spec.iops)
     } : {},
-    # Add throughput for gp3 volumes if specified
-    try(var.instance.spec.throughput, null) != null && var.instance.spec.volume_type == "gp3" ? {
+    # Add throughput for gp3 volumes
+    var.instance.spec.volume_type == "gp3" ? {
       throughput = tostring(var.instance.spec.throughput)
     } : {}
   )
