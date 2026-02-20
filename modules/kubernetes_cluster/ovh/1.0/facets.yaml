@@ -4,11 +4,11 @@ version: "1.0"
 clouds:
   - kubernetes
 description:
-  Creates and manages an OVH Managed Kubernetes Service (MKS) cluster with
-  default node pool, exposing Kubernetes and Helm providers
+  Creates and manages an OVH Managed Kubernetes Service (MKS) cluster,
+  exposing Kubernetes and Helm providers
 intentDetails:
   type: Cloud & Infrastructure
-  description: OVH Managed Kubernetes cluster with default node pool and provider configuration
+  description: OVH Managed Kubernetes cluster with provider configuration
   displayName: Kubernetes Cluster
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_cluster.svg
 spec:
@@ -24,56 +24,6 @@ spec:
         - free
         - standard
       default: free
-    default_node_pool:
-      type: object
-      title: Default Node Pool
-      description: Default node pool configuration
-      x-ui-overrides-only: true
-      properties:
-        flavor_name:
-          type: string
-          title: Instance SKU/Flavor
-          description: OVH instance type
-          enum:
-            - b2-7
-            - b2-15
-            - b2-30
-            - b2-60
-            - b2-120
-            - b3-8
-            - b3-16
-            - b3-32
-            - b3-64
-            - b3-128
-          default: b3-8
-        desired_nodes:
-          type: integer
-          title: Initial Node Count
-          description: Initial number of nodes
-          minimum: 1
-          default: 3
-        max_nodes:
-          type: integer
-          title: Maximum Nodes
-          description: Maximum nodes for autoscaling
-          minimum: 1
-          default: 10
-        autoscale:
-          type: boolean
-          title: Enable Autoscaling
-          description: Enable cluster autoscaler
-          default: true
-        monthly_billed:
-          type: boolean
-          title: Monthly Billing
-          description: Use monthly billing instead of hourly
-          default: false
-      default:
-        flavor_name: b3-8
-        desired_nodes: 3
-        max_nodes: 10
-        autoscale: true
-        monthly_billed: false
 inputs:
   ovh_provider:
     type: "@facets/ovh-provider"
@@ -105,9 +55,3 @@ sample:
   disabled: false
   spec:
     plan: free
-    default_node_pool:
-      flavor_name: b3-8
-      desired_nodes: 3
-      max_nodes: 10
-      autoscale: true
-      monthly_billed: false

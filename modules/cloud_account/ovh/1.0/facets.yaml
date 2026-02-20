@@ -67,6 +67,9 @@ outputs:
           application_key: attributes.application_key
           application_secret: attributes.application_secret
           consumer_key: attributes.consumer_key
+      null:
+        source: hashicorp/null
+        version: "~> 3.2"
 sample:
   kind: cloud_account
   flavor: ovh_provider

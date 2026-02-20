@@ -1,0 +1,151 @@
+intent: kubernetes_node_pool
+flavor: ovh
+version: "1.0"
+clouds:
+  - kubernetes
+description:
+  Creates and manages OVH Managed Kubernetes node pools with support for
+  multi-AZ deployments
+intentDetails:
+  type: Cloud & Infrastructure
+  description: OVH Managed Kubernetes node pool with availability zone support
+  displayName: Kubernetes Node Pool
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_node_pool.svg
+spec:
+  title: OVH Kubernetes Node Pool
+  description: Configure OVH Managed Kubernetes node pool
+  type: object
+  properties:
+    flavor_name:
+      type: string
+      title: Instance SKU/Flavor
+      description: OVH instance type for the node pool
+      enum:
+        - b2-7
+        - b2-15
+        - b2-30
+        - b2-60
+        - b2-120
+        - b3-8
+        - b3-16
+        - b3-32
+        - b3-64
+        - b3-128
+      default: b3-8
+    desired_nodes:
+      type: integer
+      title: Initial Node Count
+      description: Initial number of nodes (distributed across AZs if multi-AZ)
+      minimum: 1
+      default: 3
+    max_nodes:
+      type: integer
+      title: Maximum Nodes
+      description: Maximum nodes for autoscaling
+      minimum: 1
+      default: 10
+    autoscale:
+      type: boolean
+      title: Enable Autoscaling
+      description: Enable cluster autoscaler for this node pool
+      default: true
+    monthly_billed:
+      type: boolean
+      title: Monthly Billing
+      description: Use monthly billing instead of hourly
+      default: false
+    availability_zones:
+      type: object
+      title: Availability Zones
+      description: "Map of availability zones. Leave empty for single-AZ regions (e.g. BHS5) where OVH does not support explicit AZ selection."
+      default: {}
+      x-ui-override-disable: true
+      patternProperties:
+        ".*":
+          type: object
+          properties:
+            name:
+              type: string
+              description: Availability zone name (e.g. eu-west-par-a)
+          required:
+            - name
+    labels:
+      type: object
+      title: Node Labels
+      description: Labels to apply to all nodes in the pool.
+      default: {}
+      patternProperties:
+        ".*":
+          type: object
+          properties:
+            key:
+              type: string
+              description: Label key
+            value:
+              type: string
+              description: Label value
+          required:
+            - key
+            - value
+    taints:
+      type: object
+      title: Node Taints
+      description: "Map of taints keyed by taint key. Each value has effect and optional value. Eg: my-key: {value: 'true', effect: NoSchedule}"
+      x-ui-yaml-editor: true
+      x-ui-override-disable: true
+      default: {}
+      patternProperties:
+        ".*":
+          type: object
+          properties:
+            value:
+              type: string
+              description: Taint value
+              default: ""
+            effect:
+              type: string
+              description: Taint effect
+              enum:
+                - NoSchedule
+                - PreferNoSchedule
+                - NoExecute
+inputs:
+  ovh_provider:
+    type: "@facets/ovh-provider"
+    optional: false
+    displayName: OVH Provider
+    description: OVH provider configuration
+    providers:
+      - ovh
+  kubernetes_cluster:
+    type: "@facets/ovh-kubernetes"
+    optional: false
+    displayName: OVH Kubernetes Cluster
+    description: OVH Kubernetes cluster to create node pools in
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+outputs:
+  default:
+    type: "@facets/kubernetes_nodepool"
+    title: Kubernetes Node Pool
+    description: Node pool attributes including name, taints, and node selector
+iac:
+  validated_files:
+    - variables.tf
+sample:
+  kind: kubernetes_node_pool
+  flavor: ovh
+  version: "1.0"
+  disabled: false
+  spec:
+    flavor_name: b3-8
+    desired_nodes: 3
+    max_nodes: 10
+    autoscale: true
+    monthly_billed: false
+    availability_zones:
+      zone1:
+        name: eu-west-par-a
+    labels: {}
+    taints: {}
