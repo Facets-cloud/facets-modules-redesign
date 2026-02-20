@@ -12,7 +12,7 @@
       "strategy": {
         "type": "RollingUpdate"
       },
-      "image": "",
+      "image": "springcommunity/spring-framework-petclinic:latest",
       "image_pull_policy": "IfNotPresent"
     },
     "cloud_permissions": {
@@ -48,7 +48,11 @@
         "startup_check_type": "None"
       }
     },
-    "env": {}
+    "env": {
+      "user_host": "${postgres.postgres.interfaces.writer.host}",
+      "user_pass": "${postgres.postgres.interfaces.writer.password}",
+      "user_name": "${postgres.postgres.interfaces.writer.username}"
+    }
   },
   "inputs": {
     "cloud_account": {

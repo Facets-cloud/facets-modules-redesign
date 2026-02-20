@@ -47,7 +47,27 @@
         }
       }
     },
-    "rules": {},
+    "rules": {
+      "routing-rules1": {
+        "disable": false,
+        "service_name": "${service.service.out.attributes.service_name}",
+        "namespace": "${service.service.out.attributes.namespace}",
+        "port": "8080",
+        "path": "/",
+        "path_type": "PathPrefix",
+        "method": "ALL",
+        "timeouts": {
+          "request": "300s",
+          "backend_request": "300s"
+        },
+        "cors": {
+          "enabled": false
+        },
+        "grpc_config": {
+          "enabled": false
+        }
+      }
+    },
     "helm_values": {},
     "helm_wait": true
   },
