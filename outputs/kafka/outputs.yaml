@@ -11,6 +11,9 @@ properties:
         kafka_version:
           type: string
           description: Apache Kafka version deployed
+        namespace:
+          type: string
+          description: Kubernetes namespace details for Kafka Topic and Kafka User resources
     interfaces:
       type: object
       properties:
