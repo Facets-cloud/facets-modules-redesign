@@ -1,0 +1,10 @@
+<svg role="img" viewBox="0 0 63.75 85" xmlns="http://www.w3.org/2000/svg" fill="#4A5568">
+  <title>Storage Class</title>
+  <defs>
+    <symbol id="ebs-icon">
+      <path d="M58.641 7.782V10.8H.782V7.782L29.711.4 58.64 7.782zM0 17.467h60V80H0z"/>
+      <path d="M0 14.715h60v62.267H0zM50.472 0H9.579L.782 7.782h.628 57.23L50.472 0z"/>
+    </symbol>
+  </defs>
+  <use href="#ebs-icon" x="1.875" y="2.5"/>
+</svg>
