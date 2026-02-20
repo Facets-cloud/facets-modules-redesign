@@ -2,6 +2,25 @@
 # No need to create new private IP range or service networking connection
 # The network module already provides these resources
 
+# Name module for CloudSQL instance (98 character limit)
+module "name" {
+  source        = "github.com/Facets-cloud/facets-utility-modules//name"
+  environment   = var.environment
+  limit         = 98
+  resource_name = var.instance_name
+  resource_type = "mysql"
+}
+
+# Name modules for read replicas
+module "replica_name" {
+  count         = var.instance.spec.sizing.read_replica_count
+  source        = "github.com/Facets-cloud/facets-utility-modules//name"
+  environment   = var.environment
+  limit         = 98
+  resource_name = "${var.instance_name}-replica-${count.index + 1}"
+  resource_type = "mysql"
+}
+
 # Random password for MySQL root user (when not restoring from backup or importing user)
 resource "random_password" "mysql_password" {
   count   = var.instance.spec.restore_config.restore_from_backup ? 0 : 1
@@ -16,7 +35,7 @@ resource "random_password" "mysql_password" {
 # CloudSQL MySQL instance
 # NOTE: Read replicas must be deleted before the master instance can be deleted
 resource "google_sql_database_instance" "mysql_instance" {
-  name                = "${var.instance_name}-${var.environment.unique_name}"
+  name                = module.name.name
   database_version    = "MYSQL_${replace(var.instance.spec.version_config.version, ".", "_")}"
   region              = var.inputs.network.attributes.region
   deletion_protection = false
@@ -155,7 +174,7 @@ resource "google_sql_user" "mysql_root_user" {
 # Read replicas (if specified)
 resource "google_sql_database_instance" "read_replica" {
   count                = var.instance.spec.sizing.read_replica_count
-  name                 = "${var.instance_name}-${var.environment.unique_name}-replica-${count.index + 1}"
+  name                 = module.replica_name[count.index].name
   database_version     = google_sql_database_instance.mysql_instance.database_version
   region               = var.inputs.network.attributes.region
   master_instance_name = google_sql_database_instance.mysql_instance.name
