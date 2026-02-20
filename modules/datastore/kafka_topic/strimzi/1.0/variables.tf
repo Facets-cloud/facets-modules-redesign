@@ -1,10 +1,6 @@
 variable "instance" {
   description = "Kafka topics configuration from facets.yaml spec"
   type = object({
-    kind     = string
-    flavor   = string
-    version  = string
-    metadata = map(string)
     spec = object({
       topics = map(object({
         partitions         = number
