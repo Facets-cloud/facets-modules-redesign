@@ -25,7 +25,10 @@ properties:
             endpoint:
               type: string
             endpoints:
-              type: string
+              type: object
+              additionalProperties:
+                type: string
+              description: Individual broker endpoints map
             password:
               type: string
             secrets:
