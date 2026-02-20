@@ -153,6 +153,19 @@ resource "google_compute_router_nat" "nat" {
   }
 }
 
+# VPC Access Connector for Cloud Run, Cloud Functions, App Engine
+resource "google_vpc_access_connector" "connector" {
+  count = local.vpc_connector_enabled ? 1 : 0
+
+  name          = "${local.name_prefix}-connector"
+  region        = local.gcp_region
+  ip_cidr_range = local.vpc_connector_subnet_cidr
+  network       = google_compute_network.vpc.name
+  machine_type  = local.vpc_connector_machine_type
+  min_instances = local.vpc_connector_min_instances
+  max_instances = local.vpc_connector_max_instances
+}
+
 # Firewall Rules
 
 # Allow internal traffic within VPC

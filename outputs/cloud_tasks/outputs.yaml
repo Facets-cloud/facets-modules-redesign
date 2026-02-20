@@ -1,0 +1,56 @@
+name: '@facets/cloud_tasks'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        queue_name:
+          description: Name of the created Cloud Tasks queue
+          type: string
+        queue_path:
+          description: Full GCP resource path of the queue
+          type: string
+        queue_region:
+          description: Region where the queue is deployed
+          type: string
+        cloudrun_location:
+          description: Region of the target Cloud Run service
+          type: string
+        project_id:
+          description: GCP project ID
+          type: string
+        api_endpoint:
+          description: Cloud Tasks REST API endpoint for creating tasks
+          type: string
+        target_url:
+          description: Cloud Run service URL pre-configured in the queue
+          type: string
+        target_path:
+          description: HTTP path tasks are dispatched to
+          type: string
+        invoker_sa_email:
+          description: Service account email used for OIDC authentication
+          type: string
+        http_target_mode:
+          description: HTTP target mode (always queue_level)
+          type: string
+    interfaces:
+      type: object
+      properties:
+        tasks_api:
+          type: object
+          properties:
+            endpoint:
+              description: Cloud Tasks REST API endpoint for creating tasks
+              type: string
+            http_method:
+              description: HTTP method for task creation (POST)
+              type: string
+            content_type:
+              description: Content-Type header preset in queue (application/json)
+              type: string
+            description:
+              description: Description of the tasks API interface
+              type: string
+providers: []

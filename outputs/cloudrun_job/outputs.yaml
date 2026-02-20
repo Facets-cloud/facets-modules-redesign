@@ -1,0 +1,23 @@
+name: '@facets/cloudrun_job'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        job_name:
+          description: Name of the Cloud Run Job
+          type: string
+        location:
+          description: GCP region where the job is deployed
+          type: string
+        project_id:
+          description: GCP project ID
+          type: string
+        execution_uri:
+          description: URI to trigger job execution via Cloud Run API
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

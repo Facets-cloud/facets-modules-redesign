@@ -1,0 +1,196 @@
+artifact_inputs:
+    primary:
+        artifact_type: docker_image
+        attribute_path: spec.container.image
+clouds:
+    - gcp
+description: |
+    GPU-accelerated Cloud Run Job for long-running tasks (up to 7 days).
+    Ideal for video processing, ML inference, batch jobs that exceed 60 min.
+    Jobs run to completion and exit (no HTTP server).
+
+    GPU Requirements:
+    - nvidia-rtx-pro-6000: Minimum 20 vCPUs, 80GiB memory
+      Available: us-central1, europe-west4, asia-south2, asia-southeast1
+flavor: gpu-job
+inputs:
+    cloud_account:
+        description: GCP cloud account for project and region
+        displayName: GCP Cloud Account
+        optional: false
+        providers:
+            - google
+        type: '@facets/gcp_cloud_account'
+    network_details:
+        description: VPC network for private connectivity
+        displayName: Network Details
+        optional: true
+        type: '@facets/gcp-network-details'
+intent: cloudrun
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Serverless containers and batch jobs on GCP Cloud Run. Supports CPU batch jobs for data processing and ETL, GPU services for AI/ML inference, and GPU batch jobs for video processing.
+  displayName: Cloud Run
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloudrun.svg
+sample:
+    disabled: false
+    flavor: gpu-job
+    kind: cloudrun
+    spec:
+        container:
+            image: ${blueprint.self.artifacts.video-processor}
+        gpu:
+            enabled: true
+            type: nvidia-rtx-pro-6000
+        job:
+            max_retries: 3
+            parallelism: 1
+            task_count: 1
+            task_timeout: 3600s
+        resources:
+            cpu: "20"
+            memory: 80Gi
+    version: "1.0"
+spec:
+    description: Configure GPU-accelerated Cloud Run Job for long-running tasks
+    properties:
+        container:
+            properties:
+                args:
+                    description: Arguments to the entrypoint
+                    items:
+                        type: string
+                    title: Arguments
+                    type: array
+                command:
+                    description: Entrypoint command override
+                    items:
+                        type: string
+                    title: Command
+                    type: array
+                image:
+                    default: ${blueprint.self.artifacts.default}
+                    description: Container image URI (use artifact reference)
+                    title: Container Image
+                    type: string
+            title: Container Configuration
+            type: object
+        env:
+            description: Environment variables for the container
+            title: Environment Variables
+            type: object
+            x-ui-yaml-editor: true
+        gpu:
+            properties:
+                enabled:
+                    default: true
+                    title: Enable GPU
+                    type: boolean
+                type:
+                    default: nvidia-rtx-pro-6000
+                    description: RTX PRO 6000 requires minimum 20 vCPUs and 80GiB memory
+                    enum:
+                        - nvidia-rtx-pro-6000
+                    title: GPU Type
+                    type: string
+            title: GPU Configuration
+            type: object
+        job:
+            properties:
+                max_retries:
+                    default: 3
+                    description: Retries per task before marking failed
+                    maximum: 10
+                    minimum: 0
+                    title: Max Retries
+                    type: integer
+                parallelism:
+                    default: 1
+                    description: Maximum tasks running in parallel
+                    maximum: 100
+                    minimum: 1
+                    title: Parallelism
+                    type: integer
+                task_count:
+                    default: 1
+                    description: Number of tasks to run (all must succeed)
+                    maximum: 100
+                    minimum: 1
+                    title: Task Count
+                    type: integer
+                task_timeout:
+                    default: 3600s
+                    description: Maximum time per task (up to 168h/7 days)
+                    title: Task Timeout
+                    type: string
+            title: Job Configuration
+            type: object
+        resources:
+            description: RTX PRO 6000 GPU requires minimum 20 vCPUs and 80GiB memory
+            properties:
+                cpu:
+                    default: "20"
+                    description: Number of vCPUs (RTX PRO 6000 requires minimum 20)
+                    enum:
+                        - "20"
+                        - "24"
+                        - "32"
+                    title: CPU
+                    type: string
+                memory:
+                    default: 80Gi
+                    description: Memory allocation (RTX PRO 6000 requires minimum 80GiB)
+                    enum:
+                        - 80Gi
+                        - 96Gi
+                        - 128Gi
+                    title: Memory
+                    type: string
+            title: Resource Allocation
+            type: object
+        secrets:
+            default: []
+            description: Secrets to mount from Secret Manager
+            items:
+                properties:
+                    env_var:
+                        description: Environment variable name
+                        type: string
+                    secret_name:
+                        description: Secret Manager secret name
+                        type: string
+                    version:
+                        default: latest
+                        description: Secret version (default latest)
+                        type: string
+                type: object
+            title: Secret Manager Secrets
+            type: array
+        service_account:
+            description: Custom service account email for the job
+            title: Service Account
+            type: string
+        vpc_access:
+            description: VPC connector for private network access
+            properties:
+                connector:
+                    description: VPC connector name
+                    type: string
+                egress:
+                    default: private-ranges-only
+                    enum:
+                        - all-traffic
+                        - private-ranges-only
+                    type: string
+            title: VPC Access
+            type: object
+    title: Cloud Run GPU Job
+    type: object
+    x-ui-order:
+        - container
+        - gpu
+        - resources
+        - job
+        - env
+        - secrets
+version: "1.0"

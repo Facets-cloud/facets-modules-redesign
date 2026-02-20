@@ -1,0 +1,24 @@
+name: '@facets/gcp_notification_channels'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        project_id:
+          description: GCP project ID where the notification channels are created
+          type: string
+        channel_ids:
+          description: Map of channel key to GCP notification channel resource ID
+          type: object
+          additionalProperties:
+            type: string
+        channel_names:
+          description: Map of channel key to GCP notification channel resource name
+          type: object
+          additionalProperties:
+            type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []
