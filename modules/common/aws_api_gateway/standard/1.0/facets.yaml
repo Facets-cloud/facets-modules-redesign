@@ -1,0 +1,780 @@
+intent: aws_api_gateway
+flavor: standard
+version: '1.0'
+clouds:
+  - aws
+description: |
+  Provisions an AWS API Gateway v2 (HTTP or WebSocket) with VPC link integration,
+  configurable routes, authorizers, and secure defaults.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: AWS API Gateway v2 for HTTP and WebSocket APIs with VPC link support
+  displayName: AWS API Gateway
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/aws_api_gateway.svg
+
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    optional: false
+    displayName: AWS Cloud Account
+    description: AWS cloud account configuration and credentials
+    providers:
+      - aws
+  network_details:
+    type: '@facets/aws-vpc-details'
+    optional: false
+    displayName: VPC Network
+    description: AWS VPC for placing the API Gateway VPC link
+
+outputs:
+  default:
+    type: '@facets/aws_api_gateway'
+    title: AWS API Gateway Attributes
+
+spec:
+  title: AWS API Gateway Configuration
+  type: object
+  x-ui-order:
+    - protocol
+    - description
+    - api_version
+    - body
+    - credentials_arn
+    - disable_execute_api_endpoint
+    - fail_on_warnings
+    - ip_address_type
+    - route_key
+    - route_selection_expression
+    - api_key_selection_expression
+    - target
+    - api_mapping_key
+    - domain_name
+    - domain_name_certificate_arn
+    - domain_name_ownership_verification_certificate_arn
+    - create_domain_name
+    - hosted_zone_name
+    - private_zone
+    - create_domain_records
+    - subdomains
+    - subdomain_record_types
+    - create_certificate
+    - mutual_tls_authentication
+    - cors_configuration
+    - create_stage
+    - deploy_stage
+    - stage_name
+    - stage_description
+    - stage_client_certificate_id
+    - stage_variables
+    - stage_tags
+    - stage_access_log_settings
+    - stage_default_route_settings
+    - vpc_link_security_group_ids
+    - vpc_link_tags
+    - authorizers
+    - create_routes_and_integrations
+    - routes
+  properties:
+    ########################################
+    # API Gateway
+    ########################################
+    protocol:
+      type: string
+      title: Protocol Type
+      description: The API protocol type
+      enum:
+        - HTTP
+        - WEBSOCKET
+      default: HTTP
+    description:
+      type: string
+      title: Description
+      description: Description of the API Gateway (max 1024 characters)
+      default: API Gateway provisioned by Facets
+    api_version:
+      type: string
+      title: API Version
+      description: A version identifier for the API (1-64 characters)
+    body:
+      type: string
+      title: OpenAPI Body
+      description: An OpenAPI specification that defines the set of routes and integrations to create. Supported only for HTTP APIs.
+    credentials_arn:
+      type: string
+      title: Credentials ARN
+      description: Specifies any credentials required for the integration (quick create). Applicable for HTTP APIs.
+    disable_execute_api_endpoint:
+      type: boolean
+      title: Disable Default Execute Endpoint
+      description: Disable the default execute-api endpoint. Recommended when using a custom domain.
+      default: false
+    fail_on_warnings:
+      type: boolean
+      title: Fail on Warnings
+      description: Whether warnings should return an error while API Gateway is creating or updating the resource using an OpenAPI specification. Applicable for HTTP APIs.
+      default: false
+    ip_address_type:
+      type: string
+      title: IP Address Type
+      description: The IP address types that can invoke the API
+      enum:
+        - ipv4
+        - dualstack
+    route_key:
+      type: string
+      title: Route Key
+      description: Part of quick create. Specifies any route key. Applicable for HTTP APIs.
+    route_selection_expression:
+      type: string
+      title: Route Selection Expression
+      description: The route selection expression for the API (e.g. $request.method $request.path)
+    api_key_selection_expression:
+      type: string
+      title: API Key Selection Expression
+      description: An API key selection expression. Valid values for WebSocket APIs.
+      enum:
+        - $context.authorizer.usageIdentifierKey
+        - $request.header.x-api-key
+    target:
+      type: string
+      title: Quick Create Target
+      description: Part of quick create. Specifies a fully qualified URL (HTTP) or Lambda ARN. Applicable for HTTP APIs.
+    api_mapping_key:
+      type: string
+      title: API Mapping Key
+      description: The API mapping key
+
+    ########################################
+    # Domain Name
+    ########################################
+    domain_name:
+      type: string
+      title: Custom Domain Name
+      description: The domain name to use for API gateway (e.g. api.example.com)
+    domain_name_certificate_arn:
+      type: string
+      title: Domain Certificate ARN
+      description: ACM certificate ARN for the custom domain name
+      x-ui-visible-if:
+        field: spec.domain_name
+    domain_name_ownership_verification_certificate_arn:
+      type: string
+      title: Ownership Verification Certificate ARN
+      description: ARN of the AWS-issued certificate used to validate custom domain ownership
+      x-ui-visible-if:
+        field: spec.domain_name
+    create_domain_name:
+      type: boolean
+      title: Create Domain Name
+      description: Whether to create the API domain name resource
+      default: true
+      x-ui-visible-if:
+        field: spec.domain_name
+    hosted_zone_name:
+      type: string
+      title: Hosted Zone Name
+      description: Optional domain name of the Route 53 Hosted Zone where the domain should be created
+      x-ui-visible-if:
+        field: spec.domain_name
+    private_zone:
+      type: boolean
+      title: Private Zone
+      description: Indicates the hosted zone being looked up is private. Certificate validation will fail if set to true.
+      default: false
+      x-ui-visible-if:
+        field: spec.domain_name
+
+    ########################################
+    # Domain - Route53 Records
+    ########################################
+    create_domain_records:
+      type: boolean
+      title: Create Route53 Records
+      description: Whether to create Route53 records for the domain name
+      default: true
+      x-ui-visible-if:
+        field: spec.domain_name
+    subdomains:
+      type: array
+      title: Subdomains
+      description: An optional list of subdomains to use for API gateway
+      items:
+        type: string
+      default: []
+      x-ui-visible-if:
+        field: spec.domain_name
+    subdomain_record_types:
+      type: array
+      title: Subdomain Record Types
+      description: A list of record types to create for the subdomain(s)
+      items:
+        type: string
+      default:
+        - A
+        - AAAA
+      x-ui-visible-if:
+        field: spec.domain_name
+
+    ########################################
+    # Domain - Certificate
+    ########################################
+    create_certificate:
+      type: boolean
+      title: Create Certificate
+      description: Whether to create a certificate for the domain (ignored if private_zone is true)
+      default: true
+      x-ui-visible-if:
+        field: spec.domain_name
+
+    ########################################
+    # Mutual TLS
+    ########################################
+    mutual_tls_authentication:
+      type: object
+      title: Mutual TLS Authentication
+      description: Truststore settings for mutual TLS authentication
+      x-ui-order:
+        - truststore_uri
+        - truststore_version
+      properties:
+        truststore_uri:
+          type: string
+          title: Truststore URI
+          description: Amazon S3 URL of the truststore file (e.g. s3://bucket/key.pem)
+        truststore_version:
+          type: string
+          title: Truststore Version
+          description: Version of the S3 object for the truststore
+
+    ########################################
+    # CORS
+    ########################################
+    cors_configuration:
+      type: object
+      title: CORS Configuration
+      description: Cross-Origin Resource Sharing settings. Applicable for HTTP APIs.
+      x-ui-order:
+        - allow_origins
+        - allow_methods
+        - allow_headers
+        - expose_headers
+        - allow_credentials
+        - max_age
+      properties:
+        allow_credentials:
+          type: boolean
+          title: Allow Credentials
+          description: Whether to allow cookies or auth headers in cross-origin requests
+        allow_headers:
+          type: array
+          title: Allow Headers
+          description: List of allowed request headers
+          items:
+            type: string
+        allow_methods:
+          type: array
+          title: Allow Methods
+          description: List of allowed HTTP methods
+          items:
+            type: string
+        allow_origins:
+          type: array
+          title: Allow Origins
+          description: List of allowed origins (e.g. ["https://example.com"])
+          items:
+            type: string
+        expose_headers:
+          type: array
+          title: Expose Headers
+          description: List of headers exposed to the browser
+          items:
+            type: string
+          default: []
+        max_age:
+          type: number
+          title: Max Age (seconds)
+          description: How long preflight response can be cached
+
+    ########################################
+    # Stage
+    ########################################
+    create_stage:
+      type: boolean
+      title: Create Stage
+      description: Whether to create the default stage
+      default: true
+    deploy_stage:
+      type: boolean
+      title: Deploy Stage
+      description: Whether to deploy the stage. HTTP APIs are auto-deployed by default.
+      default: true
+    stage_name:
+      type: string
+      title: Stage Name
+      description: The name of the stage (1-128 characters)
+      default: $default
+    stage_description:
+      type: string
+      title: Stage Description
+      description: The description for the stage (max 1024 characters)
+    stage_client_certificate_id:
+      type: string
+      title: Stage Client Certificate ID
+      description: The identifier of a client certificate for the stage. Supported only for WebSocket APIs.
+    stage_variables:
+      type: object
+      title: Stage Variables
+      description: A map that defines the stage variables for the stage
+      x-ui-yaml-editor: true
+    stage_tags:
+      type: object
+      title: Stage Tags
+      description: Additional tags to assign to the stage resource
+      x-ui-yaml-editor: true
+
+    stage_access_log_settings:
+      type: object
+      title: Stage Access Log Settings
+      description: Settings for logging access in this stage
+      x-ui-order:
+        - create_log_group
+        - destination_arn
+        - format
+        - log_group_name
+        - log_group_retention_in_days
+        - log_group_kms_key_id
+        - log_group_skip_destroy
+        - log_group_class
+        - log_group_tags
+      properties:
+        create_log_group:
+          type: boolean
+          title: Create Log Group
+          description: Whether to create a CloudWatch log group for access logs
+          default: true
+        destination_arn:
+          type: string
+          title: Destination ARN
+          description: ARN of an existing CloudWatch Logs log group (used when create_log_group is false)
+          x-ui-visible-if:
+            field: spec.stage_access_log_settings.create_log_group
+            values:
+              - false
+        format:
+          type: string
+          title: Log Format
+          description: Single-line format of access log data using $context variables
+        log_group_name:
+          type: string
+          title: Log Group Name
+          description: Custom name for the CloudWatch log group (auto-generated if not set)
+          x-ui-visible-if:
+            field: spec.stage_access_log_settings.create_log_group
+        log_group_retention_in_days:
+          type: number
+          title: Log Retention (days)
+          description: Number of days to retain access logs in CloudWatch
+          default: 30
+          x-ui-visible-if:
+            field: spec.stage_access_log_settings.create_log_group
+        log_group_kms_key_id:
+          type: string
+          title: KMS Key ID
+          description: ARN of a KMS key to encrypt the log group
+          x-ui-visible-if:
+            field: spec.stage_access_log_settings.create_log_group
+        log_group_skip_destroy:
+          type: boolean
+          title: Skip Destroy
+          description: Whether to retain the log group when the resource is destroyed
+          x-ui-visible-if:
+            field: spec.stage_access_log_settings.create_log_group
+        log_group_class:
+          type: string
+          title: Log Group Class
+          description: Storage class of the log group
+          enum:
+            - STANDARD
+            - INFREQUENT_ACCESS
+          x-ui-visible-if:
+            field: spec.stage_access_log_settings.create_log_group
+        log_group_tags:
+          type: object
+          title: Log Group Tags
+          description: Additional tags for the CloudWatch log group
+          x-ui-yaml-editor: true
+          x-ui-visible-if:
+            field: spec.stage_access_log_settings.create_log_group
+
+    stage_default_route_settings:
+      type: object
+      title: Stage Default Route Settings
+      description: Default throttling and metrics settings for all routes in the stage
+      x-ui-order:
+        - throttling_burst_limit
+        - throttling_rate_limit
+        - detailed_metrics_enabled
+        - logging_level
+        - data_trace_enabled
+      properties:
+        data_trace_enabled:
+          type: boolean
+          title: Enable Data Trace
+          description: Whether to enable data tracing (WebSocket only)
+          default: true
+        detailed_metrics_enabled:
+          type: boolean
+          title: Enable Detailed Metrics
+          description: Whether to enable detailed CloudWatch metrics
+          default: true
+        logging_level:
+          type: string
+          title: Logging Level
+          description: Logging level (WebSocket only)
+          enum:
+            - 'OFF'
+            - ERROR
+            - INFO
+        throttling_burst_limit:
+          type: number
+          title: Throttling Burst Limit
+          description: Throttling burst limit for all routes
+          default: 500
+        throttling_rate_limit:
+          type: number
+          title: Throttling Rate Limit
+          description: Throttling rate limit for all routes
+          default: 1000
+
+    ########################################
+    # VPC Links
+    ########################################
+    vpc_link_security_group_ids:
+      type: array
+      title: VPC Link Security Group IDs
+      description: Security group IDs to attach to the VPC link
+      items:
+        type: string
+      default: []
+    vpc_link_tags:
+      type: object
+      title: VPC Link Tags
+      description: Additional tags to add to all VPC links
+      x-ui-yaml-editor: true
+
+    ########################################
+    # Authorizers
+    ########################################
+    authorizers:
+      type: object
+      title: Authorizers
+      description: Map of API Gateway authorizers
+      patternProperties:
+        ^[a-zA-Z0-9_-]+$:
+          type: object
+          title: Authorizer Configuration
+          x-ui-order:
+            - authorizer_type
+            - authorizer_uri
+            - authorizer_credentials_arn
+            - identity_sources
+            - authorizer_payload_format_version
+            - authorizer_result_ttl_in_seconds
+            - enable_simple_responses
+            - name
+            - jwt_configuration
+          properties:
+            authorizer_credentials_arn:
+              type: string
+              title: Authorizer Credentials ARN
+              description: ARN of the credentials required for the authorizer (IAM role)
+            authorizer_payload_format_version:
+              type: string
+              title: Payload Format Version
+              description: Payload format version for Lambda authorizers
+              enum:
+                - '1.0'
+                - '2.0'
+            authorizer_result_ttl_in_seconds:
+              type: number
+              title: Result TTL (seconds)
+              description: TTL for caching authorizer results (0 disables caching)
+            authorizer_type:
+              type: string
+              title: Authorizer Type
+              description: Type of the authorizer
+              enum:
+                - JWT
+                - REQUEST
+                - AWS_IAM
+              default: REQUEST
+            authorizer_uri:
+              type: string
+              title: Authorizer URI
+              description: Authorizer URI (Lambda ARN for REQUEST type)
+            enable_simple_responses:
+              type: boolean
+              title: Enable Simple Responses
+              description: Whether the Lambda authorizer returns a response in a simple format
+            identity_sources:
+              type: array
+              title: Identity Sources
+              description: Identity sources for the authorizer (e.g. ["$request.header.Authorization"])
+              items:
+                type: string
+            name:
+              type: string
+              title: Authorizer Name
+              description: Name of the authorizer (overrides the map key)
+            jwt_configuration:
+              type: object
+              title: JWT Configuration
+              description: Configuration for JWT authorizer (required when authorizer_type is JWT)
+              x-ui-visible-if:
+                field: spec.authorizers.{key}.authorizer_type
+                values:
+                  - JWT
+              properties:
+                audience:
+                  type: array
+                  title: Audience
+                  description: List of the intended recipients of the JWT
+                  items:
+                    type: string
+                issuer:
+                  type: string
+                  title: Issuer
+                  description: Base domain of the identity provider that issues JWT tokens
+          required:
+            - authorizer_type
+
+    ########################################
+    # Routes and Integrations
+    ########################################
+    create_routes_and_integrations:
+      type: boolean
+      title: Create Routes and Integrations
+      description: Whether to create routes and integrations resources
+      default: true
+    routes:
+      type: object
+      title: Routes and Integrations
+      description: Map of API gateway routes. Key is the route key (e.g. "GET /items", "$default")
+      patternProperties:
+        ^[a-zA-Z0-9_./ $-]*$:
+          type: object
+          title: Route Configuration
+          x-ui-order:
+            - authorizer_key
+            - authorization_type
+            - authorization_scopes
+            - api_key_required
+            - operation_name
+            - data_trace_enabled
+            - detailed_metrics_enabled
+            - logging_level
+            - throttling_burst_limit
+            - throttling_rate_limit
+            - integration
+          properties:
+            authorizer_key:
+              type: string
+              title: Authorizer Key
+              description: Key of the authorizer (from the authorizers map) to use for this route
+            authorization_type:
+              type: string
+              title: Authorization Type
+              description: Authorization type for this route
+              enum:
+                - NONE
+                - JWT
+                - AWS_IAM
+                - CUSTOM
+            authorization_scopes:
+              type: array
+              title: Authorization Scopes
+              description: Authorization scopes required for this route (JWT authorizers)
+              items:
+                type: string
+              default: []
+            api_key_required:
+              type: boolean
+              title: API Key Required
+              description: Whether an API key is required for this route
+            operation_name:
+              type: string
+              title: Operation Name
+              description: Operation name for this route
+            data_trace_enabled:
+              type: boolean
+              title: Enable Data Trace
+              description: Enable data tracing for this route (WebSocket only)
+            detailed_metrics_enabled:
+              type: boolean
+              title: Enable Detailed Metrics
+              description: Enable detailed CloudWatch metrics for this route
+            logging_level:
+              type: string
+              title: Logging Level
+              description: Logging level for this route (WebSocket only)
+              enum:
+                - 'OFF'
+                - ERROR
+                - INFO
+            throttling_burst_limit:
+              type: number
+              title: Throttling Burst Limit
+              description: Per-route throttling burst limit
+            throttling_rate_limit:
+              type: number
+              title: Throttling Rate Limit
+              description: Per-route throttling rate limit
+            integration:
+              type: object
+              title: Integration
+              description: Backend integration configuration for this route
+              x-ui-order:
+                - type
+                - uri
+                - method
+                - connection_type
+                - vpc_link_key
+                - payload_format_version
+                - timeout_milliseconds
+                - credentials_arn
+                - content_handling_strategy
+                - passthrough_behavior
+                - subtype
+                - description
+                - connection_id
+              properties:
+                type:
+                  type: string
+                  title: Integration Type
+                  description: Type of backend integration
+                  enum:
+                    - AWS_PROXY
+                    - HTTP_PROXY
+                    - MOCK
+                  default: AWS_PROXY
+                uri:
+                  type: string
+                  title: Integration URI
+                  description: URI of the backend target (ALB listener ARN, Lambda ARN, or HTTP URL)
+                method:
+                  type: string
+                  title: Integration Method
+                  description: HTTP method for the integration
+                  enum:
+                    - ANY
+                    - GET
+                    - POST
+                    - PUT
+                    - DELETE
+                    - PATCH
+                    - HEAD
+                    - OPTIONS
+                connection_type:
+                  type: string
+                  title: Connection Type
+                  description: Connection type for VPC link integrations
+                  enum:
+                    - INTERNET
+                    - VPC_LINK
+                vpc_link_key:
+                  type: string
+                  title: VPC Link Key
+                  description: Key of the VPC link to use for this integration
+                  x-ui-visible-if:
+                    field: spec.routes.{key}.integration.connection_type
+                    values:
+                      - VPC_LINK
+                payload_format_version:
+                  type: string
+                  title: Payload Format Version
+                  description: Payload format version for Lambda proxy integrations
+                  enum:
+                    - '1.0'
+                    - '2.0'
+                timeout_milliseconds:
+                  type: number
+                  title: Timeout (ms)
+                  description: Custom timeout for this integration in milliseconds (50-30000)
+                credentials_arn:
+                  type: string
+                  title: Credentials ARN
+                  description: IAM role ARN granting API Gateway permission to invoke the integration
+                content_handling_strategy:
+                  type: string
+                  title: Content Handling Strategy
+                  description: How to handle response payload content type conversions
+                  enum:
+                    - CONVERT_TO_BINARY
+                    - CONVERT_TO_TEXT
+                passthrough_behavior:
+                  type: string
+                  title: Passthrough Behavior
+                  description: Passthrough behavior for incoming requests
+                  enum:
+                    - WHEN_NO_MATCH
+                    - NEVER
+                    - WHEN_NO_TEMPLATES
+                subtype:
+                  type: string
+                  title: Integration Subtype
+                  description: AWS service action to invoke (for AWS_PROXY integrations with EventBridge, SQS, etc.)
+                description:
+                  type: string
+                  title: Integration Description
+                  description: Description of the integration
+                connection_id:
+                  type: string
+                  title: Connection ID
+                  description: ID of the VpcLink used for the integration (when connection_type is VPC_LINK)
+              required:
+                - type
+          required:
+            - integration
+  required:
+    - protocol
+
+sample:
+  kind: aws_api_gateway
+  flavor: standard
+  version: '1.0'
+  disabled: false
+  spec:
+    protocol: HTTP
+    description: API Gateway provisioned by Facets
+    disable_execute_api_endpoint: false
+    fail_on_warnings: false
+    create_domain_name: true
+    create_domain_records: true
+    create_certificate: true
+    private_zone: false
+    create_stage: true
+    deploy_stage: true
+    stage_name: $default
+    stage_variables: {}
+    stage_tags: {}
+    stage_access_log_settings:
+      create_log_group: true
+      log_group_retention_in_days: 30
+      log_group_tags: {}
+    stage_default_route_settings:
+      throttling_burst_limit: 500
+      throttling_rate_limit: 1000
+      detailed_metrics_enabled: true
+      data_trace_enabled: true
+    vpc_link_security_group_ids: []
+    vpc_link_tags: {}
+    authorizers: {}
+    create_routes_and_integrations: true
+    routes: {}
+
+iac:
+  validated_files:
+    - main.tf
+    - variables.tf
+    - outputs.tf
+    - locals.tf
