@@ -1,0 +1,87 @@
+intent: cloud_account
+flavor: ovh_provider
+version: "1.0"
+description: Module to configure and provision resources within an OVH cloud account
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Configure and provision resources within an OVH cloud account
+  displayName: Cloud Account
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloud_account.svg
+clouds:
+  - kubernetes
+spec:
+  title: OVH Provider Configuration
+  description: Configure OVH API access credentials and endpoint
+  type: object
+  properties:
+    endpoint:
+      type: string
+      title: OVH API Endpoint
+      description: Select the OVH API endpoint for your cloud project
+      enum:
+        - ovh-eu
+        - ovh-ca
+      default: ovh-eu
+      x-ui-overrides-only: true
+    application_key:
+      type: string
+      title: Application Key
+      description: OVH API application key
+      x-ui-secret-ref: true
+    application_secret:
+      type: string
+      title: Application Secret
+      description: OVH API application secret
+      x-ui-secret-ref: true
+    consumer_key:
+      type: string
+      title: Consumer Key
+      description: OVH API consumer key
+      x-ui-secret-ref: true
+    project_id:
+      type: string
+      title: Cloud Project ID
+      description: OVH Cloud Project ID (service_name)
+      x-ui-overrides-only: true
+  required:
+    - endpoint
+    - application_key
+    - application_secret
+    - consumer_key
+    - project_id
+  x-ui-order:
+    - endpoint
+    - application_key
+    - application_secret
+    - consumer_key
+    - project_id
+outputs:
+  default:
+    type: "@facets/ovh-provider"
+    providers:
+      ovh:
+        source: ovh/ovh
+        version: 2.7.0
+        attributes:
+          endpoint: attributes.endpoint
+          application_key: attributes.application_key
+          application_secret: attributes.application_secret
+          consumer_key: attributes.consumer_key
+      null:
+        source: hashicorp/null
+        version: "~> 3.2"
+sample:
+  kind: cloud_account
+  flavor: ovh_provider
+  version: "1.0"
+  disabled: true
+  spec:
+    endpoint: ovh-eu
+    application_key: ""
+    application_secret: ""
+    consumer_key: ""
+    project_id: ""
+iac:
+  validated_files:
+    - main.tf
+    - variables.tf

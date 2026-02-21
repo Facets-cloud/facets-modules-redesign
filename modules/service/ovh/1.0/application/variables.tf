@@ -1,0 +1,33 @@
+variable "namespace" {
+  type = string
+}
+
+variable "chart_name" {
+  type = string
+}
+
+variable "values" {
+  type = any
+}
+
+variable "annotations" {
+  type = any
+}
+
+variable "labels" {
+  type = any
+}
+
+variable "registry_secret_objects" {
+  type = any
+}
+
+
+
+variable "environment" {
+  
+}
+
+variable "inputs" {
+  type = any
+}

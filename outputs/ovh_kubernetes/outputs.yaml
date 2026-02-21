@@ -1,0 +1,76 @@
+name: "@facets/ovh-kubernetes"
+title: "OVH Kubernetes Cluster"
+description: "OVH Managed Kubernetes cluster configuration with connection details"
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        cluster_id:
+          type: string
+          description: "OVH Kubernetes cluster ID"
+        cluster_name:
+          type: string
+          description: "OVH Kubernetes cluster name"
+        cluster_endpoint:
+          type: string
+          description: "Kubernetes API server endpoint"
+        cluster_ca_certificate:
+          type: string
+          description: "Kubernetes cluster CA certificate (decoded)"
+        client_certificate:
+          type: string
+          description: "Kubernetes client certificate (decoded)"
+        client_key:
+          type: string
+          description: "Kubernetes client private key (decoded)"
+        kubeconfig:
+          type: string
+          description: "Complete kubeconfig file content"
+        region:
+          type: string
+          description: "OVH region where cluster is deployed"
+        version:
+          type: string
+          description: "Kubernetes version"
+        status:
+          type: string
+          description: "Cluster status"
+        secrets:
+          type: array
+          items:
+            type: string
+          description: "List of secret field names"
+    interfaces:
+      type: object
+      properties:
+        kubernetes:
+          type: object
+          properties:
+            host:
+              type: string
+            cluster_ca_certificate:
+              type: string
+            client_certificate:
+              type: string
+            client_key:
+              type: string
+providers:
+  - name: kubernetes
+    source: hashicorp/kubernetes
+    version: 2.23.0
+    attributes:
+      host: cluster_endpoint
+      cluster_ca_certificate: cluster_ca_certificate
+      client_certificate: client_certificate
+      client_key: client_key
+  - name: helm
+    source: hashicorp/helm
+    version: 2.11.0
+    attributes:
+      kubernetes:
+        host: cluster_endpoint
+        cluster_ca_certificate: cluster_ca_certificate
+        client_certificate: client_certificate
+        client_key: client_key

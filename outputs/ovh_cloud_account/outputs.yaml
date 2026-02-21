@@ -1,0 +1,44 @@
+name: "@facets/ovh-provider"
+title: "OVH Provider Configuration"
+description: "OVH Cloud provider configuration with authentication credentials and project settings"
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        endpoint:
+          type: string
+          description: "OVH API endpoint"
+        application_key:
+          type: string
+          description: "OVH application key for API access"
+        application_secret:
+          type: string
+          description: "OVH application secret for API access"
+        consumer_key:
+          type: string
+          description: "OVH consumer key for API access"
+        project_id:
+          type: string
+          description: "OVH cloud project ID"
+        secrets:
+          type: array
+          items:
+            type: string
+          description: "List of secret field names"
+    interfaces:
+      type: object
+      description: "No interfaces defined for provider"
+providers:
+  - name: ovh
+    source: "ovh/ovh"
+    version: "2.7.0"
+    attributes:
+      endpoint: attributes.endpoint
+      application_key: attributes.application_key
+      application_secret: attributes.application_secret
+      consumer_key: attributes.consumer_key
+  - name: "null"
+    source: "hashicorp/null"
+    version: "~> 3.2"

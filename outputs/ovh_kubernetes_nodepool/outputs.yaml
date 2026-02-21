@@ -1,0 +1,47 @@
+name: '@facets/ovh-kubernetes-nodepool'
+title: "OVH Kubernetes Node Pool"
+description: "OVH Managed Kubernetes node pool with availability zone details"
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        node_pool_name:
+          type: string
+          description: "Comma-separated names of the node pool resources"
+        node_pool_ids:
+          type: string
+          description: "Comma-separated IDs of the node pool resources"
+        flavor_name:
+          type: string
+          description: "OVH instance flavor used by the node pool"
+        availability_zones:
+          type: array
+          items:
+            type: string
+          description: "List of availability zones the node pool spans"
+        autoscale:
+          type: boolean
+          description: "Whether autoscaling is enabled"
+        taints:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+              effect:
+                type: string
+          description: "List of taints applied to the node pool"
+        node_selector:
+          type: object
+          additionalProperties:
+            type: string
+          description: "Map of labels used as node selector"
+    interfaces:
+      type: object
+      properties: {}
+providers: []

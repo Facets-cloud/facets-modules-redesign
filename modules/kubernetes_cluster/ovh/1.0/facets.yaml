@@ -1,0 +1,57 @@
+intent: kubernetes_cluster
+flavor: ovh
+version: "1.0"
+clouds:
+  - kubernetes
+description:
+  Creates and manages an OVH Managed Kubernetes Service (MKS) cluster,
+  exposing Kubernetes and Helm providers
+intentDetails:
+  type: Cloud & Infrastructure
+  description: OVH Managed Kubernetes cluster with provider configuration
+  displayName: Kubernetes Cluster
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_cluster.svg
+spec:
+  title: OVH Managed Kubernetes Cluster
+  description: Configure OVH Managed Kubernetes Service cluster
+  type: object
+  properties:
+    plan:
+      type: string
+      title: Cluster Plan
+      description: MKS cluster plan
+      enum:
+        - free
+        - standard
+      default: free
+inputs:
+  ovh_provider:
+    type: "@facets/ovh-provider"
+    optional: false
+    displayName: OVH Provider
+    description: OVH provider configuration
+    providers:
+      - ovh
+  network:
+    type: "@facets/ovh-network"
+    optional: false
+    displayName: OVH Network
+    description: Network configuration for the cluster
+    default:
+      resource_type: network
+      resource_name: default
+outputs:
+  default:
+    type: "@facets/ovh-kubernetes"
+    title: OVH Kubernetes Cluster Attributes
+    description: OVH-specific cluster attributes without provider configuration
+iac:
+  validated_files:
+    - variables.tf
+sample:
+  kind: kubernetes_cluster
+  flavor: ovh
+  version: "1.0"
+  disabled: false
+  spec:
+    plan: free
