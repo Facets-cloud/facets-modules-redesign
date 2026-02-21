@@ -56,6 +56,9 @@ locals {
     metadata = {
       name      = "${var.instance_name}-${local.admin_username}-password"
       namespace = local.namespace
+      annotations = {
+        "facets.cloud/operator-release" = local.operator_release
+      }
     }
     type = "Opaque"
     data = {
@@ -72,7 +75,11 @@ module "kafka_admin_password_secret" {
   namespace    = local.namespace
   data         = local.password_secret_manifest
 
-  advanced_config = {}
+  advanced_config = {
+    annotations = {
+      "facets.cloud/operator-release" = local.operator_release
+    }
+  }
 }
 
 # Deploy KafkaNodePool using any-k8s-resource
@@ -83,7 +90,13 @@ module "kafka_node_pool" {
   namespace    = local.namespace
   data         = local.kafka_node_pool_manifest
 
-  advanced_config = {}
+  advanced_config = {
+    annotations = {
+      "facets.cloud/operator-release" = local.operator_release
+    }
+  }
+
+  depends_on = [module.kafka_admin_password_secret]
 }
 
 # Deploy Kafka using any-k8s-resource
@@ -94,7 +107,11 @@ module "kafka" {
   namespace    = local.namespace
   data         = local.kafka_manifest
 
-  advanced_config = {}
+  advanced_config = {
+    annotations = {
+      "facets.cloud/operator-release" = local.operator_release
+    }
+  }
 
   depends_on = [module.kafka_node_pool]
 }
@@ -107,7 +124,11 @@ module "kafka_admin_user" {
   namespace    = local.namespace
   data         = local.kafka_user_manifest
 
-  advanced_config = {}
+  advanced_config = {
+    annotations = {
+      "facets.cloud/operator-release" = local.operator_release
+    }
+  }
 
   depends_on = [module.kafka_admin_password_secret, module.kafka]
 }
