@@ -9,7 +9,7 @@ module "apigateway-name" {
 }
 
 module "api_gateway" {
-  source  = "./terraform-aws-apigateway-v2"
+  source = "./terraform-aws-apigateway-v2"
 
 
   ########################################
