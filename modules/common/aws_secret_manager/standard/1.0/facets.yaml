@@ -1,0 +1,126 @@
+intent: aws_secret_manager
+flavor: standard
+version: '1.0'
+description: AWS Secrets Manager - Standard
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Create and manage AWS Secrets Manager secrets for storing sensitive data
+  displayName: AWS Secrets Manager
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/aws_secret_manager.svg
+clouds:
+  - aws
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: Cloud Account
+    description: The AWS Cloud Account for S3 bucket deployment
+    optional: true
+    providers:
+    - aws
+spec:
+  title: AWS Secrets Manager Configuration
+  description: Configuration options for AWS Secrets Manager
+  type: object
+  x-ui-order:
+    - override_default_name
+    - override_name
+    - description
+    - kms_key_id
+    - recovery_window_in_days
+    - policy
+    - rotation
+    - secrets
+  properties:
+    override_default_name:
+      type: boolean
+      title: Override Default Name
+      description: Enable to override the auto-generated secret name
+      default: false
+    override_name:
+      type: string
+      title: Override Name
+      description: Custom name for the secret (only used when override_default_name is true)
+    description:
+      type: string
+      title: Description
+      description: Description of the secret
+    kms_key_id:
+      type: string
+      title: KMS Key ID
+      description: KMS key ID to use for encrypting the secret
+    policy:
+      type: object
+      title: Policy
+      description: (Optional) Valid JSON document representing a resource policy. For more information about building AWS IAM policy documents with Terraform, see the AWS IAM Policy Document Guide. Removing policy from your configuration or setting policy to null or an empty string (i.e., policy = "") will not delete the policy since it could have been set by aws_secretsmanager_secret_policy. To delete the policy, set it to "{}" (an empty JSON document).
+      x-ui-yaml-editor: true
+    recovery_window_in_days:
+      type: number
+      title: Recovery Window (Days)
+      description: (Optional) Number of days that AWS Secrets Manager waits before it can delete the secret. This value can be 0 to force deletion without recovery or range from 7 to 30 days. The default value is 30.
+      default: 30
+      minimum: 0
+      maximum: 30
+    rotation:
+      type: object
+      title: Rotation Configuration
+      description: Configuration for automatic secret rotation
+      properties:
+        enabled:
+          type: boolean
+          title: Enable Rotation
+          description: Enable automatic rotation for this secret
+          default: false
+        lambda_arn:
+          type: string
+          title: Lambda ARN
+          description: ARN of the Lambda function that can rotate the secret
+        rotation_rules:
+          type: object
+          title: Rotation Rules
+          description: Configuration for rotation schedule
+          properties:
+            automatically_after_days:
+              type: number
+              title: Automatically After Days
+              description: Number of days between automatic scheduled rotations
+              minimum: 1
+              maximum: 1000
+            duration:
+              type: string
+              title: Duration
+              description: Length of the rotation window in ISO 8601 format (e.g., 2h for 2 hours)
+            schedule_expression:
+              type: string
+              title: Schedule Expression
+              description: Cron or rate expression for rotation schedule
+        rotate_immediately:
+          type: boolean
+          title: Rotate Immediately
+          description: Rotate the secret immediately after creation
+          default: false
+    secrets:
+      type: object
+      title: Secrets
+      description: Key-value pairs of secrets to store
+      x-ui-yaml-editor: true
+      patternProperties:
+        ^[a-zA-Z0-9_.-]*$:
+          type: string
+          title: Secret Value
+          description: Value for the secret key
+outputs:
+  default:
+    type: '@facets/aws_secret_manager'
+    title: AWS Secrets Manager Details
+sample:
+  kind: aws_secret_manager
+  flavor: standard
+  metadata: {}
+  disabled: true
+  version: '1.0'
+  spec:
+    override_default_name: false
+    secrets: {}
+iac:
+  validated_files:
+    - variables.tf
