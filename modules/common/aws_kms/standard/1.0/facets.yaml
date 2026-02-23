@@ -1,0 +1,91 @@
+intent: aws_kms
+flavor: standard
+version: '1.0'
+description: AWS KMS key management with configurable policies and permissions
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Create and manage AWS KMS keys for encryption, with support for customer-managed keys, external keys, and multi-region replication
+  displayName: AWS KMS
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/aws_kms.svg
+clouds:
+  - aws
+inputs:
+  cloud_account:
+    type: "@facets/aws_cloud_account"
+    displayName: AWS Cloud Account
+    optional: false
+    providers:
+      - aws
+outputs:
+  default:
+    type: "@facets/aws_kms"
+    title: AWS KMS Key Details
+spec:
+  title: AWS KMS Configuration
+  description: Configuration options for AWS KMS key
+  type: object
+  properties:
+    create:
+      type: boolean
+      title: Create KMS Key
+      description: Determines whether resources will be created
+      default: true
+    create_external:
+      type: boolean
+      title: Create External Key
+      description: Determines whether an external CMK (externally provided material) will be created
+      default: false
+    description:
+      type: string
+      title: Key Description
+      description: The description of the key as viewed in AWS console
+    enable_key_rotation:
+      type: boolean
+      title: Enable Key Rotation
+      description: Specifies whether key rotation is enabled
+      default: true
+    deletion_window_in_days:
+      type: number
+      title: Deletion Window (Days)
+      description: Waiting period before KMS deletes the key (7-30 days)
+      minimum: 7
+      maximum: 30
+    multi_region:
+      type: boolean
+      title: Multi-Region Key
+      description: Indicates whether the KMS key is multi-Region or regional
+      default: false
+    key_administrators:
+      type: array
+      title: Key Administrators
+      description: List of IAM ARNs for key administrators
+      items:
+        type: string
+    key_users:
+      type: array
+      title: Key Users
+      description: List of IAM ARNs for key users
+      items:
+        type: string
+    aliases:
+      type: array
+      title: Key Aliases
+      description: List of aliases to create for the key
+      items:
+        type: string
+    tags:
+      type: object
+      title: Tags
+      description: A map of tags to add to all resources
+sample:
+  kind: aws_kms
+  flavor: standard
+  version: '1.0'
+  spec:
+    create: true
+    description: "KMS key for encryption"
+    enable_key_rotation: true
+    deletion_window_in_days: 7
+    multi_region: false
+    tags:
+      Environment: Dev

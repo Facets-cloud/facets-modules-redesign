@@ -1,0 +1,35 @@
+name: '@facets/aws_kms'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        key_arn:
+          type: string
+          description: The Amazon Resource Name (ARN) of the KMS key
+        key_id:
+          type: string
+          description: The globally unique identifier for the key
+        key_region:
+          type: string
+          description: The AWS region where the key is located
+        key_policy:
+          type: string
+          description: The IAM resource policy set on the key
+        aliases:
+          type: object
+          description: Map of aliases created for the key
+        external_key_expiration_model:
+          type: string
+          description: Key material expiration model for external keys
+        external_key_state:
+          type: string
+          description: The state of the CMK for external keys
+        external_key_usage:
+          type: string
+          description: The cryptographic operations for which the CMK can be used
+    interfaces:
+      type: object
+      properties: {}
+providers: []
