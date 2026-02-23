@@ -80,7 +80,7 @@ variable "instance" {
         destination_arn             = optional(string)
         format                      = optional(string)
         log_group_name              = optional(string)
-        log_group_retention_in_days = optional(number, 30)
+        log_group_retention_in_days = optional(number, 7)
         log_group_kms_key_id        = optional(string)
         log_group_skip_destroy      = optional(bool)
         log_group_class             = optional(string)
