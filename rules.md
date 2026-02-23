@@ -774,6 +774,57 @@ resource "aws_eks_cluster" "main" {
 
 ---
 
+### RULE-025: Complete schema for var.instance and All variables
+
+**Category:** Terraform
+
+All variable declarations must use explicit type schemas. Never use `type = any` for any variable, especially `var.instance`. The `var.instance` variable must fully define the module's configuration schema with all nested objects and fields explicitly typed.
+
+**Bad:**
+```hcl
+variable "instance" {
+  description = "configuration"
+  type        = any
+}
+
+variable "custom_config" {
+  type = any
+}
+```
+
+**Good:**
+```hcl
+variable "instance" {
+  description = "sample_resource"
+  type = object({
+    kind    = string
+    flavor  = string
+    version = string
+    spec = object({
+      operator_version = string
+      high_availability = optional(object({
+        replicas   = optional(number, 1)
+      }))
+      resources = optional(object({
+        cpu_limit      = optional(string)
+        memory_limit   = optional(string)
+        cpu_request    = optional(string)
+        memory_request = optional(string)
+      }))
+    })
+  })
+}
+
+variable "custom_config" {
+  type = object({
+    setting_name = string
+    setting_value = optional(string)
+  })
+}
+```
+
+---
+
 ## Quick Reference
 
 | Rule | Category | Summary |
@@ -802,3 +853,4 @@ resource "aws_eks_cluster" "main" {
 | RULE-022 | module design | Enable security defaults (encryption, logging) |
 | RULE-023 | module lifecycle | Bump version for breaking changes; update project types |
 | RULE-024 | terraform | Use //name module for resource name length limits |
+| RULE-025 | terraform | Complete schema for var.instance and all variables; no type = any |
