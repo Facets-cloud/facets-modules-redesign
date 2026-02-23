@@ -91,10 +91,13 @@ spec:
       title: Description
       description: Description of the API Gateway (max 1024 characters)
       default: API Gateway provisioned by Facets
+      maxLength: 1024
     api_version:
       type: string
       title: API Version
       description: A version identifier for the API (1-64 characters)
+      minLength: 1
+      maxLength: 64
     body:
       type: string
       title: OpenAPI Body
@@ -167,7 +170,7 @@ spec:
       type: boolean
       title: Create Domain Name
       description: Whether to create the API domain name resource
-      default: true
+      default: false
       x-ui-visible-if:
         field: spec.domain_name
     hosted_zone_name:
@@ -191,7 +194,7 @@ spec:
       type: boolean
       title: Create Route53 Records
       description: Whether to create Route53 records for the domain name
-      default: true
+      default: false
       x-ui-visible-if:
         field: spec.domain_name
     subdomains:
@@ -374,7 +377,7 @@ spec:
           type: number
           title: Log Retention (days)
           description: Number of days to retain access logs in CloudWatch
-          default: 30
+          default: 7
           x-ui-visible-if:
             field: spec.stage_access_log_settings.create_log_group
         log_group_kms_key_id:
@@ -439,12 +442,12 @@ spec:
           type: number
           title: Throttling Burst Limit
           description: Throttling burst limit for all routes
-          default: 500
+          default: 100
         throttling_rate_limit:
           type: number
           title: Throttling Rate Limit
           description: Throttling rate limit for all routes
-          default: 1000
+          default: 100
 
     ########################################
     # VPC Links
@@ -499,6 +502,8 @@ spec:
               type: number
               title: Result TTL (seconds)
               description: TTL for caching authorizer results (0 disables caching)
+              minimum: 0
+              maximum: 3600
             authorizer_type:
               type: string
               title: Authorizer Type
@@ -748,9 +753,9 @@ sample:
     description: API Gateway provisioned by Facets
     disable_execute_api_endpoint: false
     fail_on_warnings: false
-    create_domain_name: true
-    create_domain_records: true
-    create_certificate: true
+    create_domain_name: false
+    create_domain_records: false
+    create_certificate: false
     private_zone: false
     create_stage: true
     deploy_stage: true
@@ -759,7 +764,7 @@ sample:
     stage_tags: {}
     stage_access_log_settings:
       create_log_group: true
-      log_group_retention_in_days: 30
+      log_group_retention_in_days: 7
       log_group_tags: {}
     stage_default_route_settings:
       throttling_burst_limit: 500
