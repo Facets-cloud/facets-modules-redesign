@@ -71,7 +71,7 @@ resource "google_cloud_run_v2_service" "this" {
 
       # Environment variables - only non-empty values have secrets; skip empty ones
       dynamic "env" {
-        for_each = local.non_empty_env_keys
+        for_each = lookup(var.instance.spec, "env", {})
         content {
           name = env.key
           value_source {
