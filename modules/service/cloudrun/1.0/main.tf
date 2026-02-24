@@ -32,8 +32,8 @@ resource "google_cloud_run_v2_service" "this" {
     # Request timeout
     timeout = "${lookup(var.instance.spec, "timeout", "300")}s"
 
-    # Service account
-    service_account = lookup(var.instance.spec, "service_account", null)
+    # Service account - always use the module-created service account
+    service_account = google_service_account.this.email
 
     # VPC Access
     dynamic "vpc_access" {
@@ -69,24 +69,15 @@ resource "google_cloud_run_v2_service" "this" {
       command = lookup(var.instance.spec.container, "command", null)
       args    = lookup(var.instance.spec.container, "args", null)
 
-      # Environment variables
+      # Environment variables - only non-empty values have secrets; skip empty ones
       dynamic "env" {
-        for_each = lookup(var.instance.spec, "env", {})
-        content {
-          name  = env.key
-          value = env.value
-        }
-      }
-
-      # Secret environment variables
-      dynamic "env" {
-        for_each = lookup(var.instance.spec, "secrets", {})
+        for_each = local.non_empty_env_keys
         content {
           name = env.key
           value_source {
             secret_key_ref {
-              secret  = env.value.secret_name
-              version = lookup(env.value, "version", "latest")
+              secret  = google_secret_manager_secret.env_vars[env.key].secret_id
+              version = "latest"
             }
           }
         }

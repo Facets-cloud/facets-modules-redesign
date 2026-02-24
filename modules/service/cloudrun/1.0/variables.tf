@@ -12,10 +12,6 @@ variable "instance" {
       })
 
       env = optional(map(string), {})
-      secrets = optional(map(object({
-        secret_name = string
-        version     = optional(string, "latest")
-      })), {})
 
       gcs_volumes = optional(map(object({
         bucket     = string
@@ -62,7 +58,18 @@ variable "instance" {
         egress  = "private-ranges-only"
       })
 
-      service_account = optional(string)
+      cloud_permissions = optional(object({
+        gcp = optional(object({
+          roles = optional(map(object({
+            role = string
+            condition = optional(object({
+              title       = string
+              expression  = string
+              description = optional(string)
+            }))
+          })), {})
+        }), { roles = {} })
+      }), { gcp = { roles = {} } })
 
       annotations = optional(map(string), {})
       labels      = optional(map(string), {})

@@ -1,5 +1,5 @@
 locals {
-  service_name = module.name.name
+  service_name = replace(module.name.name, "_", "-")
   location     = var.inputs.gcp_provider.attributes.region
   project_id   = var.inputs.gcp_provider.attributes.project_id
 

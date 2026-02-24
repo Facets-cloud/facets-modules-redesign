@@ -2,6 +2,7 @@ locals {
   # Output attributes matching @facets/service schema
   output_attributes = {
     service_name        = google_cloud_run_v2_service.this.name
+    name                = google_cloud_run_v2_service.this.name
     namespace           = local.location
     resource_name       = var.instance_name
     resource_type       = "cloudrun"
