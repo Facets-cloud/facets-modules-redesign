@@ -1,0 +1,21 @@
+name: '@facets/log_collector'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        loki_endpoint:
+          type: string
+        loki_namespace:
+          type: string
+        gateway_fqdn:
+          type: string
+        minio_endpoint:
+          type: string
+        datasource_name:
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

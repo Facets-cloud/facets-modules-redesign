@@ -1,0 +1,193 @@
+intent: log_collector
+flavor: loki
+version: '1.0'
+description: |
+  Grafana Loki distributed logging stack with Promtail log collector,
+  optional Minio storage backend, and Loki Canary monitoring. Supports
+  external storage (AWS S3, GCS, Azure Blob) and Prometheus integration.
+intentDetails:
+  type: Monitoring & Observability
+  description: Grafana Loki distributed logging stack with Promtail agent and optional Minio storage
+  displayName: Log Collector
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/log_collector.svg
+clouds:
+  - kubernetes
+  - aws
+  - gcp
+  - azure
+spec:
+  type: object
+  properties:
+    retention_days:
+      type: integer
+      title: Log Retention Days
+      description: Number of days to retain logs in Minio storage
+      default: 7
+      minimum: 1
+      maximum: 365
+    storage_size:
+      type: string
+      title: Minio Storage Size
+      description: PVC size for Minio storage (per replica)
+      default: "5Gi"
+      pattern: ^[0-9]+(Mi|Gi|Ti)$
+      x-ui-placeholder: "10Gi"
+    ingester_pvc_size:
+      type: string
+      title: Loki Ingester PVC Size
+      description: PVC size for Loki ingester component (per replica)
+      default: "5Gi"
+      pattern: ^[0-9]+(Mi|Gi|Ti)$
+    querier_pvc_size:
+      type: string
+      title: Loki Querier PVC Size
+      description: PVC size for Loki querier component (per replica)
+      default: "5Gi"
+      pattern: ^[0-9]+(Mi|Gi|Ti)$
+    loki_query_timeout:
+      type: integer
+      title: Loki Query Timeout (seconds)
+      description: Maximum query execution time in Grafana datasource
+      default: 60
+      minimum: 10
+      maximum: 600
+    enable_loki_canary:
+      type: boolean
+      title: Enable Loki Canary
+      description: Deploy Loki Canary for synthetic log testing and monitoring
+      default: false
+    enable_kubelet_log_scraping:
+      type: boolean
+      title: Enable Kubelet Log Scraping
+      description: Scrape systemd journal logs from Kubernetes nodes (kubelet.service)
+      default: false
+    kubelet_scrape_extra_matches:
+      type: array
+      title: Extra Systemd Units to Scrape
+      description: Additional systemd units to scrape (e.g., cron.service, containerd.service)
+      x-ui-visible-if:
+        field: spec.enable_kubelet_log_scraping
+        values: [true]
+      items:
+        type: string
+      default: []
+    use_docker_parser:
+      type: boolean
+      title: Use Docker Log Parser
+      description: Use Docker log parser instead of CRI (for older Kubernetes versions)
+      default: false
+    enable_default_pack:
+      type: boolean
+      title: Enable Default Log Packing
+      description: Pack logs by pod/container/job labels to reduce cardinality
+      default: true
+    enable_route53_record:
+      type: boolean
+      title: Enable AWS Route53 DNS Record
+      description: Create Route53 DNS record for Loki gateway (AWS only)
+      default: false
+    route53_domain_prefix:
+      type: string
+      title: Route53 Domain Prefix
+      description: Domain prefix for Route53 record (e.g., 'loki' creates loki.example.com)
+      x-ui-visible-if:
+        field: spec.enable_route53_record
+        values: [true]
+      x-ui-placeholder: "loki"
+    route53_zone_id:
+      type: string
+      title: Route53 Hosted Zone ID
+      description: AWS Route53 hosted zone ID for DNS record creation
+      x-ui-visible-if:
+        field: spec.enable_route53_record
+        values: [true]
+      x-ui-placeholder: "Z1234567890ABC"
+    route53_base_domain:
+      type: string
+      title: Route53 Base Domain
+      description: Base domain for Route53 record (e.g., example.com)
+      x-ui-visible-if:
+        field: spec.enable_route53_record
+        values: [true]
+      x-ui-placeholder: "example.com"
+    derived_fields:
+      type: object
+      title: Grafana Derived Fields
+      description: Configure Grafana derived fields for trace integration (key-value pairs)
+      x-ui-yaml-editor: true
+      default: {}
+    loki_helm_values:
+      type: object
+      title: Loki Helm Values Override
+      description: Additional Helm values for Loki chart (merged with defaults)
+      x-ui-yaml-editor: true
+      default: {}
+    promtail_helm_values:
+      type: object
+      title: Promtail Helm Values Override
+      description: Additional Helm values for Promtail chart (merged with defaults)
+      x-ui-yaml-editor: true
+      default: {}
+    minio_helm_values:
+      type: object
+      title: Minio Helm Values Override
+      description: Additional Helm values for Minio chart (merged with defaults)
+      x-ui-yaml-editor: true
+      default: {}
+  required:
+    - retention_days
+    - storage_size
+    - ingester_pvc_size
+    - querier_pvc_size
+inputs:
+  kubernetes_details:
+    type: '@facets/kubernetes-details'
+    displayName: Kubernetes Cluster
+    description: Kubernetes cluster where Loki stack will be deployed
+    optional: false
+    providers:
+      - kubernetes
+      - kubernetes-alpha
+      - helm
+  prometheus:
+    type: '@facets/prometheus'
+    displayName: Prometheus Instance
+    description: Prometheus instance for alerting and metrics (provides alertmanager URL and Grafana namespace)
+    optional: true
+  aws_cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: AWS Cloud Account
+    description: AWS account for Route53 DNS record creation (required if enable_route53_record is true)
+    optional: true
+    providers:
+      - aws
+outputs:
+  default:
+    type: '@facets/log_collector'
+    title: Loki Log Collector Output
+sample:
+  kind: log_collector
+  flavor: loki
+  version: '1.0'
+  disabled: false
+  spec:
+    retention_days: 7
+    storage_size: "5Gi"
+    ingester_pvc_size: "10Gi"
+    querier_pvc_size: "10Gi"
+    loki_query_timeout: 60
+    enable_loki_canary: false
+    enable_kubelet_log_scraping: false
+    kubelet_scrape_extra_matches: []
+    use_docker_parser: false
+    enable_default_pack: true
+    enable_route53_record: false
+    derived_fields: {}
+    loki_helm_values: {}
+    promtail_helm_values: {}
+    minio_helm_values: {}
+iac:
+  validated_files:
+    - variables.tf
+    - main.tf
+    - locals.tf

@@ -54,7 +54,7 @@ raptor import project-type --managed facets/aws --name "My Platform"
 `Helm` `Ingress/Gateway Fabric` `Ingress/NGINX` `cert-manager` `ConfigMap` `Secrets` `PVC (k8s_standard)` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `VPA` `Artifactories`
 
 **Operators & Monitoring**
-`KubeBlocks` `Strimzi` `ECK` `WireGuard Operator` `WireGuard VPN` `Alert Rules` `Prometheus` `Grafana` `Monitoring`
+`KubeBlocks` `Strimzi` `ECK` `WireGuard Operator` `WireGuard VPN` `Alert Rules` `Prometheus` `Grafana` `Log Collector (loki)` `Monitoring`
 
 </details>
 
@@ -100,7 +100,7 @@ raptor import project-type --managed facets/gcp --name "My Platform"
 `Helm` `Ingress/Gateway Fabric` `cert-manager` `ConfigMap` `Secrets` `PVC (k8s_standard)` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `VPA` `Artifactories`
 
 **Operators & Monitoring**
-`KubeBlocks` `Strimzi` `ECK` `WireGuard Operator` `WireGuard VPN` `Alert Rules` `Prometheus` `Grafana` `Monitoring`
+`KubeBlocks` `Strimzi` `ECK` `WireGuard Operator` `WireGuard VPN` `Alert Rules` `Prometheus` `Grafana` `Log Collector (loki)` `Monitoring`
 
 </details>
 
@@ -146,7 +146,7 @@ raptor import project-type --managed facets/azure --name "My Platform"
 `Helm` `Ingress/Gateway Fabric` `cert-manager` `ConfigMap` `Secrets` `PVC (k8s_standard)` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `VPA` `Artifactories`
 
 **Operators & Monitoring**
-`KubeBlocks` `Strimzi` `ECK` `WireGuard Operator` `WireGuard VPN` `Alert Rules` `Prometheus` `Grafana` `Monitoring`
+`KubeBlocks` `Strimzi` `ECK` `WireGuard Operator` `WireGuard VPN` `Alert Rules` `Prometheus` `Grafana` `Log Collector (loki)` `Monitoring`
 
 </details>
 

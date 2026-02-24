@@ -834,7 +834,7 @@ body {
 const CLOUD_DATA = {
   aws: {
     name: "Amazon Web Services",
-    moduleCount: 40,
+    moduleCount: 41,
     praxisPrompt: "Import the official Facets AWS project type for me.\n\nraptor import project-type --managed facets/aws",
     raptorImport: "raptor import project-type --managed facets/aws",
     raptorImportNamed: 'raptor import project-type --managed facets/aws \\\n  --name "My Platform"',
@@ -859,13 +859,13 @@ const CLOUD_DATA = {
       ],
       "Operators & Monitoring": [
         "KubeBlocks", "Strimzi", "ECK", "WireGuard Operator",
-        "WireGuard VPN", "Alert Rules", "Prometheus", "Grafana", "Monitoring"
+        "WireGuard VPN", "Alert Rules", "Prometheus", "Grafana", "Log Collector (loki)", "Monitoring"
       ]
     }
   },
   gcp: {
     name: "Google Cloud Platform",
-    moduleCount: 35,
+    moduleCount: 36,
     praxisPrompt: "Import the official Facets GCP project type for me.\n\nraptor import project-type --managed facets/gcp",
     raptorImport: "raptor import project-type --managed facets/gcp",
     raptorImportNamed: 'raptor import project-type --managed facets/gcp \\\n  --name "My Platform"',
@@ -889,13 +889,13 @@ const CLOUD_DATA = {
       ],
       "Operators & Monitoring": [
         "KubeBlocks", "Strimzi", "ECK", "WireGuard Operator",
-        "WireGuard VPN", "Alert Rules", "Prometheus", "Grafana", "Monitoring"
+        "WireGuard VPN", "Alert Rules", "Prometheus", "Grafana", "Log Collector (loki)", "Monitoring"
       ]
     }
   },
   azure: {
     name: "Microsoft Azure",
-    moduleCount: 34,
+    moduleCount: 35,
     praxisPrompt: "Import the official Facets Azure project type for me.\n\nraptor import project-type --managed facets/azure",
     raptorImport: "raptor import project-type --managed facets/azure",
     raptorImportNamed: 'raptor import project-type --managed facets/azure \\\n  --name "My Platform"',
@@ -919,7 +919,7 @@ const CLOUD_DATA = {
       ],
       "Operators & Monitoring": [
         "KubeBlocks", "Strimzi", "ECK", "WireGuard Operator",
-        "WireGuard VPN", "Alert Rules", "Prometheus", "Grafana", "Monitoring"
+        "WireGuard VPN", "Alert Rules", "Prometheus", "Grafana", "Log Collector (loki)", "Monitoring"
       ]
     }
   }
