@@ -1,0 +1,44 @@
+intent: cloud_account
+flavor: aws_env_provider
+version: "1.0"
+description: Lightweight AWS provider that auto-discovers credentials from the pod environment (IAM role, IRSA, etc.)
+intentDetails:
+  type: Cloud & Infrastructure
+  description: AWS provider using environment-based credential discovery (no cloud account selection)
+  displayName: Cloud Account
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloud_account.svg
+clouds:
+  - kubernetes
+spec:
+  title: AWS Environment Provider
+  description: Configures an AWS provider using credentials auto-discovered from the environment
+  type: object
+  properties:
+    region:
+      type: string
+      title: AWS Region
+      description: AWS region for the provider
+      x-ui-overrides-only: true
+  required:
+    - region
+outputs:
+  default:
+    type: "@facets/aws_cloud_account"
+    providers:
+      aws:
+        source: hashicorp/aws
+        version: "= 6.9.0"
+        attributes:
+          region: attributes.aws_region
+          skip_region_validation: true
+      tls:
+        source: hashicorp/tls
+        version: ">= 4.0.0"
+        attributes: {}
+sample:
+  kind: cloud_account
+  flavor: aws_env_provider
+  version: "1.0"
+  disabled: true
+  spec:
+    region: ""

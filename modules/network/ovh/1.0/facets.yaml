@@ -1,0 +1,68 @@
+intent: network
+flavor: ovh
+version: 1.0.0
+clouds:
+- kubernetes
+description: Creates private network infrastructure for OVH Managed Kubernetes clusters
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Private network infrastructure for OVH Managed Kubernetes clusters
+  displayName: Network
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/network.svg
+spec:
+  title: OVH Network for Kubernetes
+  description: Configure network infrastructure for K8s deployment
+  type: object
+  properties:
+    region:
+      type: string
+      title: Deployment Region
+      description: OVH Cloud region
+      enum:
+      - Beauharnois, Canada (BHS5)
+      - Frankfurt, Germany (DE1)
+      - Paris, France 3-AZ (EU-WEST-PAR)
+      - Gravelines, France (GRA9)
+      - Roubaix, France (RBX-A)
+      - Strasbourg, France (SBG5)
+      - London, UK (UK1)
+      - Warsaw, Poland (WAW1)
+      x-ui-overrides-only: true
+    network_cidr:
+      type: string
+      title: Network CIDR
+      description: CIDR block for the private network
+      x-ui-overrides-only: true
+    vlan_id:
+      type: number
+      title: VLAN ID
+      description: VLAN ID for the network (0-4000). Must be unique per OVH account.
+      minimum: 0
+      maximum: 4000
+      x-ui-overrides-only: true
+  required:
+  - vlan_id
+inputs:
+  ovh_provider:
+    type: '@facets/ovh-provider'
+    optional: false
+    displayName: OVH Provider
+    description: OVH provider configuration
+    providers:
+    - ovh
+outputs:
+  default:
+    type: '@facets/ovh-network'
+    title: OVH Network Configuration
+iac:
+  validated_files:
+  - variables.tf
+sample:
+  kind: network
+  flavor: ovh
+  version: 1.0.0
+  disabled: true
+  spec:
+    region: "Gravelines, France (GRA9)"
+    network_cidr: "10.0.0.0/16"
+    vlan_id: 100

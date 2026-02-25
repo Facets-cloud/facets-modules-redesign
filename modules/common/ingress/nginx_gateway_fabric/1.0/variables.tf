@@ -11,20 +11,12 @@ variable "instance_name" {
 variable "inputs" {
   type = object({
     kubernetes_details = object({
-      attributes = object({
-        cloud_provider         = optional(string)
-        cluster_id             = optional(string)
-        cluster_name           = optional(string)
-        cluster_location       = optional(string)
-        cluster_endpoint       = optional(string)
-        lb_service_record_type = optional(string)
-      })
-      interfaces = optional(object({
-        kubernetes = optional(object({
-          cluster_ca_certificate = optional(string)
-          host                   = optional(string)
-        }))
-      }))
+      cloud_provider         = optional(string)
+      cluster_id             = optional(string)
+      cluster_name           = optional(string)
+      cluster_location       = optional(string)
+      cluster_endpoint       = optional(string)
+      lb_service_record_type = optional(string)
     })
     kubernetes_node_pool_details = optional(object({
       attributes = optional(object({
@@ -49,6 +41,14 @@ variable "inputs" {
         channel     = optional(string)
         install_url = optional(string)
         job_name    = optional(string)
+      }))
+    }))
+    aws_provider = optional(object({
+      attributes = optional(object({
+        aws_region   = optional(string)
+        aws_iam_role = optional(string)
+        session_name = optional(string)
+        external_id  = optional(string)
       }))
     }))
     prometheus_details = optional(object({
