@@ -1,0 +1,161 @@
+intent: redis
+flavor: ovh
+version: '1.0'
+clouds:
+- kubernetes
+description: Managed Valkey (Redis-compatible) cache on OVH Cloud with private network
+  connectivity and TLS encryption
+intentDetails:
+  type: Datastores
+  description: OVH Cloud managed Valkey (Redis-compatible) cache service
+  displayName: Redis
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/redis.svg
+spec:
+  title: OVH Managed Valkey (Redis-compatible) Cache
+  description: Managed Valkey (Redis-compatible) cache on OVH Cloud with private network
+    connectivity and TLS encryption
+  type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - advanced_config
+  properties:
+    version_config:
+      type: object
+      title: Version Configuration
+      x-ui-order:
+      - version
+      properties:
+        version:
+          type: string
+          title: Valkey Version
+          description: Version of the Valkey/Redis engine
+          enum:
+          - '8.1'
+          - '8.0'
+          - '7.0'
+          - '6.2'
+          default: '8.1'
+      required:
+      - version
+    sizing:
+      type: object
+      title: Sizing & Performance
+      x-ui-order:
+      - plan
+      - flavor
+      - nodes_count
+      properties:
+        plan:
+          type: string
+          title: Service Plan
+          description: OVH Cloud Database service plan
+          enum:
+          - essential
+          - business
+          default: essential
+        flavor:
+          type: string
+          title: Node Flavor
+          description: Node size and resources for the Valkey instance
+          enum:
+          - db1-4
+          - db1-7
+          - db1-15
+          - db1-30
+          - db1-60
+          - db1-120
+          default: db1-4
+        nodes_count:
+          type: integer
+          title: Number of Nodes
+          description: Number of nodes in the cluster (1 for standalone, 3+ for cluster
+            mode)
+          minimum: 1
+          maximum: 9
+          default: 1
+      required:
+      - plan
+      - flavor
+      - nodes_count
+    advanced_config:
+      type: object
+      title: Advanced Configuration
+      x-ui-toggle: true
+      properties:
+        maxmemory_policy:
+          type: string
+          title: Max Memory Policy
+          description: How Valkey selects what to remove when maxmemory is reached
+          default: allkeys-lru
+          enum:
+          - noeviction
+          - allkeys-lru
+          - allkeys-lfu
+          - volatile-lru
+          - volatile-lfu
+          - allkeys-random
+          - volatile-random
+          - volatile-ttl
+        timeout:
+          type: string
+          title: Connection Timeout
+          description: Close the connection after a client is idle for N seconds (0
+            to disable)
+          default: '300'
+        notify_keyspace_events:
+          type: string
+          title: Keyspace Notifications
+          description: Valkey keyspace events notification configuration
+          default: ''
+        persistence:
+          type: string
+          title: Persistence Mode
+          description: Data persistence configuration
+          default: rdb
+          enum:
+          - 'off'
+          - rdb
+          - aof
+  required:
+  - version_config
+  - sizing
+inputs:
+  ovh_provider:
+    type: '@facets/ovh-provider'
+    optional: false
+    displayName: OVH Cloud Account
+    description: OVH provider configuration
+    providers:
+    - ovh
+  network:
+    type: '@facets/ovh-network'
+    optional: false
+    displayName: OVH Network
+    description: Network configuration for private connectivity
+outputs:
+  default:
+    type: '@facets/redis'
+    title: OVH Valkey (Redis-compatible) Cache
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+  - versions.tf
+sample:
+  kind: redis
+  flavor: ovh
+  version: '1.0'
+  disabled: true
+  spec:
+    version_config:
+      version: '8.1'
+    sizing:
+      plan: essential
+      flavor: db1-4
+      nodes_count: 1
+    advanced_config:
+      maxmemory_policy: allkeys-lru
+      timeout: '300'
+      persistence: rdb
