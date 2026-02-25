@@ -1,0 +1,132 @@
+intent: mongo
+flavor: ovh
+version: '1.0'
+clouds:
+- kubernetes
+description: Managed MongoDB database on OVH Cloud with private network connectivity
+  and SSL/TLS encryption
+intentDetails:
+  type: Datastores
+  description: OVH Cloud managed MongoDB database service
+  displayName: MongoDB
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mongo.svg
+spec:
+  title: OVH Managed MongoDB Database
+  description: Managed MongoDB database on OVH Cloud with private network connectivity
+    and SSL/TLS encryption
+  type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  properties:
+    version_config:
+      type: object
+      title: Version Configuration
+      x-ui-order:
+      - version
+      properties:
+        version:
+          type: string
+          title: MongoDB Version
+          description: MongoDB engine version
+          enum:
+          - '4.4'
+          - '5.0'
+          - '6.0'
+          - '7.0'
+          default: '6.0'
+      required:
+      - version
+    sizing:
+      type: object
+      title: Sizing & Performance
+      x-ui-order:
+      - plan
+      - flavor
+      - nodes_count
+      - disk_size
+      properties:
+        plan:
+          type: string
+          title: Service Plan
+          description: OVH Cloud Database service plan (production and advanced require
+            3+ nodes)
+          enum:
+          - production
+          - advanced
+          default: production
+        flavor:
+          type: string
+          title: Instance Flavor
+          description: OVH instance flavor for database nodes
+          enum:
+          - db2-2
+          - db2-4
+          - db2-7
+          - db2-15
+          - db2-30
+          - db2-60
+          - db2-120
+          - b3-8
+          - b3-16
+          - b3-32
+          - b3-64
+          default: db2-4
+        nodes_count:
+          type: integer
+          title: Number of Nodes
+          description: Number of database nodes (3+ for production/advanced)
+          minimum: 3
+          maximum: 10
+          default: 3
+        disk_size:
+          type: integer
+          title: Disk Size (GB)
+          description: Storage size in GB
+          minimum: 20
+          maximum: 2000
+          default: 20
+      required:
+      - plan
+      - flavor
+      - nodes_count
+      - disk_size
+  required:
+  - version_config
+  - sizing
+inputs:
+  ovh_provider:
+    type: '@facets/ovh-provider'
+    optional: false
+    displayName: OVH Cloud Account
+    description: OVH provider configuration
+    providers:
+    - ovh
+  network:
+    type: '@facets/ovh-network'
+    optional: false
+    displayName: OVH Network
+    description: Network configuration for private connectivity
+outputs:
+  default:
+    type: '@facets/mongo'
+    title: OVH MongoDB Database
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+  - versions.tf
+sample:
+  kind: mongo
+  flavor: ovh
+  version: '1.0'
+  disabled: true
+  spec:
+    version_config:
+      version: '6.0'
+    sizing:
+      plan: production
+      flavor: db2-4
+      nodes_count: 3
+      disk_size: 20
