@@ -1,6 +1,6 @@
 intent: ingress
 flavor: nginx_gateway_fabric
-version: "1.0-testing"
+version: "1.0"
 description: NGINX Gateway Fabric - Kubernetes Gateway API implementation
 clouds:
   - aws
@@ -343,7 +343,7 @@ spec:
             path_type:
               type: string
               title: Path Type
-              description: "Path matching type. RegularExpression (default) uses regex matching like ingress-nginx use-regex. PathPrefix matches path segments. Exact matches the full path."
+              description: "Path matching type. RegularExpression (default) uses regex matching. PathPrefix matches path segments. Exact matches the full path."
               enum:
                 - RegularExpression
                 - PathPrefix
@@ -890,7 +890,7 @@ outputs:
 sample:
   kind: ingress
   flavor: nginx_gateway_fabric
-  version: "1.0-testing"
+  version: "1.0"
   disabled: true
   spec:
     private: false
