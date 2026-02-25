@@ -1,6 +1,6 @@
 intent: mysql
 flavor: gcp-cloudsql
-version: '1.0'
+version: '1.1'
 clouds:
 - gcp
 description: Managed MySQL database using Google Cloud SQL with automated backups
@@ -279,7 +279,7 @@ iac:
 sample:
   kind: mysql
   flavor: gcp-cloudsql
-  version: '1.0'
+  version: '1.1'
   disabled: true
   spec:
     version_config:
