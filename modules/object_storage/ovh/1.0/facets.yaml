@@ -1,0 +1,92 @@
+intent: object_storage
+flavor: ovh
+version: '1.0'
+description: S3-compatible object storage container for storing unstructured data
+  in OVH Cloud
+intentDetails:
+  type: Cloud & Infrastructure
+  description: S3-compatible object storage with encryption, versioning, and replication
+    on OVH Cloud
+  displayName: Object Storage
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/object_storage.svg
+clouds:
+- kubernetes
+inputs:
+  ovh_provider:
+    type: '@facets/ovh-provider'
+    optional: false
+    displayName: OVH Cloud Account
+    description: OVH Cloud account with project credentials
+    providers:
+    - ovh
+outputs:
+  default:
+    type: '@facets/ovh-object-storage'
+    title: Object Storage Container
+spec:
+  title: OVH Object Storage
+  description: S3-compatible object storage container for storing unstructured data
+    in OVH Cloud
+  type: object
+  properties:
+    versioning_enabled:
+      type: boolean
+      title: Enable Versioning
+      description: Enable object versioning for the storage container
+      default: false
+    encryption_enabled:
+      type: boolean
+      title: Enable Encryption
+      description: Enable server-side encryption for stored objects
+      default: true
+    encryption_algorithm:
+      type: string
+      title: Encryption Algorithm
+      description: Encryption algorithm to use (if encryption is enabled)
+      default: AES256
+      enum:
+      - AES256
+    replication_enabled:
+      type: boolean
+      title: Enable Replication
+      description: Enable cross-region replication
+      default: false
+    replication_region:
+      type: string
+      title: Replication Region
+      description: Target region for replication (if enabled)
+      default: ''
+    public_read:
+      type: boolean
+      title: Public Read Access
+      description: Allow public read access to objects in the container
+      default: false
+    lifecycle_enabled:
+      type: boolean
+      title: Enable Lifecycle Rules
+      description: Enable automatic object lifecycle management
+      default: false
+    expiration_days:
+      type: number
+      title: Object Expiration Days
+      description: Number of days after which objects expire (if lifecycle is enabled)
+      default: 0
+      minimum: 0
+  required: []
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+sample:
+  kind: object_storage
+  flavor: ovh
+  version: '1.0'
+  disabled: true
+  spec:
+    versioning_enabled: false
+    encryption_enabled: true
+    encryption_algorithm: AES256
+    replication_enabled: false
+    public_read: false
+    lifecycle_enabled: false
