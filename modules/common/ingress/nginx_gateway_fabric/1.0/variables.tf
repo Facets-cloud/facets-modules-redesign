@@ -43,6 +43,14 @@ variable "inputs" {
         job_name    = optional(string)
       }))
     }))
+    aws_provider = optional(object({
+      attributes = optional(object({
+        aws_region   = optional(string)
+        aws_iam_role = optional(string)
+        session_name = optional(string)
+        external_id  = optional(string)
+      }))
+    }))
     prometheus_details = optional(object({
       attributes = optional(object({
         alertmanager_url = optional(string)
