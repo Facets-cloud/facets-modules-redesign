@@ -25,11 +25,6 @@ spec:
   description: Configuration options for AWS KMS key
   type: object
   properties:
-    create:
-      type: boolean
-      title: Create KMS Key
-      description: Determines whether resources will be created
-      default: true
     create_external:
       type: boolean
       title: Create External Key
