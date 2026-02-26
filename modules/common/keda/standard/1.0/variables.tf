@@ -10,7 +10,7 @@ variable "instance" {
         cpu    = optional(string)
         memory = optional(string)
       }), {})
-      custom_values = optional(map(any), {})
+      custom_values = optional(object({}), {})
     })
   })
 }

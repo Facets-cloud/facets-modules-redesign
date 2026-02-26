@@ -1,5 +1,4 @@
 name: '@facets/prometheus'
-type: object
 properties:
   type: object
   properties:

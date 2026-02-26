@@ -11,7 +11,15 @@ resource "helm_release" "keda" {
 
   values = [
     <<VALUES
-prometheus_id: ${local.prometheus_release_id}
+prometheus:
+  metricServer:
+    enabled: ${local.prometheus_release_id != "" ? "true" : "false"}
+    serviceMonitor:
+      enabled: ${local.prometheus_release_id != "" ? "true" : "false"}
+  operator:
+    enabled: ${local.prometheus_release_id != "" ? "true" : "false"}
+    serviceMonitor:
+      enabled: ${local.prometheus_release_id != "" ? "true" : "false"}
 resources:
   operator:
     limits:

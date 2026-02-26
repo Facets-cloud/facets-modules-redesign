@@ -16,9 +16,14 @@ locals {
   prometheus_release_id = lookup(local.prometheus_attributes, "helm_release_id", "")
 
   # Nodepool configuration from inputs
-  nodepool_attributes = var.inputs.kubernetes_node_pool_details != null ? lookup(var.inputs.kubernetes_node_pool_details, "attributes", {}) : {}
-  node_pool_taints    = lookup(local.nodepool_attributes, "taints", [])
-  nodepool_labels     = lookup(local.nodepool_attributes, "node_selector", {})
+  nodepool_attributes = var.inputs.kubernetes_node_pool_details != null ? lookup(var.inputs.kubernetes_node_pool_details, "attributes", {}) : {
+    node_class_name = null
+    node_pool_name  = null
+    taints          = []
+    node_selector   = {}
+  }
+  node_pool_taints = lookup(local.nodepool_attributes, "taints", [])
+  nodepool_labels  = lookup(local.nodepool_attributes, "node_selector", {})
 
   # Convert taints from {key, value, effect} to tolerations format
   tolerations = [

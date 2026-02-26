@@ -1,6 +1,5 @@
 clouds:
     - aws
-    - kubernetes
     - azure
     - gcp
 intentDetails:
@@ -25,7 +24,7 @@ inputs:
     kubernetes_node_pool_details:
         description: Node pool for KEDA operator deployment
         displayName: Node Pool
-        optional: true
+        optional: false
         type: '@facets/kubernetes_nodepool'
     prometheus_details:
         description: Prometheus instance for metrics-based scaling integration
