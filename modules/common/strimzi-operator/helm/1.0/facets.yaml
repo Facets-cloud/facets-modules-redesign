@@ -55,6 +55,7 @@ spec:
       type: object
       title: Helm Values
       description: Additional Helm values to override defaults
+      x-ui-yaml-editor: true
   required:
   - resources
 inputs:
@@ -68,7 +69,7 @@ inputs:
     - helm
   node_pool:
     type: '@facets/kubernetes_nodepool'
-    optional: true
+    optional: false
     displayName: Node Pool
     description: Node pool for Strimzi Operator pods
 outputs:
