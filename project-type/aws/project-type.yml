@@ -54,6 +54,8 @@ modules:
     flavor: aws-rds
   - intent: redis
     flavor: aws-elasticache
+  - intent: keda
+    flavor: standard
 
   # === Common Modules ===
   - intent: artifactories
