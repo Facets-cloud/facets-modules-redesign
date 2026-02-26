@@ -154,7 +154,7 @@ The structure of `var.inputs.<name>` — declaration in `variables.tf` and acces
 | `default` | `attributes = optional(object({...}), {})` + `interfaces = optional(object({}), {})` | `var.inputs.X.attributes.field` |
 | `attributes` | flat fields directly | `var.inputs.X.field` |
 
-Do not rely on the output type schema alone — two types can have identical schemas but inject differently based on the key name.
+Do not rely on the output type schema alone — two types can have identical schemas but inject differently based on the key name. In blueprints, when consuming a non-default output key, specify `"output_name"` in the input wiring (e.g., `"output_name": "attributes"`).
 
 **Bad — `default` output declared flat (missing wrapper):**
 ```hcl
@@ -474,16 +474,6 @@ namespace = lookup(lookup(var.instance, "metadata", {}), "namespace", "default")
 
 enable_interruption = lookup(var.instance.spec, "interruption_handling", false)
 ```
-
----
-
-### RULE-016: Merged into RULE-006
-
-**Source:** #228, #233, #208, #224
-
-This rule has been merged into **RULE-006**. See RULE-006 for complete guidance on `var.inputs` declaration and access patterns, including the distinction between consuming `default` vs. `attributes` output types.
-
-**Blueprint wiring note:** When consuming a non-default output key in a blueprint, specify `"output_name"` in the input wiring (e.g., `"output_name": "attributes"`).
 
 ---
 
@@ -848,7 +838,6 @@ variable "custom_config" {
 | RULE-013 | terraform | No required_providers in modules |
 | RULE-014 | terraform | All variables must be declared; no platform-injected vars |
 | RULE-015 | terraform | Use lookup() for optional spec fields |
-| RULE-016 | var.inputs | Merged into RULE-006 — see var.inputs structure and access |
 | RULE-017 | terraform | depends_on: when to use and when not to |
 | RULE-018 | terraform | Pin Docker images to verified tags |
 | RULE-019 | terraform | Single owner for shared resource tags |
