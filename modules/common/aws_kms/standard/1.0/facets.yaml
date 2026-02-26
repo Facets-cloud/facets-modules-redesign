@@ -77,7 +77,6 @@ sample:
   flavor: standard
   version: '1.0'
   spec:
-    create: true
     description: "KMS key for encryption"
     enable_key_rotation: true
     deletion_window_in_days: 7
