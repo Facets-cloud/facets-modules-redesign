@@ -77,7 +77,7 @@ resource "google_cloud_run_v2_service" "this" {
           value_source {
             secret_key_ref {
               secret  = google_secret_manager_secret.env_vars[env.key].secret_id
-              version = "latest"
+              version = google_secret_manager_secret_version.env_vars[env.key].version
             }
           }
         }
