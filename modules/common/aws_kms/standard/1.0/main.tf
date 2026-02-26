@@ -28,7 +28,7 @@ module "kms" {
   key_hmac_users                         = lookup(local.spec, "key_hmac_users", [])
   key_asymmetric_public_encryption_users = lookup(local.spec, "key_asymmetric_public_encryption_users", [])
   key_asymmetric_sign_verify_users       = lookup(local.spec, "key_asymmetric_sign_verify_users", [])
-  key_statements                         = lookup(local.spec, "key_statements", {})
+  key_statements                         = lookup(local.spec, "key_statements", [])
   source_policy_documents                = lookup(local.spec, "source_policy_documents", [])
   override_policy_documents              = lookup(local.spec, "override_policy_documents", [])
   enable_route53_dnssec                  = lookup(local.spec, "enable_route53_dnssec", false)

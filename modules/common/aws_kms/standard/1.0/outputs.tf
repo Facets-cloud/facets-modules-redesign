@@ -10,6 +10,5 @@ locals {
     kms_aliases                       = module.kms.aliases
     kms_grants                        = module.kms.grants
     kms_key_region                    = module.kms.key_region
-    secrets                           = ["kms_grants"]
   }
 }
