@@ -23,6 +23,8 @@ modules:
     flavor: gcp_network
   - intent: service
     flavor: gcp
+  - intent: service
+    flavor: cloudrun
 
   # GCP-Specific Modules
   - intent: google_workload_identity
