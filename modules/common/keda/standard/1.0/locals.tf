@@ -9,20 +9,16 @@ locals {
   cpu_limit      = lookup(local.size, "cpu", "1")
   memory_limit   = lookup(local.size, "memory", "1000Mi")
   cpu_request    = lookup(local.size, "cpu", "100m")
-  memory_request = lookup(local.size, "memory", "100m")
+  memory_request = lookup(local.size, "memory", "100Mi")
 
   # Prometheus details - optional input, extract helm_release_id if available
   prometheus_attributes = var.inputs.prometheus_details != null ? lookup(var.inputs.prometheus_details, "attributes", {}) : {}
   prometheus_release_id = lookup(local.prometheus_attributes, "helm_release_id", "")
 
   # Nodepool configuration from inputs
-  nodepool_attributes  = lookup(var.inputs.kubernetes_node_pool_details, "attributes", {})
-  node_pool_taints     = lookup(local.nodepool_attributes, "taints", [])
-  nodepool_labels      = lookup(local.nodepool_attributes, "node_selector", {})
-
-  #kubernetes details inputs attributes
-  kubernetes_details = lookup(var.inputs, "kubernetes_details", {})
-  kubernetes_attributes = lookup(local.kubernetes_details, "attributes", {})
+  nodepool_attributes = var.inputs.kubernetes_node_pool_details != null ? lookup(var.inputs.kubernetes_node_pool_details, "attributes", {}) : {}
+  node_pool_taints    = lookup(local.nodepool_attributes, "taints", [])
+  nodepool_labels     = lookup(local.nodepool_attributes, "node_selector", {})
 
   # Convert taints from {key, value, effect} to tolerations format
   tolerations = [

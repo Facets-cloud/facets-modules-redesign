@@ -43,7 +43,7 @@ variable "inputs" {
       }))
       interfaces = optional(object({}))
     })
-    kubernetes_node_pool_details = object({
+    kubernetes_node_pool_details = optional(object({
       attributes = optional(object({
         node_class_name = optional(string)
         node_pool_name  = optional(string)
@@ -55,7 +55,7 @@ variable "inputs" {
         node_selector = optional(map(string), {})
       }))
       interfaces = optional(object({}))
-    })
+    }))
     prometheus_details = optional(object({
       attributes = optional(object({
         alertmanager_url = optional(string)
