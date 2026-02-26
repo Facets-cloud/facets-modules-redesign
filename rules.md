@@ -145,142 +145,55 @@ variable "inputs" {
 
 ---
 
-### RULE-006: var.inputs structure and access — default vs. attributes output types
+### RULE-006: var.inputs structure depends on the source module's output key
 
-The structure of `var.inputs.<name>` — both how you **declare** it in `variables.tf` and how you **access** it in `main.tf` — depends on **which named output key** the source module uses to produce the type. You must check two things:
+The structure of `var.inputs.<name>` — declaration in `variables.tf` and access in `main.tf` — is determined by **which named output key** the source module uses. Check the source module's `facets.yaml` `outputs:` section to find the key name, then apply:
 
-1. The output type schema (`outputs/{type-name}/outputs.yaml` or `raptor get output-type <type>`)
-2. The source module's `facets.yaml` `outputs:` section — specifically which key (`default` or `attributes`) produces the type
-
-**Do not look at the schema alone.** Two output types can have identical schemas but inject differently based on the output key name.
-
----
-
-#### Case 1: Consuming a `default` output
-
-When the source module exposes the type via `outputs.default`, the platform injects the full `{attributes: {...}, interfaces: {...}}` wrapper.
-
-**Source module facets.yaml:**
-```yaml
-outputs:
-  default:
-    type: '@facets/eks'
-```
-
-**Declaration (variables.tf):** Use `attributes` + `interfaces` wrapper.
-```hcl
-variable "inputs" {
-  type = object({
-    kubernetes_cluster = object({
-      attributes = optional(object({
-        cluster_endpoint = optional(string)
-        cluster_ca_cert  = optional(string)
-      }), {})
-      interfaces = optional(object({}), {})
-    })
-  })
-}
-```
-
-**Access (main.tf):** Navigate through `.attributes.`
-```hcl
-host = var.inputs.kubernetes_cluster.attributes.cluster_endpoint
-```
-
----
-
-#### Case 2: Consuming an `attributes` output
-
-When the source module exposes the type via `outputs.attributes`, the platform injects the raw `output_attributes` content — flat, with no wrapper.
-
-**Source module facets.yaml:**
-```yaml
-outputs:
-  default:
-    type: '@facets/gcp_notification_channels'
-  attributes:
-    type: '@facets/gcp_notification_channel_attributes'
-```
-
-**Declaration (variables.tf):** Flat fields directly — no `attributes`/`interfaces` wrapper.
-```hcl
-variable "inputs" {
-  type = object({
-    notification_channels = object({
-      channel_ids   = optional(map(string), {})
-      channel_names = optional(map(string), {})
-      project_id    = optional(string)
-    })
-  })
-}
-```
-
-**Access (main.tf):** Access fields directly — no `.attributes.` layer.
-```hcl
-all_channels = values(var.inputs.notification_channels.channel_names)
-```
-
----
-
-#### How to identify which case you're in
-
-1. Find the input type in the **consuming** module's `facets.yaml`:
-   ```yaml
-   inputs:
-     notification_channels:
-       type: '@facets/gcp_notification_channel_attributes'
-   ```
-
-2. Find the **source** module that produces this type. Check its `facets.yaml` `outputs:` section and note the key name:
-   ```yaml
-   outputs:
-     default:
-       type: '@facets/gcp_notification_channels'
-     attributes:                                         # ← this is the key name
-       type: '@facets/gcp_notification_channel_attributes'
-   ```
-
-3. Apply the rule:
-
-| Source output key | variables.tf declaration | main.tf access |
+| Source output key | variables.tf | main.tf access |
 |---|---|---|
 | `default` | `attributes = optional(object({...}), {})` + `interfaces = optional(object({}), {})` | `var.inputs.X.attributes.field` |
-| `attributes` | flat fields directly inside the object | `var.inputs.X.field` |
+| `attributes` | flat fields directly | `var.inputs.X.field` |
 
----
+Do not rely on the output type schema alone — two types can have identical schemas but inject differently based on the key name.
 
-#### Common mistakes
-
-**Bad — flat structure used for a `default` output:**
+**Bad — `default` output declared flat (missing wrapper):**
 ```hcl
-# Wrong: aks_cluster is a default output, must have attributes/interfaces wrapper
 aks_cluster = object({
-  oidc_issuer_url = optional(string)
+  oidc_issuer_url = optional(string)  # Wrong: must use attributes/interfaces wrapper
   cluster_id      = optional(string)
 })
 ```
 
-**Bad — attributes/interfaces wrapper used for an `attributes` output:**
+**Bad — `attributes` output declared with wrapper (wrapper not needed):**
 ```hcl
-# Wrong: notification_channels is an attributes output, must be flat
 notification_channels = object({
-  attributes = optional(object({
+  attributes = optional(object({          # Wrong: source uses outputs.attributes, must be flat
     channel_names = optional(map(string), {})
   }), {})
   interfaces = optional(object({}), {})
 })
 ```
 
-**Bad — wrong access path for a `default` output:**
+**Good — `default` output (wrapper + correct access):**
 ```hcl
-# Wrong: missing .attributes. layer
-host = var.inputs.kubernetes_cluster.cluster_endpoint
+aks_cluster = object({
+  attributes = optional(object({
+    oidc_issuer_url = optional(string)
+    cluster_id      = optional(string)
+  }), {})
+  interfaces = optional(object({}), {})
+})
+# access: var.inputs.aks_cluster.attributes.oidc_issuer_url
 ```
 
-**Bad — wrong access path for an `attributes` output:**
+**Good — `attributes` output (flat + correct access):**
 ```hcl
-# Wrong: extra .attributes. layer not needed
-channels = var.inputs.notification_channels.attributes.channel_names
+notification_channels = object({
+  channel_ids   = optional(map(string), {})
+  channel_names = optional(map(string), {})
+  project_id    = optional(string)
+})
+# access: var.inputs.notification_channels.channel_names
 ```
 
 ---
