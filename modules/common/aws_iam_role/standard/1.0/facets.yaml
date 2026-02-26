@@ -1,0 +1,121 @@
+intent: aws_iam_role
+flavor: standard
+version: '1.0'
+description: Adds AWS IAM Role
+intentDetails:
+  type: Security & Compliance
+  description: Create and manage AWS IAM roles with IRSA for EKS workloads
+  displayName: AWS IAM Role
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/aws_iam_role.svg
+clouds:
+- aws
+inputs:
+  kubernetes_details:
+    optional: true
+    type: '@facets/eks'
+    providers:
+    - kubernetes
+    - kubernetes-alpha
+    - helm
+  cloud_account:
+    description: The AWS Cloud Account where the EKS cluster will be created
+    displayName: Cloud Account
+    optional: false
+    type: '@facets/aws_cloud_account'
+    providers:
+    - aws
+outputs:
+  default:
+    type: '@facets/aws_iam_role'
+spec:
+  title: AWS IAM Role
+  description: Specification of the aws iam role resource intent
+  type: object
+  properties:
+    irsa:
+      type: object
+      description: IRSA block which required to attach EKS OIDC to service accounts
+        for allowing applications to get cloud credentials
+      properties:
+        service_accounts:
+          type: object
+          title: Service Accounts
+          description: the map of all service accounts that you want to attach IRSA
+          patternProperties:
+            ^[a-zA-Z0-9_.-]*$:
+              type: object
+              title: Service Account Name
+              description: An arbitrary name given to the service account which is
+                not used anywhere
+              properties:
+                name:
+                  type: string
+                  description: The name of the service account that you want to attach
+                    the role to with the trust relationship
+                  pattern: ^[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]$
+                  x-ui-error-message: 'Service account names must start and end with alphanumeric characters and can contain letters, numbers, underscores and hyphens'
+                namespace:
+                  type: string
+                  description: The namespace of the service account that you want
+                    to attach the role to with the trust relationship
+              required:
+              - name
+        oidc_providers:
+          type: object
+          title: OIDC Providers
+          description: the map of all OIDC arns that you want to attach IRSA
+          patternProperties:
+            ^[a-zA-Z0-9_.-]*$:
+              type: object
+              title: OIDC Provider ARN
+              description: An arbitrary name given to the OIDC provider which is not
+                used anywhere
+              properties:
+                arn:
+                  type: string
+                  description: The arn of the OIDC that you want to attach the role
+                    to with the trust relationship
+                  pattern: ^arn:aws:iam::[0-9]{12}:oidc-provider\/[a-zA-Z0-9._\-\/]+$
+                  x-ui-error-message: Invalid OIDC ARN format. Ensure it follows the
+                    pattern <arn:aws:iam::<account-id>:oidc-provider/<provider-path>
+      required:
+      - service_accounts
+    policies:
+      type: object
+      title: Policies
+      description: the map of all policies arns that you want to attach to the role
+      patternProperties:
+        ^[a-zA-Z0-9_.-]*$:
+          type: object
+          title: Policy ARN
+          description: An arbitrary name given to the policies which is not used anywhere
+          properties:
+            arn:
+              type: string
+              description: The arn of the policy that you want to attach the role
+              pattern: ^arn:[a-zA-Z0-9-]+:[a-zA-Z0-9-]+:[a-zA-Z0-9-]*:[0-9]{12}:[a-zA-Z0-9-\/:_+=.@]+$
+              x-ui-error-message: Invalid ARN format. Ensure it follows the pattern
+                <arn:partition:service:region:account-id:resource>
+    tags:
+      type: object
+      title: Tags
+      description: Additional tags to apply to the IAM role
+      x-ui-yaml-editor: true
+  required:
+  - policies
+sample:
+  version: '1.0'
+  disabled: true
+  flavor: standard
+  metadata: {}
+  kind: aws_iam_role
+  spec:
+    irsa:
+      service_accounts:
+        my_service_account:
+          name: default
+          namespace: default
+    policies:
+      external_policy:
+        arn: arn:aws:iam::123456789012:policy/MyPolicy
+

@@ -30,6 +30,8 @@ modules:
     flavor: aws_network
   - intent: service
     flavor: aws
+  - intent: aws_iam_role
+    flavor: standard
 
   # === AWS Messaging & Storage Modules ===
   - intent: s3
