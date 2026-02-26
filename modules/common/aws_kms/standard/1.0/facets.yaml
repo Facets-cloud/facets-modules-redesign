@@ -1,0 +1,271 @@
+intent: aws_kms
+flavor: standard
+version: '1.0'
+description: AWS KMS key management with configurable policies and permissions
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Create and manage AWS KMS keys for encryption, with support for customer-managed keys, external keys, and multi-region replication
+  displayName: AWS KMS
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/aws_kms.svg
+clouds:
+  - aws
+inputs:
+  cloud_account:
+    type: "@facets/aws_cloud_account"
+    displayName: AWS Cloud Account
+    optional: false
+    providers:
+      - aws
+outputs:
+  default:
+    type: "@facets/aws_kms"
+    title: AWS KMS Key Details
+spec:
+  title: AWS KMS Configuration
+  description: Configuration options for AWS KMS key
+  type: object
+  properties:
+    create_external:
+      type: boolean
+      title: Create External Key
+      description: Determines whether an external CMK (externally provided material) will be created
+      default: false
+    bypass_policy_lockout_safety_check:
+      type: boolean
+      title: Bypass Policy Lockout Safety Check
+      description: A flag to bypass the key policy lockout safety check performed when creating or updating a key policy
+    customer_master_key_spec:
+      type: string
+      title: Customer Master Key Spec
+      description: Specifies whether the key contains a symmetric key or an asymmetric key pair
+      enum:
+        - SYMMETRIC_DEFAULT
+        - RSA_2048
+        - RSA_3072
+        - RSA_4096
+        - ECC_NIST_P256
+        - ECC_NIST_P384
+        - ECC_NIST_P521
+        - ECC_SECG_P256K1
+        - HMAC_224
+        - HMAC_256
+        - HMAC_384
+        - HMAC_512
+        - SM2
+    custom_key_store_id:
+      type: string
+      title: Custom Key Store ID
+      description: ID of the KMS Custom Key Store where the key will be stored instead of KMS
+    description:
+      type: string
+      title: Key Description
+      description: The description of the key as viewed in AWS console
+    enable_key_rotation:
+      type: boolean
+      title: Enable Key Rotation
+      description: Specifies whether key rotation is enabled
+      default: true
+    deletion_window_in_days:
+      type: number
+      title: Deletion Window (Days)
+      description: Waiting period before KMS deletes the key (7-30 days)
+      minimum: 7
+      maximum: 30
+      default: 30
+    is_enabled:
+      type: boolean
+      title: Key Enabled
+      description: Specifies whether the key is enabled
+      default: true
+    key_material_base64:
+      type: string
+      title: Key Material Base64
+      description: Base64-encoded 256-bit symmetric encryption key material to import
+    key_usage:
+      type: string
+      title: Key Usage
+      description: Specifies the intended use of the key
+      enum:
+        - ENCRYPT_DECRYPT
+        - SIGN_VERIFY
+        - GENERATE_VERIFY_MAC
+    multi_region:
+      type: boolean
+      title: Multi-Region Key
+      description: Indicates whether the KMS key is multi-Region or regional
+      default: false
+    policy:
+      type: string
+      title: Key Policy
+      description: A valid policy JSON document for the KMS key
+    valid_to:
+      type: string
+      title: Valid To
+      description: Time at which the imported key material expires (RFC3339 format)
+    enable_default_policy:
+      type: boolean
+      title: Enable Default Policy
+      description: Specifies whether to enable the default key policy
+      default: true
+    key_owners:
+      type: array
+      title: Key Owners
+      description: List of IAM ARNs for key owners who have full permissions
+      items:
+        type: string
+    key_administrators:
+      type: array
+      title: Key Administrators
+      description: List of IAM ARNs for key administrators
+      items:
+        type: string
+    key_users:
+      type: array
+      title: Key Users
+      description: List of IAM ARNs for key users
+      items:
+        type: string
+    key_service_users:
+      type: array
+      title: Key Service Users
+      description: List of IAM ARNs for AWS service users
+      items:
+        type: string
+    key_service_roles_for_autoscaling:
+      type: array
+      title: Key Service Roles for Autoscaling
+      description: List of IAM ARNs for autoscaling service roles
+      items:
+        type: string
+    key_symmetric_encryption_users:
+      type: array
+      title: Symmetric Encryption Users
+      description: List of IAM ARNs for symmetric encryption operations
+      items:
+        type: string
+    key_hmac_users:
+      type: array
+      title: HMAC Users
+      description: List of IAM ARNs for HMAC operations
+      items:
+        type: string
+    key_asymmetric_public_encryption_users:
+      type: array
+      title: Asymmetric Public Encryption Users
+      description: List of IAM ARNs for asymmetric public key encryption operations
+      items:
+        type: string
+    key_asymmetric_sign_verify_users:
+      type: array
+      title: Asymmetric Sign Verify Users
+      description: List of IAM ARNs for asymmetric signing/verification operations
+      items:
+        type: string
+    key_statements:
+      type: array
+      title: Key Policy Statements
+      description: List of IAM policy statements to add to the key policy
+      items:
+        type: object
+        properties:
+          sid:
+            type: string
+          actions:
+            type: array
+            items:
+              type: string
+          effect:
+            type: string
+          resources:
+            type: array
+            items:
+              type: string
+    source_policy_documents:
+      type: array
+      title: Source Policy Documents
+      description: List of IAM policy documents that are merged together into the key policy
+      items:
+        type: string
+    override_policy_documents:
+      type: array
+      title: Override Policy Documents
+      description: List of IAM policy documents that override the policy
+      items:
+        type: string
+    enable_route53_dnssec:
+      type: boolean
+      title: Enable Route53 DNSSEC
+      description: Enable permissions for Route53 DNSSEC signing
+      default: false
+    route53_dnssec_sources:
+      type: array
+      title: Route53 DNSSEC Sources
+      description: List of Route53 hosted zone configurations allowed to use the key for DNSSEC
+      items:
+        type: object
+        properties:
+          account_ids:
+            type: array
+            items:
+              type: string
+          hosted_zone_arn:
+            type: string
+    rotation_period_in_days:
+      type: number
+      title: Rotation Period (Days)
+      description: Custom period of time between automatic rotations
+      minimum: 90
+      maximum: 2560
+      default: 90
+    create_replica:
+      type: boolean
+      title: Create Replica
+      description: Create a replica of the multi-region key
+      default: false
+    primary_key_arn:
+      type: string
+      title: Primary Key ARN
+      description: ARN of the multi-region primary key for replica creation
+    create_replica_external:
+      type: boolean
+      title: Create Replica External
+      description: Create a replica of an external multi-region key
+      default: false
+    primary_external_key_arn:
+      type: string
+      title: Primary External Key ARN
+      description: ARN of the multi-region external primary key for replica creation
+    aliases:
+      type: array
+      title: Key Aliases
+      description: List of aliases to create for the key
+      items:
+        type: string
+    computed_aliases:
+      type: object
+      title: Computed Aliases
+      description: Map of aliases computed from other values
+    aliases_use_name_prefix:
+      type: boolean
+      title: Aliases Use Name Prefix
+      description: Whether to use name_prefix for aliases
+      default: false
+    grants:
+      type: object
+      title: KMS Grants
+      description: Map of grant definitions to create
+    tags:
+      type: object
+      title: Tags
+      description: A map of tags to add to all resources
+sample:
+  kind: aws_kms
+  flavor: standard
+  version: '1.0'
+  spec:
+    description: "KMS key for encryption"
+    enable_key_rotation: true
+    deletion_window_in_days: 7
+    multi_region: false
+    tags:
+      Environment: Dev
