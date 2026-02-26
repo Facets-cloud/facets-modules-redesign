@@ -60,6 +60,8 @@ modules:
     flavor: standard
   - intent: alert_rules
     flavor: prometheus
+  - intent: storage_class
+    flavor: aws_ebs
   - intent: cert_manager
     flavor: standard
   - intent: config_map
