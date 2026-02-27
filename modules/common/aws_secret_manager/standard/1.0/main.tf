@@ -1,7 +1,7 @@
 resource "random_string" "suffix" {
   length  = 1
-  special = "false"
-  upper   = "false"
+  special = false
+  upper   = false
 }
 
 module "secret_name" {
@@ -18,7 +18,7 @@ resource "aws_secretsmanager_secret" "secret-manager-secret" {
   name                    = local.override_default_name ? local.override_name : module.secret_name.name
   description             = local.description
   kms_key_id              = local.kms_key_id
-  policy                  = local.policy
+  policy                  = local.policy != null ? jsonencode(local.policy) : null
   recovery_window_in_days = local.recovery_window_in_days
   tags                    = merge(local.user_defined_tags, var.environment.cloud_tags)
   lifecycle {
