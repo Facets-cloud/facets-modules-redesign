@@ -13,7 +13,7 @@ inputs:
   cloud_account:
     type: '@facets/aws_cloud_account'
     displayName: Cloud Account
-    description: The AWS Cloud Account for Secrets Manager deployment
+    description: Cloud Account inputs for the secret manager
     optional: true
     providers:
     - aws
