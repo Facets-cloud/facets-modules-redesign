@@ -28,14 +28,14 @@ variable "instance" {
       domain_name                                        = optional(string, "")
       domain_name_certificate_arn                        = optional(string)
       domain_name_ownership_verification_certificate_arn = optional(string)
-      create_domain_name                                 = optional(bool, true)
+      create_domain_name                                 = optional(bool, false)
       hosted_zone_name                                   = optional(string)
       private_zone                                       = optional(bool, false)
 
       ########################################
       # Domain - Route53 Records
       ########################################
-      create_domain_records  = optional(bool, true)
+      create_domain_records  = optional(bool, false)
       subdomains             = optional(list(string), [])
       subdomain_record_types = optional(list(string), ["A", "AAAA"])
 
