@@ -26,6 +26,17 @@ module "pool_name" {
   globally_unique = false
 }
 
+# Name module for kafka admin password secret
+module "secret_name" {
+  source          = "github.com/Facets-cloud/facets-utility-modules//name"
+  environment     = var.environment
+  limit           = 53
+  resource_name   = var.instance_name
+  resource_type   = "kafka-secret"
+  is_k8s          = true
+  globally_unique = false
+}
+
 # Name module for kafka admin user
 module "user_name" {
   source          = "github.com/Facets-cloud/facets-utility-modules//name"
@@ -40,7 +51,7 @@ module "user_name" {
 # Deploy password secret first
 resource "kubernetes_secret_v1" "kafka_admin_password_secret" {
   metadata {
-    name      = "${var.instance_name}-${local.admin_username}-password"
+    name      = module.secret_name.name
     namespace = local.namespace
     annotations = {
       "facets.cloud/operator-release" = local.operator_release
