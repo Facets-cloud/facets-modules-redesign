@@ -43,14 +43,14 @@ module "api_gateway" {
   domain_name                                        = lookup(local.spec, "domain_name", "")
   domain_name_certificate_arn                        = lookup(local.spec, "domain_name_certificate_arn", null)
   domain_name_ownership_verification_certificate_arn = lookup(local.spec, "domain_name_ownership_verification_certificate_arn", null)
-  create_domain_name                                 = lookup(local.spec, "create_domain_name", true)
+  create_domain_name                                 = lookup(local.spec, "create_domain_name", false)
   hosted_zone_name                                   = lookup(local.spec, "hosted_zone_name", null)
   private_zone                                       = lookup(local.spec, "private_zone", false)
 
   ########################################
   # Domain - Route53 Records & Certificate
   ########################################
-  create_domain_records  = lookup(local.spec, "create_domain_records", true)
+  create_domain_records  = lookup(local.spec, "create_domain_records", false)
   subdomains             = lookup(local.spec, "subdomains", [])
   subdomain_record_types = lookup(local.spec, "subdomain_record_types", ["A", "AAAA"])
   create_certificate     = lookup(local.spec, "create_certificate", true)
