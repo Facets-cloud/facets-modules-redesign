@@ -63,9 +63,10 @@ variable "inputs" {
   description = "Resolved inputs from dependent modules."
   type = object({
     cloud_account = object({
-      attributes = object({
-        project_id = string
-      })
+      attributes = optional(object({
+        project_id = optional(string)
+      }), {})
+      interfaces = optional(object({}), {})
     })
   })
 }
