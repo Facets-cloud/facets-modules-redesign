@@ -168,6 +168,8 @@ spec:
               type: string
               title: Topic Resource Name
               description: "Format: projects/{project}/topics/{topic}"
+              x-ui-output-type: pubsub_name
+              x-ui-typeable: true
           required:
             - name
 
