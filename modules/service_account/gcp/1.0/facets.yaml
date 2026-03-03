@@ -1,0 +1,103 @@
+clouds:
+    - gcp
+description: Module to create and manage GCP service accounts with IAM role bindings
+flavor: gcp
+
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Create and manage GCP service accounts with fine-grained IAM role bindings across project, storage, BigQuery, Pub/Sub, Secret Manager, KMS, Artifact Registry, Cloud Run, and Cloud Tasks resources.
+  displayName: GCP Service Account
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloud_account.svg
+
+iac:
+    validated_files:
+        - variables.tf
+inputs:
+    cloud_account:
+        description: GCP cloud account providing project and credentials
+        displayName: GCP Cloud Account
+        optional: false
+        providers:
+            - google
+        type: '@facets/gcp_cloud_account'
+intent: service_account
+outputs:
+    default:
+        title: GCP Service Account
+        type: '@facets/gcp_service_account'
+sample:
+    disabled: false
+    flavor: gcp
+    kind: service_account
+    spec:
+        description: Service account for application access
+        display_name: Service Account
+    version: "1.0"
+spec:
+    description: Configure GCP service account with IAM roles
+    properties:
+        create_key:
+            default: false
+            description: Whether to create a service account key
+            title: Create Key
+            type: boolean
+        description:
+            default: Managed by Facets
+            description: Description of the service account
+            title: Description
+            type: string
+        display_name:
+            default: Service Account
+            description: Display name for the service account
+            title: Display Name
+            type: string
+        iam_bindings:
+            description: Generic IAM bindings for any GCP resource type (project, bucket, dataset, topic, etc.)
+            patternProperties:
+                ^[a-zA-Z0-9_-]+$:
+                    properties:
+                        location:
+                            description: Optional location/region override for regional resources (cloud_run_service, cloud_run_job, cloud_tasks_queue). Defaults to cloud_account region.
+                            title: Location
+                            type: string
+                        resource_name:
+                            description: Name/ID of the resource (project ID, bucket name, dataset ID, etc.). Not needed for project type.
+                            title: Resource Name
+                            type: string
+                        resource_type:
+                            description: Type of GCP resource (project, storage_bucket, bigquery_dataset, pubsub_topic, secret_manager_secret, etc.)
+                            enum:
+                                - project
+                                - storage_bucket
+                                - bigquery_dataset
+                                - pubsub_topic
+                                - pubsub_subscription
+                                - secret_manager_secret
+                                - kms_crypto_key
+                                - kms_key_ring
+                                - artifact_registry_repository
+                                - cloud_run_service
+                                - cloud_run_job
+                                - cloud_tasks_queue
+                            title: Resource Type
+                            type: string
+                        role:
+                            description: GCP IAM role (e.g., roles/storage.objectAdmin, roles/bigquery.dataViewer)
+                            title: Role
+                            type: string
+                    required:
+                        - resource_type
+                        - role
+                    type: object
+            title: IAM Bindings
+            type: object
+    required:
+        - display_name
+    title: GCP Service Account Configuration
+    type: object
+    x-ui-order:
+        - display_name
+        - description
+        - iam_bindings
+        - create_key
+version: "1.0"

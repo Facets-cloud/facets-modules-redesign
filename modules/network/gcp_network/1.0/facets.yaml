@@ -38,7 +38,9 @@ sample:
       allow_internal: true
       allow_ssh: true
     vpc_cidr: 10.0.0.0/16
-  version: '1.0'
+    vpc_connector:
+      enabled: false
+  version: '1.1'
 spec:
   properties:
     auto_select_zones:
@@ -100,6 +102,52 @@ spec:
       x-ui-error-message: VPC CIDR must be a /16 block (e.g., 10.0.0.0/16)
       x-ui-overrides-only: true
       x-ui-placeholder: 10.0.0.0/16
+    vpc_connector:
+      description: VPC Access Connector for Cloud Run, Cloud Functions, and App Engine
+      properties:
+        enabled:
+          default: false
+          description: Create a VPC Access Connector for serverless services
+          title: Enable VPC Connector
+          type: boolean
+        machine_type:
+          default: e2-micro
+          description: Machine type for connector instances
+          enum:
+            - f1-micro
+            - e2-micro
+            - e2-standard-4
+          title: Machine Type
+          type: string
+          x-ui-visible-if:
+            field: spec.vpc_connector.enabled
+            values:
+              - true
+        max_instances:
+          default: 3
+          description: Maximum number of connector instances (3-10)
+          maximum: 10
+          minimum: 3
+          title: Max Instances
+          type: integer
+          x-ui-visible-if:
+            field: spec.vpc_connector.enabled
+            values:
+              - true
+        min_instances:
+          default: 2
+          description: Minimum number of connector instances (2-9)
+          maximum: 9
+          minimum: 2
+          title: Min Instances
+          type: integer
+          x-ui-visible-if:
+            field: spec.vpc_connector.enabled
+            values:
+              - true
+      title: VPC Connector Configuration
+      type: object
+      x-ui-toggle: true
     zones:
       description: List of zones to use (2-5 zones supported). Only used when auto_select_zones
         is false
@@ -117,4 +165,4 @@ spec:
   required:
   - vpc_cidr
   type: object
-version: '1.0'
+version: '1.1'
