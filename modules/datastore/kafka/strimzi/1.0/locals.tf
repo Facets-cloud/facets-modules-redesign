@@ -215,7 +215,7 @@ locals {
         password = {
           valueFrom = {
             secretKeyRef = {
-              name = "${var.instance_name}-${local.admin_username}-password"
+              name = module.secret_name.name
               key  = "password"
             }
           }

@@ -1,6 +1,6 @@
 intent: kafka
 flavor: strimzi
-version: '1.0'
+version: '1.1'
 clouds:
 - aws
 - azure
@@ -162,7 +162,7 @@ iac:
 sample:
   kind: kafka
   flavor: strimzi
-  version: '1.0'
+  version: '1.1'
   disabled: false
   spec:
     version_config:

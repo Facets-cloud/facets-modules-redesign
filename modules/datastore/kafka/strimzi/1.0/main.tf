@@ -48,37 +48,18 @@ module "user_name" {
   globally_unique = false
 }
 
-# Password secret manifest
-locals {
-  password_secret_manifest = {
-    apiVersion = "v1"
-    kind       = "Secret"
-    metadata = {
-      name      = "${var.instance_name}-${local.admin_username}-password"
-      namespace = local.namespace
-      annotations = {
-        "facets.cloud/operator-release" = local.operator_release
-      }
-    }
-    type = "Opaque"
-    data = {
-      password = base64encode(random_password.kafka_admin_password.result)
-    }
-  }
-}
-
 # Deploy password secret first
-module "kafka_admin_password_secret" {
-  source       = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
-  name         = "${var.instance_name}-${local.admin_username}-password"
-  release_name = module.secret_name.name
-  namespace    = local.namespace
-  data         = local.password_secret_manifest
-
-  advanced_config = {
+resource "kubernetes_secret_v1" "kafka_admin_password_secret" {
+  metadata {
+    name      = module.secret_name.name
+    namespace = local.namespace
     annotations = {
       "facets.cloud/operator-release" = local.operator_release
     }
+  }
+  type = "Opaque"
+  data = {
+    password = random_password.kafka_admin_password.result
   }
 }
 
@@ -96,7 +77,7 @@ module "kafka_node_pool" {
     }
   }
 
-  depends_on = [module.kafka_admin_password_secret]
+  depends_on = [kubernetes_secret_v1.kafka_admin_password_secret]
 }
 
 # Deploy Kafka using any-k8s-resource
@@ -130,5 +111,5 @@ module "kafka_admin_user" {
     }
   }
 
-  depends_on = [module.kafka_admin_password_secret, module.kafka]
+  depends_on = [kubernetes_secret_v1.kafka_admin_password_secret, module.kafka]
 }
