@@ -1,0 +1,25 @@
+{
+  "kind": "cert_manager",
+  "flavor": "standard",
+  "disabled": true,
+  "metadata": {},
+  "version": "1.1",
+  "spec": {
+    "cert_manager": {}
+  },
+  "inputs": {
+    "kubernetes_details": {
+      "resource_name": "kubernetes-cluster",
+      "resource_type": "kubernetes_cluster",
+      "output_name": "attributes"
+    },
+    "kubernetes_node_pool_details": {
+      "resource_name": "k8s-np",
+      "resource_type": "kubernetes_node_pool"
+    },
+    "gateway_api_crd_details": {
+      "resource_name": "gateway-crd",
+      "resource_type": "gateway_api_crd"
+    }
+  }
+}
