@@ -25,6 +25,8 @@ modules:
     flavor: gcp
 
   # GCP-Specific Modules
+  - intent: alb
+    flavor: gcp
   - intent: google_workload_identity
     flavor: gcp
   - intent: pubsub
