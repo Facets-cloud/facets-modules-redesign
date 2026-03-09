@@ -24,6 +24,8 @@ modules:
     flavor: eks_automode
   - intent: karpenter
     flavor: default
+  - intent: aws_iam_policy
+    flavor: standard
   - intent: aws_alb_controller
     flavor: standard
   - intent: aws_efs_csi_driver
