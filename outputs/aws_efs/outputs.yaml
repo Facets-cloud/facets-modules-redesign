@@ -8,9 +8,9 @@ properties:
         file_system_id:
           type: string
           description: The ID of the EFS file system
-        storage_class_name:
+        security_group_id:
           type: string
-          description: The name of the Kubernetes StorageClass backed by this EFS
+          description: The ID of the security group for EFS access
     interfaces:
       type: object
       properties: {}

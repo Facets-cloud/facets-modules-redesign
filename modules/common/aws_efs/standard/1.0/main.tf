@@ -68,24 +68,3 @@ resource "aws_efs_mount_target" "efs-csi-driver" {
   subnet_id       = length(local.private_subnets) > 0 ? local.private_subnets[count.index] : ""
   security_groups = [aws_security_group.efs-csi-driver.id]
 }
-
-resource "kubernetes_storage_class_v1" "efs-csi-drive-sc" {
-  metadata {
-    name = local.instance_name
-    annotations = {
-      "storageclass.kubernetes.io/is-default-class" = "false"
-    }
-  }
-  storage_provisioner = "efs.csi.aws.com"
-  mount_options = [
-    "tls",
-    "iam"
-  ]
-  parameters = {
-    provisioningMode = "efs-ap"
-    fileSystemId     = aws_efs_file_system.efs-csi-driver.id
-    directoryPerms   = "700"
-  }
-  reclaim_policy      = "Delete"
-  volume_binding_mode = "Immediate"
-}
