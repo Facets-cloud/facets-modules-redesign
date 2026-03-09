@@ -18,7 +18,7 @@ locals {
   # Named output: topic_name — exposes the full topic resource name for use with
   # x-ui-output-type: pubsub_name in consumer modules (e.g. secret_manager rotation topics).
   output_topic_name_attributes = {
-    topic_name = google_pubsub_topic.topic.name
+    topic_name = google_pubsub_topic.topic.id
   }
 
   output_topic_name_interfaces = {}
