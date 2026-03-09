@@ -24,7 +24,7 @@ intentDetails:
   type: Cloud & Infrastructure
   description: Create and manage Application Load Balancers for routing traffic to backend services
   displayName: Application Load Balancer
-  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/gcp-alb-module/icons/alb.svg
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/alb.svg
 outputs:
   default:
     mock:
