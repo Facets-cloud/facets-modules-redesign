@@ -32,10 +32,16 @@ resource "aws_efs_file_system" "efs-csi-driver" {
   throughput_mode                 = lookup(local.spec, "throughput_mode", null)
 
   dynamic "lifecycle_policy" {
-    for_each = lookup(local.spec, "lifecycle_policy", {})
+    for_each = lookup(lookup(local.spec, "lifecycle_policy", {}), "transition_to_ia", null) != null ? [1] : []
     content {
-      transition_to_ia                    = lookup(lifecycle_policy.value, "transition_to_ia", null)
-      transition_to_primary_storage_class = lookup(lifecycle_policy.value, "transition_to_primary_storage_class", null)
+      transition_to_ia = local.spec.lifecycle_policy.transition_to_ia
+    }
+  }
+
+  dynamic "lifecycle_policy" {
+    for_each = lookup(lookup(local.spec, "lifecycle_policy", {}), "transition_to_primary_storage_class", null) != null ? [1] : []
+    content {
+      transition_to_primary_storage_class = local.spec.lifecycle_policy.transition_to_primary_storage_class
     }
   }
 
