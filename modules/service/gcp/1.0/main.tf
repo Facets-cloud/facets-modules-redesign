@@ -38,7 +38,7 @@ locals {
     spec = merge({
       healthCheck = {
         checkIntervalSec   = lookup(lookup(lookup(local.backend_config, "spec", {}), "healthCheck", {}), "checkIntervalSec", 10),
-        timeoutSec         = lookup(lookup(lookup(local.backend_config, "spec", {}), "healthCheck", {}), "timeoutSec", lookup(lookup(local.runtime, "health_checks", {}), "timeout", 5)),
+        timeoutSec         = lookup(lookup(lookup(local.backend_config, "spec", {}), "healthCheck", {}), "timeoutSec", lookup(lookup(local.runtime, "health_checks", {}), "readiness_timeout", 5)),
         healthyThreshold   = lookup(lookup(lookup(local.backend_config, "spec", {}), "healthCheck", {}), "healthyThreshold", 2),
         unhealthyThreshold = lookup(lookup(lookup(local.backend_config, "spec", {}), "healthCheck", {}), "unhealthyThreshold", 2),
         type               = lookup(lookup(lookup(local.backend_config, "spec", {}), "healthCheck", {}), "type", "HTTP"),
