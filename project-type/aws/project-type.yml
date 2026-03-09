@@ -26,6 +26,8 @@ modules:
     flavor: default
   - intent: aws_alb_controller
     flavor: standard
+  - intent: aws_efs_csi_driver
+    flavor: standard
   - intent: network
     flavor: aws_network
   - intent: service
