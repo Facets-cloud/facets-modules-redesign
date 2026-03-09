@@ -10,7 +10,7 @@ intentDetails:
   type: Cloud & Infrastructure
   description: Creates and manages GCP Secret Manager secrets sourced from Facets project secrets and variables
   displayName: GCP Secret Manager
-  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules/master/icons/secret_manager.svg
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/secret_manager.svg
 clouds:
   - gcp
 

@@ -329,6 +329,9 @@
         outputs: [{ name: "default", type: "@facets/monitoring-rules" }] },
 
       // Security & Identity
+      { id: "secret_manager/gcp", intent: "secret_manager", flavor: "gcp", displayName: "GCP Secret Manager", group: "Security & Identity", clouds: ["gcp"], icon: "secret_manager.svg",
+        inputs: [{ name: "cloud_account", type: "@facets/gcp_cloud_account", optional: false }],
+        outputs: [{ name: "default", type: "@facets/secret_manager" }] },
       { id: "google_workload_identity/gcp", intent: "google_workload_identity", flavor: "gcp", displayName: "GCP Workload Identity", group: "Security & Identity", clouds: ["gcp"], icon: "google_workload_identity.svg",
         inputs: [{ name: "cloud_account", type: "@facets/gcp_cloud_account", optional: false }, { name: "gke_cluster", type: "@facets/gke", optional: false }],
         outputs: [{ name: "default", type: "@facets/google_workload_identity" }] },
