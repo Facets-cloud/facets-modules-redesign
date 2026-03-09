@@ -344,6 +344,9 @@
       { id: "azure_workload_identity/azure", intent: "azure_workload_identity", flavor: "azure", displayName: "Azure Workload Identity", group: "Security & Identity", clouds: ["azure"], icon: "azure_workload_identity.svg",
         inputs: [{ name: "cloud_account", type: "@facets/azure_cloud_account", optional: false }, { name: "aks_cluster", type: "@facets/azure_aks", optional: false }],
         outputs: [{ name: "default", type: "@facets/azure_workload_identity" }] },
+      { id: "aws_iam_policy/standard", intent: "aws_iam_policy", flavor: "standard", displayName: "AWS IAM Policy", group: "Security & Identity", clouds: ["aws"], icon: "aws_iam_policy.svg",
+        inputs: [{ name: "cloud_account", type: "@facets/aws_cloud_account", optional: false }],
+        outputs: [{ name: "default", type: "@facets/iam_policy" }] },
     ];
 
     // Build output type -> producer module IDs

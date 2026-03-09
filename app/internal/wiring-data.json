@@ -4232,10 +4232,40 @@
         "operator_namespace": "local.operator_namespace"
       },
       "outputInterfaces": {}
+    },
+    {
+      "id": "aws_iam_policy/standard/1.0",
+      "intent": "aws_iam_policy",
+      "flavor": "standard",
+      "version": "1.0",
+      "clouds": ["aws"],
+      "outputs": {
+        "default": {
+          "type": "@facets/iam_policy",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/aws_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": ["aws"],
+          "attributesUsed": [],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "policy": "aws_iam_policy.iam_policy.policy",
+        "name": "aws_iam_policy.iam_policy.name",
+        "arn": "aws_iam_policy.iam_policy.arn"
+      },
+      "outputInterfaces": {}
     }
   ],
   "_metadata": {
-    "totalModules": 64,
+    "totalModules": 65,
     "generatedFrom": "facets-modules-redesign/modules/",
     "description": "Comprehensive wiring data model showing how modules connect at the attribute level"
   }
