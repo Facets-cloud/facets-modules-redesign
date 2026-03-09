@@ -371,6 +371,12 @@
         cssClass: "other",
         intents: [
           {
+            intent: "secret_manager", displayName: "GCP Secret Manager", type: "Security & Identity", icon: "secret_manager.svg",
+            flavors: [
+              { flavor: "gcp", clouds: ["gcp"] },
+            ]
+          },
+          {
             intent: "google_workload_identity", displayName: "GCP Workload Identity", type: "Security & Identity", icon: "google_workload_identity.svg",
             flavors: [
               { flavor: "gcp", clouds: ["gcp"] },

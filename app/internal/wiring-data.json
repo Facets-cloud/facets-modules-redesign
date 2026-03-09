@@ -3377,6 +3377,42 @@
       }
     },
     {
+      "id": "secret_manager/gcp/1.0",
+      "intent": "secret_manager",
+      "flavor": "gcp",
+      "version": "1.0",
+      "clouds": [
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/secret_manager",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/gcp_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "google"
+          ],
+          "attributesUsed": [
+            "project_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "secret_ids": "{ for k, v in google_secret_manager_secret.this : k => v.secret_id }",
+        "secret_names": "{ for k, v in google_secret_manager_secret.this : k => v.name }",
+        "project_id": "var.inputs.cloud_account.attributes.project_id"
+      },
+      "outputInterfaces": {}
+    },
+    {
       "id": "redis/aws-elasticache/1.0",
       "intent": "redis",
       "flavor": "aws-elasticache",
@@ -4199,7 +4235,7 @@
     }
   ],
   "_metadata": {
-    "totalModules": 63,
+    "totalModules": 64,
     "generatedFrom": "facets-modules-redesign/modules/",
     "description": "Comprehensive wiring data model showing how modules connect at the attribute level"
   }
