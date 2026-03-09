@@ -3,6 +3,7 @@ properties:
   type: object
   properties:
     attributes:
+      type: object
       properties:
         availability_zones:
           description: List of availability zones where subnets are created
