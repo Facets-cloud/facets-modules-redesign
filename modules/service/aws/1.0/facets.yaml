@@ -639,13 +639,13 @@ spec:
               - PortCheck
               - HttpCheck
               - ExecCheck
-            startup_start_up_time:
+            startup_initial_delay_seconds:
               type: integer
-              title: Startup Start-Up Time
+              title: Startup Initial Delay Seconds
               default: 10
               minimum: 0
               maximum: 10000
-              x-ui-placeholder: Enter startup start up time for the Pod
+              x-ui-placeholder: Enter startup initial delay for the Pod
               x-ui-error-message: Value doesn't match pattern, accepted values are
                 from 0-10000
               x-ui-visible-if:
@@ -1778,13 +1778,13 @@ spec:
                       - PortCheck
                       - HttpCheck
                       - ExecCheck
-                    startup_start_up_time:
+                    startup_initial_delay_seconds:
                       type: integer
-                      title: Startup Start-Up Time
+                      title: Startup Initial Delay Seconds
                       default: 10
                       minimum: 0
                       maximum: 10000
-                      x-ui-placeholder: Enter startup start up time for the Pod
+                      x-ui-placeholder: Enter startup initial delay for the Pod
                       x-ui-error-message: Value doesn't match pattern, accepted values
                         are from 0-10000
                       x-ui-visible-if:
