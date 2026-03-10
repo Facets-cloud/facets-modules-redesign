@@ -145,11 +145,13 @@ inputs:
     description: OVH provider configuration
     providers:
     - ovh
+    - "null"
   network:
     type: '@facets/ovh-network'
     optional: false
     displayName: OVH Network
     description: Network configuration for private connectivity
+    providers: []
 outputs:
   default:
     type: '@facets/postgres'

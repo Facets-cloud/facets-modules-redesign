@@ -50,6 +50,7 @@ inputs:
     description: OVH provider configuration
     providers:
     - ovh
+    - "null"
 outputs:
   default:
     type: '@facets/ovh-network'

@@ -117,6 +117,7 @@ inputs:
     description: OVH provider configuration
     providers:
       - ovh
+      - "null"
   kubernetes_cluster:
     type: "@facets/ovh-kubernetes"
     optional: false
@@ -125,6 +126,7 @@ inputs:
     default:
       resource_type: kubernetes_cluster
       resource_name: default
+    providers: []
 outputs:
   default:
     type: "@facets/kubernetes_nodepool"
