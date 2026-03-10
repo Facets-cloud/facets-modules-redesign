@@ -19,6 +19,7 @@ inputs:
     description: OVH Cloud account with project credentials
     providers:
     - ovh
+    - "null"
 outputs:
   default:
     type: '@facets/ovh-object-storage'
