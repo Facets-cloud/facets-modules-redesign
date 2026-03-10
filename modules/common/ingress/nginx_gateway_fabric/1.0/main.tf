@@ -161,12 +161,17 @@ locals {
     "networking.gke.io/internal-load-balancer-allow-global-access" = "true"
   } : {}
 
+  ovh_annotations = {
+    "loadbalancer.ovhcloud.com/flavor" = "small"
+  }
+
   cloud_provider = upper(try(var.inputs.kubernetes_details.cloud_provider, "aws"))
 
   service_annotations = merge(
     local.cloud_provider == "AWS" ? local.aws_annotations : {},
     local.cloud_provider == "AZURE" ? local.azure_annotations : {},
-    local.cloud_provider == "GCP" ? local.gcp_annotations : {}
+    local.cloud_provider == "GCP" ? local.gcp_annotations : {},
+    local.cloud_provider == "OVH" ? local.ovh_annotations : {}
   )
 
   # Get ClusterIssuer names and config from cert-manager

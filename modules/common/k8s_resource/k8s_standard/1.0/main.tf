@@ -2,7 +2,7 @@ locals {
   advanced_config      = lookup(lookup(var.instance, "advanced", {}), "k8s_resource", {})
   data                 = lookup(var.instance.spec, "resource", {})
   spec                 = lookup(var.instance, "spec", {})
-  namespace_spec       = lookup(lookup(local.data, "metadata", {}), "namespace", null)   # in the .spec.resource.metadata block
+  namespace_spec       = lookup(lookup(local.data, "metadata", {}), "namespace", null) # in the .spec.resource.metadata block
   namespace            = local.namespace_spec != null ? local.namespace_spec : var.environment.namespace
   resource_name_spec   = lookup(lookup(var.instance.spec.resource, "metadata", {}), "name", null) # in var.instance.spec.resource.metadata.name
   resource_name        = local.resource_name_spec != null ? local.resource_name_spec : var.instance_name

@@ -51,6 +51,14 @@ inputs:
       resource_name: default
     displayName: Gateway API CRDs
     description: Gateway API CRD installation (required for NGINX Gateway Fabric)
+  aws_provider:
+    type: "@facets/aws_cloud_account"
+    displayName: AWS Provider (Route53)
+    description: AWS provider for Route53 DNS record management (optional, only needed for AWS-based DNS)
+    optional: true
+    providers:
+      - aws
+      - tls
   prometheus_details:
     type: "@facets/prometheus"
     displayName: Prometheus
