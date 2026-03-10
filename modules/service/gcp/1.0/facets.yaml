@@ -422,7 +422,6 @@ spec:
           title: Health Checks
           description: Ensure service remains responsive and operational. Assess its
             status and performance.
-          x-ui-override-disable: true
           x-ui-toggle: true
           x-ui-visible-if:
             field: spec.type
@@ -1673,7 +1672,6 @@ spec:
                   title: Health Checks
                   description: Ensure service remains responsive and operational.
                     Assess its status and performance.
-                  x-ui-override-disable: true
                   x-ui-toggle: true
                   properties:
                     readiness_check_type:
@@ -1933,6 +1931,7 @@ spec:
                       description: Port for readiness health check
                       x-ui-dynamic-enum: spec.sidecars.{{this}}.runtime.ports.*.port
                       x-ui-disable-tooltip: No Ports Added
+                      x-ui-typeable: true
                     liveness_port:
                       type: string
                       title: Liveness Port
@@ -1947,6 +1946,7 @@ spec:
                       description: Port for liveness health check
                       x-ui-dynamic-enum: spec.sidecars.{{this}}.runtime.ports.*.port
                       x-ui-disable-tooltip: No Ports Added
+                      x-ui-typeable: true
                     startup_port:
                       type: string
                       title: Startup Port
@@ -1961,6 +1961,7 @@ spec:
                       description: Port for startup health check
                       x-ui-dynamic-enum: spec.sidecars.{{this}}.runtime.ports.*.port
                       x-ui-disable-tooltip: No Ports Added
+                      x-ui-typeable: true
               required:
               - size
               x-ui-order:
