@@ -13,9 +13,9 @@ description: 'Deploys containerized applications to Google Cloud Run with auto-s
 intentDetails:
   type: Cloud & Infrastructure
   description: Deploy and manage containerized applications on Google Cloud Run
-  displayName: Service
-  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/service.svg
-flavor: cloudrun
+  displayName: Cloud Run
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloudrun.svg
+flavor: gcp-service
 inputs:
   gcp_provider:
     description: GCP project and authentication configuration
@@ -29,32 +29,30 @@ inputs:
     displayName: VPC Network
     optional: true
     type: '@facets/gcp-network-details'
-intent: service
+intent: cloudrun
 outputs:
+  attributes:
+    title: Cloud Run Attributes
+    type: '@facets/cloudrun_attributes'
   default:
     mock:
       attributes:
-        namespace: mock-string-value
-        resource_name: mock-string-value
-        resource_type: mock-string-value
-        selector_labels: mock-string-value
-        service_account_arn: mock-string-value
         service_name: mock-string-value
+        location: mock-string-value
+        url: mock-string-value
+        max_instances: 10
       interfaces:
         http:
-          host: mock-string-value
-          name: mock-string-value
-          password: mock-string-value
-          port: 8080
-          port_name: mock-string-value
-          secrets: []
-          username: mock-string-value
+          url: mock-string-value
+          protocol: https
+          service_name: mock-string-value
+          location: mock-string-value
     title: Cloud Run Service
-    type: '@facets/service'
+    type: '@facets/cloudrun'
 sample:
   disabled: false
-  flavor: cloudrun
-  kind: service
+  flavor: gcp-service
+  kind: cloudrun
   spec:
     auth:
       allow_unauthenticated: false

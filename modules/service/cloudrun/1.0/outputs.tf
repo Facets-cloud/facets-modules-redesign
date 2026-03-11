@@ -1,25 +1,19 @@
 locals {
-  # Output attributes matching @facets/service schema
+  # Output attributes matching @facets/cloudrun schema
   output_attributes = {
-    service_name        = google_cloud_run_v2_service.this.name
-    name                = google_cloud_run_v2_service.this.name
-    namespace           = local.location
-    resource_name       = var.instance_name
-    resource_type       = "cloudrun"
-    selector_labels     = jsonencode(local.all_labels)
-    service_account_arn = google_service_account.this.email
+    service_name  = google_cloud_run_v2_service.this.name
+    location      = google_cloud_run_v2_service.this.location
+    url           = try(google_cloud_run_v2_service.this.uri, "")
+    max_instances = lookup(lookup(var.instance.spec, "scaling", {}), "max_instances", 10)
   }
 
-  # Output interfaces - Cloud Run exposes HTTP endpoint
+  # Output interfaces matching @facets/cloudrun schema
   output_interfaces = {
     http = {
-      host      = google_cloud_run_v2_service.this.uri
-      port      = tonumber(var.instance.spec.container.port)
-      port_name = "http"
-      name      = google_cloud_run_v2_service.this.name
-      username  = ""
-      password  = ""
-      secrets   = []
+      url          = try(google_cloud_run_v2_service.this.uri, "")
+      protocol     = "https"
+      service_name = google_cloud_run_v2_service.this.name
+      location     = google_cloud_run_v2_service.this.location
     }
   }
 }
