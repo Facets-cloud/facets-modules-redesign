@@ -26,11 +26,10 @@ variable "instance" {
         task_timeout = optional(string, "3600s")
       }), {})
       env = optional(map(string), {})
-      secrets = optional(list(object({
-        env_var     = optional(string)
-        secret_name = optional(string)
+      secrets = optional(map(object({
+        secret_name = string
         version     = optional(string, "latest")
-      })), [])
+      })), {})
       service_account = optional(string)
       vpc_access = optional(object({
         egress = optional(string, "PRIVATE_RANGES_ONLY")

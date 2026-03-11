@@ -46,7 +46,7 @@ locals {
   env_vars = lookup(var.instance.spec, "env", {})
 
   # Secrets
-  secrets = lookup(var.instance.spec, "secrets", [])
+  secrets = lookup(var.instance.spec, "secrets", {})
 
   # Service account
   service_account = lookup(var.instance.spec, "service_account", null)
@@ -136,11 +136,11 @@ resource "google_cloud_run_v2_job" "this" {
         dynamic "env" {
           for_each = local.secrets
           content {
-            name = env.value.env_var
+            name = env.key
             value_source {
               secret_key_ref {
                 secret  = env.value.secret_name
-                version = lookup(env.value, "version", "latest")
+                version = env.value.version
               }
             }
           }
@@ -153,11 +153,14 @@ resource "google_cloud_run_v2_job" "this" {
   launch_stage = "ALPHA"
 
   # Labels
-  labels = {
-    "managed-by"  = "facets"
-    "instance"    = var.instance_name
-    "environment" = var.environment.unique_name
-  }
+  labels = merge(
+    var.environment.cloud_tags,
+    {
+      "managed-by"  = "facets"
+      "instance"    = var.instance_name
+      "environment" = var.environment.unique_name
+    }
+  )
 
   depends_on = [google_project_service.run]
 

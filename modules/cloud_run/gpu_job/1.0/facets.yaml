@@ -149,23 +149,22 @@ spec:
             title: Resource Allocation
             type: object
         secrets:
-            default: []
-            description: Secrets to mount from Secret Manager
-            items:
-                properties:
-                    env_var:
-                        description: Environment variable name
-                        type: string
-                    secret_name:
-                        description: Secret Manager secret name
-                        type: string
-                    version:
-                        default: latest
-                        description: Secret version (default latest)
-                        type: string
-                type: object
+            description: Secrets from Secret Manager. Keys are the environment variable names.
+            patternProperties:
+                ^[A-Z][A-Z0-9_]*$:
+                    properties:
+                        secret_name:
+                            description: Secret Manager secret name
+                            type: string
+                        version:
+                            default: latest
+                            description: Secret version (default latest)
+                            type: string
+                    required:
+                        - secret_name
+                    type: object
             title: Secret Manager Secrets
-            type: array
+            type: object
         service_account:
             description: Custom service account email for the job
             title: Service Account
@@ -194,3 +193,7 @@ spec:
         - env
         - secrets
 version: "1.0"
+outputs:
+    attributes:
+        title: Cloud Run GPU Job Attributes
+        type: '@facets/cloudrun_job_attributes'
