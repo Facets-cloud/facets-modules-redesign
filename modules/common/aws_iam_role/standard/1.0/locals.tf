@@ -7,16 +7,20 @@ locals {
   spec             = lookup(var.instance, "spec", {})
   irsa             = lookup(local.spec, "irsa", {})
   oidc             = lookup(local.irsa, "oidc_providers", {})
-  oidc_providers = merge({
-    for k, v in local.oidc : k => {
-      provider_arn               = v.arn
-      namespace_service_accounts = [for x in local.service_accounts : "${lookup(x, "namespace", local.namespace)}:${x.name}"]
-    }
-    }, {
-    facets = {
-      provider_arn               = var.inputs.kubernetes_details.attributes.oidc_provider_arn
-      namespace_service_accounts = [for x in local.service_accounts : "${lookup(x, "namespace", local.namespace)}:${x.name}"]
-  } })
+  oidc_providers = merge(
+    {
+      for k, v in local.oidc : k => {
+        provider_arn               = v.arn
+        namespace_service_accounts = [for x in local.service_accounts : "${lookup(x, "namespace", local.namespace)}:${x.name}"]
+      }
+    },
+    var.inputs.kubernetes_details != null ? {
+      facets = {
+        provider_arn               = var.inputs.kubernetes_details.attributes.oidc_provider_arn
+        namespace_service_accounts = [for x in local.service_accounts : "${lookup(x, "namespace", local.namespace)}:${x.name}"]
+      }
+    } : {}
+  )
   policies          = lookup(local.spec, "policies", {})
   user_defined_tags = lookup(local.spec, "tags", {})
 }
