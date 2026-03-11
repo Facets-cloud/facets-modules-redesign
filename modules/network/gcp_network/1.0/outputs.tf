@@ -9,13 +9,17 @@ locals {
     zones         = local.selected_zones
 
     # Subnets - Regional resources in GCP
-    private_subnet_id   = google_compute_subnetwork.private.id
-    private_subnet_name = google_compute_subnetwork.private.name
-    private_subnet_cidr = google_compute_subnetwork.private.ip_cidr_range
+    private_subnet_id    = google_compute_subnetwork.private.id
+    private_subnet_ids   = [google_compute_subnetwork.private.id]
+    private_subnet_name  = google_compute_subnetwork.private.name
+    private_subnet_cidr  = google_compute_subnetwork.private.ip_cidr_range
+    private_subnet_cidrs = [google_compute_subnetwork.private.ip_cidr_range]
 
-    public_subnet_id   = google_compute_subnetwork.public.id
-    public_subnet_name = google_compute_subnetwork.public.name
-    public_subnet_cidr = google_compute_subnetwork.public.ip_cidr_range
+    public_subnet_id    = google_compute_subnetwork.public.id
+    public_subnet_ids   = [google_compute_subnetwork.public.id]
+    public_subnet_name  = google_compute_subnetwork.public.name
+    public_subnet_cidr  = google_compute_subnetwork.public.ip_cidr_range
+    public_subnet_cidrs = [google_compute_subnetwork.public.ip_cidr_range]
 
     database_subnet_id   = google_compute_subnetwork.database.id
     database_subnet_name = google_compute_subnetwork.database.name
@@ -35,8 +39,10 @@ locals {
     # NAT and Router
     router_id   = google_compute_router.router.id
     router_name = google_compute_router.router.name
+    router_ids  = [google_compute_router.router.id]
     nat_id      = google_compute_router_nat.nat.id
     nat_name    = google_compute_router_nat.nat.name
+    nat_gateway_ids = [google_compute_router_nat.nat.id]
 
     # Google Services Peering
     google_services_network = google_service_networking_connection.google_services.network
