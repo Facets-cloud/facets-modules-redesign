@@ -1,0 +1,100 @@
+intent: cloud_tasks
+flavor: queue
+version: "1.0"
+clouds:
+  - gcp
+description: |
+  Cloud Tasks queue for async job dispatch to Cloud Run services.
+  Queue-level HTTP target: URL and OIDC auth are pre-configured.
+  Clients only need to send task body - no URL or auth required.
+  Automatically enables Cloud Tasks API.
+  Note: Cloud Tasks not available in all regions (e.g., not in asia-south2/Delhi).
+
+intentDetails:
+  type: Cloud & Infrastructure
+  description: GCP Cloud Tasks queue for async job dispatch to Cloud Run with queue-level HTTP target and OIDC auth pre-configured.
+  displayName: Cloud Tasks Queue
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloudrun.svg
+
+inputs:
+  cloud_account:
+    type: '@facets/gcp_cloud_account'
+    optional: false
+    displayName: GCP Cloud Account
+    description: GCP cloud account for project and region
+    providers:
+      - google
+  cloudrun:
+    type: '@facets/cloudrun'
+    optional: false
+    displayName: Cloud Run Service
+    description: Target Cloud Run service for task dispatch. Queue reads max_instances for concurrency.
+
+outputs:
+  default:
+    type: "@facets/cloud_tasks"
+    title: Cloud Tasks Queue
+
+sample:
+  kind: cloud_tasks
+  flavor: queue
+  version: "1.0"
+  disabled: false
+  spec:
+    region: asia-south1
+    target_path: /process
+    retry_config:
+      max_attempts: 3
+      min_backoff: "10s"
+      max_backoff: "3600s"
+
+spec:
+  title: Cloud Tasks Queue
+  description: Configure async task queue for Cloud Run dispatch
+  type: object
+  properties:
+    region:
+      type: string
+      title: Queue Region
+      description: |
+        Region for Cloud Tasks queue. Overrides default (cloudrun location).
+        Use when Cloud Tasks not available in target region (e.g., asia-south1 for Mumbai).
+        Supported: asia-south1, asia-east1, asia-northeast1, us-central1, europe-west1, etc.
+    target_path:
+      type: string
+      title: Target Path
+      description: HTTP path on Cloud Run to dispatch tasks to
+      default: "/process"
+    retry_config:
+      type: object
+      title: Retry Configuration
+      description: Configure retry behavior for failed tasks
+      properties:
+        max_attempts:
+          type: integer
+          title: Max Attempts
+          description: Maximum number of attempts for a task (including first attempt)
+          default: 3
+          minimum: 1
+          maximum: 100
+        min_backoff:
+          type: string
+          title: Min Backoff
+          description: Minimum time to wait before retrying (e.g., "10s", "1m")
+          default: "10s"
+        max_backoff:
+          type: string
+          title: Max Backoff
+          description: Maximum time to wait before retrying (e.g., "3600s", "1h")
+          default: "3600s"
+        max_doublings:
+          type: integer
+          title: Max Doublings
+          description: Maximum number of times backoff duration is doubled
+          default: 4
+          minimum: 0
+          maximum: 16
+  x-ui-order:
+    - region
+    - target_path
+    - retry_config
