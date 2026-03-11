@@ -34,7 +34,7 @@ modules:
   - intent: service_account
     flavor: gcp
   - intent: cloudrun
-    flavor: gcp-job
+    flavor: cpu-job
   - intent: cloudrun
     flavor: gpu
   - intent: cloudrun
