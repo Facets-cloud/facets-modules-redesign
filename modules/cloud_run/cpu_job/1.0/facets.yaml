@@ -1,5 +1,5 @@
 intent: cloudrun
-flavor: gcp-job
+flavor: cpu-job
 version: "1.0"
 clouds:
   - gcp
@@ -36,7 +36,7 @@ inputs:
 
 sample:
   kind: cloudrun
-  flavor: gcp-job
+  flavor: cpu-job
   version: "1.0"
   disabled: false
   spec:
