@@ -23,7 +23,7 @@ modules:
     flavor: gcp_network
   - intent: service
     flavor: gcp
-  - intent: service
+  - intent: cpu
     flavor: cloudrun
 
   # GCP-Specific Modules
