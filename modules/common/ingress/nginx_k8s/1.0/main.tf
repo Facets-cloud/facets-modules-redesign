@@ -294,7 +294,7 @@ resource "helm_release" "nginx_ingress_ctlr" {
   name = local.name
   wait = lookup(local.advanced_config, "wait", true)
 
-  depends_on = [module.custom_error_pages_configmap]
+  depends_on = [kubernetes_config_map_v1.custom_error_pages_configmap]
 
   repository  = "https://kubernetes.github.io/ingress-nginx"
   chart       = "ingress-nginx"
@@ -786,53 +786,101 @@ locals {
   }
 }
 
-module "ingress_resources" {
+resource "kubernetes_ingress_v1" "ingress_resources" {
   for_each = local.ingress_resources
 
-  source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
   depends_on = [
     helm_release.nginx_ingress_ctlr, aws_route53_record.cluster-base-domain, kubernetes_service_v1.external_name
   ]
 
-  name            = "${lower(var.instance_name)}-${each.key}"
-  namespace       = var.environment.namespace
-  advanced_config = {}
-  data            = each.value
+  metadata {
+    name        = each.value.metadata.name
+    namespace   = each.value.metadata.namespace
+    annotations = each.value.metadata.annotations
+  }
+
+  spec {
+    ingress_class_name = each.value.spec.ingressClassName
+
+    rule {
+      host = each.value.spec.rules[0].host
+      http {
+        path {
+          path      = each.value.spec.rules[0].http.paths[0].path
+          path_type = each.value.spec.rules[0].http.paths[0].pathType
+          backend {
+            service {
+              name = each.value.spec.rules[0].http.paths[0].backend.service.name
+              port {
+                name   = each.value.spec.rules[0].http.paths[0].backend.service.port.name
+                number = each.value.spec.rules[0].http.paths[0].backend.service.port.number
+              }
+            }
+          }
+        }
+      }
+    }
+
+    tls {
+      hosts       = each.value.spec.tls[0].hosts
+      secret_name = each.value.spec.tls[0].secretName
+    }
+  }
 }
 
 # Create default backend ingress resources for header-based routing
-module "default_backend_ingress_resources" {
+resource "kubernetes_ingress_v1" "default_backend_ingress_resources" {
   for_each = local.default_backend_ingress_resources
 
-  source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
   depends_on = [
     helm_release.nginx_ingress_ctlr, aws_route53_record.cluster-base-domain, kubernetes_service_v1.external_name
   ]
 
-  name            = "${lower(var.instance_name)}-${each.key}"
-  namespace       = var.environment.namespace
-  advanced_config = {}
-  data            = each.value
+  metadata {
+    name        = each.value.metadata.name
+    namespace   = each.value.metadata.namespace
+    annotations = each.value.metadata.annotations
+  }
+
+  spec {
+    ingress_class_name = each.value.spec.ingressClassName
+
+    rule {
+      host = each.value.spec.rules[0].host
+      http {
+        path {
+          path      = each.value.spec.rules[0].http.paths[0].path
+          path_type = each.value.spec.rules[0].http.paths[0].pathType
+          backend {
+            service {
+              name = each.value.spec.rules[0].http.paths[0].backend.service.name
+              port {
+                name   = each.value.spec.rules[0].http.paths[0].backend.service.port.name
+                number = each.value.spec.rules[0].http.paths[0].backend.service.port.number
+              }
+            }
+          }
+        }
+      }
+    }
+
+    tls {
+      hosts       = each.value.spec.tls[0].hosts
+      secret_name = each.value.spec.tls[0].secretName
+    }
+  }
 }
 
 # Create ConfigMap for custom error pages if they exist
-module "custom_error_pages_configmap" {
+resource "kubernetes_config_map_v1" "custom_error_pages_configmap" {
   count = length(local.error_pages_data) > 0 ? 1 : 0
 
-  source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
-
-  name            = "${lower(var.instance_name)}-custom-error-pages"
-  namespace       = var.environment.namespace
-  advanced_config = {}
-  data = {
-    apiVersion = "v1"
-    kind       = "ConfigMap"
-    metadata = {
-      name      = "${lower(var.instance_name)}-custom-error-pages"
-      namespace = var.environment.namespace
-    }
-    data = local.error_pages_data
+  metadata {
+    name      = "${lower(var.instance_name)}-custom-error-pages"
+    namespace = var.environment.namespace
   }
+
+  data = local.error_pages_data
 }
 
 resource "kubernetes_secret" "custom_tls" {

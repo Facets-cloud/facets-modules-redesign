@@ -260,6 +260,12 @@
             ]
           },
           {
+            intent: "pvc", displayName: "Persistent Volume Claim", type: "Kubernetes Resources", icon: "pvc.svg",
+            flavors: [
+              { flavor: "k8s_standard", clouds: ["aws", "azure", "gcp", "kubernetes"] },
+            ]
+          },
+          {
             intent: "k8s_access_controls", displayName: "Access Controls", type: "Kubernetes Resources", icon: "k8s_access_controls.svg",
             flavors: [
               { flavor: "k8s_standard", clouds: ["aws", "azure", "gcp", "kubernetes"] },
@@ -365,6 +371,12 @@
         cssClass: "other",
         intents: [
           {
+            intent: "secret_manager", displayName: "GCP Secret Manager", type: "Security & Identity", icon: "secret_manager.svg",
+            flavors: [
+              { flavor: "gcp", clouds: ["gcp"] },
+            ]
+          },
+          {
             intent: "google_workload_identity", displayName: "GCP Workload Identity", type: "Security & Identity", icon: "google_workload_identity.svg",
             flavors: [
               { flavor: "gcp", clouds: ["gcp"] },
@@ -374,6 +386,12 @@
             intent: "azure_workload_identity", displayName: "Azure Workload Identity", type: "Security & Identity", icon: "azure_workload_identity.svg",
             flavors: [
               { flavor: "azure", clouds: ["azure"] },
+            ]
+          },
+          {
+            intent: "aws_iam_policy", displayName: "AWS IAM Policy", type: "Security & Identity", icon: "aws_iam_policy.svg",
+            flavors: [
+              { flavor: "standard", clouds: ["aws"] },
             ]
           },
         ]

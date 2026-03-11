@@ -145,35 +145,55 @@ variable "inputs" {
 
 ---
 
-### RULE-006: Use attributes/interfaces structure
+### RULE-006: var.inputs structure depends on the source module's output key
 
-All inputs must follow the standard `attributes`/`interfaces` pattern, not flat structure.
+The structure of `var.inputs.<name>` — declaration in `variables.tf` and access in `main.tf` — is determined by **which named output key** the source module uses. Check the source module's `facets.yaml` `outputs:` section to find the key name, then apply:
 
-**Bad:**
+| Source output key | variables.tf | main.tf access |
+|---|---|---|
+| `default` | `attributes = optional(object({...}), {})` + `interfaces = optional(object({}), {})` | `var.inputs.X.attributes.field` |
+| `attributes` | flat fields directly | `var.inputs.X.field` |
+
+Do not rely on the output type schema alone — two types can have identical schemas but inject differently based on the key name. In blueprints, when consuming a non-default output key, specify `"output_name"` in the input wiring (e.g., `"output_name": "attributes"`).
+
+**Bad — `default` output declared flat (missing wrapper):**
 ```hcl
-variable "inputs" {
-  type = object({
-    aks_cluster = object({
-      oidc_issuer_url = optional(string)  # Flat structure!
-      cluster_id = optional(string)
-    })
-  })
-}
+aks_cluster = object({
+  oidc_issuer_url = optional(string)  # Wrong: must use attributes/interfaces wrapper
+  cluster_id      = optional(string)
+})
 ```
 
-**Good:**
+**Bad — `attributes` output declared with wrapper (wrapper not needed):**
 ```hcl
-variable "inputs" {
-  type = object({
-    aks_cluster = object({
-      attributes = optional(object({
-        oidc_issuer_url = optional(string)
-        cluster_id = optional(string)
-      }), {})
-      interfaces = optional(object({}), {})
-    })
-  })
-}
+notification_channels = object({
+  attributes = optional(object({          # Wrong: source uses outputs.attributes, must be flat
+    channel_names = optional(map(string), {})
+  }), {})
+  interfaces = optional(object({}), {})
+})
+```
+
+**Good — `default` output (wrapper + correct access):**
+```hcl
+aks_cluster = object({
+  attributes = optional(object({
+    oidc_issuer_url = optional(string)
+    cluster_id      = optional(string)
+  }), {})
+  interfaces = optional(object({}), {})
+})
+# access: var.inputs.aks_cluster.attributes.oidc_issuer_url
+```
+
+**Good — `attributes` output (flat + correct access):**
+```hcl
+notification_channels = object({
+  channel_ids   = optional(map(string), {})
+  channel_names = optional(map(string), {})
+  project_id    = optional(string)
+})
+# access: var.inputs.notification_channels.channel_names
 ```
 
 ---
@@ -395,6 +415,12 @@ terraform {
 }
 ```
 
+**How provider injection works — module-scoped, not output-scoped:**
+
+Providers are determined by the *source module*, not by which specific output type the consuming module declares as its input type. If a source module exposes providers on *any* of its outputs (e.g., `@facets/kubernetes-details` on the `attributes` output), those providers are available to any consuming module that wires to *any* output of that source module (e.g., `@facets/eks` on the `default` output).
+
+This means: you do not need to pick a specific output type just to get provider injection. Pick the output type that best matches the **data contract** you need; provider availability follows automatically from the source module.
+
 ---
 
 ### RULE-014: All referenced variables must be declared
@@ -454,32 +480,6 @@ namespace = lookup(lookup(var.instance, "metadata", {}), "namespace", "default")
 
 enable_interruption = lookup(var.instance.spec, "interruption_handling", false)
 ```
-
----
-
-### RULE-016: Match input access pattern to the output type schema
-
-**Source:** #228, #233, #208, #224
-**Category:** var.inputs
-
-The structure of `var.inputs.<name>` is determined by the output type schema being consumed. You **must** verify the actual structure by checking the output type definition (in `outputs/{type-name}/outputs.yaml` or via `raptor get output-type <type>`).
-
-Common mistake: assuming all output types have the same nesting structure. Some types wrap data in `.attributes`, others may have fields at different levels. Always verify.
-
-**Bad (assuming structure without checking output type):**
-```hcl
-# If @facets/kubernetes-details puts cluster_endpoint inside attributes:
-host = var.inputs.kubernetes_details.cluster_endpoint  # Wrong level!
-```
-
-**Good (verified against output type schema):**
-```hcl
-# Check: raptor get output-type @facets/kubernetes-details
-# Schema shows: attributes.cluster_endpoint
-host = var.inputs.kubernetes_details.attributes.cluster_endpoint
-```
-
-**Note:** In blueprints, when consuming non-default output keys, specify `"output_name"` in the input wiring (e.g., `"output_name": "attributes"`).
 
 ---
 
@@ -660,7 +660,7 @@ intentDetails:
 
 **Valid `intentDetails.type` values:**
 - `Cloud & Infrastructure`
-- `Managed Datastores`
+- `Datastores`
 - `Kubernetes`
 - `Monitoring & Observability`
 - `Operators`
@@ -774,6 +774,57 @@ resource "aws_eks_cluster" "main" {
 
 ---
 
+### RULE-025: Complete schema for var.instance and All variables
+
+**Category:** Terraform
+
+All variable declarations must use explicit type schemas. Never use `type = any` for any variable, especially `var.instance`. The `var.instance` variable must fully define the module's configuration schema with all nested objects and fields explicitly typed.
+
+**Bad:**
+```hcl
+variable "instance" {
+  description = "configuration"
+  type        = any
+}
+
+variable "custom_config" {
+  type = any
+}
+```
+
+**Good:**
+```hcl
+variable "instance" {
+  description = "sample_resource"
+  type = object({
+    kind    = string
+    flavor  = string
+    version = string
+    spec = object({
+      operator_version = string
+      high_availability = optional(object({
+        replicas   = optional(number, 1)
+      }))
+      resources = optional(object({
+        cpu_limit      = optional(string)
+        memory_limit   = optional(string)
+        cpu_request    = optional(string)
+        memory_request = optional(string)
+      }))
+    })
+  })
+}
+
+variable "custom_config" {
+  type = object({
+    setting_name = string
+    setting_value = optional(string)
+  })
+}
+```
+
+---
+
 ## Quick Reference
 
 | Rule | Category | Summary |
@@ -783,7 +834,7 @@ resource "aws_eks_cluster" "main" {
 | RULE-003 | sample.spec | Use {} for objects, [] for arrays |
 | RULE-004 | var.inputs | Explicit object type required |
 | RULE-005 | var.inputs | All facets.yaml inputs must exist |
-| RULE-006 | var.inputs | Use attributes/interfaces structure |
+| RULE-006 | var.inputs | var.inputs structure and access — default vs. attributes output types |
 | RULE-007 | spec schema | No regex lookahead/lookbehind |
 | RULE-008 | spec schema | No duplicate enum values |
 | RULE-009 | spec schema | required inside patternProperties |
@@ -793,7 +844,6 @@ resource "aws_eks_cluster" "main" {
 | RULE-013 | terraform | No required_providers in modules |
 | RULE-014 | terraform | All variables must be declared; no platform-injected vars |
 | RULE-015 | terraform | Use lookup() for optional spec fields |
-| RULE-016 | var.inputs | Match input access pattern to output type schema |
 | RULE-017 | terraform | depends_on: when to use and when not to |
 | RULE-018 | terraform | Pin Docker images to verified tags |
 | RULE-019 | terraform | Single owner for shared resource tags |
@@ -802,3 +852,4 @@ resource "aws_eks_cluster" "main" {
 | RULE-022 | module design | Enable security defaults (encryption, logging) |
 | RULE-023 | module lifecycle | Bump version for breaking changes; update project types |
 | RULE-024 | terraform | Use //name module for resource name length limits |
+| RULE-025 | terraform | Complete schema for var.instance and all variables; no type = any |

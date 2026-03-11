@@ -1,0 +1,13 @@
+name: '@facets/pvc'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        pvc_name:
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

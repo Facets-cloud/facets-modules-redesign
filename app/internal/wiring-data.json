@@ -3377,6 +3377,42 @@
       }
     },
     {
+      "id": "secret_manager/gcp/1.0",
+      "intent": "secret_manager",
+      "flavor": "gcp",
+      "version": "1.0",
+      "clouds": [
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/secret_manager",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/gcp_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "google"
+          ],
+          "attributesUsed": [
+            "project_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "secret_ids": "{ for k, v in google_secret_manager_secret.this : k => v.secret_id }",
+        "secret_names": "{ for k, v in google_secret_manager_secret.this : k => v.name }",
+        "project_id": "var.inputs.cloud_account.attributes.project_id"
+      },
+      "outputInterfaces": {}
+    },
+    {
       "id": "redis/aws-elasticache/1.0",
       "intent": "redis",
       "flavor": "aws-elasticache",
@@ -4196,10 +4232,40 @@
         "operator_namespace": "local.operator_namespace"
       },
       "outputInterfaces": {}
+    },
+    {
+      "id": "aws_iam_policy/standard/1.0",
+      "intent": "aws_iam_policy",
+      "flavor": "standard",
+      "version": "1.0",
+      "clouds": ["aws"],
+      "outputs": {
+        "default": {
+          "type": "@facets/iam_policy",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/aws_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": ["aws"],
+          "attributesUsed": [],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "policy": "aws_iam_policy.iam_policy.policy",
+        "name": "aws_iam_policy.iam_policy.name",
+        "arn": "aws_iam_policy.iam_policy.arn"
+      },
+      "outputInterfaces": {}
     }
   ],
   "_metadata": {
-    "totalModules": 63,
+    "totalModules": 65,
     "generatedFrom": "facets-modules-redesign/modules/",
     "description": "Comprehensive wiring data model showing how modules connect at the attribute level"
   }

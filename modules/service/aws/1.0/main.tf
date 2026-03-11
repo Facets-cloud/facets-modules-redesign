@@ -16,9 +16,9 @@ locals {
   enable_deployment_actions  = local.enable_actions && local.spec_type == "application" ? 1 : 0
   enable_statefulset_actions = local.enable_actions && local.spec_type == "statefulset" ? 1 : 0
 
-  namespace   = var.environment.namespace
-  annotations = local.enable_irsa ? { "eks.amazonaws.com/role-arn" = module.irsa.0.iam_role_arn } : { "iam.amazonaws.com/role" = aws_iam_role.application-role.0.arn }
-  labels      = {}
+  namespace     = var.environment.namespace
+  annotations   = local.enable_irsa ? { "eks.amazonaws.com/role-arn" = module.irsa.0.iam_role_arn } : { "iam.amazonaws.com/role" = aws_iam_role.application-role.0.arn }
+  labels        = {}
   name          = "${module.sr-name.name}-ar"
   resource_type = "service"
   resource_name = var.instance_name

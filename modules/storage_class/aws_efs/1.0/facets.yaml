@@ -1,0 +1,83 @@
+intent: storage_class
+flavor: aws_efs
+version: '1.0'
+description: |
+  Creates a Kubernetes StorageClass backed by the AWS EFS CSI driver for dynamic
+  provisioning of shared EFS-backed persistent volumes. Requires the aws_efs_csi_driver
+  module to be deployed on the cluster first.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Kubernetes StorageClass for AWS EFS dynamic volume provisioning
+  displayName: StorageClass (EFS)
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/storage_class.svg
+clouds:
+- aws
+inputs:
+  kubernetes_cluster:
+    type: '@facets/eks'
+    description: Kubernetes cluster for StorageClass creation
+    displayName: Kubernetes Cluster
+    optional: false
+    providers:
+    - kubernetes
+  csi_driver:
+    type: '@facets/aws-efs-csi-driver'
+    description: The EFS CSI Driver installation that enables dynamic EFS provisioning
+    displayName: EFS CSI Driver
+    optional: false
+  aws_efs:
+    type: '@facets/aws_efs'
+    description: The AWS EFS file system to back the StorageClass
+    displayName: AWS EFS
+    optional: false
+outputs:
+  default:
+    type: '@facets/storage-class'
+    title: StorageClass Details
+spec:
+  type: object
+  title: EFS StorageClass Configuration
+  description: Configure Kubernetes StorageClass for EFS-backed dynamic provisioning
+  properties:
+    name:
+      type: string
+      title: StorageClass Name
+      description: Name of the StorageClass resource
+      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+    reclaim_policy:
+      type: string
+      title: Reclaim Policy
+      description: What happens to PersistentVolumes when their claim is deleted
+      default: Delete
+      enum:
+      - Delete
+      - Retain
+    volume_binding_mode:
+      type: string
+      title: Volume Binding Mode
+      description: Controls when volume binding and dynamic provisioning should occur
+      default: Immediate
+      enum:
+      - Immediate
+      - WaitForFirstConsumer
+    directory_permissions:
+      type: string
+      title: Directory Permissions
+      description: POSIX permissions for the EFS access point root directory
+      default: '700'
+      pattern: ^[0-7]{3}$
+  x-ui-order:
+  - name
+  - reclaim_policy
+  - volume_binding_mode
+  - directory_permissions
+sample:
+  kind: storage_class
+  flavor: aws_efs
+  version: '1.0'
+  disabled: false
+  spec:
+    name: efs
+    reclaim_policy: Delete
+    volume_binding_mode: Immediate
+    directory_permissions: '700'

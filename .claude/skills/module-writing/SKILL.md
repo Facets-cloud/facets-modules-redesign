@@ -1269,7 +1269,41 @@ inputs:
       - helm
 ```
 
-### 7.4 Provider Chain Example
+### 7.4 Input Wiring with Non-Default Outputs
+
+Some modules expose **multiple named outputs** with different types. The most common
+example is `kubernetes_cluster`:
+
+| Output Key   | Type                           | Contains                                          |
+|--------------|--------------------------------|---------------------------------------------------|
+| `default`    | `@facets/eks` (cloud-specific) | OIDC ARN, node role ARN, cloud-specific attrs     |
+| `attributes` | `@facets/kubernetes-details`   | cluster endpoint, CA cert, Kubernetes providers   |
+
+When an input's `type` does not match the `default` output of its source module,
+you must specify `output_name` in the resource YAML when using `raptor apply`:
+
+```yaml
+# Resource YAML for raptor apply
+inputs:
+  kubernetes_details:
+    resource_type: kubernetes_cluster
+    resource_name: cluster
+    output_name: attributes   # "attributes" provides @facets/kubernetes-details
+                              # Without this, raptor checks "default" (@facets/eks) → FAIL
+```
+
+**Without `output_name`**, `raptor apply` defaults to the `default` output of the wired
+resource. If the types don't match, you get:
+
+```
+input 'kubernetes_details': resource 'kubernetes_cluster/cluster' is not compatible with input 'kubernetes_details'
+```
+
+**Rule of thumb:** If your input declares `type: "@facets/kubernetes-details"`, always
+wire with `output_name: attributes`. If no `type` is declared (or `type: "@facets/eks"`),
+omit `output_name` — it uses the default output.
+
+### 7.5 Provider Chain Example
 
 ```
 cloud_account → network → kubernetes_cluster → service
@@ -1876,6 +1910,12 @@ raptor get resource-overrides -p <project> -e <env> <kind/name>
 # Get runtime outputs after deployment
 raptor get resource-outputs -p <project> -e <env> <kind/name>
 ```
+
+> **Input compatibility errors:** If `raptor apply` reports
+> `resource X is not compatible with input Y`, the wired resource's default output
+> type doesn't match the module's required input type. Fix: add
+> `output_name: <output-key>` to the input wiring (e.g. `output_name: attributes`
+> for inputs requiring `@facets/kubernetes-details`). See Section 7.4 for details.
 
 ### 11.4 Versioning Strategy
 

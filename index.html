@@ -842,7 +842,9 @@ const CLOUD_DATA = {
       "Infrastructure": [
         "Cloud Account (aws_provider)", "Network/VPC (aws_network)", "EKS Standard (eks_standard)",
         "EKS Automode (eks_automode)", "Node Pool/Karpenter (karpenter)",
-        "Node Pool/Automode (eks_automode)", "Karpenter (default)", "AWS ALB Controller (standard)", "Service (aws)"
+        "Node Pool/Automode (eks_automode)", "Karpenter (default)", "AWS ALB Controller (standard)",
+        "EFS CSI Driver (standard)", "AWS EFS (standard)", "StorageClass/EBS (aws_ebs)", "StorageClass/EFS (aws_efs)", "Service (aws)",
+        "AWS IAM Policy (standard)"
       ],
       "Managed Datastores": [
         "PostgreSQL/RDS (aws-rds)", "PostgreSQL/Aurora (aws-aurora)", "MySQL/RDS (aws-rds)",
@@ -854,7 +856,7 @@ const CLOUD_DATA = {
       ],
       "K8s Platform": [
         "Helm", "Ingress/Gateway Fabric", "Ingress/NGINX", "cert-manager",
-        "ConfigMap", "Secrets", "Access Controls", "Callbacks",
+        "ConfigMap", "Secrets", "PVC", "Access Controls", "Callbacks",
         "K8s Resources", "Gateway API CRD", "VPA", "Artifactories"
       ],
       "Operators & Monitoring": [
@@ -873,7 +875,7 @@ const CLOUD_DATA = {
       "Infrastructure": [
         "Cloud Account (gcp_provider)", "Network/VPC (gcp_network)", "GKE (gke)",
         "Node Pool (gcp)", "Node Fleet (gcp_node_fleet)", "Service (gcp)",
-        "Workload Identity (gcp)", "Pub/Sub (gcp)"
+        "Workload Identity (gcp)", "Pub/Sub (gcp)", "GCP Secret Manager (gcp)"
       ],
       "Managed Datastores": [
         "PostgreSQL/Cloud SQL (gcp-cloudsql)", "MySQL/Cloud SQL (gcp-cloudsql)",
@@ -884,7 +886,7 @@ const CLOUD_DATA = {
       ],
       "K8s Platform": [
         "Helm", "Ingress/Gateway Fabric", "cert-manager", "ConfigMap",
-        "Secrets", "Access Controls", "Callbacks", "K8s Resources",
+        "Secrets", "PVC", "Access Controls", "Callbacks", "K8s Resources",
         "Gateway API CRD", "VPA", "Artifactories"
       ],
       "Operators & Monitoring": [
@@ -914,7 +916,7 @@ const CLOUD_DATA = {
       ],
       "K8s Platform": [
         "Helm", "Ingress/Gateway Fabric", "cert-manager", "ConfigMap",
-        "Secrets", "Access Controls", "Callbacks", "K8s Resources",
+        "Secrets", "PVC", "Access Controls", "Callbacks", "K8s Resources",
         "Gateway API CRD", "VPA", "Artifactories"
       ],
       "Operators & Monitoring": [

@@ -1,9 +1,9 @@
 intent: ingress
 flavor: nginx_k8s
-version: '1.1'
+version: '1.2'
 description: Adds Ingress module
 intentDetails:
-  type: Kubernetes Resources
+  type: Kubernetes
   description: Create and manage NGINX Ingress resources for exposing services
   displayName: Ingress
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/ingress.svg
@@ -623,7 +623,7 @@ sample:
   flavor: nginx_k8s
   $schema: https://facets-cloud.github.io/facets-schemas/schemas/ingress/ingress.schema.json
   disabled: true
-  version: '1.1'
+  version: '1.2'
   spec:
     private: false
     basic_auth: false

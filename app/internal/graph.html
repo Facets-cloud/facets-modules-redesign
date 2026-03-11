@@ -181,6 +181,12 @@
       { id: "aws_alb_controller/standard", intent: "aws_alb_controller", flavor: "standard", displayName: "AWS ALB Controller", group: "Cloud & Infrastructure", clouds: ["aws"], icon: "aws_alb_controller.svg",
         inputs: [{ name: "cloud_account", type: "@facets/aws_cloud_account", optional: false }, { name: "eks_details", type: "@facets/eks", optional: false }, { name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }, { name: "network_details", type: "@facets/aws-vpc-details", optional: false }],
         outputs: [{ name: "default", type: "@facets/aws-alb-controller" }] },
+      { id: "aws_efs/standard", intent: "aws_efs", flavor: "standard", displayName: "AWS EFS", group: "Cloud & Infrastructure", clouds: ["aws"], icon: "aws_efs.svg",
+        inputs: [{ name: "cloud_account", type: "@facets/aws_cloud_account", optional: false }, { name: "network_details", type: "@facets/aws-vpc-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/aws_efs" }] },
+      { id: "storage_class/aws_efs", intent: "storage_class", flavor: "aws_efs", displayName: "StorageClass (EFS)", group: "Cloud & Infrastructure", clouds: ["aws"], icon: "storage_class.svg",
+        inputs: [{ name: "kubernetes_cluster", type: "@facets/eks", optional: false }, { name: "csi_driver", type: "@facets/aws-efs-csi-driver", optional: false }, { name: "aws_efs", type: "@facets/aws_efs", optional: false }],
+        outputs: [{ name: "default", type: "@facets/storage-class" }] },
       { id: "service/aws", intent: "service", flavor: "aws", displayName: "Service", group: "Cloud & Infrastructure", clouds: ["aws"], icon: "service.svg",
         inputs: [{ name: "cloud_account", type: "@facets/aws_cloud_account", optional: false }, { name: "kubernetes_details", type: "@facets/eks", optional: false }, { name: "kubernetes_node_pool_details", type: "@facets/aws_karpenter_nodepool", optional: false }, { name: "artifactories", type: "@facets/artifactories", optional: true }, { name: "vpa_details", type: "@facets/vpa", optional: true }],
         outputs: [{ name: "default", type: "@facets/service" }] },
@@ -275,6 +281,9 @@
       { id: "kubernetes_secret/k8s_standard", intent: "kubernetes_secret", flavor: "k8s_standard", displayName: "Secret", group: "Kubernetes Resources", clouds: ["aws","azure","gcp","kubernetes"], icon: "kubernetes_secret.svg",
         inputs: [{ name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }],
         outputs: [{ name: "default", type: "@facets/kubernetes_secret" }] },
+      { id: "pvc/k8s_standard", intent: "pvc", flavor: "k8s_standard", displayName: "Persistent Volume Claim", group: "Kubernetes Resources", clouds: ["aws","azure","gcp","kubernetes"], icon: "pvc.svg",
+        inputs: [{ name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }],
+        outputs: [{ name: "default", type: "@facets/pvc" }] },
       { id: "k8s_access_controls/k8s_standard", intent: "k8s_access_controls", flavor: "k8s_standard", displayName: "Access Controls", group: "Kubernetes Resources", clouds: ["aws","azure","gcp","kubernetes"], icon: "k8s_access_controls.svg",
         inputs: [{ name: "kubernetes_details", type: "@facets/kubernetes-details", optional: false }],
         outputs: [{ name: "default", type: "@facets/k8s_access_controls" }] },
@@ -326,12 +335,18 @@
         outputs: [{ name: "default", type: "@facets/monitoring-rules" }] },
 
       // Security & Identity
+      { id: "secret_manager/gcp", intent: "secret_manager", flavor: "gcp", displayName: "GCP Secret Manager", group: "Security & Identity", clouds: ["gcp"], icon: "secret_manager.svg",
+        inputs: [{ name: "cloud_account", type: "@facets/gcp_cloud_account", optional: false }],
+        outputs: [{ name: "default", type: "@facets/secret_manager" }] },
       { id: "google_workload_identity/gcp", intent: "google_workload_identity", flavor: "gcp", displayName: "GCP Workload Identity", group: "Security & Identity", clouds: ["gcp"], icon: "google_workload_identity.svg",
         inputs: [{ name: "cloud_account", type: "@facets/gcp_cloud_account", optional: false }, { name: "gke_cluster", type: "@facets/gke", optional: false }],
         outputs: [{ name: "default", type: "@facets/google_workload_identity" }] },
       { id: "azure_workload_identity/azure", intent: "azure_workload_identity", flavor: "azure", displayName: "Azure Workload Identity", group: "Security & Identity", clouds: ["azure"], icon: "azure_workload_identity.svg",
         inputs: [{ name: "cloud_account", type: "@facets/azure_cloud_account", optional: false }, { name: "aks_cluster", type: "@facets/azure_aks", optional: false }],
         outputs: [{ name: "default", type: "@facets/azure_workload_identity" }] },
+      { id: "aws_iam_policy/standard", intent: "aws_iam_policy", flavor: "standard", displayName: "AWS IAM Policy", group: "Security & Identity", clouds: ["aws"], icon: "aws_iam_policy.svg",
+        inputs: [{ name: "cloud_account", type: "@facets/aws_cloud_account", optional: false }],
+        outputs: [{ name: "default", type: "@facets/iam_policy" }] },
     ];
 
     // Build output type -> producer module IDs

@@ -1,6 +1,6 @@
 intent: redis
 flavor: kubeblocks
-version: '1.0'
+version: '1.1'
 clouds:
 - kubernetes
 - aws
@@ -44,6 +44,7 @@ spec:
   - shards
   - resources
   - storage
+  - high_availability
   - backup
   properties:
     namespace_override:
@@ -155,6 +156,31 @@ spec:
           default: 10Gi
       required:
       - size
+    high_availability:
+      type: object
+      title: High Availability Settings
+      description: Configure pod anti-affinity and disruption budget for HA
+      x-ui-visible-if:
+        field: spec.mode
+        values:
+        - replication
+        - redis-cluster
+      x-ui-order:
+      - enable_pod_anti_affinity
+      - enable_pdb
+      properties:
+        enable_pod_anti_affinity:
+          type: boolean
+          title: Enable Pod Anti-Affinity
+          description: Spread Redis pods across different nodes (soft anti-affinity
+            - prefers different nodes but allows colocation if needed)
+          default: true
+        enable_pdb:
+          type: boolean
+          title: Enable Pod Disruption Budget
+          description: Prevent simultaneous pod eviction during node maintenance/upgrades
+            (maxUnavailable=1)
+          default: false
     backup:
       type: object
       title: Backup Configuration
@@ -220,7 +246,7 @@ iac:
 sample:
   kind: redis
   flavor: kubeblocks
-  version: '1.0'
+  version: '1.1'
   disabled: true
   spec:
     namespace_override: ''
@@ -236,6 +262,9 @@ sample:
       memory_limit: 512Mi
     storage:
       size: 10Gi
+    high_availability:
+      enable_pod_anti_affinity: true
+      enable_pdb: false
     backup:
       enabled: false
       schedule_cron: 0 2 * * *

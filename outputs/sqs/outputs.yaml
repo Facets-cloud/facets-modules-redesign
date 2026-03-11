@@ -1,0 +1,41 @@
+name: '@facets/sqs'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        queue_name:
+          description: SQS queue name
+          type: string
+        queue_url:
+          description: SQS queue URL
+          type: string
+        queue_arn:
+          description: SQS queue ARN
+          type: string
+        region:
+          description: AWS region where queue is located
+          type: string
+        is_fifo:
+          description: Whether the queue is a FIFO queue
+          type: boolean
+        dlq_queue_name:
+          description: Dead letter queue name (empty if DLQ not enabled)
+          type: string
+        dlq_queue_url:
+          description: Dead letter queue URL (empty if DLQ not enabled)
+          type: string
+        dlq_queue_arn:
+          description: Dead letter queue ARN (empty if DLQ not enabled)
+          type: string
+        producer_policy_arn:
+          description: IAM policy ARN for sending messages (for IRSA)
+          type: string
+        consumer_policy_arn:
+          description: IAM policy ARN for receiving messages (for IRSA)
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

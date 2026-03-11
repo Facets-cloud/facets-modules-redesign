@@ -65,7 +65,7 @@ variable "inputs" {
         project_id                             = optional(string)
         region                                 = optional(string)
         release_channel                        = optional(string)
-        secrets                                = optional(string)
+        secrets                                = optional(list(string))
         services_range_name                    = optional(string)
         subnetwork                             = optional(string)
         workload_identity_config_workload_pool = optional(string)

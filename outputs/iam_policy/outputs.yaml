@@ -1,0 +1,17 @@
+name: '@facets/iam_policy'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        arn:
+          type: string
+        name:
+          type: string
+        policy:
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []
