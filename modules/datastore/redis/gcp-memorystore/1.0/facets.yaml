@@ -124,7 +124,7 @@ spec:
           x-ui-visible-if:
             field: spec.imports.import_existing
             values:
-              - true
+            - true
   required:
   - version_config
   - sizing
