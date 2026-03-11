@@ -29,6 +29,20 @@ modules:
     flavor: gcp
   - intent: pubsub
     flavor: gcp
+  - intent: service_account
+    flavor: gcp
+  - intent: cloudrun
+    flavor: gcp-job
+  - intent: cloudrun
+    flavor: gpu
+  - intent: cloudrun
+    flavor: gpu-job
+  - intent: cloud_tasks
+    flavor: queue
+  - intent: notification_channel
+    flavor: gcp
+  - intent: alert_policy
+    flavor: gcp
 
   # GCP Datastore Modules
   - intent: mysql
