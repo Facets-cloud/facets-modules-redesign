@@ -15,7 +15,7 @@ intentDetails:
   description: Deploy and manage containerized applications on Google Cloud Run
   displayName: Cloud Run
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloudrun.svg
-flavor: gcp-service
+flavor: cpu
 inputs:
   gcp_provider:
     description: GCP project and authentication configuration
@@ -51,7 +51,7 @@ outputs:
     type: '@facets/cloudrun'
 sample:
   disabled: false
-  flavor: gcp-service
+  flavor: cpu
   kind: cloudrun
   spec:
     auth:
