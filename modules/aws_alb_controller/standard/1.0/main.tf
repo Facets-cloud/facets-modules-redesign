@@ -8,7 +8,8 @@ module "name" {
 }
 
 locals {
-  name                       = module.name.name
+  metadata                   = lookup(var.instance, "metadata", {})
+  name                       = lookup(local.metadata, "name", module.name.name)
   controller_namespace       = "kube-system"
   controller_service_account = "aws-load-balancer-controller"
   cluster_name               = var.inputs.eks_details.attributes.cluster_name
