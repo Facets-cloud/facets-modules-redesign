@@ -34,8 +34,8 @@ variable "inputs" {
           args        = list(string)
         })
       }))
+      interfaces = optional(object({}), {})
     }))
-    interfaces = optional(object({}), {})
     cloud_account = object({
       attributes = object({
         aws_region     = string
