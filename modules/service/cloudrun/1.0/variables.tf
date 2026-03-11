@@ -75,7 +75,7 @@ variable "instance" {
       labels      = optional(map(string), {})
 
       # Deletion protection - defaults to true for safety
-      deletion_protection = optional(bool, true)
+      deletion_protection = optional(bool, false)
 
       health_checks = optional(object({
         startup_probe = optional(object({

@@ -7,7 +7,7 @@ locals {
     resource_name       = var.instance_name
     resource_type       = "cloudrun"
     selector_labels     = jsonencode(local.all_labels)
-    service_account_arn = lookup(var.instance.spec, "service_account", "")
+    service_account_arn = google_service_account.this.email
   }
 
   # Output interfaces - Cloud Run exposes HTTP endpoint

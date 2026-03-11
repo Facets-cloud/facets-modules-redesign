@@ -61,7 +61,7 @@ sample:
     container:
       image: ${blueprint.self.artifacts.cloudrun-service}
       port: '8080'
-    deletion_protection: true
+    deletion_protection: false
     ingress: all
     resources:
       cpu: 1000m
@@ -126,7 +126,7 @@ spec:
       title: Container Configuration
       type: object
     deletion_protection:
-      default: true
+      default: false
       description: Prevent accidental deletion of the Cloud Run service
       title: Deletion Protection
       type: boolean
