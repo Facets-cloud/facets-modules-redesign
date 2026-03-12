@@ -1,0 +1,37 @@
+name: '@facets/gcs-bucket'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        bucket_name:
+          description: GCS bucket name
+          type: string
+        bucket_url:
+          description: GCS bucket URL (gs://)
+          type: string
+        self_link:
+          description: GCS bucket self link (full GCP resource path)
+          type: string
+        bucket_id:
+          description: GCS bucket ID
+          type: string
+        location:
+          description: GCS bucket location/region
+          type: string
+        storage_class:
+          description: Storage class of the bucket
+          type: string
+        project_id:
+          description: GCP project ID where bucket is located
+          type: string
+        labels:
+          description: Labels attached to the bucket
+          type: object
+          additionalProperties:
+            type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

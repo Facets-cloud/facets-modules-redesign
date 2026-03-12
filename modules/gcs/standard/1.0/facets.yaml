@@ -1,0 +1,73 @@
+intent: "storage"
+flavor: "gcs"
+version: "1.0"
+description: "Google Cloud Storage bucket with versioning support"
+clouds:
+  - gcp
+intentDetails:
+  type: "storage"
+  displayName: "Google Cloud Storage"
+  description: "Managed object storage service for Google Cloud Platform"
+  iconUrl: "https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/storage.svg"
+spec:
+  title: "GCS Bucket"
+  type: object
+  properties:
+    bucket_name:
+      type: string
+      title: "Bucket Name"
+      description: "Globally unique name for the GCS bucket"
+      x-ui-placeholder: "e.g. my-prod-bucket"
+    location:
+      type: string
+      title: "Location"
+      description: "GCS bucket location"
+      default: "asia-south1"
+    versioning_enabled:
+      type: boolean
+      title: "Enable Versioning"
+      description: "Enable object versioning on the bucket"
+      default: true
+    force_destroy:
+      type: boolean
+      title: "Force Destroy"
+      description: "Allow bucket deletion even if it contains objects"
+      default: false
+    storage_class:
+      type: string
+      title: "Storage Class"
+      description: "Storage class for the bucket"
+      default: "STANDARD"
+      enum:
+        - STANDARD
+        - NEARLINE
+        - COLDLINE
+        - ARCHIVE
+  required:
+    - bucket_name
+  x-ui-order:
+    - bucket_name
+    - location
+    - storage_class
+    - versioning_enabled
+    - force_destroy
+
+inputs:
+  cloud_account:
+    type: "@facets/gcp_cloud_account"
+    optional: false
+    displayName: "GCP Cloud Account"
+    providers:
+      - google
+
+outputs:
+  default:
+    type: "@facets/gcs-bucket"
+    title: "GCS Bucket Attributes"
+sample:
+  kind: "storage"
+  flavor: "gcs"
+  version: "1.0"
+  disabled: false
+  spec:
+    bucket_name: "example-bucket"
