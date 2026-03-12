@@ -1,0 +1,248 @@
+clouds:
+    - gcp
+description: Deploys a GCP Compute Engine service using a Managed Instance Group with autoscaling, configurable machine type, boot disk, startup script (user data), and IAM permissions.
+flavor: gcp-vm
+inputs:
+    gcp_provider:
+        description: GCP project and authentication configuration
+        displayName: GCP Cloud Account
+        optional: false
+        providers:
+            - google
+        type: '@facets/gcp_cloud_account'
+    network:
+        description: VPC network and subnetwork details
+        displayName: VPC Network
+        optional: false
+        type: '@facets/gcp-network-details'
+intent: service
+intentDetails:
+    description: Deploy and manage an autoscaling GCP Compute Engine service via Managed Instance Group
+    displayName: GCP VM Service
+    iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/service.svg
+    type: Cloud & Infrastructure
+name_length_limit: 30
+outputs:
+    default:
+        mock:
+            attributes:
+                instance_group_name: mock-string-value
+                instance_template_name: mock-string-value
+                resource_name: mock-string-value
+                resource_type: mock-string-value
+                service_account_email: mock-string-value
+                zone: mock-string-value
+            interfaces:
+                ssh:
+                    host: mock-string-value
+                    name: mock-string-value
+                    password: mock-string-value
+                    port: mock-string-value
+                    port_name: mock-string-value
+                    secrets: []
+                    username: mock-string-value
+        title: GCP VM Service
+        type: '@facets/service'
+sample:
+    disabled: false
+    flavor: gcp-vm
+    kind: service
+    spec:
+        boot_disk:
+            image: debian-cloud/debian-12
+            size_gb: 20
+            type: pd-balanced
+        deletion_protection: false
+        machine:
+            machine_type: e2-medium
+        scaling:
+            cooldown_period: 60
+            cpu_target: 0.6
+            max_instances: 3
+            min_instances: 1
+        user_data: |
+            #!/bin/bash
+            echo "Hello from startup script" >> /var/log/startup.log
+    version: "1.0"
+spec:
+    description: Configure your autoscaling GCP Compute Engine service
+    properties:
+        boot_disk:
+            properties:
+                image:
+                    default: debian-cloud/debian-12
+                    description: Boot disk image family or self-link (e.g., debian-cloud/debian-12)
+                    title: OS Image
+                    type: string
+                    x-ui-placeholder: e.g., debian-cloud/debian-12
+                size_gb:
+                    default: 20
+                    description: Size of the boot disk in gigabytes
+                    maximum: 65536
+                    minimum: 10
+                    title: Disk Size (GB)
+                    type: integer
+                type:
+                    default: pd-balanced
+                    description: Boot disk performance tier
+                    enum:
+                        - pd-standard
+                        - pd-balanced
+                        - pd-ssd
+                    title: Disk Type
+                    type: string
+            required:
+                - image
+            title: Boot Disk
+            type: object
+        cloud_permissions:
+            description: GCP IAM roles assigned to the VM service account
+            properties:
+                gcp:
+                    properties:
+                        roles:
+                            description: Define GCP IAM roles to manage permissions and secure resources
+                            patternProperties:
+                                ^[a-zA-Z0-9_.-]*$:
+                                    properties:
+                                        condition:
+                                            description: Optional IAM condition for the role binding
+                                            title: Condition
+                                            type: object
+                                            x-ui-yaml-editor: true
+                                        role:
+                                            description: GCP IAM role to be assigned
+                                            title: Role
+                                            type: string
+                                            x-ui-placeholder: e.g., roles/storage.objectViewer
+                                    required:
+                                        - role
+                                    title: role_key
+                                    type: object
+                            title: IAM Roles
+                            type: object
+                    title: GCP
+                    type: object
+                    x-ui-toggle: true
+            title: Cloud Permissions
+            type: object
+            x-ui-toggle: true
+        deletion_protection:
+            default: false
+            description: Prevent accidental deletion of the managed instance group
+            title: Deletion Protection
+            type: boolean
+        env:
+            description: Key-value pairs injected as GCP instance metadata on every VM. Accessible via the metadata server at http://metadata.google.internal/computeMetadata/v1/instance/attributes/.
+            title: Environment Metadata
+            type: object
+            x-ui-yaml-editor: true
+        labels:
+            description: Resource labels applied to all GCP resources in this module
+            title: Labels
+            type: object
+            x-ui-yaml-editor: true
+        machine:
+            properties:
+                machine_type:
+                    default: e2-medium
+                    description: GCP Compute Engine machine type for each VM instance
+                    enum:
+                        - e2-micro
+                        - e2-small
+                        - e2-medium
+                        - e2-standard-2
+                        - e2-standard-4
+                        - e2-standard-8
+                        - n1-standard-1
+                        - n1-standard-2
+                        - n1-standard-4
+                        - n2-standard-2
+                        - n2-standard-4
+                        - c2-standard-4
+                    title: Machine Type
+                    type: string
+                zone:
+                    description: GCP zone override (e.g., us-central1-a). Defaults to the first zone in the provider region.
+                    title: Zone
+                    type: string
+                    x-ui-placeholder: e.g., us-central1-a
+            required:
+                - machine_type
+            title: Machine Configuration
+            type: object
+        network:
+            properties:
+                assign_external_ip:
+                    default: true
+                    description: Attach an ephemeral external IP to each VM instance. Disable for private VPC-only deployments.
+                    title: Assign External IP
+                    type: boolean
+                network_tags:
+                    description: GCP network tags applied to all instances for firewall rule targeting
+                    items:
+                        type: string
+                    title: Network Tags
+                    type: array
+            title: Network Configuration
+            type: object
+            x-ui-toggle: true
+        scaling:
+            properties:
+                cooldown_period:
+                    default: 60
+                    description: Seconds the autoscaler waits after a scale event before re-evaluating
+                    maximum: 3600
+                    minimum: 15
+                    title: Cooldown Period (seconds)
+                    type: integer
+                cpu_target:
+                    default: 0.6
+                    description: Target average CPU utilization (0.0–1.0) across all instances. e.g., 0.6 means scale when average CPU exceeds 60%.
+                    maximum: 1
+                    minimum: 0.1
+                    title: CPU Utilization Target
+                    type: number
+                max_instances:
+                    default: 3
+                    description: Maximum number of VM instances the autoscaler can scale up to
+                    maximum: 1000
+                    minimum: 1
+                    title: Maximum Instances
+                    type: integer
+                min_instances:
+                    default: 1
+                    description: Minimum number of VM instances the MIG maintains at all times
+                    maximum: 100
+                    minimum: 1
+                    title: Minimum Instances
+                    type: integer
+            title: Autoscaling Configuration
+            type: object
+        stateful:
+            default: false
+            description: Preserve the boot disk across instance recreation. When enabled, the MIG detaches (never deletes) the disk on instance removal and reattaches it when the instance comes back. Recommended for stateful services like databases or self-hosted apps with local data.
+            title: Stateful Disk
+            type: boolean
+        user_data:
+            description: Shell script executed on VM startup via GCP metadata startup-script. Runs as root on every instance boot and applies to all instances in the group.
+            title: Startup Script (User Data)
+            type: string
+            x-ui-editor: true
+    required:
+        - machine
+        - boot_disk
+    title: GCP VM Service Configuration
+    type: object
+    x-ui-order:
+        - machine
+        - boot_disk
+        - scaling
+        - stateful
+        - user_data
+        - env
+        - network
+        - cloud_permissions
+        - labels
+        - deletion_protection
+version: "1.0"
