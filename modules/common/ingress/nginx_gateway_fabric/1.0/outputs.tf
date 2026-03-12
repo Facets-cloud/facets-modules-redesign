@@ -24,16 +24,34 @@ locals {
     }
   )
 
-  output_interfaces = {
-    for route_key, route in local.rulesFiltered : route_key => {
-      connection_string = local.is_auth_enabled ? "https://${local.username}:${local.password}@${route.host}" : "https://${route.host}"
-      host              = route.host
-      port              = 443
-      username          = local.username
-      password          = local.password
-      secrets           = local.is_auth_enabled ? ["connection_string", "password"] : []
+  # Generate output interfaces for every rule × domain combination
+  # Each rule is expanded across all configured domains (not just the base domain)
+  # Base domain entries are excluded when disable_base_domain is true
+  output_interfaces = merge([
+    for route_key, route in local.rulesFiltered : {
+      for domain_key, domain in local.domains :
+      "${route_key}--${domain_key}" => {
+        connection_string = local.is_auth_enabled ? "https://${local.username}:${local.password}@${
+          lookup(route, "domain_prefix", null) == null || lookup(route, "domain_prefix", null) == "" ?
+          domain.domain :
+          "${lookup(route, "domain_prefix", null)}.${domain.domain}"
+          }" : "https://${
+          lookup(route, "domain_prefix", null) == null || lookup(route, "domain_prefix", null) == "" ?
+          domain.domain :
+          "${lookup(route, "domain_prefix", null)}.${domain.domain}"
+        }"
+        host = (
+          lookup(route, "domain_prefix", null) == null || lookup(route, "domain_prefix", null) == "" ?
+          domain.domain :
+          "${lookup(route, "domain_prefix", null)}.${domain.domain}"
+        )
+        port     = 443
+        username = local.username
+        password = local.password
+        secrets  = local.is_auth_enabled ? ["connection_string", "password"] : []
+      }
     }
-  }
+  ]...)
 }
 
 output "domains" {
