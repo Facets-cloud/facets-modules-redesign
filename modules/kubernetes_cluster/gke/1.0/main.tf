@@ -127,10 +127,3 @@ resource "google_container_cluster" "primary" {
   # Resource labels
   resource_labels = local.cluster_labels
 }
-
-# Install bundled gke-auth-plugin binary for downstream provider exec authentication
-resource "null_resource" "install_gke_auth_plugin" {
-  provisioner "local-exec" {
-    command = "cp ${path.module}/gke-auth-plugin /usr/local/bin/gke-auth-plugin && chmod +x /usr/local/bin/gke-auth-plugin"
-  }
-}
