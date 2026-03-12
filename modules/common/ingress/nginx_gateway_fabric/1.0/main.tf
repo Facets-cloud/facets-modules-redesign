@@ -69,13 +69,23 @@ locals {
     hostname if !contains(local.all_domain_hostnames, hostname)
   ]
 
+  # Domains that have a certificate_reference (wildcard cert covers subdomains)
+  domains_with_cert_ref = {
+    for domain_key, domain in local.domains :
+    domain.domain => lookup(domain, "certificate_reference", "")
+    if lookup(domain, "certificate_reference", "") != ""
+  }
+
   # Map of additional hostnames to their config for listeners and certs
+  # Subdomains of domains with certificate_reference are excluded — the wildcard listener covers them
   additional_hostname_configs = {
     for hostname in local.additional_hostnames :
     replace(replace(hostname, ".", "-"), "*", "wildcard") => {
       hostname    = hostname
       secret_name = "${local.name}-${replace(replace(hostname, ".", "-"), "*", "wildcard")}-tls-cert"
     }
+    # Exclude subdomains of domains with certificate_reference (covered by wildcard listener)
+    if !anytrue([for parent_domain, cert_ref in local.domains_with_cert_ref : endswith(hostname, ".${parent_domain}")])
   }
 
   # Nodepool configuration
@@ -114,8 +124,7 @@ locals {
 
 
   # Domains that need bootstrap TLS certificates for HTTP-01 validation
-  # Bootstrap cert is needed for HTTP-01 validation (always used)
-  # AND domain doesn't have certificate_reference (custom certs don't need bootstrap)
+  # Bootstrap cert is needed for domains without certificate_reference
   bootstrap_tls_domains = {
     for domain_key, domain in local.domains :
     domain_key => domain
@@ -123,8 +132,7 @@ locals {
   }
 
   # Domains that need cert-manager to issue certificates
-  # Only domains WITHOUT certificate_reference - cert-manager should NOT manage domains with custom certs
-  # Applies to both HTTP-01 and DNS-01 validation
+  # Only domains WITHOUT certificate_reference
   certmanager_managed_domains = {
     for domain_key, domain in local.domains :
     domain_key => domain
@@ -261,8 +269,7 @@ locals {
       }
       spec = {
         # Reference the correct listener(s) for this route's hostnames
-        # If route has domain_prefix, reference the additional hostname listeners
-        # If route has no domain_prefix, reference the base domain listeners
+        # Routes attach to HTTPS listeners per domain/hostname — TLS always terminates at the Gateway
         # When force_ssl_redirection is disabled, also attach to HTTP listener so traffic is served on port 80
         parentRefs = concat(
           lookup(v, "domain_prefix", null) == null || lookup(v, "domain_prefix", null) == "" ? [
@@ -273,11 +280,13 @@ locals {
               sectionName = "https-${domain_key}"
             }
             ] : [
-            # Has domain_prefix - use additional hostname listeners
+            # Has domain_prefix:
+            # - If parent domain has certificate_reference → use wildcard domain listener (*.domain covers subdomains)
+            # - Otherwise → use additional hostname listener
             for domain_key, domain in local.domains : {
               name        = local.name
               namespace   = var.environment.namespace
-              sectionName = "https-${replace(replace("${lookup(v, "domain_prefix", null)}.${domain.domain}", ".", "-"), "*", "wildcard")}"
+              sectionName = lookup(domain, "certificate_reference", "") != "" ? "https-${domain_key}" : "https-${replace(replace("${lookup(v, "domain_prefix", null)}.${domain.domain}", ".", "-"), "*", "wildcard")}"
             }
           ],
           # Also attach to HTTP listener when SSL redirection is disabled
@@ -459,9 +468,7 @@ locals {
       }
       spec = {
         # Reference the correct listener(s) for this route's hostnames
-        # If route has domain_prefix, reference the additional hostname listeners
-        # If route has no domain_prefix, reference the base domain listeners
-        # When force_ssl_redirection is disabled, also attach to HTTP listener
+        # Routes attach to HTTPS listeners per domain/hostname — TLS always terminates at the Gateway
         parentRefs = concat(
           lookup(v, "domain_prefix", null) == null || lookup(v, "domain_prefix", null) == "" ? [
             # No domain_prefix - use base domain listeners
@@ -471,11 +478,13 @@ locals {
               sectionName = "https-${domain_key}"
             }
             ] : [
-            # Has domain_prefix - use additional hostname listeners
+            # Has domain_prefix:
+            # - If parent domain has certificate_reference → use wildcard domain listener (*.domain covers subdomains)
+            # - Otherwise → use additional hostname listener
             for domain_key, domain in local.domains : {
               name        = local.name
               namespace   = var.environment.namespace
-              sectionName = "https-${replace(replace("${lookup(v, "domain_prefix", null)}.${domain.domain}", ".", "-"), "*", "wildcard")}"
+              sectionName = lookup(domain, "certificate_reference", "") != "" ? "https-${domain_key}" : "https-${replace(replace("${lookup(v, "domain_prefix", null)}.${domain.domain}", ".", "-"), "*", "wildcard")}"
             }
           ],
           # Also attach to HTTP listener when SSL redirection is disabled
@@ -557,9 +566,9 @@ locals {
   } : {}
 
   # Collect unique namespaces that need ReferenceGrants (for cross-namespace backends)
+  # Fix: use distinct() to avoid duplicate key error when multiple rules share the same namespace
   cross_namespace_backends = {
-    for k, v in local.rulesFiltered : v.namespace => v.namespace
-    if v.namespace != var.environment.namespace
+    for ns in distinct([for k, v in local.rulesFiltered : v.namespace if v.namespace != var.environment.namespace]) : ns => ns
   }
 
   # ReferenceGrant resources for cross-namespace backends
@@ -701,7 +710,7 @@ resource "kubernetes_secret" "bootstrap_tls" {
 }
 
 # Bootstrap TLS for additional hostnames (from domain_prefix in rules)
-# Created for HTTP-01 validation (always used)
+# Only for additional hostnames that did NOT inherit a certificate_reference from parent domain
 resource "tls_private_key" "bootstrap_additional" {
   for_each  = local.additional_hostname_configs
   algorithm = "RSA"
@@ -785,7 +794,7 @@ module "http01_certificate" {
 }
 
 # Name module for additional hostname certificates (keeps helm release names under 53 chars)
-# Only created when NOT using gateway-shim (same as http01_certificate for base domains)
+# Only created when NOT using gateway-shim and hostname doesn't inherit a parent cert
 module "http01_certificate_additional_name" {
   for_each = !local.use_gateway_shim ? local.additional_hostname_configs : {}
 
@@ -799,7 +808,7 @@ module "http01_certificate_additional_name" {
 }
 
 # Explicit Certificate resources for additional hostnames (domain_prefix + domain)
-# Created when NOT using gateway-shim (gateway-shim handles certs automatically when enabled)
+# Only for additional hostnames that don't inherit a parent cert
 module "http01_certificate_additional" {
   for_each = !local.use_gateway_shim ? local.additional_hostname_configs : {}
 
@@ -1003,8 +1012,8 @@ resource "helm_release" "nginx_gateway_fabric" {
         labels = merge(local.common_labels, {
           "gateway.networking.k8s.io/gateway-name" = local.name
         })
-        # Only add cert-manager annotations when using gateway-shim
-        # When not using gateway-shim (custom certs present), we create explicit Certificate resources
+        # Only add cert-manager annotations when using gateway-shim (all domains managed by cert-manager)
+        # When custom certs present, no cert-manager annotations needed
         annotations = local.use_gateway_shim ? {
           "cert-manager.io/cluster-issuer" = local.effective_cluster_issuer
           "cert-manager.io/renew-before"   = lookup(var.instance.spec, "renew_cert_before", "720h")
@@ -1012,7 +1021,7 @@ resource "helm_release" "nginx_gateway_fabric" {
         spec = {
           gatewayClassName = local.gateway_class_name
           listeners = concat(
-            # HTTP Listener
+            # HTTP Listener (always present)
             [{
               name     = "http"
               protocol = "HTTP"
@@ -1023,12 +1032,14 @@ resource "helm_release" "nginx_gateway_fabric" {
                 }
               }
             }],
-            # HTTPS Listeners per domain
+            # HTTPS Listeners per domain — TLS always terminates at the Gateway
+            # When certificate_reference is provided, use wildcard hostname (*.domain) to cover all subdomains
+            # Otherwise use exact hostname and rely on additional hostname listeners for subdomains
             [for domain_key, domain in local.domains : {
               name     = "https-${domain_key}"
               protocol = "HTTPS"
               port     = 443
-              hostname = domain.domain
+              hostname = lookup(domain, "certificate_reference", "") != "" ? "*.${domain.domain}" : domain.domain
               tls = {
                 mode = "Terminate"
                 certificateRefs = [{
@@ -1044,7 +1055,7 @@ resource "helm_release" "nginx_gateway_fabric" {
                 }
               }
             } if can(domain.domain)],
-            # HTTPS Listeners for additional hostnames from rules (domain_prefix + domain)
+            # HTTPS Listeners for additional hostnames
             [for hostname_key, config in local.additional_hostname_configs : {
               name     = "https-${hostname_key}"
               protocol = "HTTPS"
@@ -1079,6 +1090,7 @@ resource "helm_release" "nginx_gateway_fabric" {
 # Gateway API HTTP-01 ClusterIssuer - bundled here as it requires parentRefs to the Gateway
 # See: https://github.com/cert-manager/cert-manager/issues/7890
 module "cluster-issuer-gateway-http01" {
+  count           = length(local.certmanager_managed_domains) > 0 ? 1 : 0
   depends_on      = [helm_release.nginx_gateway_fabric]
   source          = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
   name            = local.cluster_issuer_gateway_http
