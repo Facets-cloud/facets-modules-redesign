@@ -127,7 +127,6 @@ spec:
             description: |
                 Configure base domains. Rules will create subdomains using domain_prefix.
                 Example: domain "example.com" + rule with domain_prefix "api" = "api.example.com"
-            x-ui-overrides-only: true
             patternProperties:
                 ^[a-zA-Z0-9_-]+$:
                     properties:
@@ -188,6 +187,7 @@ spec:
                     type: object
             title: Domains
             type: object
+            x-ui-overrides-only: true
         global_config:
             properties:
                 cdn_policy:
