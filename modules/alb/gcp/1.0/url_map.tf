@@ -12,7 +12,10 @@ resource "google_compute_url_map" "lb" {
     ][0]
   ]
 
-  depends_on = [google_compute_backend_service.cloudrun]
+  depends_on = [
+    google_compute_backend_service.cloudrun,
+    google_compute_backend_service.mig,
+  ]
 
   # Host rules: one per unique computed host
   # e.g., example.com, api.example.com, app.example.com

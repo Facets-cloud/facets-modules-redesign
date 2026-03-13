@@ -18,10 +18,21 @@ variable "instance" {
       rules = map(object({
         domain_key    = optional(string, "")
         domain_prefix = optional(string, "*")
-        service       = string
         path          = optional(string, "/")
         path_type     = optional(string, "PREFIX")
         priority      = optional(number, 100)
+        # Backend type selector: "cloudrun" or "mig"
+        type = string
+        # cloudrun-specific fields
+        service = optional(string)
+        # mig-specific fields
+        instance_group_url = optional(string)
+        port_name          = optional(string, "http")
+        health_check = optional(object({
+          protocol = optional(string, "HTTP")
+          port     = optional(number, 80)
+          path     = optional(string, "/health")
+        }), { protocol = "HTTP", port = 80, path = "/health" })
       }))
       # Global load balancer settings
       global_config = optional(object({
@@ -39,7 +50,7 @@ variable "instance" {
         security_policy = optional(string)
         custom_headers  = optional(map(string), {})
         timeout_sec     = optional(number, 30)
-      }), {
+        }), {
         enable_cdn  = false
         enable_iap  = false
         timeout_sec = 30
@@ -51,7 +62,7 @@ variable "instance" {
         http_redirect               = optional(bool, true)
         session_affinity            = optional(string, "NONE")
         connection_draining_timeout = optional(number, 300)
-      }), {
+        }), {
         enable_http                 = true
         http_redirect               = true
         session_affinity            = "NONE"
@@ -74,6 +85,30 @@ variable "instance" {
       startswith(lookup(rule, "path", "/"), "/")
     ])
     error_message = "All rule paths must start with '/'."
+  }
+
+  validation {
+    condition = alltrue([
+      for rule_key, rule in var.instance.spec.rules :
+      contains(["cloudrun", "mig"], rule.type)
+    ])
+    error_message = "Each rule's 'type' must be one of: cloudrun, mig."
+  }
+
+  validation {
+    condition = alltrue([
+      for rule_key, rule in var.instance.spec.rules :
+      rule.type == "cloudrun" ? rule.service != null : true
+    ])
+    error_message = "Rules with type=cloudrun must specify 'service'."
+  }
+
+  validation {
+    condition = alltrue([
+      for rule_key, rule in var.instance.spec.rules :
+      rule.type == "mig" ? rule.instance_group_url != null : true
+    ])
+    error_message = "Rules with type=mig must specify 'instance_group_url'."
   }
 }
 

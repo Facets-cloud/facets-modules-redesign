@@ -1,24 +1,26 @@
-# Serverless Network Endpoint Groups for CloudRun services
-resource "google_compute_region_network_endpoint_group" "cloudrun" {
-  for_each = local.services_map
+# Backend resources for Cloud Run (Serverless NEG) rules
+# Iterates over local.cloudrun_rules — rules with type = "cloudrun"
 
-  # Name derived from rule_key + service name, last 8 chars of md5 for uniqueness
-  name                  = "${local.name}-${substr(md5("${each.key}-${each.value}"), 24, 8)}"
+# Serverless Network Endpoint Groups — one per Cloud Run rule
+resource "google_compute_region_network_endpoint_group" "cloudrun" {
+  for_each = local.cloudrun_rules
+
+  # Name: alb-name + last 8 chars of md5(rule_key + service) for uniqueness
+  name                  = "${local.name}-${substr(md5("${each.key}-${each.value.service}"), 24, 8)}"
   project               = local.project_id
   region                = local.region
   network_endpoint_type = "SERVERLESS"
 
   cloud_run {
-    service = each.value # The resolved CloudRun service name
+    service = each.value.service
   }
 }
 
-# Backend services for each CloudRun service
+# Backend services — one per Cloud Run rule, backed by the Serverless NEG above
 resource "google_compute_backend_service" "cloudrun" {
-  for_each = local.services_map
+  for_each = local.cloudrun_rules
 
-  # Name derived from rule_key + service name, last 8 chars of md5 for uniqueness
-  name                            = "${local.name}-${substr(md5("${each.key}-${each.value}"), 24, 8)}"
+  name                            = "${local.name}-${substr(md5("${each.key}-${each.value.service}"), 24, 8)}"
   project                         = local.project_id
   protocol                        = "HTTP"
   port_name                       = "http"
@@ -56,14 +58,5 @@ resource "google_compute_backend_service" "cloudrun" {
 
   lifecycle {
     create_before_destroy = true
-  }
-}
-
-locals {
-  # Map rule_key to backend service IDs
-  # URL map looks up backend by rule_key
-  service_backends = {
-    for rule_key, service in local.services_map :
-    rule_key => google_compute_backend_service.cloudrun[rule_key].id
   }
 }

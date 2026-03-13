@@ -43,7 +43,6 @@ locals {
         rule_key    = rule_key
         domain_key  = domain_key
         domain      = domain_config.domain
-        service     = rule.service
         path        = lookup(rule, "path", "/")
         path_type   = lookup(rule, "path_type", "PREFIX")
         priority    = lookup(rule, "priority", 100)
@@ -73,7 +72,6 @@ locals {
       rule_key    = rule_key
       domain_key  = rule.domain_key
       domain      = var.instance.spec.domains[rule.domain_key].domain
-      service     = rule.service
       path        = lookup(rule, "path", "/")
       path_type   = lookup(rule, "path_type", "PREFIX")
       priority    = lookup(rule, "priority", 100)
@@ -97,14 +95,30 @@ locals {
     ]
   }
 
-  # ─── Service Extraction ─────────────────────────────────────────────────────
-  # Create a map of services for backend creation
-  # Key = rule_key (stable), Value = service_name
-  services_map = {
+  # ─── Backend Classification ─────────────────────────────────────────────────
+  # Split rules by backend type for dedicated backend resource files
+
+  # Cloud Run rules — handled in backend_cloudrun.tf
+  cloudrun_rules = {
     for rule_key, rule in var.instance.spec.rules :
-    rule_key => rule.service
-    if lookup(rule, "service", "") != ""
+    rule_key => rule
+    if rule.type == "cloudrun"
   }
+
+  # MIG rules — handled in backend_mig.tf
+  mig_rules = {
+    for rule_key, rule in var.instance.spec.rules :
+    rule_key => rule
+    if rule.type == "mig"
+  }
+
+  # ─── Unified Backend Services ───────────────────────────────────────────────
+  # Merged map of rule_key → backend_service_id used by url_map.tf
+  # Each backend file contributes its slice; merged here for a single lookup surface
+  service_backends = merge(
+    { for k in keys(local.cloudrun_rules) : k => google_compute_backend_service.cloudrun[k].id },
+    { for k in keys(local.mig_rules) : k => google_compute_backend_service.mig[k].id },
+  )
 
   # ─── Certificate Configuration ──────────────────────────────────────────────
   # Determine certificate strategy per host
