@@ -27,6 +27,7 @@ outputs:
         mock:
             attributes:
                 instance_group_name: mock-string-value
+                instance_group_url: mock-string-value
                 instance_template_name: mock-string-value
                 resource_name: mock-string-value
                 resource_type: mock-string-value

@@ -2,6 +2,7 @@ locals {
   # Output attributes — instance group and service account identifiers
   output_attributes = {
     instance_group_name    = google_compute_instance_group_manager.this.name
+    instance_group_url     = google_compute_instance_group_manager.this.instance_group
     instance_template_name = google_compute_instance_template.this.name
     resource_name          = var.instance_name
     resource_type          = "gcp-vm"
