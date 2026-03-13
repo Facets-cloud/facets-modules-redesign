@@ -1,0 +1,29 @@
+name: '@facets/alb'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        lb_name:
+          description: The name of the load balancer
+          type: string
+        lb_ip_address:
+          description: The external IP address of the load balancer
+          type: string
+    interfaces:
+      type: object
+      description: Dynamic routing interfaces per rule (rule_key -> interface)
+      additionalProperties:
+        type: object
+        properties:
+          connection_string:
+            description: Full HTTPS URL for the endpoint
+            type: string
+          host:
+            description: Hostname for the endpoint
+            type: string
+          port:
+            description: Port number (443 for HTTPS)
+            type: integer
+providers: []

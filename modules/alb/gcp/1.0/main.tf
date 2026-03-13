@@ -4,5 +4,5 @@ module "name" {
   environment   = var.environment
   limit         = 63
   resource_name = var.instance_name
-  resource_type = "ingress"
+  resource_type = "alb"
 }
