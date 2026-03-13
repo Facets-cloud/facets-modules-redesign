@@ -1,6 +1,7 @@
 locals {
-  # OVH has no cloud-specific LB annotations
-  ovh_annotations = {}
+  ovh_annotations = {
+    "loadbalancer.ovhcloud.com/flavor" = "small"
+  }
 }
 
 # Call the base utility module
