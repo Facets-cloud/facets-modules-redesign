@@ -47,6 +47,15 @@ sample:
     controller_replicas: 1
     controller_version: "3.0.0"
   version: "1.0"
+metadata: 
+  type: object
+  title: Metadata object of the resource
+  description: Contains the metadata information of the resource such as name. 
+  properties:
+    name: 
+      type: string
+      title: Name of the resource.
+      description: Name of the resource if specified otherwise fallback will be module internal nameing.
 spec:
   description: Configure the AWS Load Balancer Controller for your EKS cluster
   properties:
@@ -67,6 +76,16 @@ spec:
       title: Resource Tags
       type: object
       x-ui-yaml-editor: true
+    aws_alb_controller:
+      type: object
+      title: AWS ALB Controller Configuration
+      description: Additional AWS ALB controller configuration
+      properties:
+        values: 
+          type: object
+          title: Helm Values Override
+          description: Override default helm chart values. Any values provided here will take precedence over module defaults.
+          x-ui-yaml-editor: true
   required:
     - controller_version
   title: AWS ALB Controller Configuration
