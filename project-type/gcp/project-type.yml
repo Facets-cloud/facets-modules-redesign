@@ -27,6 +27,8 @@ modules:
     flavor: cloudrun
 
   # GCP-Specific Modules
+  - intent: ingress
+    flavor: gcp_alb
   - intent: google_workload_identity
     flavor: gcp
   - intent: pubsub
