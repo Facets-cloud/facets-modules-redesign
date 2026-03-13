@@ -25,6 +25,4 @@ locals {
   ingress_setting = lookup(var.instance.spec, "ingress", "all")
   ingress_value   = local.ingress_setting != "" ? "INGRESS_TRAFFIC_${upper(replace(local.ingress_setting, "-", "_"))}" : "INGRESS_TRAFFIC_ALL"
 
-  # Deletion protection - configurable with secure default
-  deletion_protection = lookup(var.instance.spec, "deletion_protection", false)
 }

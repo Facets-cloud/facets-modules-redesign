@@ -54,7 +54,6 @@ variable "instance" {
 
       labels = optional(map(string), {})
 
-      deletion_protection = optional(bool, false)
 
       # When true, the MIG preserves the boot disk across instance recreation
       stateful = optional(bool, false)

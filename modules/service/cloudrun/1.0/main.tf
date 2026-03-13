@@ -19,8 +19,7 @@ resource "google_cloud_run_v2_service" "this" {
   # Ingress configuration
   ingress = local.ingress_value
 
-  # Deletion protection - configurable with secure default
-  deletion_protection = local.deletion_protection
+  deletion_protection = false
 
   template {
     # Scaling configuration
