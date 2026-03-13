@@ -6,7 +6,7 @@ resource "google_compute_instance_group_manager" "this" {
   zone               = local.zone
   base_instance_name = local.vm_name
   # When stateful=true there is no autoscaler; target_size controls the fixed instance count.
-  target_size = lookup(var.instance.spec, "stateful", false) ? lookup(var.instance.spec.scaling, "min_instances", 1) : null
+  target_size = lookup(var.instance.spec, "stateful", false) ? lookup(var.instance.spec.runtime.autoscaling, "min", 1) : null
 
   version {
     instance_template = google_compute_instance_template.this.id

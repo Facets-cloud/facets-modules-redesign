@@ -15,11 +15,11 @@ locals {
   ) ? lookup(var.instance.spec.vpc_access, "connector", null) : null
 
   # Health check probes
-  startup_probe_enabled  = lookup(var.instance.spec.health_checks.startup_probe, "enabled", false)
-  liveness_probe_enabled = lookup(var.instance.spec.health_checks.liveness_probe, "enabled", false)
+  startup_probe_enabled  = lookup(var.instance.spec.runtime.health_checks.startup_probe, "enabled", false)
+  liveness_probe_enabled = lookup(var.instance.spec.runtime.health_checks.liveness_probe, "enabled", false)
 
-  # CPU idle - allow manual override or default based on min_instances
-  cpu_idle = lookup(var.instance.spec.resources, "cpu_idle", lookup(var.instance.spec.scaling, "min_instances", 0) == 0)
+  # CPU idle - allow manual override or default based on min instances
+  cpu_idle = lookup(var.instance.spec.runtime.size, "cpu_idle", lookup(var.instance.spec.runtime.autoscaling, "min", 0) == 0)
 
   # Ingress configuration - transform to Cloud Run format
   ingress_setting = lookup(var.instance.spec, "ingress", "all")

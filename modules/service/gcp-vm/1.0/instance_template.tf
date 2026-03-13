@@ -4,7 +4,7 @@ resource "google_compute_instance_template" "this" {
   # Datetime suffix ensures a globally unique name on every new template creation.
   # ignore_changes on name prevents perpetual replacement from timestamp drift on re-plans.
   name         = "${local.vm_name}-${formatdate("YYMMDDhhmmss", timestamp())}"
-  machine_type = var.instance.spec.machine.machine_type
+  machine_type = var.instance.spec.runtime.size.machine_type
   project      = local.project_id
 
   labels = local.all_labels

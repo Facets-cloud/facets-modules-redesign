@@ -8,13 +8,13 @@ resource "google_compute_autoscaler" "this" {
   target  = google_compute_instance_group_manager.this.id
 
   autoscaling_policy {
-    min_replicas    = lookup(var.instance.spec.scaling, "min_instances", 1)
-    max_replicas    = lookup(var.instance.spec.scaling, "max_instances", 3)
-    cooldown_period = lookup(var.instance.spec.scaling, "cooldown_period", 60)
+    min_replicas    = lookup(var.instance.spec.runtime.autoscaling, "min", 1)
+    max_replicas    = lookup(var.instance.spec.runtime.autoscaling, "max", 3)
+    cooldown_period = lookup(var.instance.spec.runtime.autoscaling, "cooldown_period", 60)
 
     # Scale based on average CPU utilization across all instances in the MIG
     cpu_utilization {
-      target = lookup(var.instance.spec.scaling, "cpu_target", 0.6)
+      target = lookup(var.instance.spec.runtime.autoscaling, "cpu_target", 0.6)
     }
   }
 }

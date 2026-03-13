@@ -4,11 +4,64 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
-      container = object({
-        image   = string
+      release = object({
+        image             = string
+        image_pull_policy = optional(string, "IfNotPresent")
+      })
+
+      runtime = object({
         port    = string
         command = optional(list(string))
         args    = optional(list(string))
+
+        size = optional(object({
+          cpu               = optional(string, "1000m")
+          memory            = optional(string, "512Mi")
+          startup_cpu_boost = optional(bool, false)
+          cpu_idle          = optional(bool)
+          }), {
+          cpu               = "1000m"
+          memory            = "512Mi"
+          startup_cpu_boost = false
+        })
+
+        autoscaling = optional(object({
+          enabled     = optional(bool, true)
+          min         = optional(number, 0)
+          max         = optional(number, 10)
+          concurrency = optional(number, 80)
+          }), {
+          enabled     = true
+          min         = 0
+          max         = 10
+          concurrency = 80
+        })
+
+        health_checks = optional(object({
+          startup_probe = optional(object({
+            enabled           = optional(bool, false)
+            path              = optional(string, "/health/startup")
+            initial_delay     = optional(number, 0)
+            timeout           = optional(number, 1)
+            period            = optional(number, 10)
+            failure_threshold = optional(number, 3)
+            }), {
+            enabled = false
+          })
+          liveness_probe = optional(object({
+            enabled           = optional(bool, false)
+            path              = optional(string, "/health/live")
+            initial_delay     = optional(number, 0)
+            timeout           = optional(number, 1)
+            period            = optional(number, 10)
+            failure_threshold = optional(number, 3)
+            }), {
+            enabled = false
+          })
+          }), {
+          startup_probe  = { enabled = false }
+          liveness_probe = { enabled = false }
+        })
       })
 
       env = optional(map(string), {})
@@ -18,27 +71,6 @@ variable "instance" {
         mount_path = string
         read_only  = optional(bool, false)
       })), {})
-
-      resources = optional(object({
-        cpu               = optional(string, "1000m")
-        memory            = optional(string, "512Mi")
-        startup_cpu_boost = optional(bool, false)
-        cpu_idle          = optional(bool)
-        }), {
-        cpu               = "1000m"
-        memory            = "512Mi"
-        startup_cpu_boost = false
-      })
-
-      scaling = optional(object({
-        min_instances = optional(number, 0)
-        max_instances = optional(number, 10)
-        concurrency   = optional(number, 80)
-        }), {
-        min_instances = 0
-        max_instances = 10
-        concurrency   = 80
-      })
 
       timeout = optional(string, "300")
       ingress = optional(string, "all")
@@ -73,33 +105,6 @@ variable "instance" {
 
       annotations = optional(map(string), {})
       labels      = optional(map(string), {})
-
-
-      health_checks = optional(object({
-        startup_probe = optional(object({
-          enabled           = optional(bool, false)
-          path              = optional(string, "/health/startup")
-          initial_delay     = optional(number, 0)
-          timeout           = optional(number, 1)
-          period            = optional(number, 10)
-          failure_threshold = optional(number, 3)
-          }), {
-          enabled = false
-        })
-        liveness_probe = optional(object({
-          enabled           = optional(bool, false)
-          path              = optional(string, "/health/live")
-          initial_delay     = optional(number, 0)
-          timeout           = optional(number, 1)
-          period            = optional(number, 10)
-          failure_threshold = optional(number, 3)
-          }), {
-          enabled = false
-        })
-        }), {
-        startup_probe  = { enabled = false }
-        liveness_probe = { enabled = false }
-      })
     })
   })
 

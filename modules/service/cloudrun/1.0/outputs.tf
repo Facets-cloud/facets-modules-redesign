@@ -14,7 +14,7 @@ locals {
   output_interfaces = {
     http = {
       host      = google_cloud_run_v2_service.this.uri
-      port      = tonumber(var.instance.spec.container.port)
+      port      = tonumber(var.instance.spec.runtime.port)
       port_name = "http"
       name      = google_cloud_run_v2_service.this.name
       username  = ""

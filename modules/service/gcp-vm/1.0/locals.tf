@@ -4,7 +4,7 @@ locals {
 
   # Zone: use spec override or default to region + "-a"
   zone = coalesce(
-    lookup(var.instance.spec.machine, "zone", null),
+    lookup(var.instance.spec.runtime.size, "zone", null),
     "${local.region}-a"
   )
 
@@ -14,8 +14,8 @@ locals {
     lookup(var.instance.spec, "labels", {})
   )
 
-  # Startup script passed via user_data
-  startup_script = lookup(var.instance.spec, "user_data", "")
+  # Startup script passed via runtime.startup_script
+  startup_script = lookup(var.instance.spec.runtime, "startup_script", "")
 
   # Instance metadata: env key-value pairs + startup-script (if provided)
   instance_metadata = merge(

@@ -4,9 +4,27 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
-      machine = object({
-        machine_type = string
-        zone         = optional(string)
+      runtime = object({
+        size = object({
+          machine_type = string
+          zone         = optional(string)
+        })
+
+        autoscaling = optional(object({
+          enabled         = optional(bool, true)
+          min             = optional(number, 1)
+          max             = optional(number, 3)
+          cpu_target      = optional(number, 0.6)
+          cooldown_period = optional(number, 60)
+          }), {
+          enabled         = true
+          min             = 1
+          max             = 3
+          cpu_target      = 0.6
+          cooldown_period = 60
+        })
+
+        startup_script = optional(string, "")
       })
 
       boot_disk = object({
@@ -14,20 +32,6 @@ variable "instance" {
         size_gb = optional(number, 20)
         type    = optional(string, "pd-balanced")
       })
-
-      scaling = optional(object({
-        min_instances   = optional(number, 1)
-        max_instances   = optional(number, 3)
-        cpu_target      = optional(number, 0.6)
-        cooldown_period = optional(number, 60)
-        }), {
-        min_instances   = 1
-        max_instances   = 3
-        cpu_target      = 0.6
-        cooldown_period = 60
-      })
-
-      user_data = optional(string, "")
 
       env = optional(map(string), {})
 
