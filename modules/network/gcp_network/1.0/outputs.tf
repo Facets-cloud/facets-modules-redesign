@@ -37,11 +37,11 @@ locals {
     gke_services_cidr       = local.gke_services_subnet_cidr
 
     # NAT and Router
-    router_id   = google_compute_router.router.id
-    router_name = google_compute_router.router.name
-    router_ids  = [google_compute_router.router.id]
-    nat_id      = google_compute_router_nat.nat.id
-    nat_name    = google_compute_router_nat.nat.name
+    router_id       = google_compute_router.router.id
+    router_name     = google_compute_router.router.name
+    router_ids      = [google_compute_router.router.id]
+    nat_id          = google_compute_router_nat.nat.id
+    nat_name        = google_compute_router_nat.nat.name
     nat_gateway_ids = [google_compute_router_nat.nat.id]
 
     # Google Services Peering

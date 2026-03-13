@@ -235,6 +235,23 @@ resource "google_compute_firewall" "allow_https" {
   priority      = 1000
 }
 
+# Allow GCP health check probes (required for MIG auto-healing and LB health checks)
+# Source ranges are Google's dedicated health checker IPs — not internal VPC traffic
+resource "google_compute_firewall" "allow_health_checks" {
+  count = lookup(local.firewall_rules, "allow_health_checks", true) ? 1 : 0
+
+  name        = "${local.name_prefix}-allow-health-checks"
+  network     = google_compute_network.vpc.name
+  description = "Allow GCP health check probes from Google's health checker IP ranges"
+
+  allow {
+    protocol = "tcp"
+  }
+
+  source_ranges = ["35.191.0.0/16", "130.211.0.0/22"]
+  priority      = 1000
+}
+
 # Allow ICMP (ping) within VPC
 resource "google_compute_firewall" "allow_icmp" {
   count = lookup(local.firewall_rules, "allow_icmp", true) ? 1 : 0

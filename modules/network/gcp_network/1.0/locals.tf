@@ -5,11 +5,12 @@ locals {
   vpc_cidr         = local.spec.vpc_cidr
   enable_flow_logs = lookup(local.spec, "enable_flow_logs", false)
   firewall_rules = lookup(local.spec, "firewall_rules", {
-    allow_internal = true
-    allow_ssh      = true
-    allow_http     = false
-    allow_https    = true
-    allow_icmp     = true
+    allow_internal      = true
+    allow_ssh           = true
+    allow_http          = false
+    allow_https         = true
+    allow_icmp          = true
+    allow_health_checks = true
   })
   labels_spec       = lookup(local.spec, "labels", {})
   gcp_region        = var.inputs.cloud_account.attributes.region
