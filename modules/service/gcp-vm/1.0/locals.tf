@@ -32,4 +32,8 @@ locals {
 
   # Network tags for firewall rule targeting
   network_tags = try(var.instance.spec.network.network_tags, [])
+
+  # Health check type — None means no health check resource or auto-healing policy
+  health_check_type    = try(var.instance.spec.runtime.health_checks.check_type, "None")
+  health_check_enabled = local.health_check_type != "None"
 }

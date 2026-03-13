@@ -25,6 +25,31 @@ variable "instance" {
         })
 
         startup_script = optional(string, "")
+
+        ports = optional(map(object({
+          port     = number
+          protocol = optional(string, "TCP")
+        })), {})
+
+        health_checks = optional(object({
+          check_type          = optional(string, "None")
+          port                = optional(number, null)
+          http_path           = optional(string, "/")
+          initial_delay       = optional(number, 300)
+          check_interval      = optional(number, 30)
+          timeout             = optional(number, 10)
+          healthy_threshold   = optional(number, 1)
+          unhealthy_threshold = optional(number, 3)
+          }), {
+          check_type          = "None"
+          port                = null
+          http_path           = "/"
+          initial_delay       = 300
+          check_interval      = 30
+          timeout             = 10
+          healthy_threshold   = 1
+          unhealthy_threshold = 3
+        })
       })
 
       boot_disk = object({

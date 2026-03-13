@@ -33,6 +33,24 @@ resource "google_compute_instance_group_manager" "this" {
     }
   }
 
+  # Named ports — used by load balancers and health checks to route traffic by port name
+  dynamic "named_port" {
+    for_each = try(var.instance.spec.runtime.ports, {})
+    content {
+      name = named_port.key
+      port = named_port.value.port
+    }
+  }
+
+  # Auto-healing: replace instances that fail the health check after initial_delay
+  dynamic "auto_healing_policies" {
+    for_each = local.health_check_enabled ? [1] : []
+    content {
+      health_check      = google_compute_health_check.this[0].id
+      initial_delay_sec = try(var.instance.spec.runtime.health_checks.initial_delay, 300)
+    }
+  }
+
   # Do not block Terraform apply waiting for all instances to become healthy
   wait_for_instances = false
 }

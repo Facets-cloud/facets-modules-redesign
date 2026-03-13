@@ -213,6 +213,129 @@ spec:
                     title: Autoscaling
                     type: object
                     x-ui-toggle: true
+                health_checks:
+                    description: Configure GCP Compute Engine health checks for auto-healing. The MIG uses these checks to detect and replace unhealthy instances.
+                    properties:
+                        check_interval:
+                            default: 30
+                            description: How often (in seconds) to perform the health check
+                            maximum: 300
+                            minimum: 5
+                            title: Check Interval (seconds)
+                            type: integer
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.check_type
+                                values:
+                                    - HttpCheck
+                                    - TcpCheck
+                        check_type:
+                            default: None
+                            description: Type of health check to perform
+                            enum:
+                                - None
+                                - HttpCheck
+                                - TcpCheck
+                            title: Health Check Type
+                            type: string
+                            x-ui-no-sort: true
+                        healthy_threshold:
+                            default: 1
+                            description: Number of consecutive successes required to mark an instance healthy
+                            maximum: 10
+                            minimum: 1
+                            title: Healthy Threshold
+                            type: integer
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.check_type
+                                values:
+                                    - HttpCheck
+                                    - TcpCheck
+                        http_path:
+                            default: /
+                            description: HTTP path for the health check request (only for HttpCheck)
+                            title: HTTP Path
+                            type: string
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.check_type
+                                values:
+                                    - HttpCheck
+                        initial_delay:
+                            default: 300
+                            description: Seconds to wait after an instance starts before beginning health checks (auto-healing initial delay)
+                            maximum: 3600
+                            minimum: 0
+                            title: Initial Delay (seconds)
+                            type: integer
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.check_type
+                                values:
+                                    - HttpCheck
+                                    - TcpCheck
+                        port:
+                            description: Port number to health check on the VM instance
+                            maximum: 65535
+                            minimum: 1
+                            title: Port
+                            type: integer
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.check_type
+                                values:
+                                    - HttpCheck
+                                    - TcpCheck
+                        timeout:
+                            default: 10
+                            description: Seconds to wait before the health check is considered failed
+                            maximum: 300
+                            minimum: 1
+                            title: Timeout (seconds)
+                            type: integer
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.check_type
+                                values:
+                                    - HttpCheck
+                                    - TcpCheck
+                        unhealthy_threshold:
+                            default: 3
+                            description: Number of consecutive failures required to mark an instance unhealthy
+                            maximum: 10
+                            minimum: 1
+                            title: Unhealthy Threshold
+                            type: integer
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.check_type
+                                values:
+                                    - HttpCheck
+                                    - TcpCheck
+                    title: Health Checks
+                    type: object
+                    x-ui-toggle: true
+                ports:
+                    description: Named port mappings for this VM service. Used to configure MIG named ports and GCP health checks.
+                    patternProperties:
+                        ^[a-zA-Z0-9_-]+$:
+                            description: Define a named port for the VM service
+                            properties:
+                                port:
+                                    description: Port number on the VM instance
+                                    maximum: 65535
+                                    minimum: 1
+                                    title: Port
+                                    type: integer
+                                protocol:
+                                    default: TCP
+                                    description: Protocol for this port
+                                    enum:
+                                        - TCP
+                                        - HTTP
+                                        - HTTPS
+                                    title: Protocol
+                                    type: string
+                            required:
+                                - port
+                            title: Port
+                            type: object
+                    title: Ports
+                    type: object
                 size:
                     properties:
                         machine_type:
@@ -254,6 +377,8 @@ spec:
             x-ui-order:
                 - autoscaling
                 - size
+                - health_checks
+                - ports
                 - startup_script
         stateful:
             default: false
