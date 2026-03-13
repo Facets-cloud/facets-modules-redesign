@@ -346,9 +346,15 @@ spec:
                             type: string
                         port_name:
                             default: http
-                            description: Named port configured on the instance group (e.g., http, https)
+                            description: |
+                                Named port configured on the instance group. Must be a lowercase letter followed
+                                by up to 62 lowercase letters, digits, or hyphens (e.g., http, https, langfuse).
+                                This is NOT a port number — define a named port on the MIG that maps to the actual port.
+                            pattern: ^[a-z][-a-z0-9]{0,61}[a-z0-9]?$
                             title: Named Port
                             type: string
+                            x-ui-error-message: Must be a named port (e.g., http, langfuse) — not a port number like 3000
+                            x-ui-placeholder: e.g., http, https, langfuse
                             x-ui-visible-if:
                                 field: spec.rules.{{this}}.type
                                 values:

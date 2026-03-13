@@ -110,6 +110,14 @@ variable "instance" {
     ])
     error_message = "Rules with type=mig must specify 'instance_group_url'."
   }
+
+  validation {
+    condition = alltrue([
+      for rule_key, rule in var.instance.spec.rules :
+      rule.type == "mig" ? can(regex("^[a-z][-a-z0-9]{0,61}[a-z0-9]?$", rule.port_name)) : true
+    ])
+    error_message = "Rules with type=mig must use a named port (e.g., http, langfuse) — not a port number like 3000. Define a named port on the MIG that maps to the actual port."
+  }
 }
 
 variable "instance_name" {
