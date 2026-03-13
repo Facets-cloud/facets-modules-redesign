@@ -5,8 +5,11 @@ locals {
   primary_host = length(local.unique_hosts) > 0 ? local.unique_hosts[0] : ""
 
   output_attributes = {
-    lb_name       = local.name
-    lb_ip_address = local.lb_ip_address
+    base_domain           = length(local.unique_hosts) > 0 ? local.unique_hosts[0] : ""
+    base_domain_enabled   = true
+    loadbalancer_ip       = local.lb_ip_address
+    loadbalancer_dns      = local.lb_ip_address
+    loadbalancer_hostname = local.lb_ip_address
   }
 
   # Output interfaces per rule (matching nginx ingress pattern)

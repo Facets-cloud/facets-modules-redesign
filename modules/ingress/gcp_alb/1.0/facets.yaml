@@ -6,7 +6,7 @@ description: |
     Supports Cloud Run (serverless) and VM Managed Instance Groups (MIG) as backends.
     Provides subdomain routing via domain_prefix, path-based routing, CDN, Cloud Armor, and IAP integration.
     Similar to nginx/traefik ingress pattern with base domains and rules with domain prefixes.
-flavor: gcp
+flavor: gcp_alb
 inputs:
     gcp_cloud_account:
         description: GCP project and credentials for provisioning resources
@@ -20,25 +20,28 @@ inputs:
         displayName: GCP Network
         optional: true
         type: '@facets/gcp-network-details'
-intent: alb
+intent: ingress
 intentDetails:
-    description: Create and manage Application Load Balancers for routing traffic to backend services
-    displayName: Application Load Balancer
-    iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/alb.svg
+    description: Create and manage GCP Application Load Balancers for routing traffic to backend services
+    displayName: GCP Application Load Balancer
+    iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/ingress.svg
     type: Cloud & Infrastructure
 outputs:
     default:
         mock:
             attributes:
-                lb_ip_address: mock-string-value
-                lb_name: mock-string-value
+                base_domain: mock-string-value
+                base_domain_enabled: true
+                loadbalancer_dns: mock-string-value
+                loadbalancer_hostname: mock-string-value
+                loadbalancer_ip: mock-string-value
             interfaces: {}
-        title: Load Balancer
-        type: '@facets/alb'
+        title: GCP Application Load Balancer
+        type: '@facets/ingress'
 sample:
     disabled: false
-    flavor: gcp
-    kind: alb
+    flavor: gcp_alb
+    kind: ingress
     spec:
         advanced:
             connection_draining_timeout: 300
