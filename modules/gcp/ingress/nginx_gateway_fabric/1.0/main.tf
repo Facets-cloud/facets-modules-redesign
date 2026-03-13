@@ -9,7 +9,7 @@ locals {
 
 # Call the base utility module
 module "nginx_gateway_fabric" {
-  source = "github.com/Facets-cloud/facets-utility-modules//nginx_gateway_fabric?ref=nginx-gateway-fabric-base"
+  source = "github.com/Facets-cloud/facets-utility-modules//nginx_gateway_fabric"
 
   instance      = var.instance
   instance_name = var.instance_name
