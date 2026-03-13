@@ -1,11 +1,9 @@
 intent: ingress
-flavor: nginx_gateway_fabric
+flavor: nginx_gateway_fabric_aws
 version: "1.0"
-description: NGINX Gateway Fabric - Kubernetes Gateway API implementation
+description: NGINX Gateway Fabric for AWS - Gateway API with NLB, Route53, and ACM support
 clouds:
   - aws
-  - azure
-  - gcp
   - kubernetes
 intentDetails:
   type: Kubernetes Resources
@@ -15,7 +13,7 @@ intentDetails:
 inputs:
   kubernetes_details:
     optional: false
-    type: "@facets/kubernetes-details"
+    type: "@facets/eks"
     displayName: Kubernetes Cluster
     default:
       resource_type: kubernetes_cluster
@@ -58,6 +56,19 @@ inputs:
     default:
       resource_type: prometheus
       resource_name: default
+  aws_alb_controller_details:
+    type: "@facets/aws-alb-controller"
+    displayName: AWS ALB Controller
+    description: Optional AWS Load Balancer Controller dependency to ensure it is deployed before the gateway
+    optional: true
+    default:
+      resource_type: aws_alb_controller
+      resource_name: default
+  ack_acm_controller_details:
+    type: "@facets/ack_acm_controller"
+    displayName: ACK ACM Controller
+    description: Optional ACK ACM Controller for managing ACM certificates as Kubernetes TLS secrets
+    optional: true
 spec:
   title: NGINX Gateway Fabric
   type: object
@@ -889,7 +900,7 @@ outputs:
     title: Ingress Details
 sample:
   kind: ingress
-  flavor: nginx_gateway_fabric
+  flavor: nginx_gateway_fabric_aws
   version: "1.0"
   disabled: true
   spec:
