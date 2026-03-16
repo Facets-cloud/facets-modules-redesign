@@ -15,9 +15,6 @@ inputs:
     optional: false
     type: "@facets/eks"
     displayName: Kubernetes Cluster
-    default:
-      resource_type: kubernetes_cluster
-      resource_name: default
     providers:
       - kubernetes
       - kubernetes-alpha
@@ -63,7 +60,7 @@ inputs:
     optional: true
     default:
       resource_type: aws_alb_controller
-      resource_name: default
+      resource_name: aws-alb-controller
   ack_acm_controller_details:
     type: "@facets/ack_acm_controller"
     displayName: ACK ACM Controller
