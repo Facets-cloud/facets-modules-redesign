@@ -87,7 +87,7 @@ modules:
   - intent: gateway_api_crd
     flavor: default
   - intent: ingress
-    flavor: nginx_gateway_fabric
+    flavor: nginx_gateway_fabric_aws
   - intent: ingress
     flavor: nginx_k8s
   - intent: k8s_access_controls
