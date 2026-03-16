@@ -40,17 +40,18 @@ variable "inputs" {
     }))
     cert_manager_details = optional(object({
       attributes = optional(object({
+        acme_email          = optional(string)
         cluster_issuer_http = optional(string)
       }))
     }))
-    gateway_api_crd_details = optional(object({
-      attributes = optional(object({
+    gateway_api_crd_details = object({
+      attributes = object({
         version     = optional(string)
         channel     = optional(string)
         install_url = optional(string)
         job_name    = optional(string)
-      }))
-    }))
+      })
+    })
     prometheus_details = optional(object({
       attributes = optional(object({
         alertmanager_url = optional(string)
@@ -58,6 +59,24 @@ variable "inputs" {
         prometheus_url   = optional(string)
       }))
       interfaces = optional(object({}))
+    }))
+    aws_alb_controller_details = optional(object({
+      attributes = optional(object({
+        controller_namespace       = optional(string)
+        controller_service_account = optional(string)
+        controller_version         = optional(string)
+        controller_role_arn        = optional(string)
+        helm_release_id            = optional(string)
+      }))
+    }))
+    ack_acm_controller_details = optional(object({
+      attributes = optional(object({
+        namespace       = optional(string)
+        release_name    = optional(string)
+        chart_version   = optional(string)
+        role_arn        = optional(string)
+        helm_release_id = optional(string)
+      }))
     }))
   })
   description = "Inputs from other modules"

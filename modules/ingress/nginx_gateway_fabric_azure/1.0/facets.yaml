@@ -1,11 +1,9 @@
 intent: ingress
-flavor: nginx_gateway_fabric
+flavor: nginx_gateway_fabric_azure
 version: "1.0"
-description: NGINX Gateway Fabric - Kubernetes Gateway API implementation
+description: NGINX Gateway Fabric for Azure - Gateway API with internal/external load balancer support
 clouds:
-  - aws
   - azure
-  - gcp
   - kubernetes
 intentDetails:
   type: Kubernetes Resources
@@ -15,7 +13,7 @@ intentDetails:
 inputs:
   kubernetes_details:
     optional: false
-    type: "@facets/kubernetes-details"
+    type: "@facets/azure_aks"
     displayName: Kubernetes Cluster
     default:
       resource_type: kubernetes_cluster
@@ -889,7 +887,7 @@ outputs:
     title: Ingress Details
 sample:
   kind: ingress
-  flavor: nginx_gateway_fabric
+  flavor: nginx_gateway_fabric_azure
   version: "1.0"
   disabled: true
   spec:
