@@ -80,7 +80,7 @@ modules:
   - intent: gateway_api_crd
     flavor: default
   - intent: ingress
-    flavor: nginx_gateway_fabric
+    flavor: nginx_gateway_fabric_gcp
   - intent: k8s_access_controls
     flavor: k8s_standard
   - intent: k8s_callback
