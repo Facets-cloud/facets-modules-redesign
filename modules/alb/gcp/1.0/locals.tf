@@ -10,14 +10,14 @@ locals {
   global_rules = {
     for rule_key, rule in var.instance.spec.rules :
     rule_key => rule
-    if lookup(rule, "domain_key", "") == ""
+    if lookup(rule, "domain_key", "") == "" && rule.enabled
   }
 
   # Domain-specific rules: apply only to their specified domain
   domain_specific_rules = {
     for rule_key, rule in var.instance.spec.rules :
     rule_key => rule
-    if lookup(rule, "domain_key", "") != ""
+    if lookup(rule, "domain_key", "") != "" && rule.enabled
   }
 
   # ─── Rules by Host Computation ──────────────────────────────────────────────
@@ -102,14 +102,14 @@ locals {
   cloudrun_rules = {
     for rule_key, rule in var.instance.spec.rules :
     rule_key => rule
-    if rule.type == "cloudrun"
+    if rule.type == "cloudrun" && rule.enabled
   }
 
   # MIG rules — handled in backend_mig.tf
   mig_rules = {
     for rule_key, rule in var.instance.spec.rules :
     rule_key => rule
-    if rule.type == "mig"
+    if rule.type == "mig" && rule.enabled
   }
 
   # ─── Unified Backend Services ───────────────────────────────────────────────

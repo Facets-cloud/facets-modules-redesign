@@ -16,6 +16,7 @@ variable "instance" {
       }))
       # Routing rules
       rules = map(object({
+        enabled       = optional(bool, true)
         domain_key    = optional(string, "")
         domain_prefix = optional(string, "*")
         path          = optional(string, "/")
