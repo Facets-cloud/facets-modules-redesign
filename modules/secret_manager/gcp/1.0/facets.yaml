@@ -1,197 +1,169 @@
-intent: secret_manager
-flavor: gcp
-version: "1.0"
-description: |
-  Creates one GCP Secret Manager secret per entry defined in the secrets and
-  variables maps. Values are sourced from existing Facets project secrets or
-  variables. All secrets share the same replication policy, labels, and
-  rotation configuration. New secret versions must be added manually.
-intentDetails:
-  type: Cloud & Infrastructure
-  description: Creates and manages GCP Secret Manager secrets sourced from Facets project secrets and variables
-  displayName: GCP Secret Manager
-  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/secret_manager.svg
 clouds:
-  - gcp
-
+    - gcp
+description: |
+    Creates one GCP Secret Manager secret per entry defined in the secrets map.
+    Values are sourced from existing Facets project secrets. All secrets share
+    the same replication policy, labels, and rotation configuration. New secret
+    versions must be added manually.
+flavor: gcp
 inputs:
-  cloud_account:
-    type: "@facets/gcp_cloud_account"
-    optional: false
-    displayName: GCP Cloud Account
-    description: GCP cloud account providing the project ID and google provider.
-    providers:
-      - google
-
+    cloud_account:
+        description: GCP cloud account providing the project ID and google provider.
+        displayName: GCP Cloud Account
+        optional: false
+        providers:
+            - google
+        type: '@facets/gcp_cloud_account'
+intent: secret_manager
+intentDetails:
+    description: Creates and manages GCP Secret Manager secrets sourced from Facets project secrets
+    displayName: GCP Secret Manager
+    iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/secret_manager.svg
+    type: Cloud & Infrastructure
 outputs:
-  default:
-    type: "@facets/secret_manager"
-    title: GCP Secret Manager Secrets
-
-spec:
-  title: GCP Secret Manager Configuration
-  description: Configure GCP Secret Manager secrets sourced from Facets secrets and variables.
-  type: object
-  properties:
-
-    secrets:
-      type: object
-      title: Secrets
-      description: >
-        Map of GCP secrets to create from Facets project-level secrets.
-        Each key becomes the GCP secret name; the value is the Facets secret expression
-        (e.g. ${blueprint.self.secrets.MY_SECRET}).
-      x-ui-yaml-editor: true
-
-    variables:
-      type: object
-      title: Variables
-      description: >
-        Map of GCP secrets to create from Facets project-level variables.
-        Each key becomes the GCP secret name; the value is the Facets variable expression
-        (e.g. ${blueprint.self.variables.MY_VAR}).
-      x-ui-yaml-editor: true
-
-    replication:
-      type: object
-      title: Replication Policy
-      description: >
-        Replication policy applied to all secrets created by this resource.
-        Cannot be changed after secrets are created.
-      properties:
-        type:
-          type: string
-          title: Replication Type
-          enum:
-            - auto
-            - user_managed
-          default: auto
-          description: >
-            auto: Automatically replicated without restrictions.
-            user_managed: Replicated only to user-specified regions.
-
-        kms_key_name:
-          type: string
-          title: KMS Key Name (Auto replication)
-          description: >
-            Cloud KMS key for customer-managed encryption under auto replication.
-            Format: projects/{project}/locations/{location}/keyRings/{ring}/cryptoKeys/{key}
-          x-ui-visible-if:
-            field: spec.replication.type
-            values:
-              - auto
-
-        replicas:
-          type: object
-          title: Replicas
-          description: >
-            Replica configurations for user-managed replication.
-            Each key is a logical name; location is required.
-          x-ui-visible-if:
-            field: spec.replication.type
-            values:
-              - user_managed
-          patternProperties:
-            "^[a-zA-Z0-9_-]+$":
-              type: object
-              title: Replica
-              properties:
-                location:
-                  type: string
-                  title: Location
-                  description: GCP region ID (e.g., us-east1).
-                kms_key_name:
-                  type: string
-                  title: KMS Key Name
-                  description: >
-                    Cloud KMS key for this replica.
-                    Format: projects/{project}/locations/{location}/keyRings/{ring}/cryptoKeys/{key}
-              required:
-                - location
-      required:
-        - type
-
-    labels:
-      type: object
-      title: Labels
-      description: >
-        GCP resource labels applied to all secrets. Merged with environment cloud tags.
-      x-ui-yaml-editor: true
-
-    annotations:
-      type: object
-      title: Annotations
-      description: Arbitrary metadata annotations applied to all secrets.
-      x-ui-yaml-editor: true
-
-    expire_time:
-      type: string
-      title: Expiration Time
-      description: >
-        UTC expiry timestamp for all secrets (RFC3339, e.g. 2026-12-31T00:00:00Z).
-        Mutually exclusive with ttl.
-
-    ttl:
-      type: string
-      title: TTL
-      description: >
-        Time-to-live applied to all secrets (e.g. 86400s). Mutually exclusive with expire_time.
-
-    rotation:
-      type: object
-      title: Rotation Policy
-      description: >
-        Rotation schedule applied to all secrets. Requires topics to be configured.
-      x-ui-toggle: true
-      properties:
-        next_rotation_time:
-          type: string
-          title: Next Rotation Time
-          description: RFC3339 timestamp for the next rotation notification.
-        rotation_period:
-          type: string
-          title: Rotation Period
-          description: >
-            Duration between rotation notifications (e.g. 604800s). Min 3600s.
-
-    topics:
-      type: object
-      title: Pub/Sub Topics
-      description: >
-        Pub/Sub topics for secret lifecycle notifications (max 10). Required for rotation.
-      patternProperties:
-        "^[a-zA-Z0-9_-]+$":
-          type: object
-          title: Topic
-          properties:
-            name:
-              type: string
-              title: Topic Resource Name
-              description: "Format: projects/{project}/topics/{topic}"
-              x-ui-output-type: pubsub_name
-              x-ui-typeable: true
-          required:
-            - name
-
-  required:
-    - replication
-
-  x-ui-order:
-    - secrets
-    - variables
-    - replication
-    - labels
-    - annotations
-    - expire_time
-    - ttl
-    - topics
-    - rotation
-
+    default:
+        mock:
+            attributes:
+                project_id: mock-string-value
+                secret_ids: mock-string-value
+                secret_names: mock-string-value
+            interfaces: {}
+        title: GCP Secret Manager Secrets
+        type: '@facets/secret_manager'
 sample:
-  kind: secret_manager
-  flavor: gcp
-  version: "1.0"
-  disabled: false
-  spec:
-    replication:
-      type: auto
+    disabled: false
+    flavor: gcp
+    kind: secret_manager
+    spec:
+        replication:
+            type: auto
+    version: "1.0"
+spec:
+    description: Configure GCP Secret Manager secrets sourced from Facets secrets.
+    properties:
+        annotations:
+            description: Arbitrary metadata annotations applied to all secrets.
+            title: Annotations
+            type: object
+            x-ui-yaml-editor: true
+        expire_time:
+            description: |
+                UTC expiry timestamp for all secrets (RFC3339, e.g. 2026-12-31T00:00:00Z). Mutually exclusive with ttl.
+            title: Expiration Time
+            type: string
+        labels:
+            description: |
+                GCP resource labels applied to all secrets. Merged with environment cloud tags.
+            title: Labels
+            type: object
+            x-ui-yaml-editor: true
+        replication:
+            description: |
+                Replication policy applied to all secrets created by this resource. Cannot be changed after secrets are created.
+            properties:
+                kms_key_name:
+                    description: |
+                        Cloud KMS key for customer-managed encryption under auto replication. Format: projects/{project}/locations/{location}/keyRings/{ring}/cryptoKeys/{key}
+                    title: KMS Key Name (Auto replication)
+                    type: string
+                    x-ui-visible-if:
+                        field: spec.replication.type
+                        values:
+                            - auto
+                replicas:
+                    description: |
+                        Replica configurations for user-managed replication. Each key is a logical name; location is required.
+                    patternProperties:
+                        ^[a-zA-Z0-9_-]+$:
+                            properties:
+                                kms_key_name:
+                                    description: |
+                                        Cloud KMS key for this replica. Format: projects/{project}/locations/{location}/keyRings/{ring}/cryptoKeys/{key}
+                                    title: KMS Key Name
+                                    type: string
+                                location:
+                                    description: GCP region ID (e.g., us-east1).
+                                    title: Location
+                                    type: string
+                            required:
+                                - location
+                            title: Replica
+                            type: object
+                    title: Replicas
+                    type: object
+                    x-ui-visible-if:
+                        field: spec.replication.type
+                        values:
+                            - user_managed
+                type:
+                    default: auto
+                    description: |
+                        auto: Automatically replicated without restrictions. user_managed: Replicated only to user-specified regions.
+                    enum:
+                        - auto
+                        - user_managed
+                    title: Replication Type
+                    type: string
+            required:
+                - type
+            title: Replication Policy
+            type: object
+        rotation:
+            description: |
+                Rotation schedule applied to all secrets. Requires topics to be configured.
+            properties:
+                next_rotation_time:
+                    description: RFC3339 timestamp for the next rotation notification.
+                    title: Next Rotation Time
+                    type: string
+                rotation_period:
+                    description: |
+                        Duration between rotation notifications (e.g. 604800s). Min 3600s.
+                    title: Rotation Period
+                    type: string
+            title: Rotation Policy
+            type: object
+            x-ui-toggle: true
+        secrets:
+            description: |
+                Map of GCP secrets to create from Facets project-level secrets. Each key becomes the GCP secret name; the value is the Facets secret expression (e.g. ${blueprint.self.secrets.MY_SECRET}).
+            title: Secrets
+            type: object
+            x-ui-yaml-editor: true
+        topics:
+            description: |
+                Pub/Sub topics for secret lifecycle notifications (max 10). Required for rotation.
+            patternProperties:
+                ^[a-zA-Z0-9_-]+$:
+                    properties:
+                        name:
+                            description: 'Format: projects/{project}/topics/{topic}'
+                            title: Topic Resource Name
+                            type: string
+                            x-ui-output-type: pubsub_name
+                            x-ui-typeable: true
+                    required:
+                        - name
+                    title: Topic
+                    type: object
+            title: Pub/Sub Topics
+            type: object
+        ttl:
+            description: |
+                Time-to-live applied to all secrets (e.g. 86400s). Mutually exclusive with expire_time.
+            title: TTL
+            type: string
+    required:
+        - replication
+    title: GCP Secret Manager Configuration
+    type: object
+    x-ui-order:
+        - secrets
+        - replication
+        - labels
+        - annotations
+        - expire_time
+        - ttl
+        - topics
+        - rotation
+version: "1.0"

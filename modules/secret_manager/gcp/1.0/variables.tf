@@ -8,9 +8,6 @@ variable "instance" {
       # Map of GCP secret name -> resolved Facets secret value.
       secrets = optional(map(string), {})
 
-      # Map of GCP secret name -> resolved Facets variable value.
-      variables = optional(map(string), {})
-
       # Replication policy — applied to every secret created by this resource.
       replication = object({
         type         = string
