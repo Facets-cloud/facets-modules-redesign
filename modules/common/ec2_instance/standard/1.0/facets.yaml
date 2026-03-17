@@ -1,0 +1,373 @@
+intent: ec2_instance
+flavor: standard
+version: '1.0'
+description: Deploy and manage AWS EC2 instances with comprehensive configuration options for networking, security, storage, and instance features
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Deploy and manage AWS EC2 compute instances with full control over networking, security, IAM, storage, and advanced features
+  displayName: EC2 Instance
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/ec2_instance.svg
+clouds:
+- aws
+inputs:
+  cloud_account:
+    optional: false
+    type: '@facets/aws_cloud_account'
+    displayName: AWS Cloud Account
+    default:
+      resource_type: cloud_account
+      resource_name: default
+    providers:
+    - aws
+  network_details:
+    optional: false
+    type: '@facets/aws-vpc-details'
+    displayName: VPC Network Details
+    default:
+      resource_type: network
+      resource_name: default
+spec:
+  type: object
+  properties:
+    # Instance Configuration
+    ami_id:
+      title: AMI ID
+      description: The AMI ID to use for the instance. If not specified, the latest Amazon Linux 2023 AMI will be used.
+      type: string
+    instance_type:
+      title: Instance Type
+      description: The EC2 instance type (e.g., t3.medium, c5.xlarge, m5.large)
+      type: string
+      default: t3.medium
+
+    # Network Configuration
+    vpc_id:
+      title: VPC ID
+      description: The VPC ID where the instance will be deployed. Defaults to the network_details input.
+      type: string
+    vpc_cidr:
+      title: VPC CIDR
+      description: The VPC CIDR block. Defaults to the network_details input.
+      type: string
+    subnet_id:
+      title: Subnet IDs
+      description: List of subnet IDs where the instance can be deployed. Defaults to private subnets from network_details.
+      type: array
+      items:
+        type: string
+    availability_zone:
+      title: Availability Zone
+      description: Specific availability zone for the instance. Defaults to first AZ from network_details.
+      type: string
+    vpc_security_group_ids:
+      title: Security Group IDs
+      description: List of existing security group IDs to attach to the instance. If provided, this overrides the module-created security group.
+      type: array
+      items:
+        type: string
+
+    # Security Group Configuration
+    create_security_group:
+      title: Create Security Group
+      description: Whether to create a new security group for this instance
+      type: boolean
+      default: true
+    security_group_name:
+      title: Security Group Name
+      description: Name for the security group (if create_security_group is true)
+      type: string
+    security_group_description:
+      title: Security Group Description
+      description: Description for the security group
+      type: string
+    ingress_cidr_blocks:
+      title: Ingress CIDR Blocks
+      description: List of CIDR blocks allowed for ingress. Defaults to VPC CIDR for security.
+      type: array
+      items:
+        type: string
+    ingress_rules:
+      title: Ingress Rules
+      description: List of ingress rules to apply to the security group (e.g., ["https-443-tcp", "ssh-tcp"])
+      type: array
+      items:
+        type: string
+    egress_cidr_blocks:
+      title: Egress CIDR Blocks
+      description: List of CIDR blocks allowed for egress. Defaults to 0.0.0.0/0.
+      type: array
+      items:
+        type: string
+    egress_rules:
+      title: Egress Rules
+      description: List of egress rules to apply to the security group
+      type: array
+      items:
+        type: string
+
+    # Placement Group Configuration
+    create_placement_group:
+      title: Create Placement Group
+      description: Whether to create a placement group for this instance
+      type: boolean
+      default: false
+    placement_group_name:
+      title: Placement Group Name
+      description: Name for the placement group (if create_placement_group is true)
+      type: string
+    placement_group_strategy:
+      title: Placement Group Strategy
+      description: The placement strategy for the group
+      type: string
+      enum:
+        - cluster
+        - spread
+        - partition
+      default: cluster
+    placement_group_id:
+      title: Placement Group ID
+      description: ID of an existing placement group to use (overrides create_placement_group)
+      type: string
+
+    # IAM Configuration
+    create_iam_instance_profile:
+      title: Create IAM Instance Profile
+      description: Whether to create an IAM role and instance profile for this instance
+      type: boolean
+      default: true
+    iam_role_name:
+      title: IAM Role Name
+      description: Name for the IAM role (if create_iam_instance_profile is true)
+      type: string
+    iam_role_description:
+      title: IAM Role Description
+      description: Description for the IAM role
+      type: string
+    iam_role_policies:
+      title: IAM Role Policies
+      description: Map of IAM policy ARNs to attach to the instance role. Defaults to AmazonSSMManagedInstanceCore for secure access.
+      type: object
+      patternProperties:
+        ^[a-zA-Z0-9_.-]*$:
+          type: string
+    iam_instance_profile:
+      title: IAM Instance Profile
+      description: ARN of an existing IAM instance profile to use (overrides create_iam_instance_profile)
+      type: string
+
+    # Instance Features
+    create_eip:
+      title: Create Elastic IP
+      description: Whether to create and associate an Elastic IP with this instance
+      type: boolean
+      default: false
+    associate_public_ip_address:
+      title: Associate Public IP
+      description: Whether to associate a public IP address with the instance (different from EIP)
+      type: boolean
+      default: false
+    disable_api_stop:
+      title: Disable API Stop
+      description: If true, enables EC2 Instance Stop Protection
+      type: boolean
+      default: false
+    disable_api_termination:
+      title: Disable API Termination
+      description: If true, enables EC2 Instance Termination Protection
+      type: boolean
+      default: false
+    hibernation:
+      title: Enable Hibernation
+      description: If true, the launched EC2 instance will support hibernation
+      type: boolean
+      default: false
+    monitoring:
+      title: Enable Detailed Monitoring
+      description: If true, enables detailed CloudWatch monitoring for the instance
+      type: boolean
+      default: true
+    enable_volume_tags:
+      title: Enable Volume Tags
+      description: Whether to enable volume tags (the same as instance tags)
+      type: boolean
+      default: true
+
+    # User Data
+    user_data:
+      title: User Data
+      description: User data script to run on instance launch (will be base64 encoded automatically)
+      type: string
+      x-ui-textarea: true
+    user_data_base64:
+      title: User Data (Base64)
+      description: Base64-encoded user data (use this if you already have base64-encoded data)
+      type: string
+    user_data_replace_on_change:
+      title: Replace Instance on User Data Change
+      description: If true, instance will be replaced when user_data changes
+      type: boolean
+      default: false
+
+    # CPU Configuration
+    cpu_options:
+      title: CPU Options
+      description: CPU options for the instance (useful for licensing optimization)
+      type: object
+      properties:
+        core_count:
+          title: Core Count
+          description: Number of CPU cores for the instance
+          type: number
+        threads_per_core:
+          title: Threads Per Core
+          description: Number of threads per CPU core (1 for disabling multithreading, 2 for enabling)
+          type: number
+
+    # Storage Configuration
+    root_block_device:
+      title: Root Block Device
+      description: Root volume configuration
+      type: object
+      properties:
+        encrypted:
+          title: Encrypted
+          description: Enable encryption for the root volume
+          type: boolean
+          default: true
+        volume_type:
+          title: Volume Type
+          description: The type of volume
+          type: string
+          enum:
+            - gp2
+            - gp3
+            - io1
+            - io2
+          default: gp3
+        throughput:
+          title: Throughput
+          description: The throughput for gp3 volumes (MB/s, 125-1000)
+          type: number
+          default: 125
+        volume_size:
+          title: Volume Size
+          description: The size of the volume in GB
+          type: number
+          default: 30
+        iops:
+          title: IOPS
+          description: The IOPS for the volume (for io1, io2, gp3)
+          type: number
+        delete_on_termination:
+          title: Delete on Termination
+          description: Whether the volume should be destroyed on instance termination
+          type: boolean
+          default: true
+        tags:
+          title: Tags
+          description: Tags for the root volume
+          type: object
+          patternProperties:
+            ^[a-zA-Z0-9_.-]*$:
+              type: string
+
+    ebs_volumes:
+      title: Additional EBS Volumes
+      description: Additional EBS volumes to attach to the instance
+      type: object
+      patternProperties:
+        ^[a-zA-Z0-9_.-]*$:
+          type: object
+          properties:
+            device_name:
+              title: Device Name
+              description: The device name to expose to the instance (e.g., /dev/sdf)
+              type: string
+            volume_size:
+              title: Volume Size
+              description: Volume size in GB
+              type: number
+              default: 10
+            volume_type:
+              title: Volume Type
+              description: The type of volume
+              type: string
+              enum:
+                - gp2
+                - gp3
+                - io1
+                - io2
+                - st1
+                - sc1
+              default: gp3
+            throughput:
+              title: Throughput
+              description: Throughput in MB/s (for gp3 volumes, 125-1000)
+              type: number
+              default: 125
+            iops:
+              title: IOPS
+              description: IOPS for the volume (for io1, io2, gp3)
+              type: number
+            encrypted:
+              title: Encrypted
+              description: Enable volume encryption
+              type: boolean
+              default: true
+            kms_key_id:
+              title: KMS Key ID
+              description: The ARN of the KMS key to use for encryption
+              type: string
+            delete_on_termination:
+              title: Delete on Termination
+              description: Whether the volume should be destroyed on instance termination
+              type: boolean
+              default: true
+            tags:
+              title: Tags
+              description: Volume tags
+              type: object
+              patternProperties:
+                ^[a-zA-Z0-9_.-]*$:
+                  type: string
+
+    # Tags
+    tags:
+      title: Tags
+      description: Additional tags to apply to all resources
+      type: object
+      patternProperties:
+        ^[a-zA-Z0-9_.-]*$:
+          type: string
+
+outputs:
+  default:
+    type: '@facets/ec2_instance'
+    title: EC2 Instance Details
+
+sample:
+  kind: ec2_instance
+  flavor: standard
+  version: '1.0'
+  spec:
+    instance_type: t3.medium
+    create_security_group: true
+    ingress_rules: []
+    create_placement_group: false
+    create_iam_instance_profile: true
+    iam_role_policies: {}
+    create_eip: false
+    associate_public_ip_address: false
+    monitoring: true
+    enable_volume_tags: true
+    cpu_options: {}
+    root_block_device: {}
+    ebs_volumes: {}
+    tags: {}
+
+iac:
+  validated_files:
+  - variables.tf
+  - main.tf
+  - outputs.tf
+  - locals.tf
