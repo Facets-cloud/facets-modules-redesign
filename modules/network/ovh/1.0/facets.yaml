@@ -41,6 +41,8 @@ spec:
       maximum: 4000
       x-ui-overrides-only: true
   required:
+  - region
+  - network_cidr
   - vlan_id
 inputs:
   ovh_provider:
