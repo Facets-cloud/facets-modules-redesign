@@ -40,7 +40,6 @@ resource "aws_iam_policy" "ack_acm" {
         Effect = "Allow"
         Action = [
           "acm:DescribeCertificate",
-          "acm:ExportCertificate",
           "acm:GetCertificate",
           "acm:ListCertificates",
           "acm:ListTagsForCertificate",
