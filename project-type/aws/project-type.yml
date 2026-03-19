@@ -30,8 +30,6 @@ modules:
     flavor: standard
   - intent: aws_efs_csi_driver
     flavor: standard
-  - intent: ack_acm_controller
-    flavor: standard
   - intent: network
     flavor: aws_network
   - intent: service
