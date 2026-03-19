@@ -111,6 +111,7 @@ variable "inputs" {
         external_id  = string
         aws_region   = string
       })
+      interfaces = optional(object({}), {})
     })
   })
 
