@@ -18,21 +18,29 @@ variable "inputs" {
   type = object({
     kubernetes_details = optional(object({
       attributes = optional(object({
-        cluster_endpoint       = string
-        cluster_ca_certificate = string
-        cluster_name           = string
-        cluster_version        = string
-        cluster_arn            = string
-        cluster_id             = string
-        oidc_issuer_url        = string
-        oidc_provider          = string
-        oidc_provider_arn      = string
-        node_security_group_id = string
+        cloud_provider                     = optional(string)
+        cluster_endpoint                   = string
+        cluster_ca_certificate             = string
+        cluster_name                       = string
+        cluster_version                    = string
+        cluster_arn                        = string
+        cluster_id                         = string
+        cluster_location                   = optional(string)
+        cluster_primary_security_group_id  = optional(string)
+        cluster_security_group_id          = optional(string)
+        cluster_iam_role_arn               = optional(string)
+        oidc_issuer_url                    = string
+        oidc_provider                      = string
+        oidc_provider_arn                  = string
+        node_iam_role_arn                  = optional(string)
+        node_iam_role_name                 = optional(string)
+        node_security_group_id             = string
         kubernetes_provider_exec = object({
           api_version = string
           command     = string
           args        = list(string)
         })
+        secrets = optional(list(string))
       }))
       interfaces = optional(object({}), {})
     }))

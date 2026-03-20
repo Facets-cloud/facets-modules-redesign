@@ -106,6 +106,57 @@
       "outputInterfaces": {}
     },
     {
+      "id": "aws_iam_role/standard/1.0",
+      "intent": "aws_iam_role",
+      "flavor": "standard",
+      "version": "1.0",
+      "clouds": [
+        "aws"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/aws_iam_role",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/eks",
+          "optional": true,
+          "default": null,
+          "providers": [
+            "kubernetes",
+            "kubernetes-alpha",
+            "helm"
+          ],
+          "attributesUsed": [
+            "oidc_provider_arn"
+          ],
+          "interfacesUsed": []
+        },
+        "cloud_account": {
+          "type": "@facets/aws_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "aws"
+          ],
+          "attributesUsed": [
+            "aws_region",
+            "aws_iam_role"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "irsa_iam_role_arn": "module.iam_eks_role.iam_role_arn",
+        "iam_role_name": "module.iam_eks_role.iam_role_name",
+        "iam_role_arn": "module.iam_eks_role.iam_role_arn"
+      },
+      "outputInterfaces": {}
+    },
+    {
       "id": "azure_workload_identity/azure/1.0",
       "intent": "azure_workload_identity",
       "flavor": "azure",

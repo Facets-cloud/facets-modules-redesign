@@ -42,7 +42,7 @@ raptor import project-type --managed facets/aws --name "My Platform"
 <summary><strong>What's included</strong></summary>
 
 **Infrastructure**
-`Cloud Account (aws_provider)` `Network/VPC (aws_network)` `EKS Standard (eks_standard)` `EKS Automode (eks_automode)` `Node Pool/Karpenter (karpenter)` `Node Pool/Automode (eks_automode)` `Karpenter (default)` `AWS ALB Controller (standard)` `EFS CSI Driver (standard)` `AWS EFS (standard)` `StorageClass/EBS (aws_ebs)` `StorageClass/EFS (aws_efs)` `Service (aws)` `AWS IAM Policy (standard)`
+`Cloud Account (aws_provider)` `Network/VPC (aws_network)` `EKS Standard (eks_standard)` `EKS Automode (eks_automode)` `Node Pool/Karpenter (karpenter)` `Node Pool/Automode (eks_automode)` `Karpenter (default)` `AWS ALB Controller (standard)` `EFS CSI Driver (standard)` `AWS EFS (standard)` `StorageClass/EBS (aws_ebs)` `StorageClass/EFS (aws_efs)` `Service (aws)` `AWS IAM Policy (standard)` `AWS IAM Role (standard)`
 
 **Managed Datastores**
 `PostgreSQL/RDS (aws-rds)` `PostgreSQL/Aurora (aws-aurora)` `MySQL/RDS (aws-rds)` `MySQL/Aurora (aws-aurora)` `MongoDB/DocumentDB (aws-documentdb)` `Redis/ElastiCache (aws-elasticache)` `Kafka/MSK (aws-msk)`
