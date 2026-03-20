@@ -18,7 +18,7 @@ inputs:
     - kubernetes-alpha
     - helm
   cloud_account:
-    description: The AWS Cloud Account where the EKS cluster will be created
+    description: Account in which the aws iam role will be created.
     displayName: Cloud Account
     optional: false
     type: '@facets/aws_cloud_account'
