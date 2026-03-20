@@ -2,6 +2,11 @@ intent: compute_engine
 flavor: gcp
 version: "1.0"
 description: "Deploy a GCP Compute Engine VM with a custom startup script. Suitable for running workloads like Jenkins."
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Deploy and manage GCP Compute Engine VM instances with custom startup scripts
+  displayName: Compute Engine
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules/master/icons/compute_engine.svg
 clouds:
   - gcp
 spec:

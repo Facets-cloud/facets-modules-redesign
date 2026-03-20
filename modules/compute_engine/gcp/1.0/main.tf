@@ -1,3 +1,11 @@
+module "name" {
+  source        = "github.com/Facets-cloud/facets-utility-modules//name"
+  environment   = var.environment
+  limit         = 63
+  resource_name = var.instance_name
+  resource_type = "compute_engine"
+}
+
 resource "google_compute_instance" "this" {
   name         = local.vm_name
   machine_type = local.machine_type
@@ -43,7 +51,7 @@ resource "google_compute_instance" "this" {
 resource "google_compute_firewall" "open_ports" {
   for_each = local.open_ports
 
-  name    = "${local.vm_name}-${each.key}"
+  name    = substr("${local.vm_name}-${each.key}", 0, 63)
   network = local.network
   project = local.project_id
 

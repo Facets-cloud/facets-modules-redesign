@@ -11,7 +11,7 @@ locals {
   region = var.inputs.network_details.attributes.region
 
   # VM identity
-  vm_name = var.instance_name
+  vm_name = module.name.name
 
   # Compute spec
   machine_type = try(local.spec.machine_type, "e2-standard-2")
@@ -28,7 +28,7 @@ locals {
   requested_subnet  = trimspace(try(local.spec.network.subnetwork, ""))
 
   network    = local.requested_network != "" ? local.requested_network : local.network_details.vpc_self_link
-  subnetwork = local.requested_subnet != "" ? local.requested_subnet : try(local.network_details.private_subnet_name, "")
+  subnetwork = local.requested_subnet != "" ? local.requested_subnet : ""
 
   assign_public_ip = try(local.spec.network.assign_public_ip, true)
 
