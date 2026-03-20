@@ -202,12 +202,3 @@ sample:
         protocol: "tcp"
         source_ranges:
           - "0.0.0.0/0"
-  inputs:
-    cloud_account:
-      resource_type: "cloud_account"
-      resource_name: "default"
-      output_name: "default"
-    network_details:
-      resource_type: "network"
-      resource_name: "default"
-      output_name: "default"
