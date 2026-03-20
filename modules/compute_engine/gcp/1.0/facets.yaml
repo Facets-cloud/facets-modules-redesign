@@ -1,0 +1,208 @@
+intent: compute_engine
+flavor: gcp
+version: "1.0"
+description: "Deploy a GCP Compute Engine VM with a custom startup script. Suitable for running workloads like Jenkins."
+clouds:
+  - gcp
+spec:
+  title: "Compute Engine VM"
+  type: object
+  properties:
+    machine_type:
+      type: string
+      title: "Machine Type"
+      description: "GCE machine type. Select a common size or type a custom value."
+      default: "e2-standard-2"
+      enum:
+        - e2-micro
+        - e2-small
+        - e2-medium
+        - e2-standard-2
+        - e2-standard-4
+        - e2-standard-8
+        - n2-standard-2
+        - n2-standard-4
+        - n2-standard-8
+        - n2d-standard-2
+        - n2d-standard-4
+        - c2-standard-4
+        - c2-standard-8
+      x-ui-allow-custom: true
+      x-ui-placeholder: "e.g., e2-standard-2"
+    zone:
+      type: string
+      title: "Zone"
+      description: "GCP zone where the VM will be deployed"
+      default: "asia-south1-a"
+      x-ui-placeholder: "e.g., asia-south1-a"
+    boot_disk:
+      type: object
+      title: "Boot Disk"
+      properties:
+        image:
+          type: string
+          title: "Disk Image"
+          description: "Source image in project/family format"
+          default: "debian-cloud/debian-11"
+          x-ui-placeholder: "e.g., ubuntu-os-cloud/ubuntu-2204-lts"
+        size_gb:
+          type: integer
+          title: "Disk Size (GB)"
+          description: "Size of the boot disk in GB"
+          default: 50
+        type:
+          type: string
+          title: "Disk Type"
+          description: "Persistent disk type"
+          default: "pd-ssd"
+          enum:
+            - pd-standard
+            - pd-balanced
+            - pd-ssd
+    network:
+      type: object
+      title: "Network Configuration"
+      properties:
+        vpc_name:
+          type: string
+          title: "VPC Network Name"
+          description: "Leave empty to use the VPC from the connected network module"
+          default: ""
+          x-ui-placeholder: "Leave blank for default resolution"
+        subnetwork:
+          type: string
+          title: "Subnetwork Name"
+          description: "Leave empty to use the private subnet from the connected network module"
+          default: ""
+          x-ui-placeholder: "Leave blank for default resolution"
+        assign_public_ip:
+          type: boolean
+          title: "Assign Public IP"
+          description: "Assign an external (ephemeral) IP address to the VM"
+          default: true
+    startup_script:
+      type: string
+      title: "Startup Script"
+      description: "Shell script executed on VM first boot. Use this to install and configure software."
+      x-ui-widget: textarea
+      default: ""
+    tags:
+      type: array
+      title: "Network Tags"
+      description: "GCE network tags applied to the instance for firewall targeting"
+      items:
+        type: string
+      default: []
+    open_ports:
+      type: object
+      title: "Firewall Rules"
+      description: "Map of firewall rules to open on the VM. Key is a unique rule identifier."
+      patternProperties:
+        ".*":
+          type: object
+          title: "Firewall Rule"
+          properties:
+            port:
+              type: string
+              title: "Port or Range"
+              description: "TCP/UDP port or range (e.g., 8080 or 8080-8090)"
+            protocol:
+              type: string
+              title: "Protocol"
+              default: "tcp"
+              enum:
+                - tcp
+                - udp
+                - icmp
+            source_ranges:
+              type: array
+              title: "Source CIDR Ranges"
+              description: "CIDR ranges allowed to reach this port"
+              items:
+                type: string
+              default:
+                - "0.0.0.0/0"
+          required:
+            - port
+      default: {}
+    service_account:
+      type: object
+      title: "Service Account"
+      properties:
+        email:
+          type: string
+          title: "Service Account Email"
+          description: "Email of the GCP service account to attach to the VM. Leave empty to use the default compute SA."
+          default: ""
+        scopes:
+          type: array
+          title: "OAuth Scopes"
+          description: "OAuth2 scopes granted to the attached service account"
+          items:
+            type: string
+          default:
+            - "https://www.googleapis.com/auth/cloud-platform"
+  required:
+    - zone
+inputs:
+  cloud_account:
+    type: "@facets/gcp_cloud_account"
+    optional: false
+    displayName: GCP Cloud Account
+    description: GCP project credentials that provide the Google provider
+    providers:
+      - google
+  network_details:
+    type: "@facets/gcp-network-details"
+    optional: false
+    displayName: Network
+    description: Network module output used to resolve region, VPC, and default subnet references
+outputs:
+  default:
+    type: "@facets/compute_engine"
+sample:
+  kind: compute_engine
+  flavor: gcp
+  version: "1.0"
+  spec:
+    zone: "asia-south1-a"
+    machine_type: "e2-standard-2"
+    boot_disk:
+      image: "ubuntu-os-cloud/ubuntu-2204-lts"
+      size_gb: 50
+      type: "pd-ssd"
+    network:
+      vpc_name: ""
+      subnetwork: ""
+      assign_public_ip: true
+    startup_script: |
+      #!/bin/bash
+      set -euxo pipefail
+      apt-get update -y
+      apt-get install -y openjdk-17-jdk curl gnupg
+      curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+      echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/" > /etc/apt/sources.list.d/jenkins.list
+      apt-get update -y
+      apt-get install -y jenkins
+      systemctl enable jenkins
+      systemctl start jenkins
+    open_ports:
+      jenkins-ui:
+        port: "8080"
+        protocol: "tcp"
+        source_ranges:
+          - "0.0.0.0/0"
+      jenkins-agent:
+        port: "50000"
+        protocol: "tcp"
+        source_ranges:
+          - "0.0.0.0/0"
+  inputs:
+    cloud_account:
+      resource_type: "cloud_account"
+      resource_name: "default"
+      output_name: "default"
+    network_details:
+      resource_type: "network"
+      resource_name: "default"
+      output_name: "default"

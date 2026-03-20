@@ -1,0 +1,36 @@
+name: '@facets/compute_engine'
+properties:
+    properties:
+        attributes:
+            properties:
+                external_ip:
+                    description: External/public IP address of the VM
+                    type: string
+                instance_id:
+                    description: GCP Compute Engine instance ID
+                    type: string
+                internal_ip:
+                    description: Internal IP address of the VM
+                    type: string
+                machine_type:
+                    description: Machine type of the VM
+                    type: string
+                self_link:
+                    description: The server-defined URL of the VM
+                    type: string
+                status:
+                    description: Status of the VM (PROVISIONING, STAGING, RUNNING, STOPPING, STOPPED, SUSPENDING, SUSPENDED, REPAIRING, TERMINATED)
+                    type: string
+                zone:
+                    description: GCP zone where the VM is deployed
+                    type: string
+            type: object
+        interfaces:
+            properties: {}
+            type: object
+    type: object
+providers:
+    - name: google
+      source: hashicorp/google
+      version: 6.43.0
+
