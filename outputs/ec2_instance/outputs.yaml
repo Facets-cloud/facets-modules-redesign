@@ -1,0 +1,59 @@
+name: '@facets/ec2_instance'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        instance_id:
+          description: The ID of the EC2 instance
+          type: string
+        instance_arn:
+          description: The ARN of the EC2 instance
+          type: string
+        public_ip:
+          description: The public IP address of the instance (from EIP if created, otherwise instance public IP)
+          type: string
+        private_ip:
+          description: The private IP address of the instance
+          type: string
+        private_dns:
+          description: The private DNS name of the instance
+          type: string
+        public_dns:
+          description: The public DNS name of the instance
+          type: string
+        iam_role_arn:
+          description: The ARN of the IAM role attached to the instance
+          type: string
+        iam_role_name:
+          description: The name of the IAM role attached to the instance
+          type: string
+        iam_instance_profile_arn:
+          description: The ARN of the IAM instance profile
+          type: string
+        iam_instance_profile_name:
+          description: The name of the IAM instance profile
+          type: string
+        security_group_id:
+          description: The ID of the security group attached to the instance (if created by module)
+          type: string
+        availability_zone:
+          description: The availability zone where the instance is deployed
+          type: string
+        subnet_id:
+          description: The subnet ID where the instance is deployed
+          type: string
+        placement_group:
+          description: The placement group ID (if configured)
+          type: string
+        eip_id:
+          description: The Elastic IP ID (if created)
+          type: string
+        eip_allocation_id:
+          description: The Elastic IP allocation ID (if created)
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []
