@@ -15,8 +15,22 @@ locals {
     domain_key => "${local.name}-${domain_key}-acm-tls"
   }
 
-  # Rewrite instance domains: replace ACM ARN certificate_reference with K8s secret name
-  # The base module only sees K8s secret names — never ACM ARNs
+  # Detect ACK ACM controller availability
+  use_ack_acm = try(var.inputs.ack_acm_controller_details, null) != null
+
+  # ACM mode: when ACM domains exist but no ACK controller,
+  # TLS terminates at the NLB instead of at the Gateway pod
+  acm_mode = !local.use_ack_acm && length(local.acm_cert_domains) > 0
+
+  # ACM ARNs to attach to NLB for TLS termination
+  acm_cert_arns = local.acm_mode ? distinct([
+    for domain_key, domain in local.acm_cert_domains : domain.certificate_reference
+  ]) : []
+
+  # Rewrite ACM ARN certificate_reference → K8s secret name for all ACM domains.
+  # In ACM mode (no ACK), this rewrite is harmless — external_tls_termination=true
+  # tells the base module to ignore certificate_reference entirely.
+  # Always rewriting avoids unknown map values when use_ack_acm is unresolved at plan time.
   modified_domains = {
     for domain_key, domain in lookup(var.instance.spec, "domains", {}) :
     domain_key => contains(keys(local.acm_cert_secret_names), domain_key) ? merge(domain, {
@@ -50,8 +64,45 @@ locals {
       "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"         = "ip"
       "service.beta.kubernetes.io/aws-load-balancer-backend-protocol"        = "tcp"
       "service.beta.kubernetes.io/aws-load-balancer-target-group-attributes" = lookup(var.instance.spec, "private", false) ? "proxy_protocol_v2.enabled=true,preserve_client_ip.enabled=false" : "proxy_protocol_v2.enabled=true,preserve_client_ip.enabled=true"
-    }
+    },
+    # ACM mode: attach ACM certs to NLB for TLS termination
+    local.acm_mode ? {
+      "service.beta.kubernetes.io/aws-load-balancer-ssl-cert"  = join(",", local.acm_cert_arns)
+      "service.beta.kubernetes.io/aws-load-balancer-ssl-ports" = "443"
+    } : {}
   )
+
+  # ACK ACM Certificate CRD resources — creates ACM certificates via ACK controller
+  # and exports them to K8s TLS secrets for Gateway listener consumption.
+  # Iterates over acm_cert_domains directly (always known from spec) instead of
+  # gating on use_ack_acm which may be unknown on first apply.
+  ack_acm_resources = {
+    for domain_key, domain in local.acm_cert_domains :
+    "ack-acm-cert-${domain_key}" => {
+      apiVersion = "acm.services.k8s.aws/v1alpha1"
+      kind       = "Certificate"
+      metadata = {
+        name      = "${local.name}-acm-cert-${domain_key}"
+        namespace = var.environment.namespace
+      }
+      spec = {
+        domainName = "*.${domain.domain}"
+        subjectAlternativeNames = [
+          domain.domain,
+          "*.${domain.domain}"
+        ]
+        validationMethod = "DNS"
+        options = {
+          certificateTransparencyLoggingPreference = "ENABLED"
+        }
+        exportTo = {
+          namespace = var.environment.namespace
+          name      = local.acm_cert_secret_names[domain_key]
+          key       = "tls.crt"
+        }
+      }
+    }
+  }
 }
 
 # Call the base utility module
@@ -69,7 +120,8 @@ module "nginx_gateway_fabric" {
     } : {}
   )
 
-  load_balancer_class = local.load_balancer_class
+  load_balancer_class      = local.load_balancer_class
+  external_tls_termination = local.acm_mode
 
   nginx_proxy_extra_config = {
     rewriteClientIP = {
@@ -80,48 +132,13 @@ module "nginx_gateway_fabric" {
       }]
     }
   }
-}
 
-# ACK ACM Certificate CRD resources — creates ACM certificates via ACK controller
-# and exports them to K8s TLS secrets for Gateway listener consumption.
-# Only created for domains whose certificate_reference is an ACM ARN.
-# Requires the ack_acm_controller to be deployed (optional input).
-module "ack_acm_certificate" {
-  for_each = local.acm_cert_domains
-
-  source          = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
-  name            = "${local.name}-acm-cert-${each.key}"
-  namespace       = var.environment.namespace
-  advanced_config = {}
-
-  data = {
-    apiVersion = "acm.services.k8s.aws/v1alpha1"
-    kind       = "Certificate"
-    metadata = {
-      name      = "${local.name}-acm-cert-${each.key}"
-      namespace = var.environment.namespace
-    }
-    spec = {
-      domainName = "*.${each.value.domain}"
-      subjectAlternativeNames = [
-        each.value.domain,
-        "*.${each.value.domain}"
-      ]
-      validationMethod = "DNS"
-      options = {
-        certificateTransparencyLoggingPreference = "ENABLED"
-      }
-      exportTo = {
-        namespace = var.environment.namespace
-        name      = local.acm_cert_secret_names[each.key]
-        key       = "tls.crt"
-      }
-    }
-  }
+  additional_base_resources = local.ack_acm_resources
 }
 
 # Pre-create empty TLS secrets for ACK ACM certificate export
 # ACK ACM controller requires the target secret to exist before it can export
+# Gated on acm_cert_domains (always known from spec) instead of use_ack_acm
 resource "kubernetes_secret_v1" "acm_cert" {
   for_each = local.acm_cert_domains
 
