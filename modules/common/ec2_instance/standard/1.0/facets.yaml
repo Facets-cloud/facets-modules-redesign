@@ -1,4 +1,4 @@
-intent: ec2_instance
+intent: compute
 flavor: standard
 version: '1.0'
 description: Deploy and manage AWS EC2 instances with comprehensive configuration options for networking, security, storage, and instance features
@@ -346,7 +346,7 @@ outputs:
     title: EC2 Instance Details
 
 sample:
-  kind: ec2_instance
+  kind: compute
   flavor: standard
   version: '1.0'
   spec:
