@@ -17,26 +17,26 @@ variable "instance" {
       vpc_security_group_ids = optional(list(string))
 
       # Security Group Configuration
-      create_security_group   = optional(bool)
-      security_group_name     = optional(string)
+      create_security_group      = optional(bool)
+      security_group_name        = optional(string)
       security_group_description = optional(string)
-      ingress_cidr_blocks     = optional(list(string))
-      ingress_rules           = optional(list(string))
-      egress_cidr_blocks      = optional(list(string))
-      egress_rules            = optional(list(string))
+      ingress_cidr_blocks        = optional(list(string))
+      ingress_rules              = optional(list(string))
+      egress_cidr_blocks         = optional(list(string))
+      egress_rules               = optional(list(string))
 
       # Placement Group Configuration
-      create_placement_group = optional(bool)
-      placement_group_name   = optional(string)
+      create_placement_group   = optional(bool)
+      placement_group_name     = optional(string)
       placement_group_strategy = optional(string)
-      placement_group_id     = optional(string)
+      placement_group_id       = optional(string)
 
       # IAM Configuration
       create_iam_instance_profile = optional(bool)
-      iam_role_name              = optional(string)
-      iam_role_description       = optional(string)
-      iam_role_policies          = optional(map(string))
-      iam_instance_profile       = optional(string)
+      iam_role_name               = optional(string)
+      iam_role_description        = optional(string)
+      iam_role_policies           = optional(map(string))
+      iam_instance_profile        = optional(string)
 
       # Instance Features
       create_eip                  = optional(bool)
@@ -58,13 +58,13 @@ variable "instance" {
         threads_per_core = optional(number)
       }))
       root_block_device = optional(object({
-        encrypted            = optional(bool)
-        volume_type          = optional(string)
-        throughput           = optional(number)
-        volume_size          = optional(number)
-        iops                 = optional(number)
+        encrypted             = optional(bool)
+        volume_type           = optional(string)
+        throughput            = optional(number)
+        volume_size           = optional(number)
+        iops                  = optional(number)
         delete_on_termination = optional(bool)
-        tags                 = optional(map(string))
+        tags                  = optional(map(string))
       }))
       ebs_volumes = optional(map(object({
         device_name           = optional(string)
@@ -87,11 +87,11 @@ variable "instance" {
 variable "environment" {
   description = "An object containing details about the environment."
   type = object({
-    cloud_tags = object({})
-    namespace  = string
-
+    name        = optional(string)
+    unique_name = optional(string)
+    namespace   = string
+    cloud_tags  = optional(map(string), {})
   })
-
 }
 
 variable "instance_name" {
@@ -109,7 +109,6 @@ variable "inputs" {
       session_name = optional(string)
       external_id  = optional(string)
     })
-    interfaces = optional(object({}))
     network_details = object({
       attributes = object({
         vpc_id             = optional(string)
@@ -118,8 +117,6 @@ variable "inputs" {
         availability_zones = optional(any)
         private_subnet_ids = optional(any)
       })
-
-      interfaces = optional(object({}))
     })
   })
 

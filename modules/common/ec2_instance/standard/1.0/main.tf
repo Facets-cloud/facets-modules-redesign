@@ -1,13 +1,13 @@
 locals {
-  spec        = lookup(var.instance, "spec", {})
-  metadata    = lookup(var.instance, "metadata", {})
-  name        = lookup(local.metadata, "name", module.name.name)
+  spec     = lookup(var.instance, "spec", {})
+  metadata = lookup(var.instance, "metadata", {})
+  name     = try(module.name.name, "${var.instance_name}")
 
   # Network Configuration
-  vpc_id    = lookup(local.spec, "vpc_id", var.inputs.network_details.attributes.vpc_id)
-  vpc_cidr  = lookup(local.spec, "vpc_cidr", var.inputs.network_details.attributes.vpc_cidr_block)
-  subnet_id = lookup(local.spec, "subnet_id", var.inputs.network_details.attributes.private_subnet_ids)
-  availability_zone = lookup(local.spec, "availability_zone", element(var.inputs.network_details.attributes.availability_zones, 0))
+  vpc_id            = local.spec.vpc_id != null ? local.spec.vpc_id : var.inputs.network_details.attributes.vpc_id
+  vpc_cidr          = local.spec.vpc_cidr != null ? local.spec.vpc_cidr : var.inputs.network_details.attributes.vpc_cidr_block
+  subnet_id         = lookup(local.spec, "subnet_id", null) != null && length(local.spec.subnet_id) > 0 ? element(local.spec.subnet_id, 0) : element(var.inputs.network_details.attributes.private_subnet_ids, 0)
+  availability_zone = local.spec.availability_zone != null ? local.spec.availability_zone : element(var.inputs.network_details.attributes.availability_zones, 0)
 
   # Tags
   tags        = lookup(local.spec, "tags", {})
@@ -18,9 +18,9 @@ locals {
   instance_type = lookup(local.spec, "instance_type", "t3.medium")
 
   # Security Group Configuration
-  create_security_group = lookup(local.spec, "create_security_group", true)
-  security_group_name   = lookup(local.spec, "security_group_name", "${local.name}-sg")
-  security_group_description = lookup(local.spec, "security_group_description", "Security group for EC2 instance ${local.name}")
+  create_security_group      = lookup(local.spec, "create_security_group", true)
+  security_group_name        = lookup(local.spec, "security_group_name", null) != null ? local.spec.security_group_name : "${local.name}-sg"
+  security_group_description = lookup(local.spec, "security_group_description", null) != null ? local.spec.security_group_description : "Security group for EC2 instance ${local.name}"
 
   # Determine which security groups to use
   vpc_security_group_ids = lookup(local.spec, "vpc_security_group_ids", null) != null ? lookup(local.spec, "vpc_security_group_ids", []) : (
@@ -57,7 +57,7 @@ locals {
   enable_volume_tags          = lookup(local.spec, "enable_volume_tags", true)
 
   # User Data
-  user_data                   = lookup(local.spec, "user_data", "")
+  user_data                   = lookup(local.spec, "user_data", null)
   user_data_base64            = lookup(local.spec, "user_data_base64", null)
   user_data_replace_on_change = lookup(local.spec, "user_data_replace_on_change", false)
 
@@ -67,7 +67,7 @@ locals {
     threads_per_core = 2
   }
 
-  default_root_block_device = [{
+  default_root_block_device = {
     encrypted             = true
     volume_type           = "gp3"
     throughput            = 125
@@ -75,15 +75,15 @@ locals {
     iops                  = 3000
     delete_on_termination = true
     tags                  = local.merged_tags
-  }]
+  }
 
-  default_ebs_block_device = []
+  default_ebs_block_device = {}
 
   # Storage - User Overrides
   cpu_options       = lookup(local.spec, "cpu_options", local.default_cpu_options)
-  root_block_device = lookup(local.spec, "root_block_device", null) != null ? [lookup(local.spec, "root_block_device", {})] : local.default_root_block_device
-  ebs_block_device  = lookup(local.spec, "ebs_volumes", null) != null ? [
-    for device_name, config in lookup(local.spec, "ebs_volumes", {}) : merge(
+  root_block_device = lookup(local.spec, "root_block_device", null) != null ? lookup(local.spec, "root_block_device", {}) : local.default_root_block_device
+  ebs_volumes = lookup(local.spec, "ebs_volumes", null) != null ? {
+    for device_name, config in lookup(local.spec, "ebs_volumes", {}) : device_name => merge(
       {
         device_name           = lookup(config, "device_name", device_name)
         volume_size           = lookup(config, "volume_size", 10)
@@ -96,7 +96,7 @@ locals {
         tags                  = merge(local.merged_tags, lookup(config, "tags", {}))
       }
     )
-  ] : local.default_ebs_block_device
+  } : local.default_ebs_block_device
 }
 
 # Data source for default AMI
@@ -129,9 +129,8 @@ resource "aws_placement_group" "ec2_placement" {
 
 # Conditional Security Group
 module "security_group" {
-  count   = local.create_security_group ? 1 : 0
-  source  = "terraform-aws-modules/security-group/aws"
-  version = "~> 5.0"
+  count  = local.create_security_group ? 1 : 0
+  source = "./terraform-aws-security-group"
 
   name        = local.security_group_name
   description = local.security_group_description
@@ -147,8 +146,7 @@ module "security_group" {
 
 # EC2 Instance Module
 module "ec2_instance" {
-  source  = "terraform-aws-modules/ec2-instance/aws"
-  version = "5.7.1"
+  source = "./terraform-aws-ec2-instance"
 
   name = local.name
 
@@ -180,13 +178,13 @@ module "ec2_instance" {
   enable_volume_tags      = local.enable_volume_tags
 
   # User Data
-  user_data_base64            = local.user_data_base64 != null ? local.user_data_base64 : (local.user_data != "" ? base64encode(local.user_data) : null)
+  user_data_base64            = local.user_data_base64 != null ? local.user_data_base64 : (local.user_data != null && local.user_data != "" ? base64encode(local.user_data) : null)
   user_data_replace_on_change = local.user_data_replace_on_change
 
   # Storage
   cpu_options       = local.cpu_options
   root_block_device = local.root_block_device
-  ebs_block_device  = local.ebs_block_device
+  ebs_volumes       = local.ebs_volumes
 
   # Tags
   tags = local.merged_tags
