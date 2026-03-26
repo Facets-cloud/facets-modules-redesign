@@ -1,5 +1,19 @@
 variable "instance" {
-  type = any
+  description = "ConfigMap instance configuration"
+  type = object({
+    kind    = optional(string)
+    flavor  = optional(string)
+    version = optional(string)
+    spec = optional(object({
+      data = optional(map(object({
+        key   = string
+        value = string
+      })), {})
+    }), {})
+    advanced = optional(object({
+      k8s = optional(map(any), {})
+    }), {})
+  })
 }
 
 
@@ -9,13 +23,20 @@ variable "instance_name" {
 }
 
 variable "environment" {
-  type = any
+  description = "Environment configuration"
+  type = object({
+    namespace   = string
+    name        = optional(string)
+    unique_name = optional(string)
+    cloud_tags  = optional(map(string), {})
+  })
   default = {
     namespace = "default"
   }
 }
 
 variable "inputs" {
+  description = "Input references from other modules"
   type = object({
     kubernetes_details = object({
       attributes = optional(object({

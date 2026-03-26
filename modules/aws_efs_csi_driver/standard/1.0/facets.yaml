@@ -1,0 +1,99 @@
+clouds:
+  - aws
+description: |
+  Deploys the AWS EFS CSI Driver on EKS clusters via Helm.
+  Configures IRSA (IAM Roles for Service Accounts) for the CSI controller so it can
+  manage EFS Access Points. Does not create EFS file systems — use the aws_efs module
+  for that.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: AWS EFS CSI Driver for elastic file system storage on EKS
+  displayName: AWS EFS CSI Driver
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/aws_efs_csi_driver.svg
+flavor: standard
+inputs:
+  cloud_account:
+    description: The AWS Cloud Account for IAM and resource provisioning
+    displayName: Cloud Account
+    optional: false
+    providers:
+      - aws
+    type: '@facets/aws_cloud_account'
+  kubernetes_details:
+    description: The EKS cluster where the EFS CSI Driver will be deployed
+    displayName: EKS Cluster
+    optional: false
+    providers:
+      - helm
+      - kubernetes
+    type: '@facets/eks'
+intent: aws_efs_csi_driver
+outputs:
+  default:
+    title: AWS EFS CSI Driver Details
+    type: '@facets/aws-efs-csi-driver'
+spec:
+  description: Configure the AWS EFS CSI Driver for your EKS cluster
+  properties:
+    chart_version:
+      default: "2.4.6"
+      description: Helm chart version of the AWS EFS CSI Driver
+      title: Chart Version
+      type: string
+    size:
+      description: Resource requests for controller and node components
+      title: Component Sizing
+      type: object
+      properties:
+        controller:
+          type: object
+          description: Resource requests for the EFS CSI controller
+          properties:
+            cpu:
+              type: string
+              default: "100m"
+              description: CPU request for the controller pod
+            memory:
+              type: string
+              default: "128Mi"
+              description: Memory request for the controller pod
+        node:
+          type: object
+          description: Resource requests for the EFS CSI node DaemonSet
+          properties:
+            cpu:
+              type: string
+              default: "100m"
+              description: CPU request for the node pod
+            memory:
+              type: string
+              default: "128Mi"
+              description: Memory request for the node pod
+    values:
+      description: Advanced Helm chart values to pass directly to the EFS CSI Driver chart. These are deep-merged over the computed values, allowing full override of any chart setting.
+      title: Helm Values
+      type: object
+      x-ui-yaml-editor: true
+    tags:
+      description: Additional AWS tags to apply to all EFS CSI Driver resources
+      title: Resource Tags
+      type: object
+      x-ui-yaml-editor: true
+  required:
+    - chart_version
+  title: AWS EFS CSI Driver Configuration
+  type: object
+  x-ui-order:
+    - chart_version
+    - size
+    - values
+    - tags
+version: "1.0"
+sample:
+  disabled: false
+  flavor: standard
+  kind: aws_efs_csi_driver
+  spec:
+    chart_version: "2.4.6"
+    size: {}
+  version: "1.0"

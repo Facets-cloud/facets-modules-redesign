@@ -1,0 +1,24 @@
+name: '@facets/secret_manager'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        secret_ids:
+          type: object
+          description: Map of logical name to GCP secret_id (short name within project)
+          additionalProperties:
+            type: string
+        secret_names:
+          type: object
+          description: Map of logical name to full GCP resource name (projects/{project}/secrets/{id})
+          additionalProperties:
+            type: string
+        project_id:
+          type: string
+          description: GCP project that owns all the secrets
+    interfaces:
+      type: object
+      properties: {}
+providers: []

@@ -1,0 +1,127 @@
+intent: mysql
+flavor: ovh
+version: '1.0'
+clouds:
+- kubernetes
+description: Managed MySQL database on OVH Cloud with private network connectivity
+  and SSL/TLS encryption
+intentDetails:
+  type: Datastores
+  description: OVH Cloud managed MySQL database service
+  displayName: MySQL
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mysql.svg
+spec:
+  title: OVH Managed MySQL Database
+  description: Managed MySQL database on OVH Cloud with private network connectivity
+    and SSL/TLS encryption
+  type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  properties:
+    version_config:
+      type: object
+      title: Version Configuration
+      x-ui-order:
+      - version
+      properties:
+        version:
+          type: string
+          title: MySQL Version
+          description: MySQL engine version
+          enum:
+          - '8'
+          default: '8'
+      required:
+      - version
+    sizing:
+      type: object
+      title: Sizing & Performance
+      x-ui-order:
+      - plan
+      - flavor
+      - nodes_count
+      - disk_size
+      properties:
+        plan:
+          type: string
+          title: Service Plan
+          description: OVH Cloud Database service plan
+          enum:
+          - essential
+          - business
+          - enterprise
+          default: essential
+        flavor:
+          type: string
+          title: Instance Flavor
+          description: OVH instance flavor for database nodes
+          enum:
+          - db1-2
+          - db1-4
+          - db1-7
+          - db1-15
+          - db1-30
+          - db1-60
+          - db1-120
+          default: db1-4
+        nodes_count:
+          type: integer
+          title: Number of Nodes
+          description: Number of database nodes (1 for essential, 2+ for business/enterprise)
+          minimum: 1
+          maximum: 10
+          default: 1
+        disk_size:
+          type: integer
+          title: Disk Size (GB)
+          description: Storage size in GB
+          minimum: 20
+          maximum: 2000
+          default: 80
+      required:
+      - plan
+      - flavor
+      - nodes_count
+      - disk_size
+  required:
+  - version_config
+  - sizing
+inputs:
+  ovh_provider:
+    type: '@facets/ovh-provider'
+    optional: false
+    displayName: OVH Cloud Account
+    description: OVH provider configuration
+    providers:
+    - ovh
+    - "null"
+  network:
+    type: '@facets/ovh-network'
+    optional: false
+    displayName: OVH Network
+    description: Network configuration for private connectivity
+    providers: []
+outputs:
+  default:
+    type: '@facets/mysql'
+    title: OVH MySQL Database
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+  - versions.tf
+sample:
+  kind: mysql
+  flavor: ovh
+  version: '1.0'
+  disabled: true
+  spec:
+    version_config:
+      version: '8'
+    sizing:
+      plan: essential
+      flavor: db1-4
+      nodes_count: 1
+      disk_size: 80

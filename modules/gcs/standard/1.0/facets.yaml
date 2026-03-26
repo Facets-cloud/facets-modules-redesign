@@ -1,0 +1,183 @@
+intent: gcs
+flavor: standard
+version: '1.0'
+description: Creates and manages a Google Cloud Storage bucket with configurable options.
+intentDetails:
+  type: Storage
+  description: Google Cloud Storage bucket for object storage with lifecycle, versioning, and access controls
+  displayName: GCS Bucket
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/google_cloud_storage.svg
+clouds:
+- gcp
+inputs:
+  cloud_account:
+    type: '@facets/gcp_cloud_account'
+    displayName: Cloud Account
+    description: The GCP Cloud Account where the bucket will be created
+    optional: true
+    providers:
+    - google
+outputs:
+  attributes.bucket_iam_condition_expression:
+    description: An IAM condition expression using startsWith to match this specific bucket
+    title: Bucket IAM Condition Expression
+    type: '@outputs/gcp_iam_condition_expression'
+  attributes.read_only_role:
+    description: The predefined IAM role for read-only access to the bucket
+    title: Read-Only IAM Role
+    type: '@outputs/gcp_iam_role_name'
+  attributes.read_write_role:
+    description: The predefined IAM role for read-write access to the bucket
+    title: Read-Write IAM Role
+    type: '@outputs/gcp_iam_role_name'
+  default:
+    type: '@outputs/google_cloud_storage_bucket'
+spec:
+  description: Creates and manages a Google Cloud Storage bucket with configurable options.
+  type: object
+  title: GCS Bucket
+  properties:
+    storage_class:
+      default: STANDARD
+      description: The storage class of the bucket
+      enum:
+      - STANDARD
+      - NEARLINE
+      - COLDLINE
+      - ARCHIVE
+      title: Storage Class
+      type: string
+    versioning_enabled:
+      default: false
+      description: Whether to enable versioning for this bucket
+      title: Enable Versioning
+      type: boolean
+    uniform_bucket_level_access:
+      default: true
+      description: When set to true, enables Uniform bucket-level access to the bucket
+      title: Uniform Bucket-Level Access
+      type: boolean
+    requester_pays:
+      default: false
+      description: Enables Requester Pays on the bucket
+      title: Requester Pays
+      type: boolean
+    location:
+      description: The GCS location where the bucket will be created. If not specified, uses the environment region.
+      enum:
+      - US
+      - EU
+      - ASIA
+      - US-CENTRAL1
+      - US-EAST1
+      - US-EAST4
+      - US-EAST5
+      - US-SOUTH1
+      - US-WEST1
+      - US-WEST2
+      - US-WEST3
+      - US-WEST4
+      - NORTHAMERICA-NORTHEAST1
+      - NORTHAMERICA-NORTHEAST2
+      - NORTHAMERICA-SOUTH1
+      - SOUTHAMERICA-EAST1
+      - SOUTHAMERICA-WEST1
+      - EUROPE-CENTRAL2
+      - EUROPE-NORTH1
+      - EUROPE-NORTH2
+      - EUROPE-SOUTHWEST1
+      - EUROPE-WEST1
+      - EUROPE-WEST2
+      - EUROPE-WEST3
+      - EUROPE-WEST4
+      - EUROPE-WEST6
+      - EUROPE-WEST8
+      - EUROPE-WEST9
+      - EUROPE-WEST10
+      - EUROPE-WEST12
+      - ASIA-EAST1
+      - ASIA-EAST2
+      - ASIA-NORTHEAST1
+      - ASIA-NORTHEAST2
+      - ASIA-NORTHEAST3
+      - ASIA-SOUTHEAST1
+      - ASIA-SOUTHEAST2
+      - ASIA-SOUTH1
+      - ASIA-SOUTH2
+      - ME-CENTRAL1
+      - ME-CENTRAL2
+      - ME-WEST1
+      - AUSTRALIA-SOUTHEAST1
+      - AUSTRALIA-SOUTHEAST2
+      - AFRICA-SOUTH1
+      - ASIA1
+      - EUR4
+      - EUR5
+      - EUR7
+      - EUR8
+      - NAM4
+      title: Bucket Location
+      type: string
+      x-ui-overrides-only: true
+    lifecycle_rules:
+      description: Lifecycle rules for objects in the bucket
+      type: object
+      title: Lifecycle Rules
+      properties:
+        enabled:
+          default: false
+          description: Whether to enable lifecycle rules for this bucket
+          title: Enable Lifecycle Rules
+          type: boolean
+        action:
+          default: Delete
+          description: Action to take when lifecycle rule conditions are met
+          enum:
+          - Delete
+          - SetStorageClass
+          title: Lifecycle Action
+          type: string
+        age_days:
+          default: 30
+          description: Age in days after which objects will be transitioned/deleted
+          minimum: 0
+          title: Age in Days
+          type: number
+        storage_class:
+          default: NEARLINE
+          description: The target storage class if action is SetStorageClass
+          enum:
+          - NEARLINE
+          - COLDLINE
+          - ARCHIVE
+          title: Target Storage Class
+          type: string
+          x-ui-visible-if:
+            field: spec.lifecycle_rules.action
+            values:
+            - SetStorageClass
+    custom_labels:
+      default: {}
+      description: A map of key-value pairs to assign to the bucket
+      title: Custom Labels
+      type: object
+      x-ui-yaml-editor: true
+  required:
+  - storage_class
+  - versioning_enabled
+  - uniform_bucket_level_access
+sample:
+  flavor: standard
+  kind: gcs
+  spec:
+    custom_labels: {}
+    lifecycle_rules:
+      action: Delete
+      age_days: 30
+      enabled: false
+      storage_class: NEARLINE
+    requester_pays: false
+    storage_class: STANDARD
+    uniform_bucket_level_access: true
+    versioning_enabled: false
+  version: '1.0'
