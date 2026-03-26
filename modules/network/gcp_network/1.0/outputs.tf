@@ -9,13 +9,17 @@ locals {
     zones         = local.selected_zones
 
     # Subnets - Regional resources in GCP
-    private_subnet_id   = google_compute_subnetwork.private.id
-    private_subnet_name = google_compute_subnetwork.private.name
-    private_subnet_cidr = google_compute_subnetwork.private.ip_cidr_range
+    private_subnet_id    = google_compute_subnetwork.private.id
+    private_subnet_ids   = [google_compute_subnetwork.private.id]
+    private_subnet_name  = google_compute_subnetwork.private.name
+    private_subnet_cidr  = google_compute_subnetwork.private.ip_cidr_range
+    private_subnet_cidrs = [google_compute_subnetwork.private.ip_cidr_range]
 
-    public_subnet_id   = google_compute_subnetwork.public.id
-    public_subnet_name = google_compute_subnetwork.public.name
-    public_subnet_cidr = google_compute_subnetwork.public.ip_cidr_range
+    public_subnet_id    = google_compute_subnetwork.public.id
+    public_subnet_ids   = [google_compute_subnetwork.public.id]
+    public_subnet_name  = google_compute_subnetwork.public.name
+    public_subnet_cidr  = google_compute_subnetwork.public.ip_cidr_range
+    public_subnet_cidrs = [google_compute_subnetwork.public.ip_cidr_range]
 
     database_subnet_id   = google_compute_subnetwork.database.id
     database_subnet_name = google_compute_subnetwork.database.name
@@ -35,8 +39,16 @@ locals {
     # NAT and Router
     router_id   = google_compute_router.router.id
     router_name = google_compute_router.router.name
+    router_ids  = [google_compute_router.router.id]
     nat_id      = google_compute_router_nat.nat.id
     nat_name    = google_compute_router_nat.nat.name
+    nat_gateway_ids = [google_compute_router_nat.nat.id]
+
+    # VPC Access Connector (for Cloud Run, Cloud Functions, App Engine)
+    vpc_connector_enabled   = local.vpc_connector_enabled
+    vpc_connector_id        = local.vpc_connector_enabled ? google_vpc_access_connector.connector[0].id : null
+    vpc_connector_name      = local.vpc_connector_enabled ? google_vpc_access_connector.connector[0].name : null
+    vpc_connector_self_link = local.vpc_connector_enabled ? google_vpc_access_connector.connector[0].self_link : null
 
     # Google Services Peering
     google_services_network = google_service_networking_connection.google_services.network

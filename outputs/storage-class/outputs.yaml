@@ -1,0 +1,32 @@
+name: '@facets/storage-class'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        name:
+          description: StorageClass name
+          type: string
+        provisioner:
+          description: Storage provisioner (e.g., ebs.csi.aws.com)
+          type: string
+        volume_type:
+          description: Volume type (e.g., gp3, gp2, io1, io2)
+          type: string
+        is_default:
+          description: Whether this StorageClass is the default
+          type: string
+        reclaim_policy:
+          description: PersistentVolume reclaim policy
+          type: string
+        volume_binding_mode:
+          description: Volume binding mode (Immediate or WaitForFirstConsumer)
+          type: string
+        allow_volume_expansion:
+          description: Whether volume expansion is allowed
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

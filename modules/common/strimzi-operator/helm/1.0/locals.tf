@@ -2,7 +2,7 @@ locals {
   spec = var.instance.spec
 
   # Use custom namespace if provided, otherwise fall back to default
-  namespace = var.instance.spec.namespace != "" ? var.instance.spec.namespace : "kafka-system"
+  namespace = lookup(local.spec, "namespace", "") != "" ? lookup(local.spec, "namespace", "") : "kafka-system"
 
   # Helm chart configuration
   repository    = "https://strimzi.io/charts/"
@@ -36,17 +36,19 @@ locals {
   helm_values = lookup(local.spec, "helm_values", {})
 
   # Build default values for Strimzi Operator with node pool support
+  resources_spec = lookup(local.spec, "resources", {})
+
   default_values = {
     watchAnyNamespace = true
     # Resource allocation for operator pods
     resources = {
       limits = {
-        cpu    = var.instance.spec.resources.cpu_limit
-        memory = var.instance.spec.resources.memory_limit
+        cpu    = lookup(local.resources_spec, "cpu_limit", "1")
+        memory = lookup(local.resources_spec, "memory_limit", "1Gi")
       }
       requests = {
-        cpu    = var.instance.spec.resources.cpu_request
-        memory = var.instance.spec.resources.memory_request
+        cpu    = lookup(local.resources_spec, "cpu_request", "200m")
+        memory = lookup(local.resources_spec, "memory_request", "256Mi")
       }
     }
 

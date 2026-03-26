@@ -1,0 +1,134 @@
+intent: notification_channel
+flavor: gcp
+version: "1.0"
+clouds:
+  - gcp
+description: |
+  Create GCP Cloud Monitoring notification channels for alerts.
+  Supports Email, Slack, Webhook, and PagerDuty integrations.
+
+intentDetails:
+  type: Monitoring & Observability
+  description: Manage GCP Cloud Monitoring notification channels (email, Slack, webhook, PagerDuty) for alert routing.
+  displayName: Notification Channels
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/monitoring.svg
+
+inputs:
+  gcp_provider:
+    type: '@facets/gcp_cloud_account'
+    optional: false
+    displayName: GCP Cloud Account
+    description: GCP project and authentication configuration
+    providers:
+      - google
+
+sample:
+  kind: notification_channel
+  flavor: gcp
+  version: "1.0"
+  disabled: false
+  spec:
+    channels:
+      ops-email:
+        type: email
+        email_address: ops@example.com
+      ops-slack:
+        type: slack
+        channel: "#alerts"
+
+spec:
+  title: Notification Channel Configuration
+  description: Configure notification channels for GCP Cloud Monitoring alerts
+  type: object
+  properties:
+    channels:
+      type: object
+      title: Notification Channels
+      description: Define notification channels (email, slack, webhook, pagerduty)
+      patternProperties:
+        "^[a-z][a-z0-9-]*$":
+          type: object
+          properties:
+            type:
+              type: string
+              title: Channel Type
+              description: Type of notification channel
+              enum:
+                - email
+                - slack
+                - webhook
+                - pagerduty
+            display_name:
+              type: string
+              title: Display Name
+              description: Human-readable name for the channel (defaults to key name)
+            enabled:
+              type: boolean
+              title: Enabled
+              description: Whether the channel is enabled
+              default: true
+            # Email specific
+            email_address:
+              type: string
+              title: Email Address
+              description: Email address for notifications (required for email type)
+              x-ui-visible-if:
+                field: spec.channels.{{this}}.type
+                values:
+                  - email
+            # Slack specific
+            channel:
+              type: string
+              title: Slack Channel
+              description: Slack channel name including # (required for slack type)
+              x-ui-visible-if:
+                field: spec.channels.{{this}}.type
+                values:
+                  - slack
+            auth_token:
+              type: string
+              title: Slack Auth Token
+              description: Slack Bot OAuth token
+              x-ui-secret-ref: true
+              x-ui-visible-if:
+                field: spec.channels.{{this}}.type
+                values:
+                  - slack
+            # Webhook specific
+            url:
+              type: string
+              title: Webhook URL
+              description: HTTP endpoint URL for notifications (required for webhook type)
+              x-ui-visible-if:
+                field: spec.channels.{{this}}.type
+                values:
+                  - webhook
+            # PagerDuty specific
+            service_key:
+              type: string
+              title: PagerDuty Service Key
+              description: PagerDuty integration key (required for pagerduty type)
+              x-ui-secret-ref: true
+              x-ui-visible-if:
+                field: spec.channels.{{this}}.type
+                values:
+                  - pagerduty
+            labels:
+              type: object
+              title: Additional Labels
+              description: Custom labels for the channel
+              x-ui-yaml-editor: true
+          required:
+            - type
+  required:
+    - channels
+  x-ui-order:
+    - channels
+
+outputs:
+  default:
+    type: '@facets/gcp_notification_channels'
+    title: GCP Notification Channels
+  attributes:
+    type: '@facets/gcp_notification_channel_attributes'
+    title: Notification Channel Attributes

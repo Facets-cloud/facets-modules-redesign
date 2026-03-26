@@ -1,5 +1,7 @@
 locals {
-  output_attributes = {}
+  output_attributes = {
+    database_name = local.database_name
+  }
   output_interfaces = {
     reader = {
       host              = local.reader_endpoint

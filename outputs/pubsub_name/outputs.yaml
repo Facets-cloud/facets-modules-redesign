@@ -1,0 +1,14 @@
+name: '@facets/pubsub_name'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        topic_name:
+          type: string
+          description: Full GCP Pub/Sub topic resource name (projects/{project}/topics/{topic})
+    interfaces:
+      type: object
+      properties: {}
+providers: []
