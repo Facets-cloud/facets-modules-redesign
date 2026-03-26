@@ -38,6 +38,8 @@ modules:
     flavor: standard
   - intent: aws_iam_role
     flavor: standard
+  - intent: aws_secret_manager
+    flavor: standard
 
   # === AWS Messaging & Storage Modules ===
   - intent: s3

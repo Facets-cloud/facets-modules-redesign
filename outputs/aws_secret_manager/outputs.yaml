@@ -1,0 +1,32 @@
+name: '@facets/aws_secret_manager'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        secret_name:
+          type: string
+          description: Name of the AWS Secrets Manager secret
+        secret_id:
+          type: string
+          description: ID of the AWS Secrets Manager secret
+        secret_arn:
+          type: string
+          description: ARN of the AWS Secrets Manager secret
+        secret_version_arn:
+          type: string
+          description: ARN of the secret version
+        secret_version_id:
+          type: string
+          description: Version ID of the secret
+        rotation_enabled:
+          type: boolean
+          description: Whether rotation is enabled for the secret
+        rotation_lambda_arn:
+          type: string
+          description: ARN of the Lambda function used for rotation
+    interfaces:
+      type: object
+      properties: {}
+providers: []
