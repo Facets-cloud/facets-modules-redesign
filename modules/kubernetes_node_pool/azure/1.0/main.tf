@@ -3,13 +3,12 @@ locals {
   aks_upgrade_settings      = lookup(local.aks_advanced, "upgrade_settings", {})
   aks_linux_os_config       = lookup(local.aks_advanced, "linux_os_config", {})
   aks_sysctl_config         = lookup(local.aks_linux_os_config, "sysctl_config", {})
-  metadata                  = lookup(var.instance, "metadata", {})
   priority                  = lookup(local.aks_advanced, "priority", "Regular")
   user_defined_tags         = lookup(local.aks_advanced, "tags", {})
   facets_defined_cloud_tags = lookup(var.environment, "cloud_tags", {})
   tags                      = merge(local.user_defined_tags, local.facets_defined_cloud_tags)
 
-  name = lookup(local.metadata, "name", var.instance_name)
+  name = var.instance_name
 
   spec           = lookup(var.instance, "spec", {})
   taints         = lookup(local.spec, "taints", [])
@@ -21,7 +20,7 @@ locals {
 
 resource "azurerm_kubernetes_cluster_node_pool" "node_pool" {
   name                  = local.os_type == "Windows" && length(local.name) >= 6 ? "windos" : local.name
-  kubernetes_cluster_id = var.inputs.kubernetes_details.cluster_id
+  kubernetes_cluster_id = var.inputs.kubernetes_details.attributes.cluster_id
   vm_size               = var.instance.spec.instance_type
   os_disk_size_gb       = trim(var.instance.spec.disk_size, "G")
   os_type               = local.os_type
@@ -42,7 +41,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "node_pool" {
 
   mode                 = lookup(local.aks_advanced, "mode", "User")
   orchestrator_version = lookup(local.aks_advanced, "orchestrator_version", null)
-  vnet_subnet_id       = lookup(local.aks_advanced, "vnet_subnet_id", var.inputs.kubernetes_details.network_details.private_subnet_ids[0])
+  vnet_subnet_id       = lookup(local.aks_advanced, "vnet_subnet_id", var.inputs.network_details.attributes.private_subnet_ids[0])
   eviction_policy      = local.priority == "Spot" ? lookup(local.aks_advanced, "eviction_policy", "Delete") : null
 
   tags           = local.tags

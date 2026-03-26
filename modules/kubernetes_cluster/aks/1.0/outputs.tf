@@ -15,7 +15,7 @@ locals {
     client_key                = base64decode(module.k8scluster.client_key)
     automatic_channel_upgrade = var.instance.spec.auto_upgrade_settings.automatic_channel_upgrade
     cloud_provider            = "AZURE"
-    secrets                   = "[\"client_key\", \"client_certificate\", \"cluster_ca_certificate\"]"
+    secrets                   = ["client_key", "client_certificate", "cluster_ca_certificate"]
   }
   output_interfaces = {
     kubernetes = {
@@ -23,7 +23,7 @@ locals {
       client_key             = base64decode(module.k8scluster.client_key)
       client_certificate     = base64decode(module.k8scluster.client_certificate)
       cluster_ca_certificate = base64decode(module.k8scluster.cluster_ca_certificate)
-      secrets                = "[\"client_key\", \"client_certificate\", \"cluster_ca_certificate\"]"
+      secrets                = ["client_key", "client_certificate", "cluster_ca_certificate"]
     }
   }
 }

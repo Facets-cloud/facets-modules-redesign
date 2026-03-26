@@ -7,7 +7,7 @@ locals {
 
   # Get kubernetes details to determine cloud provider
   kubernetes_details_input = lookup(var.inputs, "kubernetes_details", {})
-  kubernetes_details_attrs = lookup(local.kubernetes_details_input, "attributes", {})
+  kubernetes_details_attrs = local.kubernetes_details_input
   cloud_provider           = lookup(local.kubernetes_details_attrs, "cloud_provider", "")
 
   # Automatically determine MTU based on cloud provider

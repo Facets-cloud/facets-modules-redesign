@@ -1,0 +1,133 @@
+intent: helm
+flavor: k8s_git
+version: '1.0'
+description: Deploy a Helm chart from a Git repository using sparse checkout
+intentDetails:
+  type: Kubernetes Resources
+  description: Deploy applications to Kubernetes using Helm charts from Git repositories
+  displayName: Helm
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/helm.svg
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+inputs:
+  kubernetes_details:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+    - kubernetes
+    - helm
+    - kubernetes-alpha
+spec:
+  title: Helm Chart from Git Repository
+  description: Deploy a Helm chart from a Git repository with optional authentication
+  type: object
+  properties:
+    git_owner:
+      type: string
+      title: Git Owner
+      description: Owner of the repository
+      x-ui-placeholder: "Enter repository owner or organization"
+    git_repository:
+      type: string
+      title: Git Repository Name
+      description: The Git repository name (without URL)
+      x-ui-placeholder: "my-repo"
+    git_base_url:
+      type: string
+      title: Git Base URL
+      description: "Base URL of the Git provider (e.g. github.com, gitlab.com, bitbucket.org)"
+      default: "github.com"
+      x-ui-placeholder: "github.com"
+    git_ref:
+      type: string
+      title: Git Reference
+      description: Git branch, tag, or commit to use
+      default: "main"
+    chart_path:
+      type: string
+      title: Chart Path
+      description: Path to the chart directory within the repository
+      default: ""
+      x-ui-placeholder: "charts/my-chart"
+    git_username:
+      type: string
+      title: Git Username
+      description: Username for Git authentication (required for private repositories)
+      x-ui-variable-ref: true
+      x-ui-placeholder: "Enter your Git username"
+    git_token:
+      type: string
+      title: Git Personal Access Token
+      description: Personal Access Token for Git authentication (required for private repositories)
+      x-ui-secret-ref: true
+    release_name:
+      type: string
+      title: Release Name
+      description: Name override for the Helm release (by default uses the resource name)
+      x-ui-placeholder: "my-helm-release"
+      x-ui-error-message: "Must be a valid Kubernetes resource name"
+    namespace:
+      type: string
+      title: Namespace
+      description: Kubernetes namespace to deploy the chart (uses environment namespace
+        if empty)
+      default: ""
+      x-ui-typeable: true
+      x-ui-error-message: "Must be a valid Kubernetes namespace name or empty"
+    values:
+      type: object
+      title: Helm Values
+      description: Values to pass to the Helm chart
+      x-ui-yaml-editor: true
+    wait_config:
+      type: object
+      title: Wait Configuration
+      description: Configuration for waiting on deployment
+      x-ui-toggle: true
+      properties:
+        wait:
+          type: boolean
+          title: Wait for Deployment
+          description: Wait for the deployment to complete
+          default: true
+        timeout:
+          type: number
+          title: Timeout (seconds)
+          description: Time to wait for deployment completion
+          default: 300
+          minimum: 1
+          maximum: 3600
+      required:
+      - wait
+  required:
+  - git_repository
+  - git_owner
+outputs:
+  default:
+    type: '@facets/helm'
+    title: Helm Release
+sample:
+  kind: helm
+  flavor: k8s_git
+  disabled: true
+  version: '1.0'
+  spec:
+    git_owner: "myowner"
+    git_repository: "my-charts"
+    git_base_url: "github.com"
+    git_ref: "main"
+    chart_path: "charts/app"
+    git_username: ""
+    git_token: ""
+    namespace: ""
+    values: {}
+    wait_config:
+      wait: true
+      timeout: 300

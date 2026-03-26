@@ -24,7 +24,7 @@ locals {
   import_enabled = lookup(var.instance.spec, "imports", null) != null ? lookup(var.instance.spec.imports, "import_existing", false) : false
 
   # Check if we're importing
-  is_importing = local.import_enabled && lookup(var.instance.spec.imports, "db_instance_identifier", null) != null
+  is_importing = local.import_enabled ? lookup(var.instance.spec.imports, "db_instance_identifier", null) != null : false
 
   # Resource naming with length constraints
   db_instance_identifier = substr("${var.instance_name}-${var.environment.unique_name}", 0, 63)
@@ -32,10 +32,10 @@ locals {
   security_group_name    = substr("${var.instance_name}-${var.environment.unique_name}-sg", 0, 63)
 
   # Use imported or created subnet group
-  actual_subnet_group_name = local.import_enabled && lookup(var.instance.spec.imports, "subnet_group_name", null) != null ? var.instance.spec.imports.subnet_group_name : (length(aws_db_subnet_group.postgres) > 0 ? aws_db_subnet_group.postgres[0].name : null)
+  actual_subnet_group_name = local.import_enabled ? (lookup(var.instance.spec.imports, "subnet_group_name", null) != null ? var.instance.spec.imports.subnet_group_name : (length(aws_db_subnet_group.postgres) > 0 ? aws_db_subnet_group.postgres[0].name : null)) : (length(aws_db_subnet_group.postgres) > 0 ? aws_db_subnet_group.postgres[0].name : null)
 
   # Use imported or created security group
-  actual_security_group_id = local.import_enabled && lookup(var.instance.spec.imports, "security_group_id", null) != null ? var.instance.spec.imports.security_group_id : (length(aws_security_group.postgres) > 0 ? aws_security_group.postgres[0].id : null)
+  actual_security_group_id = local.import_enabled ? (lookup(var.instance.spec.imports, "security_group_id", null) != null ? var.instance.spec.imports.security_group_id : (length(aws_security_group.postgres) > 0 ? aws_security_group.postgres[0].id : null)) : (length(aws_security_group.postgres) > 0 ? aws_security_group.postgres[0].id : null)
 
   # Determine the correct source DB identifier for replicas
   # Use imported identifier if importing, otherwise use the generated identifier
@@ -83,7 +83,7 @@ locals {
 
 # DB Subnet Group - only create if not importing
 resource "aws_db_subnet_group" "postgres" {
-  count = local.import_enabled && lookup(var.instance.spec.imports, "subnet_group_name", null) != null ? 0 : 1
+  count = local.import_enabled ? (lookup(var.instance.spec.imports, "subnet_group_name", null) != null ? 0 : 1) : 1
 
   name       = local.subnet_group_name
   subnet_ids = var.inputs.vpc_details.attributes.private_subnet_ids
@@ -104,7 +104,7 @@ resource "aws_db_subnet_group" "postgres" {
 
 # Security Group for RDS - only create if not importing
 resource "aws_security_group" "postgres" {
-  count = local.import_enabled && lookup(var.instance.spec.imports, "security_group_id", null) != null ? 0 : 1
+  count = local.import_enabled ? (lookup(var.instance.spec.imports, "security_group_id", null) != null ? 0 : 1) : 1
 
   name_prefix = "${local.security_group_name}-"
   vpc_id      = var.inputs.vpc_details.attributes.vpc_id

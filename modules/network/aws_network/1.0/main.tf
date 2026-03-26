@@ -52,6 +52,12 @@ resource "aws_subnet" "private" {
     Name = "${local.name_prefix}-private-${each.value.az}"
     Type = "Private"
   })
+
+  lifecycle {
+    ignore_changes = [
+      tags["karpenter.sh/discovery"]
+    ]
+  }
 }
 
 # Database Subnets (one per AZ)

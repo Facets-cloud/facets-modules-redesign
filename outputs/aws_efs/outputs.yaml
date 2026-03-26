@@ -1,0 +1,17 @@
+name: '@facets/aws_efs'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        file_system_id:
+          type: string
+          description: The ID of the EFS file system
+        security_group_id:
+          type: string
+          description: The ID of the security group for EFS access
+    interfaces:
+      type: object
+      properties: {}
+providers: []

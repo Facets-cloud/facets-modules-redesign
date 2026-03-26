@@ -1,13 +1,14 @@
 {
   "kind": "k8s_callback",
   "flavor": "k8s_standard",
-  "version": "1.0",
+  "version": "1.1",
   "disabled": false,
   "spec": {},
   "inputs": {
     "kubernetes_details": {
       "resource_name": "cluster",
-      "resource_type": "kubernetes_cluster"
+      "resource_type": "kubernetes_cluster",
+      "output_name": "attributes"
     }
   }
 }

@@ -24,10 +24,26 @@ modules:
     flavor: eks_automode
   - intent: karpenter
     flavor: default
+  - intent: aws_iam_policy
+    flavor: standard
+  - intent: aws_alb_controller
+    flavor: standard
+  - intent: aws_efs_csi_driver
+    flavor: standard
   - intent: network
     flavor: aws_network
   - intent: service
     flavor: aws
+  - intent: aws_efs
+    flavor: standard
+
+  # === AWS Messaging & Storage Modules ===
+  - intent: s3
+    flavor: standard
+  - intent: sqs
+    flavor: standard
+  - intent: sns
+    flavor: standard
 
   # === AWS Datastore Modules ===
   - intent: kafka
@@ -52,6 +68,10 @@ modules:
     flavor: standard
   - intent: alert_rules
     flavor: prometheus
+  - intent: storage_class
+    flavor: aws_ebs
+  - intent: storage_class
+    flavor: aws_efs
   - intent: cert_manager
     flavor: standard
   - intent: config_map
@@ -62,10 +82,12 @@ modules:
     flavor: k8s
   - intent: helm
     flavor: k8s_standard
+  - intent: helm
+    flavor: k8s_git
   - intent: gateway_api_crd
     flavor: default
   - intent: ingress
-    flavor: nginx_gateway_fabric
+    flavor: nginx_gateway_fabric_aws
   - intent: ingress
     flavor: nginx_k8s
   - intent: k8s_access_controls
@@ -77,6 +99,8 @@ modules:
   - intent: kubeblocks-operator
     flavor: standard
   - intent: kubernetes_secret
+    flavor: k8s_standard
+  - intent: pvc
     flavor: k8s_standard
   - intent: monitoring
     flavor: mongo

@@ -1,0 +1,185 @@
+intent: postgres
+flavor: ovh
+version: '1.0'
+clouds:
+- kubernetes
+description: Managed PostgreSQL database on OVH Cloud with private network connectivity
+  and SSL/TLS encryption
+intentDetails:
+  type: Datastores
+  description: OVH Cloud managed PostgreSQL database service
+  displayName: PostgreSQL
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/postgres.svg
+spec:
+  title: OVH Managed PostgreSQL Database
+  description: Managed PostgreSQL database on OVH Cloud with private network connectivity
+    and SSL/TLS encryption
+  type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - advanced_config
+  properties:
+    version_config:
+      type: object
+      title: Version Configuration
+      x-ui-order:
+      - version
+      properties:
+        version:
+          type: string
+          title: PostgreSQL Version
+          description: PostgreSQL engine version
+          enum:
+          - '13'
+          - '14'
+          - '15'
+          - '16'
+          default: '15'
+      required:
+      - version
+    sizing:
+      type: object
+      title: Sizing & Performance
+      x-ui-order:
+      - plan
+      - flavor
+      - nodes_count
+      - disk_size
+      properties:
+        plan:
+          type: string
+          title: Service Plan
+          description: OVH Cloud Database service plan
+          enum:
+          - essential
+          - business
+          - enterprise
+          default: essential
+        flavor:
+          type: string
+          title: Instance Flavor
+          description: OVH instance flavor for database nodes
+          enum:
+          - db1-2
+          - db1-4
+          - db1-7
+          - db1-15
+          - db1-30
+          - db1-60
+          - db1-120
+          default: db1-4
+        nodes_count:
+          type: integer
+          title: Number of Nodes
+          description: Number of database nodes (1 for essential, 2+ for business/enterprise)
+          minimum: 1
+          maximum: 10
+          default: 1
+        disk_size:
+          type: integer
+          title: Disk Size (GB)
+          description: Storage size in GB
+          minimum: 20
+          maximum: 2000
+          default: 80
+      required:
+      - plan
+      - flavor
+      - nodes_count
+      - disk_size
+    advanced_config:
+      type: object
+      title: Advanced Configuration
+      x-ui-toggle: true
+      properties:
+        password_encryption:
+          type: string
+          title: Password Encryption
+          description: Password encryption method for PostgreSQL
+          default: md5
+          enum:
+          - md5
+          - scram-sha-256
+        max_failover_replication_time_lag:
+          type: string
+          title: Max Failover Replication Time Lag
+          description: Maximum replication lag (seconds) before failover is triggered
+          default: '60'
+        io_combine_limit:
+          type: string
+          title: IO Combine Limit
+          description: Limit on the size of data reads that can be combined
+          default: '16'
+        io_max_combine_limit:
+          type: string
+          title: IO Max Combine Limit
+          description: Upper limit on the size of combined data reads
+          default: '16'
+        io_max_concurrency:
+          type: string
+          title: IO Max Concurrency
+          description: Maximum number of concurrent IO operations (-1 for auto)
+          default: '-1'
+        io_method:
+          type: string
+          title: IO Method
+          description: IO method for PostgreSQL
+          default: worker
+          enum:
+          - worker
+          - io_uring
+        io_workers:
+          type: string
+          title: IO Workers
+          description: Number of IO worker processes
+          default: '3'
+  required:
+  - version_config
+  - sizing
+inputs:
+  ovh_provider:
+    type: '@facets/ovh-provider'
+    optional: false
+    displayName: OVH Cloud Account
+    description: OVH provider configuration
+    providers:
+    - ovh
+    - "null"
+  network:
+    type: '@facets/ovh-network'
+    optional: false
+    displayName: OVH Network
+    description: Network configuration for private connectivity
+    providers: []
+outputs:
+  default:
+    type: '@facets/postgres'
+    title: OVH PostgreSQL Database
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+  - versions.tf
+sample:
+  kind: postgres
+  flavor: ovh
+  version: '1.0'
+  disabled: true
+  spec:
+    version_config:
+      version: '15'
+    sizing:
+      plan: essential
+      flavor: db1-4
+      nodes_count: 1
+      disk_size: 80
+    advanced_config:
+      password_encryption: md5
+      max_failover_replication_time_lag: '60'
+      io_combine_limit: '16'
+      io_max_combine_limit: '16'
+      io_max_concurrency: '-1'
+      io_method: worker
+      io_workers: '3'

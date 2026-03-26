@@ -2,6 +2,14 @@
 # Creates and manages MongoDB database clusters using KubeBlocks operator
 # REQUIRES: KubeBlocks operator must be deployed first (CRDs must exist)
 
+module "name" {
+  source        = "github.com/Facets-cloud/facets-utility-modules//name"
+  resource_name = var.instance_name
+  resource_type = "mongodb"
+  environment   = var.environment
+  limit         = 63
+  is_k8s        = true
+}
 
 # MongoDB Cluster with Embedded Backup Configuration
 # Using any-k8s-resource module to avoid plan-time CRD validation
@@ -159,49 +167,33 @@ module "mongodb_cluster" {
 # PodDisruptionBudget for MongoDB HA
 # maxUnavailable=1 ensures only 1 pod can be disrupted at a time
 # This maintains quorum during node maintenance/upgrades
-module "mongodb_pdb" {
-  count  = local.enable_pdb ? 1 : 0
-  source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
+resource "kubernetes_pod_disruption_budget_v1" "mongodb_pdb" {
+  count = local.enable_pdb ? 1 : 0
 
-  name         = "${local.cluster_name}-mongodb-pdb"
-  namespace    = local.namespace
-  release_name = "mongo-pdb-${local.cluster_name}-${substr(var.inputs.kubeblocks_operator.attributes.release_id, 0, 8)}"
+  metadata {
+    name      = "${local.cluster_name}-mongodb-pdb"
+    namespace = local.namespace
 
-  data = {
-    apiVersion = "policy/v1"
-    kind       = "PodDisruptionBudget"
-
-    metadata = {
-      name      = "${local.cluster_name}-mongodb-pdb"
-      namespace = local.namespace
-
-      labels = merge(
-        {
-          "app.kubernetes.io/name"       = "mongodb"
-          "app.kubernetes.io/instance"   = local.cluster_name
-          "app.kubernetes.io/managed-by" = "terraform"
-        },
-        var.environment.cloud_tags
-      )
-    }
-
-    spec = {
-      maxUnavailable = 1
-
-      selector = {
-        matchLabels = {
-          "app.kubernetes.io/instance"        = local.cluster_name
-          "app.kubernetes.io/managed-by"      = "kubeblocks"
-          "apps.kubeblocks.io/component-name" = "mongodb"
-        }
-      }
-    }
+    labels = merge(
+      {
+        "app.kubernetes.io/name"       = "mongodb"
+        "app.kubernetes.io/instance"   = local.cluster_name
+        "app.kubernetes.io/managed-by" = "terraform"
+      },
+      var.environment.cloud_tags
+    )
   }
 
-  advanced_config = {
-    wait            = false
-    cleanup_on_fail = true
-    max_history     = 3
+  spec {
+    max_unavailable = "1"
+
+    selector {
+      match_labels = {
+        "app.kubernetes.io/instance"        = local.cluster_name
+        "app.kubernetes.io/managed-by"      = "kubeblocks"
+        "apps.kubeblocks.io/component-name" = "mongodb"
+      }
+    }
   }
 
   depends_on = [module.mongodb_cluster]

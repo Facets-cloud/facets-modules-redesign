@@ -25,12 +25,13 @@ outputs:
   default:
     title: Pub/Sub Topic Details
     type: '@facets/pubsub'
+  topic_name:
+    title: Pub/Sub Topic Name
+    type: '@facets/pubsub_name'
 sample:
   disabled: true
   flavor: gcp
   kind: pubsub
-  metadata:
-    name: my-topic
   spec:
     create_subscription: true
     message_retention_duration: 604800s

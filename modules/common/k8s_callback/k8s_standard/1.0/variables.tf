@@ -28,25 +28,11 @@ variable "inputs" {
   description = "A map of inputs requested by the module developer."
   type = object({
     kubernetes_details = object({
-      attributes = object({
-        cluster_endpoint       = string
-        cluster_ca_certificate = string
-        cluster_name           = string
-        cluster_version        = string
-        cluster_arn            = string
-        cluster_id             = string
-        oidc_issuer_url        = string
-        oidc_provider          = string
-        oidc_provider_arn      = string
-        node_iam_role_arn      = string
-        node_iam_role_name     = string
-        node_security_group_id = string
-        kubernetes_provider_exec = object({
-          api_version = string
-          command     = string
-          args        = list(string)
-        })
-      })
+      cluster_endpoint       = optional(string)
+      cluster_ca_certificate = optional(string)
+      cluster_name           = optional(string)
+      cluster_version        = optional(string)
+      cluster_id             = optional(string)
     })
   })
 }

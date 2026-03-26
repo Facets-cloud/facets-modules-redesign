@@ -273,8 +273,6 @@ sample:
   kind: kubernetes_node_pool
   flavor: eks_automode
   version: '1.0'
-  metadata:
-    name: production-nodepool
   spec:
     instance_requirements:
       instance_classification: Instance Types

@@ -88,27 +88,8 @@ variable "inputs" {
     })
     network = object({
       attributes = object({
-        vpc_self_link                       = string
-        vpc_id                              = string
-        vpc_name                            = string
-        region                              = string
-        project_id                          = string
-        private_services_connection_id      = string
-        private_services_connection_status  = bool
-        private_services_range_name         = string
-        private_services_range_id           = string
-        private_services_range_address      = string
-        private_services_peering_connection = string
-        private_subnet_ids                  = list(string)
-        database_subnet_ids                 = list(string)
-        private_subnet_cidrs                = list(string)
-        database_subnet_cidrs               = list(string)
-        public_subnet_ids                   = list(string)
-        public_subnet_cidrs                 = list(string)
-        firewall_rule_ids                   = list(string)
-        nat_gateway_ids                     = list(string)
-        router_ids                          = list(string)
-        zones                               = list(string)
+        vpc_self_link = string
+        region        = string
       })
     })
   })

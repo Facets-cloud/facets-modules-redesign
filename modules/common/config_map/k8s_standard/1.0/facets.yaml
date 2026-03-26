@@ -1,6 +1,6 @@
 intent: config_map
 flavor: k8s_standard
-version: '1.0'
+version: '1.1'
 description: config_map - k8s
 intentDetails:
   type: Kubernetes Resources
@@ -54,8 +54,7 @@ sample:
   $schema: https://facets-cloud.github.io/facets-schemas/schemas/config_map/config_map.schema.json
   kind: config_map
   flavor: k8s_standard
-  version: '1.0'
-  metadata: {}
+  version: '1.1'
   disabled: true
   spec:
     data: {}

@@ -23,11 +23,29 @@ modules:
     flavor: gcp_network
   - intent: service
     flavor: gcp
+  - intent: cloudrun
+    flavor: cpu
 
   # GCP-Specific Modules
   - intent: google_workload_identity
     flavor: gcp
   - intent: pubsub
+    flavor: gcp
+  - intent: service_account
+    flavor: gcp
+  - intent: cloudrun
+    flavor: cpu-job
+  - intent: cloudrun
+    flavor: gpu
+  - intent: cloudrun
+    flavor: gpu-job
+  - intent: cloud_tasks
+    flavor: queue
+  - intent: notification_channel
+    flavor: gcp
+  - intent: alert_policy
+    flavor: gcp
+  - intent: secret_manager
     flavor: gcp
 
   # GCP Datastore Modules
@@ -57,10 +75,12 @@ modules:
     flavor: k8s
   - intent: helm
     flavor: k8s_standard
+  - intent: helm
+    flavor: k8s_git
   - intent: gateway_api_crd
     flavor: default
   - intent: ingress
-    flavor: nginx_gateway_fabric
+    flavor: nginx_gateway_fabric_gcp
   - intent: k8s_access_controls
     flavor: k8s_standard
   - intent: k8s_callback
@@ -70,6 +90,8 @@ modules:
   - intent: kubeblocks-operator
     flavor: standard
   - intent: kubernetes_secret
+    flavor: k8s_standard
+  - intent: pvc
     flavor: k8s_standard
   - intent: monitoring
     flavor: mongo

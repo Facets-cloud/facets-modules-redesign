@@ -9,6 +9,10 @@
       "system": {
         "name": "SYSTEM_COMPONENTS",
         "enabled": true
+      },
+      "apiserver": {
+        "name": "APISERVER",
+        "enabled": true
       }
     }
   },
