@@ -115,7 +115,6 @@ outputs:
 sample:
   kind: aws_secret_manager
   flavor: standard
-  metadata: {}
   disabled: true
   version: '1.0'
   spec:

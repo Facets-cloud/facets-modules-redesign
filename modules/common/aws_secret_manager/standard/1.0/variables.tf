@@ -8,7 +8,7 @@ variable "instance" {
       override_name           = optional(string)
       description             = optional(string)
       kms_key_id              = optional(string)
-      policy                  = optional(any)
+      policy                  = optional(map(any))
       recovery_window_in_days = optional(number)
       rotation = optional(object({
         enabled    = optional(bool)
