@@ -125,10 +125,10 @@ spec:
               description: "CIDR ranges allowed to reach this port"
               items:
                 type: string
-              default:
-                - "0.0.0.0/0"
+              x-ui-placeholder: "e.g., 0.0.0.0/0"
           required:
             - port
+            - source_ranges
       default: {}
     service_account:
       type: object

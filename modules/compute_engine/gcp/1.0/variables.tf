@@ -19,7 +19,6 @@ variable "inputs" {
       attributes = optional(object({
         credentials = optional(string)
         project_id  = optional(string)
-        project     = optional(string)
         region      = optional(string)
       }), {})
       interfaces = optional(object({}), {})
@@ -81,7 +80,7 @@ variable "instance" {
       open_ports = optional(map(object({
         port          = string
         protocol      = optional(string, "tcp")
-        source_ranges = optional(list(string), ["0.0.0.0/0"])
+        source_ranges = list(string)
       })), {})
       service_account = optional(object({
         email  = optional(string, "")

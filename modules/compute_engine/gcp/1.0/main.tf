@@ -60,6 +60,6 @@ resource "google_compute_firewall" "open_ports" {
     ports    = [tostring(each.value.port)]
   }
 
-  source_ranges = try(each.value.source_ranges, ["0.0.0.0/0"])
+  source_ranges = each.value.source_ranges
   target_tags   = [local.vm_name]
 }

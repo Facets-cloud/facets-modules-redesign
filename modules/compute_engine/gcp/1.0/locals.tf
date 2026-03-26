@@ -2,10 +2,7 @@ locals {
   spec = var.instance.spec
 
   # Cloud account outputs (project, credentials)
-  project_id = coalesce(
-    try(var.inputs.cloud_account.attributes.project_id, null),
-    try(var.inputs.cloud_account.attributes.project, null)
-  )
+  project_id = var.inputs.cloud_account.attributes.project_id
 
   # Region from network module (consistent with gcp-bastion)
   region = var.inputs.network_details.attributes.region
