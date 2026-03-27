@@ -1,0 +1,320 @@
+intent: log_collector
+flavor: loki
+version: '1.0'
+description: Loki-based log collection stack for Kubernetes with Promtail and optional MinIO or S3 storage
+intentDetails:
+  type: Monitoring & Observability
+  description: Deploys Grafana Loki distributed log aggregation stack with Promtail on Kubernetes
+  displayName: Log Collector (Loki)
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/log_collector.svg
+clouds:
+  - aws
+  - azure
+  - gcp
+  - kubernetes
+inputs:
+  kubernetes_details:
+    optional: false
+    type: '@facets/kubernetes-details'
+    displayName: Kubernetes Cluster
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+      - kubernetes
+      - helm
+  kubernetes_node_pool_details:
+    optional: true
+    type: '@facets/kubernetes_nodepool'
+    displayName: Node Pool
+  prometheus_details:
+    optional: true
+    type: '@facets/prometheus'
+    displayName: Prometheus
+    default:
+      resource_type: prometheus
+      resource_name: default
+outputs:
+  default:
+    type: '@facets/log_collector'
+    title: Log Collector (Loki) Details
+spec:
+  title: Log Collector (Loki) Configuration
+  description: Configuration for the Loki-based logging stack
+  type: object
+  properties:
+    namespace:
+      type: string
+      title: Namespace
+      description: Kubernetes namespace for the logging stack
+      default: logging
+      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+      x-ui-placeholder: e.g., logging, loki
+    storage_config:
+      type: object
+      title: Storage Configuration
+      description: Configure S3 for storage; if omitted, MinIO is deployed internally
+      properties:
+        s3:
+          type: object
+          title: S3 Storage
+          description: AWS S3 bucket configuration for Loki chunks. bucket_name is required when this block is set.
+          properties:
+            bucket_name:
+              type: string
+              title: Bucket Name
+              description: S3 bucket name for Loki storage (required)
+            region:
+              type: string
+              title: Region
+              description: AWS region for the S3 bucket
+              default: us-east-1
+            access_key_id:
+              type: string
+              title: Access Key ID
+              description: AWS access key ID (leave empty to use IAM role / IRSA)
+            secret_access_key:
+              type: string
+              title: Secret Access Key
+              description: AWS secret access key (leave empty to use IAM role / IRSA)
+    auth_enabled:
+      type: boolean
+      title: Enable Multi-tenancy
+      description: Enable Loki multi-tenancy (X-Scope-OrgID header required on all requests when true)
+      default: false
+    replication_factor:
+      type: integer
+      title: Replication Factor
+      description: Number of ingest replicas for high availability. Use 1 for dev, 3 for production.
+      default: 1
+    loki_size:
+      type: object
+      title: Loki Resource Sizing
+      description: Resource requests and limits for Loki components
+      properties:
+        ingester:
+          type: object
+          title: Ingester
+          properties:
+            replicas:
+              type: integer
+              title: Replicas
+              default: 1
+            resources:
+              type: object
+              title: Resources
+              properties:
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      type: string
+                      default: 500m
+                    memory:
+                      type: string
+                      default: 1Gi
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      type: string
+                      default: "1"
+                    memory:
+                      type: string
+                      default: 2Gi
+        querier:
+          type: object
+          title: Querier
+          properties:
+            replicas:
+              type: integer
+              title: Replicas
+              default: 1
+            resources:
+              type: object
+              title: Resources
+              properties:
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      type: string
+                      default: 200m
+                    memory:
+                      type: string
+                      default: 512Mi
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      type: string
+                      default: 500m
+                    memory:
+                      type: string
+                      default: 1Gi
+        distributor:
+          type: object
+          title: Distributor
+          properties:
+            replicas:
+              type: integer
+              title: Replicas
+              default: 1
+            resources:
+              type: object
+              title: Resources
+              properties:
+                requests:
+                  type: object
+                  properties:
+                    cpu:
+                      type: string
+                      default: 200m
+                    memory:
+                      type: string
+                      default: 256Mi
+                limits:
+                  type: object
+                  properties:
+                    cpu:
+                      type: string
+                      default: 500m
+                    memory:
+                      type: string
+                      default: 512Mi
+    promtail_size:
+      type: object
+      title: Promtail Resource Sizing
+      description: Resource requests and limits for the Promtail DaemonSet
+      properties:
+        resources:
+          type: object
+          title: Resources
+          properties:
+            requests:
+              type: object
+              properties:
+                cpu:
+                  type: string
+                  default: 200m
+                memory:
+                  type: string
+                  default: 256Mi
+            limits:
+              type: object
+              properties:
+                cpu:
+                  type: string
+                  default: 500m
+                memory:
+                  type: string
+                  default: 512Mi
+    log_retention_days:
+      type: integer
+      title: Log Retention (Days)
+      description: Number of days to retain logs
+      default: 7
+    enable_grafana_datasource:
+      type: boolean
+      title: Enable Grafana Datasource ConfigMap
+      description: Create a Kubernetes ConfigMap for Grafana Loki datasource auto-provisioning
+      default: true
+    grafana_datasource_namespace:
+      type: string
+      title: Grafana Datasource Namespace
+      description: Namespace where the Grafana datasource ConfigMap will be created. Must match the namespace where Grafana is deployed.
+      default: logging
+      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+    container_runtime:
+      type: string
+      title: Container Runtime
+      description: Container runtime for Promtail log parsing
+      default: cri
+      enum:
+        - cri
+        - docker
+    loki:
+      type: object
+      title: Loki Helm Overrides
+      description: Deep-merged override values for the Loki Helm chart (applied on top of defaults)
+      x-ui-yaml-editor: true
+      x-ui-placeholder: Enter Loki Helm values in YAML format
+    promtail:
+      type: object
+      title: Promtail Helm Overrides
+      description: Deep-merged override values for the Promtail Helm chart (applied on top of defaults)
+      x-ui-yaml-editor: true
+      x-ui-placeholder: Enter Promtail Helm values in YAML format
+    minio:
+      type: object
+      title: MinIO Helm Overrides
+      description: Deep-merged override values for the MinIO Helm chart (only used when S3 is not configured)
+      x-ui-yaml-editor: true
+      x-ui-placeholder: Enter MinIO Helm values in YAML format
+  x-ui-order:
+    - namespace
+    - storage_config
+    - auth_enabled
+    - replication_factor
+    - loki_size
+    - promtail_size
+    - log_retention_days
+    - container_runtime
+    - enable_grafana_datasource
+    - grafana_datasource_namespace
+    - loki
+    - promtail
+    - minio
+sample:
+  kind: log_collector
+  flavor: loki
+  disabled: true
+  version: '1.0'
+  spec:
+    namespace: logging
+    log_retention_days: 7
+    container_runtime: cri
+    enable_grafana_datasource: true
+    grafana_datasource_namespace: logging
+    auth_enabled: false
+    replication_factor: 1
+    storage_config: {}
+    loki_size:
+      ingester:
+        replicas: 1
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: "1"
+            memory: 2Gi
+      querier:
+        replicas: 1
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+      distributor:
+        replicas: 1
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+    promtail_size:
+      resources:
+        requests:
+          cpu: 200m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+iac:
+  validated_files:
+    - variables.tf

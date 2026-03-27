@@ -1,0 +1,19 @@
+name: '@facets/log_collector'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        loki_url:
+          type: string
+        namespace:
+          type: string
+        storage_type:
+          type: string
+        helm_release_id:
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []
