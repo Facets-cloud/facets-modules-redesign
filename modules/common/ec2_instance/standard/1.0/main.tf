@@ -4,10 +4,11 @@ locals {
   name     = try(module.name.name, "${var.instance_name}")
 
   # Network Configuration
-  vpc_id            = local.spec.vpc_id != null ? local.spec.vpc_id : var.inputs.network_details.attributes.vpc_id
-  vpc_cidr          = local.spec.vpc_cidr != null ? local.spec.vpc_cidr : var.inputs.network_details.attributes.vpc_cidr_block
-  subnet_id         = lookup(local.spec, "subnet_id", null) != null && length(local.spec.subnet_id) > 0 ? element(local.spec.subnet_id, 0) : element(var.inputs.network_details.attributes.private_subnet_ids, 0)
-  availability_zone = local.spec.availability_zone != null ? local.spec.availability_zone : element(var.inputs.network_details.attributes.availability_zones, 0)
+  vpc_id            = lookup(local.spec, "vpc_id", null) != null ? local.spec.vpc_id : var.inputs.network_details.attributes.vpc_id
+  vpc_cidr          = lookup(local.spec, "vpc_cidr", null) != null ? local.spec.vpc_cidr : var.inputs.network_details.attributes.vpc_cidr_block
+  subnet_id_list    = lookup(local.spec, "subnet_id", null)
+  subnet_id         = local.subnet_id_list != null && length(local.subnet_id_list) > 0 ? element(local.subnet_id_list, 0) : element(var.inputs.network_details.attributes.private_subnet_ids, 0)
+  availability_zone = lookup(local.spec, "availability_zone", null) != null ? local.spec.availability_zone : element(var.inputs.network_details.attributes.availability_zones, 0)
 
   # Tags
   tags        = lookup(local.spec, "tags", {})
@@ -19,12 +20,22 @@ locals {
 
   # Security Group Configuration
   create_security_group      = lookup(local.spec, "create_security_group", true)
-  security_group_name        = lookup(local.spec, "security_group_name", null) != null ? local.spec.security_group_name : "${local.name}-sg"
-  security_group_description = lookup(local.spec, "security_group_description", null) != null ? local.spec.security_group_description : "Security group for EC2 instance ${local.name}"
+  security_group_name        = lookup(local.spec, "security_group_name", "${local.name}-sg")
+  security_group_description = lookup(local.spec, "security_group_description", "Security group for EC2 instance ${local.name}")
+
+  # Security Group Rules Configuration
+  ingress_rules = lookup(local.spec, "ingress_rules", [])
+  egress_rules = lookup(local.spec, "egress_rules", [
+    {
+      ip_protocol = "-1"
+      cidr_ipv4   = "0.0.0.0/0"
+      description = "Allow all outbound traffic"
+    }
+  ])
 
   # Determine which security groups to use
   vpc_security_group_ids = lookup(local.spec, "vpc_security_group_ids", null) != null ? lookup(local.spec, "vpc_security_group_ids", []) : (
-    local.create_security_group ? [module.security_group[0].security_group_id] : []
+    local.create_security_group ? [aws_security_group.this[0].id] : []
   )
 
   # Placement Group Configuration
@@ -42,9 +53,12 @@ locals {
   create_iam_instance_profile = lookup(local.spec, "create_iam_instance_profile", true)
   iam_role_name               = lookup(local.spec, "iam_role_name", "${local.name}-role")
   iam_role_description        = lookup(local.spec, "iam_role_description", "IAM role for EC2 instance ${local.name}")
-  iam_role_policies = lookup(local.spec, "iam_role_policies", {
-    SSMManaged = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-  })
+  iam_role_policies_raw = lookup(local.spec, "iam_role_policies", null)
+  iam_role_policies = local.iam_role_policies_raw != null ? local.iam_role_policies_raw : (
+    local.create_iam_instance_profile ? {
+      SSMManaged = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+    } : {}
+  )
   iam_instance_profile = lookup(local.spec, "iam_instance_profile", null)
 
   # Instance Features
@@ -128,20 +142,71 @@ resource "aws_placement_group" "ec2_placement" {
 }
 
 # Conditional Security Group
-module "security_group" {
-  count  = local.create_security_group ? 1 : 0
-  source = "./terraform-aws-security-group"
+resource "aws_security_group" "this" {
+  count = local.create_security_group ? 1 : 0
 
-  name        = local.security_group_name
+  name_prefix = "${local.security_group_name}-"
   description = local.security_group_description
   vpc_id      = local.vpc_id
 
-  ingress_cidr_blocks = lookup(local.spec, "ingress_cidr_blocks", [local.vpc_cidr])
-  ingress_rules       = lookup(local.spec, "ingress_rules", [])
-  egress_cidr_blocks  = lookup(local.spec, "egress_cidr_blocks", ["0.0.0.0/0"])
-  egress_rules        = lookup(local.spec, "egress_rules", ["all-all"])
+  tags = merge(
+    local.merged_tags,
+    {
+      Name = local.security_group_name
+    }
+  )
 
-  tags = local.merged_tags
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Security Group Ingress Rules
+resource "aws_vpc_security_group_ingress_rule" "this" {
+  for_each = local.create_security_group ? { for idx, rule in local.ingress_rules : idx => rule } : {}
+
+  security_group_id = aws_security_group.this[0].id
+
+  ip_protocol = lookup(each.value, "ip_protocol", "tcp")
+  from_port   = lookup(each.value, "from_port", null)
+  to_port     = lookup(each.value, "to_port", null)
+
+  cidr_ipv4                    = lookup(each.value, "cidr_ipv4", null)
+  cidr_ipv6                    = lookup(each.value, "cidr_ipv6", null)
+  referenced_security_group_id = lookup(each.value, "referenced_security_group_id", null)
+
+  description = lookup(each.value, "description", null)
+
+  tags = merge(
+    local.merged_tags,
+    {
+      Name = "${local.security_group_name}-ingress-${each.key}"
+    }
+  )
+}
+
+# Security Group Egress Rules
+resource "aws_vpc_security_group_egress_rule" "this" {
+  for_each = local.create_security_group ? { for idx, rule in local.egress_rules : idx => rule } : {}
+
+  security_group_id = aws_security_group.this[0].id
+
+  ip_protocol = lookup(each.value, "ip_protocol", "tcp")
+  from_port   = lookup(each.value, "from_port", null)
+  to_port     = lookup(each.value, "to_port", null)
+
+  cidr_ipv4                    = lookup(each.value, "cidr_ipv4", null)
+  cidr_ipv6                    = lookup(each.value, "cidr_ipv6", null)
+  referenced_security_group_id = lookup(each.value, "referenced_security_group_id", null)
+
+  description = lookup(each.value, "description", null)
+
+  tags = merge(
+    local.merged_tags,
+    {
+      Name = "${local.security_group_name}-egress-${each.key}"
+    }
+  )
 }
 
 # EC2 Instance Module

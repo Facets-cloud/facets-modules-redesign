@@ -20,10 +20,24 @@ variable "instance" {
       create_security_group      = optional(bool)
       security_group_name        = optional(string)
       security_group_description = optional(string)
-      ingress_cidr_blocks        = optional(list(string))
-      ingress_rules              = optional(list(string))
-      egress_cidr_blocks         = optional(list(string))
-      egress_rules               = optional(list(string))
+      ingress_rules = optional(list(object({
+        ip_protocol                  = optional(string)
+        from_port                    = optional(number)
+        to_port                      = optional(number)
+        cidr_ipv4                    = optional(string)
+        cidr_ipv6                    = optional(string)
+        referenced_security_group_id = optional(string)
+        description                  = optional(string)
+      })))
+      egress_rules = optional(list(object({
+        ip_protocol                  = optional(string)
+        from_port                    = optional(number)
+        to_port                      = optional(number)
+        cidr_ipv4                    = optional(string)
+        cidr_ipv6                    = optional(string)
+        referenced_security_group_id = optional(string)
+        description                  = optional(string)
+      })))
 
       # Placement Group Configuration
       create_placement_group   = optional(bool)

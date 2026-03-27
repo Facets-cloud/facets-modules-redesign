@@ -5,7 +5,7 @@ locals {
     private_ip        = module.ec2_instance.private_ip
     iam_role_arn      = module.ec2_instance.iam_role_arn
     iam_role_name     = module.ec2_instance.iam_role_name
-    security_group_id = local.create_security_group ? module.security_group[0].security_group_id : null
+    security_group_id = local.create_security_group ? aws_security_group.this[0].id : null
     availability_zone = module.ec2_instance.availability_zone
     subnet_id         = local.subnet_id
   }
