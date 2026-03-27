@@ -94,6 +94,8 @@ modules:
     flavor: k8s_standard
   - intent: monitoring
     flavor: mongo
+  - intent: log_collector
+    flavor: loki
   - intent: prometheus
     flavor: k8s_standard
   - intent: strimzi-operator
