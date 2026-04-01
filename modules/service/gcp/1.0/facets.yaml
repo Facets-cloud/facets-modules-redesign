@@ -2,7 +2,7 @@ controlPlaneUISettings:
   enableKubernetesExplorer: true
 intent: service
 flavor: gcp
-version: '1.0'
+version: '1.1'
 description: Unified GCP cloud service module supporting deployment, cronjob, job,
   and statefulset workloads
 intentDetails:
@@ -1998,7 +1998,7 @@ sample:
   flavor: gcp
   kind: service
   disabled: true
-  version: '1.0'
+  version: '1.1'
   spec:
     type: application
     enable_host_anti_affinity: false
