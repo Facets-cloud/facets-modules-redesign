@@ -5,6 +5,8 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
+      name = optional(string)
+
       # Instance Configuration
       ami_id        = optional(string)
       instance_type = optional(string)
@@ -101,8 +103,8 @@ variable "instance" {
 variable "environment" {
   description = "An object containing details about the environment."
   type = object({
-    name        = optional(string)
-    unique_name = optional(string)
+    name        = string
+    unique_name = string
     namespace   = string
     cloud_tags  = optional(map(string), {})
   })

@@ -29,6 +29,12 @@ inputs:
 spec:
   type: object
   properties:
+    # Name Override
+    name:
+      title: Instance Name
+      description: Custom name for the EC2 instance. If not provided, a name will be auto-generated based on the instance_name and environment.
+      type: string
+
     # Instance Configuration
     ami_id:
       title: AMI ID

@@ -1,7 +1,9 @@
 locals {
   spec     = lookup(var.instance, "spec", {})
   metadata = lookup(var.instance, "metadata", {})
-  name     = try(module.name.name, "${var.instance_name}")
+  # Use instance_name directly - guaranteed non-null, can be overridden via spec.name
+  # Use try() to safely access spec.name which may not exist
+  name = try(var.instance.spec.name, null) != null && try(var.instance.spec.name, "") != "" ? var.instance.spec.name : var.instance_name
 
   # Network Configuration
   vpc_id            = lookup(local.spec, "vpc_id", null) != null ? local.spec.vpc_id : var.inputs.network_details.attributes.vpc_id
@@ -20,8 +22,8 @@ locals {
 
   # Security Group Configuration
   create_security_group      = lookup(local.spec, "create_security_group", true)
-  security_group_name        = lookup(local.spec, "security_group_name", "${local.name}-sg")
-  security_group_description = lookup(local.spec, "security_group_description", "Security group for EC2 instance ${local.name}")
+  security_group_name        = lookup(local.spec, "security_group_name", null) != null ? local.spec.security_group_name : "${local.name}-sg"
+  security_group_description = lookup(local.spec, "security_group_description", null) != null ? local.spec.security_group_description : "Security group for EC2 instance ${local.name}"
 
   # Security Group Rules Configuration
   ingress_rules = lookup(local.spec, "ingress_rules", [])
@@ -40,7 +42,7 @@ locals {
 
   # Placement Group Configuration
   create_placement_group   = lookup(local.spec, "create_placement_group", false)
-  placement_group_name     = lookup(local.spec, "placement_group_name", "${local.name}-pg")
+  placement_group_name     = lookup(local.spec, "placement_group_name", null) != null ? local.spec.placement_group_name : "${local.name}-pg"
   placement_group_strategy = lookup(local.spec, "placement_group_strategy", "cluster")
   placement_group_id       = lookup(local.spec, "placement_group_id", null)
 
@@ -51,9 +53,9 @@ locals {
 
   # IAM Configuration
   create_iam_instance_profile = lookup(local.spec, "create_iam_instance_profile", true)
-  iam_role_name               = lookup(local.spec, "iam_role_name", "${local.name}-role")
-  iam_role_description        = lookup(local.spec, "iam_role_description", "IAM role for EC2 instance ${local.name}")
-  iam_role_policies_raw = lookup(local.spec, "iam_role_policies", null)
+  iam_role_name               = lookup(local.spec, "iam_role_name", null) != null ? local.spec.iam_role_name : "${local.name}-role"
+  iam_role_description        = lookup(local.spec, "iam_role_description", null) != null ? local.spec.iam_role_description : "IAM role for EC2 instance ${local.name}"
+  iam_role_policies_raw       = lookup(local.spec, "iam_role_policies", null)
   iam_role_policies = local.iam_role_policies_raw != null ? local.iam_role_policies_raw : (
     local.create_iam_instance_profile ? {
       SSMManaged = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
@@ -83,25 +85,38 @@ locals {
 
   default_root_block_device = {
     encrypted             = true
-    volume_type           = "gp3"
+    type                  = "gp3" 
     throughput            = 125
-    volume_size           = 30
+    size                  = 30 
     iops                  = 3000
+    kms_key_id            = null
     delete_on_termination = true
-    tags                  = local.merged_tags
+
+    tags = local.merged_tags
   }
 
   default_ebs_block_device = {}
 
   # Storage - User Overrides
-  cpu_options       = lookup(local.spec, "cpu_options", local.default_cpu_options)
-  root_block_device = lookup(local.spec, "root_block_device", null) != null ? lookup(local.spec, "root_block_device", {}) : local.default_root_block_device
+  cpu_options         = lookup(local.spec, "cpu_options", local.default_cpu_options)
+  user_root_block_raw = lookup(local.spec, "root_block_device", null)
+  root_block_device = local.user_root_block_raw != null ? {
+    # Map user-friendly field names to Terraform resource field names
+    size                  = lookup(local.user_root_block_raw, "volume_size", lookup(local.user_root_block_raw, "size", null))
+    type                  = lookup(local.user_root_block_raw, "volume_type", lookup(local.user_root_block_raw, "type", null))
+    encrypted             = lookup(local.user_root_block_raw, "encrypted", null)
+    iops                  = lookup(local.user_root_block_raw, "iops", null)
+    throughput            = lookup(local.user_root_block_raw, "throughput", null)
+    kms_key_id            = lookup(local.user_root_block_raw, "kms_key_id", null)
+    delete_on_termination = lookup(local.user_root_block_raw, "delete_on_termination", null)
+    tags                  = lookup(local.user_root_block_raw, "tags", null)
+  } : local.default_root_block_device
   ebs_volumes = lookup(local.spec, "ebs_volumes", null) != null ? {
     for device_name, config in lookup(local.spec, "ebs_volumes", {}) : device_name => merge(
       {
         device_name           = lookup(config, "device_name", device_name)
-        volume_size           = lookup(config, "volume_size", 10)
-        volume_type           = lookup(config, "volume_type", "gp3")
+        size                  = lookup(config, "volume_size", 10)    # Map volume_size to size for underlying module
+        type                  = lookup(config, "volume_type", "gp3") # Map volume_type to type
         throughput            = lookup(config, "throughput", 125)
         iops                  = lookup(config, "iops", 3000)
         encrypted             = lookup(config, "encrypted", true)
@@ -118,17 +133,6 @@ data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
   name_regex  = "^al2023-ami-2023.*-x86_64"
-}
-
-# Name generation module
-module "name" {
-  source          = "github.com/Facets-cloud/facets-utility-modules//name"
-  is_k8s          = false
-  globally_unique = false
-  resource_type   = "ec2_instance"
-  resource_name   = var.instance_name
-  environment     = var.environment
-  limit           = 45
 }
 
 # Conditional Placement Group
