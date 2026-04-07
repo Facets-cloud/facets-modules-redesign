@@ -1,0 +1,15 @@
+name: aws-empty
+description: Minimal AWS project type with only cloud account setup. Use this to initialize a project and add modules incrementally.
+
+# Git repository details
+gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
+gitRef: main
+baseTemplatePath: project-type/empty/aws
+
+iacTool: TERRAFORM
+iacToolVersion: "1.5.7"
+
+# IaC modules to include
+modules:
+  - intent: cloud_account
+    flavor: aws_provider
