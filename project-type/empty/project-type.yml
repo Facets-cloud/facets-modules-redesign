@@ -1,0 +1,13 @@
+name: empty
+description: Empty project type — a blank slate for building custom module sets from scratch.
+
+# Git repository details
+gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
+gitRef: main
+baseTemplatePath: project-type/empty/base
+
+iacTool: TERRAFORM
+iacToolVersion: "1.5.7"
+
+# No modules — add your own via raptor create resource-type-mapping
+modules: []
