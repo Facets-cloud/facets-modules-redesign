@@ -4,7 +4,7 @@ resource "random_password" "master_password" {
   count            = var.instance.spec.restore_config.restore_from_backup ? 0 : 1
   length           = 16
   special          = true
-  override_special = "!#$%&*+-=?^_`{|}~" # Safe special characters for Aurora PostgreSQL
+  override_special = "!#$&*-=?^_`{|}~" # Safe special characters for Aurora PostgreSQL
 
   lifecycle {
     ignore_changes = [

@@ -1,6 +1,6 @@
 intent: postgres
 flavor: aws-aurora
-version: '1.0'
+version: '2.0'
 clouds:
 - aws
 description: A managed PostgreSQL Aurora cluster with high availability, automated
@@ -239,7 +239,7 @@ iac:
 sample:
   kind: postgres
   flavor: aws-aurora
-  version: '1.0'
+  version: '2.0'
   disabled: true
   spec:
     version_config:
