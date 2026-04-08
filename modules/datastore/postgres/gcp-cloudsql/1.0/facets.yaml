@@ -1,6 +1,6 @@
 intent: postgres
 flavor: gcp-cloudsql
-version: '1.0'
+version: '2.0'
 clouds:
 - gcp
 description: Managed PostgreSQL database using Google Cloud SQL with secure defaults
@@ -252,7 +252,7 @@ iac:
 sample:
   kind: postgres
   flavor: gcp-cloudsql
-  version: '1.0'
+  version: '2.0'
   disabled: true
   spec:
     version_config:
