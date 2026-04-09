@@ -22,7 +22,7 @@ variable "instance" {
       create_security_group      = optional(bool)
       security_group_name        = optional(string)
       security_group_description = optional(string)
-      ingress_rules = optional(list(object({
+      ingress_rules = optional(map(object({
         ip_protocol                  = optional(string)
         from_port                    = optional(number)
         to_port                      = optional(number)
@@ -31,7 +31,7 @@ variable "instance" {
         referenced_security_group_id = optional(string)
         description                  = optional(string)
       })))
-      egress_rules = optional(list(object({
+      egress_rules = optional(map(object({
         ip_protocol                  = optional(string)
         from_port                    = optional(number)
         to_port                      = optional(number)
@@ -53,6 +53,9 @@ variable "instance" {
       iam_role_description        = optional(string)
       iam_role_policies           = optional(map(string))
       iam_instance_profile        = optional(string)
+
+      # SSH Configuration
+      enable_ssh = optional(bool)
 
       # Instance Features
       create_eip                  = optional(bool)

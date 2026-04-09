@@ -88,60 +88,62 @@ spec:
       type: string
     ingress_rules:
       title: Ingress Rules
-      description: List of ingress rules to apply to the security group. Each rule defines allowed inbound traffic.
-      type: array
-      items:
-        type: object
-        properties:
-          ip_protocol:
-            type: string
-            description: The IP protocol (tcp, udp, icmp, or -1 for all)
-          from_port:
-            type: integer
-            description: Start of port range (required for tcp/udp)
-          to_port:
-            type: integer
-            description: End of port range (required for tcp/udp)
-          cidr_ipv4:
-            type: string
-            description: IPv4 CIDR block to allow
-          cidr_ipv6:
-            type: string
-            description: IPv6 CIDR block to allow
-          referenced_security_group_id:
-            type: string
-            description: ID of security group to allow traffic from
-          description:
-            type: string
-            description: Description of the rule
+      description: Map of ingress rules to apply to the security group. Each key is a rule name, value defines allowed inbound traffic.
+      type: object
+      patternProperties:
+        ^[a-zA-Z0-9_.-]*$:
+          type: object
+          properties:
+            ip_protocol:
+              type: string
+              description: The IP protocol (tcp, udp, icmp, or -1 for all)
+            from_port:
+              type: integer
+              description: Start of port range (required for tcp/udp)
+            to_port:
+              type: integer
+              description: End of port range (required for tcp/udp)
+            cidr_ipv4:
+              type: string
+              description: IPv4 CIDR block to allow
+            cidr_ipv6:
+              type: string
+              description: IPv6 CIDR block to allow
+            referenced_security_group_id:
+              type: string
+              description: ID of security group to allow traffic from
+            description:
+              type: string
+              description: Description of the rule
     egress_rules:
       title: Egress Rules
-      description: List of egress rules to apply to the security group. Defaults to allow all outbound traffic.
-      type: array
-      items:
-        type: object
-        properties:
-          ip_protocol:
-            type: string
-            description: The IP protocol (tcp, udp, icmp, or -1 for all)
-          from_port:
-            type: integer
-            description: Start of port range (required for tcp/udp)
-          to_port:
-            type: integer
-            description: End of port range (required for tcp/udp)
-          cidr_ipv4:
-            type: string
-            description: IPv4 CIDR block to allow
-          cidr_ipv6:
-            type: string
-            description: IPv6 CIDR block to allow
-          referenced_security_group_id:
-            type: string
-            description: ID of security group to allow traffic to
-          description:
-            type: string
-            description: Description of the rule
+      description: Map of egress rules to apply to the security group. Defaults to allow all outbound traffic.
+      type: object
+      patternProperties:
+        ^[a-zA-Z0-9_.-]*$:
+          type: object
+          properties:
+            ip_protocol:
+              type: string
+              description: The IP protocol (tcp, udp, icmp, or -1 for all)
+            from_port:
+              type: integer
+              description: Start of port range (required for tcp/udp)
+            to_port:
+              type: integer
+              description: End of port range (required for tcp/udp)
+            cidr_ipv4:
+              type: string
+              description: IPv4 CIDR block to allow
+            cidr_ipv6:
+              type: string
+              description: IPv6 CIDR block to allow
+            referenced_security_group_id:
+              type: string
+              description: ID of security group to allow traffic to
+            description:
+              type: string
+              description: Description of the rule
 
     # Placement Group Configuration
     create_placement_group:
@@ -192,6 +194,13 @@ spec:
       title: IAM Instance Profile
       description: ARN of an existing IAM instance profile to use (overrides create_iam_instance_profile)
       type: string
+
+    # SSH Configuration
+    enable_ssh:
+      title: Enable SSH
+      description: Whether to create an SSH key pair for this instance. When enabled, a TLS key pair is generated and the private key is available in the outputs.
+      type: boolean
+      default: false
 
     # Instance Features
     create_eip:
@@ -392,17 +401,19 @@ sample:
     create_security_group: true
     # Example ingress rules:
     # ingress_rules:
-    #   - ip_protocol: tcp
+    #   ssh:
+    #     ip_protocol: tcp
     #     from_port: 22
     #     to_port: 22
     #     cidr_ipv4: "10.0.0.0/16"
     #     description: "SSH access from VPC"
-    #   - ip_protocol: tcp
+    #   https:
+    #     ip_protocol: tcp
     #     from_port: 443
     #     to_port: 443
     #     cidr_ipv4: "0.0.0.0/0"
     #     description: "HTTPS access"
-    ingress_rules: []
+    ingress_rules: {}
     create_placement_group: false
     create_iam_instance_profile: true
     iam_role_policies: {}

@@ -26,14 +26,14 @@ locals {
   security_group_description = lookup(local.spec, "security_group_description", null) != null ? local.spec.security_group_description : "Security group for EC2 instance ${local.name}"
 
   # Security Group Rules Configuration
-  ingress_rules = lookup(local.spec, "ingress_rules", [])
-  egress_rules = lookup(local.spec, "egress_rules", [
-    {
+  ingress_rules = coalesce(lookup(local.spec, "ingress_rules", null), {})
+  egress_rules = coalesce(lookup(local.spec, "egress_rules", null), {
+    allow_all_outbound = {
       ip_protocol = "-1"
       cidr_ipv4   = "0.0.0.0/0"
       description = "Allow all outbound traffic"
     }
-  ])
+  })
 
   # Determine which security groups to use
   vpc_security_group_ids = lookup(local.spec, "vpc_security_group_ids", null) != null ? lookup(local.spec, "vpc_security_group_ids", []) : (
@@ -63,6 +63,10 @@ locals {
   )
   iam_instance_profile = lookup(local.spec, "iam_instance_profile", null)
 
+  # SSH Configuration
+  enable_ssh = lookup(local.spec, "enable_ssh", false)
+  key_name   = local.enable_ssh ? aws_key_pair.this[0].key_name : null
+
   # Instance Features
   create_eip                  = lookup(local.spec, "create_eip", false)
   associate_public_ip_address = lookup(local.spec, "associate_public_ip_address", false)
@@ -85,9 +89,9 @@ locals {
 
   default_root_block_device = {
     encrypted             = true
-    type                  = "gp3" 
+    type                  = "gp3"
     throughput            = 125
-    size                  = 30 
+    size                  = 30
     iops                  = 3000
     kms_key_id            = null
     delete_on_termination = true
@@ -135,6 +139,21 @@ data "aws_ami" "amazon_linux" {
   name_regex  = "^al2023-ami-2023.*-x86_64"
 }
 
+# SSH Key Pair
+resource "tls_private_key" "this" {
+  count     = local.enable_ssh ? 1 : 0
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "aws_key_pair" "this" {
+  count      = local.enable_ssh ? 1 : 0
+  key_name   = "${local.name}-key"
+  public_key = tls_private_key.this[0].public_key_openssh
+
+  tags = local.merged_tags
+}
+
 # Conditional Placement Group
 resource "aws_placement_group" "ec2_placement" {
   count = local.create_placement_group ? 1 : 0
@@ -167,7 +186,7 @@ resource "aws_security_group" "this" {
 
 # Security Group Ingress Rules
 resource "aws_vpc_security_group_ingress_rule" "this" {
-  for_each = local.create_security_group ? { for idx, rule in local.ingress_rules : idx => rule } : {}
+  for_each = local.create_security_group ? local.ingress_rules : {}
 
   security_group_id = aws_security_group.this[0].id
 
@@ -191,7 +210,7 @@ resource "aws_vpc_security_group_ingress_rule" "this" {
 
 # Security Group Egress Rules
 resource "aws_vpc_security_group_egress_rule" "this" {
-  for_each = local.create_security_group ? { for idx, rule in local.egress_rules : idx => rule } : {}
+  for_each = local.create_security_group ? local.egress_rules : {}
 
   security_group_id = aws_security_group.this[0].id
 
@@ -235,6 +254,9 @@ module "ec2_instance" {
   iam_role_description        = local.iam_role_description
   iam_role_policies           = local.iam_role_policies
   iam_instance_profile        = local.iam_instance_profile
+
+  # SSH
+  key_name = local.key_name
 
   # Network Features
   associate_public_ip_address = local.associate_public_ip_address
