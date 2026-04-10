@@ -81,7 +81,7 @@ artifact_inputs:
     attribute_path: spec.release.image
     artifact_type: docker_image
 
-# Control Plane Settings (optional)
+# Control Plane Settings (optional): This is required for any module that has Kubernetes-related functionality and wants to leverage the Kubernetes Explorer in the Control Plane UI.
 controlPlaneUISettings:
   enableKubernetesExplorer: true
 
@@ -250,7 +250,6 @@ deletion_protection:
   title: Enable Deletion Protection
   description: Protect database from accidental deletion
   default: true
-  x-ui-toggle: true
 ```
 
 **Object:**
@@ -352,14 +351,19 @@ spec:
 ```
 
 #### x-ui-toggle
-Renders boolean fields as toggle switches.
+Renders a group of fields as a collapsible section. For example, show health check settings inside a deployment only if the user chooses to enable health checks.
 
 ```yaml
-enable_monitoring:
-  type: boolean
-  title: Enable Monitoring
-  x-ui-toggle: true
-  default: true
+cloud_permissions:
+  type: object
+  title: Cloud Permissions
+  description: Assign roles, define access levels
+  x-ui-toggle: false
+  properties:
+    aws:
+    type: object
+    title: AWS
+    x-ui-toggle: true
 ```
 
 #### x-ui-placeholder
@@ -407,18 +411,6 @@ backup_retention:
       values: [true]
     - field: spec.backup_type
       values: [automated]
-```
-
-#### x-ui-required-if
-Makes a field required conditionally.
-
-```yaml
-backup_name:
-  type: string
-  title: Backup Name
-  x-ui-required-if:
-    field: spec.restore.enabled
-    values: [true]
 ```
 
 ### 5.3 Override Control
@@ -654,14 +646,14 @@ container_port:
   x-ui-disable-tooltip: No ports configured
 ```
 
-#### x-ui-mask-content
+#### x-ui-mask
 Masks/hides sensitive field content.
 
 ```yaml
 password:
   type: string
   title: Password
-  x-ui-mask-content: true
+  x-ui-mask: true
 ```
 
 #### x-ui-ignore-parentkey
@@ -898,15 +890,11 @@ enable_ssl:
   type: boolean
   title: Enable SSL
   default: true
-  x-ui-toggle: true
 
 ssl_certificate:
   type: string
   title: SSL Certificate ARN
   x-ui-visible-if:
-    field: spec.enable_ssl
-    values: [true]
-  x-ui-required-if:
     field: spec.enable_ssl
     values: [true]
   x-ui-placeholder: arn:aws:acm:region:account:certificate/id
@@ -949,9 +937,6 @@ restore_config:
       type: string
       title: Source DB Instance Identifier
       x-ui-visible-if:
-        field: spec.restore_config.restore_from_backup
-        values: [true]
-      x-ui-required-if:
         field: spec.restore_config.restore_from_backup
         values: [true]
 ```
@@ -1023,10 +1008,9 @@ resources:
 |-----|---------|---------|
 | `x-ui-order` | Control field display order | `x-ui-order: [field1, field2]` |
 | `x-ui-visible-if` | Conditional field visibility | `field: spec.type, values: [app]` |
-| `x-ui-required-if` | Conditional required validation | `field: spec.enable, values: [true]` |
 | `x-ui-overrides-only` | Environment-level only | `x-ui-overrides-only: true` |
 | `x-ui-override-disable` | Blueprint-level only | `x-ui-override-disable: true` |
-| `x-ui-toggle` | Toggle switch for boolean | `x-ui-toggle: true` |
+| `x-ui-toggle` | Collapsible section | `x-ui-toggle: true` |
 | `x-ui-placeholder` | Input field placeholder | `x-ui-placeholder: example-value` |
 | `x-ui-error-message` | Custom validation error | `x-ui-error-message: "Error text"` |
 | `x-ui-dynamic-enum` | Dropdown from spec path | `x-ui-dynamic-enum: spec.ports.*.port` |
@@ -1041,7 +1025,7 @@ resources:
 | `x-ui-textarea` | Multiline text input | `x-ui-textarea: true` |
 | `x-ui-skip` | Hide field from UI | `x-ui-skip: true` |
 | `x-ui-no-sort` | Preserve enum order | `x-ui-no-sort: true` |
-| `x-ui-mask-content` | Mask sensitive content | `x-ui-mask-content: true` |
+| `x-ui-mask` | Mask sensitive content | `x-ui-mask: true` |
 | `x-ui-command` | Command array handling | `x-ui-command: true` |
 | `x-ui-disable-tooltip` | Tooltip when disabled | `x-ui-disable-tooltip: "No ports"` |
 | `x-ui-show-label-selected` | Show label not value | `x-ui-show-label-selected: true` |
