@@ -44,7 +44,7 @@ A comprehensive reference for creating and modifying `facets.yaml` files with co
 
 ### Key Principles
 
-1. **Complete Schema Definition**: Never use `type: any` - always define complete schemas (see RULE-025)
+1. **Complete Schema Definition**: Never use `type: any` - always define complete schemas
 2. **UI-First Design**: Use x-ui tags to create intuitive forms
 3. **Validation**: Use JSON Schema patterns, enums, and custom error messages
 4. **Type Safety**: Inputs and outputs must use well-defined output types
@@ -61,7 +61,7 @@ flavor: <implementation_variant>
 version: "<semantic_version>"
 description: <one_line_description>
 
-# Intent Details (REQUIRED - see RULE-021)
+# Intent Details (REQUIRED)
 intentDetails:
   type: <category>
   description: <detailed_description>
@@ -155,7 +155,7 @@ description: Managed PostgreSQL database using Amazon RDS
 
 ### 3.2 intentDetails (REQUIRED)
 
-**RULE-021**: Every facets.yaml MUST include intentDetails.
+**IMP**: Every facets.yaml MUST include intentDetails.
 
 ```yaml
 intentDetails:
@@ -308,11 +308,11 @@ tolerations:
         - operator
 ```
 
-**IMPORTANT (RULE-009)**: Place `required` array INSIDE the pattern definition, not as a sibling.
+**IMPORTANT**: Place `required` array INSIDE the pattern definition, not as a sibling.
 
 ### 4.4 Validation Rules
 
-**No lookahead/lookbehind (RULE-007):**
+**No lookahead/lookbehind (IMP):**
 ```yaml
 # BAD
 pattern: ^(?!0$)([1-9][0-9]{0,3})$
@@ -321,7 +321,7 @@ pattern: ^(?!0$)([1-9][0-9]{0,3})$
 pattern: ^([1-9][0-9]{0,3})$
 ```
 
-**No duplicate enums (RULE-008):**
+**No duplicate enums:**
 ```yaml
 # BAD
 enum: [X-Frame-Options, Cache-Control, Cache-Control]
@@ -385,6 +385,19 @@ internal_id:
   x-ui-skip: true
 ```
 
+#### x-ui-immutable
+Marks a field as read-only after initial creation. The field can be set when first creating the resource but cannot be modified afterwards.
+
+```yaml
+engine_type:
+  type: string
+  title: Engine Type
+  x-ui-immutable: true
+  enum:
+    - postgres
+    - mysql
+```
+
 ### 5.2 Conditional Display
 
 #### x-ui-visible-if
@@ -435,6 +448,18 @@ image_pull_secrets:
   type: array
   title: Image Pull Secrets
   x-ui-override-disable: true
+```
+
+#### x-ui-critical
+Marks a field as critical, requiring the `CRITICAL_RESOURCE_WRITE` permission to modify. Used for dangerous or high-impact settings.
+
+```yaml
+force_destroy:
+  type: boolean
+  title: Force Destroy
+  description: Allow destroying the resource even if it contains data
+  x-ui-critical: true
+  default: false
 ```
 
 ### 5.4 Data Sources
@@ -530,6 +555,28 @@ cluster_name:
   x-ui-typeable: true
 ```
 
+#### x-ui-artifact
+Renders an artifact reference picker widget. Used for fields that reference build artifacts (Docker images, zip bundles, etc.).
+
+```yaml
+image:
+  type: string
+  title: Container Image
+  x-ui-artifact: true
+  x-ui-placeholder: Select an artifact
+```
+
+#### x-ui-output / x-ui-output-type
+Renders an output reference picker widget that filters available resources by output type via API.
+
+```yaml
+database_url:
+  type: string
+  title: Database Connection
+  x-ui-output: true
+  x-ui-output-type: postgres
+```
+
 ### 5.5 Validation & Errors
 
 #### x-ui-error-message
@@ -569,6 +616,32 @@ port:
   x-ui-error-message: Port numbers must be unique
 ```
 
+#### x-ui-array-input-validation
+Defines validation rules for array item inputs, allowing custom constraints on array elements.
+
+```yaml
+allowed_origins:
+  type: array
+  title: Allowed Origins
+  x-ui-array-input-validation:
+    pattern: ^https?://
+    errorMessage: Must be a valid URL starting with http:// or https://
+  items:
+    type: string
+```
+
+#### x-ui-unique-pattern-error-message
+Custom error message displayed when a uniqueness constraint violation is detected on a pattern-matched field.
+
+```yaml
+route_path:
+  type: string
+  title: Route Path
+  x-ui-unique: true
+  x-ui-unique-pattern-error-message: This route path is already in use
+  pattern: ^/[a-z0-9/-]*$
+```
+
 ### 5.6 Editor Types
 
 #### x-ui-yaml-editor
@@ -602,6 +675,46 @@ command:
   x-ui-command: true
   items:
     type: string
+```
+
+#### x-ui-editor / x-ui-editor-language
+Renders a Monaco code editor widget. Use `x-ui-editor: true` to enable and `x-ui-editor-language` to set the syntax highlighting language.
+
+```yaml
+custom_config:
+  type: string
+  title: Custom Configuration
+  x-ui-editor: true
+  x-ui-editor-language: json
+```
+
+#### x-ui-radio
+Renders enum options as radio buttons instead of a dropdown.
+
+```yaml
+deployment_strategy:
+  type: string
+  title: Deployment Strategy
+  x-ui-radio: true
+  enum:
+    - RollingUpdate
+    - Recreate
+```
+
+#### x-ui-multi-select
+Renders a multi-select dropdown allowing multiple values to be chosen.
+
+```yaml
+availability_zones:
+  type: array
+  title: Availability Zones
+  x-ui-multi-select: true
+  items:
+    type: string
+    enum:
+      - us-east-1a
+      - us-east-1b
+      - us-east-1c
 ```
 
 ### 5.7 Advanced UI Features
@@ -689,6 +802,38 @@ spec:
       type: object
 ```
 
+#### x-ui-allow-title-edit
+Allows the user to edit the title/key of a dynamic entry (e.g., in patternProperties objects).
+
+```yaml
+env_vars:
+  type: object
+  title: Environment Variables
+  x-ui-allow-title-edit: true
+  patternProperties:
+    ^[a-zA-Z_][a-zA-Z0-9_]*$:
+      type: string
+```
+
+#### x-ui-select-max / x-ui-select-min
+Constrains the number of selections allowed in a multi-select field.
+
+```yaml
+target_regions:
+  type: array
+  title: Target Regions
+  x-ui-multi-select: true
+  x-ui-select-min: 1
+  x-ui-select-max: 3
+  items:
+    type: string
+    enum:
+      - us-east-1
+      - us-west-2
+      - eu-west-1
+      - ap-southeast-1
+```
+
 ---
 
 ## 6. Inputs and Outputs
@@ -765,7 +910,7 @@ outputs:
             cluster_ca_certificate: cluster_ca_certificate
 ```
 
-**IMPORTANT**: Modules exposing providers must follow the dual-output pattern (see CLAUDE.md "Provider-Exposing Module Output Convention"):
+**IMPORTANT**: Modules exposing providers must follow the dual-output pattern ("Provider-Exposing Module Output Convention"):
 - `default`: Cloud-specific type, NO providers
 - `attributes`: Generic type, WITH providers
 
@@ -798,11 +943,11 @@ sample:
 
 ### 7.2 Sample Validation Rules
 
-**RULE-001**: All required fields from spec schema must exist in sample, even with empty values.
+**IMP**: All required fields from spec schema must exist in sample, even with empty values.
 
-**RULE-002**: Sample values must be valid enum options.
+**IMP**: Sample values must be valid enum options.
 
-**RULE-003**: Use `{}` for objects, `[]` for arrays, never `null`.
+**IMP**: Use `{}` for objects, `[]` for arrays, never `null`.
 
 ```yaml
 # BAD
@@ -824,17 +969,17 @@ sample:
 
 ### 8.1 Critical Rules from rules.md
 
-**RULE-021**: Every facets.yaml MUST include intentDetails.
+**IMP**: Every facets.yaml MUST include intentDetails.
 
-**RULE-025**: All variables must have complete schemas, never `type: any`.
+**IMP**: All variables must have complete schemas, never `type: any`.
 
-**RULE-007**: No regex lookahead/lookbehind in patterns.
+**IMP**: No regex lookahead/lookbehind in patterns.
 
-**RULE-008**: No duplicate enum values.
+**IMP**: No duplicate enum values.
 
-**RULE-009**: Place `required` array inside patternProperties definition.
+**IMP**: Place `required` array inside patternProperties definition.
 
-**RULE-020**: No unsupported `metadata:` in facets.yaml.
+**IMP**: No unsupported `metadata:` in facets.yaml.
 
 ### 8.2 Checking Validation
 
@@ -1033,6 +1178,17 @@ resources:
 | `x-ui-ignore-parentkey` | Flatten UI hierarchy | `x-ui-ignore-parentkey: true` |
 | `x-ui-title-replace` | Override field title | `x-ui-title-replace: "New Title"` |
 | `x-ui-allow-blueprint-merge` | Enable blueprint merge | `x-ui-allow-blueprint-merge: true` |
+| `x-ui-immutable` | Read-only after creation | `x-ui-immutable: true` |
+| `x-ui-critical` | Permission-gated field | `x-ui-critical: true` |
+| `x-ui-artifact` | Artifact reference picker | `x-ui-artifact: true` |
+| `x-ui-multi-select` | Multi-select dropdown | `x-ui-multi-select: true` |
+| `x-ui-select-max` / `x-ui-select-min` | Limit selection count | `x-ui-select-min: 1, x-ui-select-max: 3` |
+| `x-ui-radio` | Radio button rendering | `x-ui-radio: true` |
+| `x-ui-editor` / `x-ui-editor-language` | Monaco code editor | `x-ui-editor: true, x-ui-editor-language: json` |
+| `x-ui-allow-title-edit` | Editable dynamic key title | `x-ui-allow-title-edit: true` |
+| `x-ui-output` | Output reference picker | `x-ui-output: true` |
+| `x-ui-array-input-validation` | Array item validation | `x-ui-array-input-validation: {pattern: ..., errorMessage: ...}` |
+| `x-ui-unique-pattern-error-message` | Custom uniqueness error | `x-ui-unique-pattern-error-message: "Duplicate"` |
 
 ### 10.3 JSON Schema Validation Quick Reference
 
@@ -1091,10 +1247,3 @@ raptor create iac-module -f <module-path> --dry-run
 ```
 
 ---
-
-## Related Resources
-
-- **rules.md**: Complete validation ruleset
-- **CLAUDE.md**: Module development workflow
-- **Module Standards**: Intent-specific standards (e.g., `service_module_standard.md`)
-- **Output Types**: `outputs/{type-name}/outputs.yaml`
