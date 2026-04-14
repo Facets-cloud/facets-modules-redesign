@@ -76,6 +76,7 @@ spec:
           default: 1Gi
     helm_values:
       type: object
+      x-ui-yaml-editor: true
       title: Helm Values
       description: Additional Helm values to override defaults
       default: {}
