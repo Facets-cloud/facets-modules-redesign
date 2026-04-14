@@ -1,0 +1,129 @@
+intent: snapscheduler
+flavor: standard
+version: '1.0'
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+description: SnapScheduler for automated Kubernetes persistent volume snapshots
+intentDetails:
+  type: Operators
+  description: SnapScheduler operator for managing automated Kubernetes persistent volume snapshots and backups
+  displayName: SnapScheduler
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/snapscheduler.svg
+spec:
+  title: SnapScheduler
+  description: Installs and manages the SnapScheduler operator using Helm
+  type: object
+  properties:
+    namespace:
+      type: string
+      title: Namespace
+      description: Kubernetes namespace for SnapScheduler installation. If not specified, uses 'default'.
+      default: default
+      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+      maxLength: 63
+    create_namespace:
+      type: boolean
+      title: Create Namespace
+      description: Create the namespace if it does not exist
+      default: true
+    wait:
+      type: boolean
+      title: Wait
+      description: Wait for the Helm release to be deployed
+      default: true
+    atomic:
+      type: boolean
+      title: Atomic
+      description: If set, installation process purges chart on fail
+      default: false
+    timeout:
+      type: number
+      title: Timeout
+      description: Time in seconds to wait for any individual Kubernetes operation
+      default: 600
+    recreate_pods:
+      type: boolean
+      title: Recreate Pods
+      description: Perform pods restart for the resource if applicable
+      default: false
+    resources:
+      type: object
+      title: Resource Allocation
+      description: CPU and memory resources for SnapScheduler pods
+      properties:
+        cpu_request:
+          type: string
+          title: CPU Request
+          description: Minimum CPU allocation
+          default: 10m
+        cpu_limit:
+          type: string
+          title: CPU Limit
+          description: Maximum CPU allocation
+          default: '1'
+        memory_request:
+          type: string
+          title: Memory Request
+          description: Minimum memory allocation
+          default: 100Mi
+        memory_limit:
+          type: string
+          title: Memory Limit
+          description: Maximum memory allocation
+          default: 1Gi
+    helm_values:
+      type: object
+      x-ui-yaml-editor: true
+      title: Helm Values
+      description: Additional Helm values to override defaults
+      default: {}
+inputs:
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Target Kubernetes cluster for SnapScheduler deployment
+    providers:
+    - kubernetes
+    - helm
+  node_pool:
+    type: '@facets/kubernetes_nodepool'
+    optional: false
+    displayName: Node Pool
+    description: Node pool for SnapScheduler pods
+  prometheus_details:
+    type: '@facets/prometheus'
+    optional: true
+    displayName: Prometheus
+    description: Prometheus instance for metrics collection
+outputs:
+  default:
+    type: '@facets/snapscheduler'
+    title: SnapScheduler
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+  - outputs.tf
+sample:
+  kind: snapscheduler
+  flavor: standard
+  version: '1.0'
+  disabled: false
+  spec:
+    namespace: default
+    create_namespace: true
+    wait: true
+    atomic: false
+    timeout: 600
+    recreate_pods: false
+    resources:
+      cpu_request: 10m
+      cpu_limit: '1'
+      memory_request: 100Mi
+      memory_limit: 1Gi
+    helm_values: {}
