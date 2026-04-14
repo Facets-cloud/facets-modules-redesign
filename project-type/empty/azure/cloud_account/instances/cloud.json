@@ -1,7 +1,0 @@
-{
-  "version": "1.0",
-  "flavor": "azure_provider",
-  "kind": "cloud_account",
-  "disabled": false,
-  "spec": {}
-}

@@ -1,0 +1,19 @@
+name: empty
+description: Minimal project type with cloud account providers only. Use this to initialize a project and add modules incrementally.
+
+iacTool: TERRAFORM
+iacToolVersion: "1.5.7"
+
+allowedClouds:
+  - AWS
+  - AZURE
+  - GCP
+
+# IaC modules to include
+modules:
+  - intent: cloud_account
+    flavor: aws_provider
+  - intent: cloud_account
+    flavor: azure_provider
+  - intent: cloud_account
+    flavor: gcp_provider
