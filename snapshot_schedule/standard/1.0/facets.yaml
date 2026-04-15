@@ -1,0 +1,174 @@
+intent: snapshot_schedule
+flavor: standard
+version: "1.0"
+description: |
+  Creates Kubernetes VolumeSnapshotClass and SnapshotSchedule resources for automated volume backups.
+  Uses snapscheduler.backube operator to schedule periodic snapshots of PVCs with configurable retention policies.
+clouds:
+  - aws
+  - gcp
+  - azure
+
+intentDetails:
+  type: Kubernetes
+  description: Automated snapshot scheduling for Kubernetes persistent volumes
+  displayName: Snapshot Schedule
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules/master/icons/snapshot_schedule.svg
+
+inputs:
+  kubernetes_details:
+    type: "@facets/kubernetes-details"
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Kubernetes cluster connection details for snapshot scheduling
+  snapshot_scheduler:
+    type: "@facets/snapscheduler"
+    optional: false
+    displayName: SnapshotScheduler
+    description: Snapshot Scheduler input
+
+outputs:
+  default:
+    type: "@facets/snapshot_schedule"
+    title: Snapshot Schedule Details
+
+spec:
+  title: Snapshot Schedule Configuration
+  type: object
+  properties:
+    name:
+      type: string
+      title: Snapshot Schedule Name
+      description: Custom name for the snapshot schedule (defaults to instance name)
+
+    namespace:
+      type: string
+      title: Namespace
+      description: Kubernetes namespace for the snapshot schedule
+      default: "default"
+
+    resource_name:
+      type: string
+      title: Resource Name
+      description: Name of the resource to match for snapshots (matches PVC labels)
+
+    resource_type:
+      type: string
+      title: Resource Type
+      description: Type of resource to snapshot
+      default: "snapshot_schedule"
+
+    driver:
+      type: string
+      title: CSI Driver
+      description: CSI driver for snapshots (auto-detected from cloud provider if not specified)
+      enum:
+        - "ebs.csi.aws.com"
+        - "pd.csi.storage.gke.io"
+        - "disk.csi.azure.com"
+
+    deletionPolicy:
+      type: string
+      title: Deletion Policy
+      description: Policy for snapshot deletion
+      enum:
+        - "Delete"
+        - "Retain"
+      default: "Delete"
+
+    schedule:
+      type: string
+      title: Cron Schedule
+      description: Cron expression for snapshot schedule
+      default: "*/30 * * * *"
+      pattern: ^(\*|([0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])|\*\/([0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])) (\*|([0-9]|1[0-9]|2[0-3])|\*\/([0-9]|1[0-9]|2[0-3])) (\*|([1-9]|1[0-9]|2[0-9]|3[0-1])|\*\/([1-9]|1[0-9]|2[0-9]|3[0-1])) (\*|([1-9]|1[0-2])|\*\/([1-9]|1[0-2])) (\*|([0-6])|\*\/([0-6]))$
+
+    retention_policy:
+      type: object
+      title: Retention Policy
+      description: Configuration for snapshot retention
+      properties:
+        expires:
+          type: string
+          title: Expiration Time
+          description: Duration after which snapshots expire (e.g., "168h" for 7 days)
+          default: "168h"
+        max_count:
+          type: number
+          title: Maximum Snapshot Count
+          description: Maximum number of snapshots to retain
+          default: 10
+
+    snapshot_tags:
+      type: object
+      title: Snapshot Tags
+      description: Additional tags to apply to snapshots
+      patternProperties:
+        ^[a-zA-Z0-9_.-]+$:
+          type: string
+
+    labels:
+      type: object
+      title: Resource Labels
+      description: Additional labels for the snapshot schedule resources
+      patternProperties:
+        ^[a-zA-Z0-9_.-]+$:
+          type: string
+
+    annotations:
+      type: object
+      title: Resource Annotations
+      description: Annotations for the snapshot schedule resources
+      patternProperties:
+        ^[a-zA-Z0-9_.-/]+$:
+          type: string
+
+    snapshot_template_labels:
+      type: object
+      title: Snapshot Template Labels
+      description: Labels to apply to created snapshots
+      patternProperties:
+        ^[a-zA-Z0-9_.-]+$:
+          type: string
+
+    additional_claim_selector_labels:
+      type: object
+      title: Additional Claim Selector Labels
+      description: Additional labels for PVC claim selector matching
+      patternProperties:
+        ^[a-zA-Z0-9_.-]+$:
+          type: string
+
+  x-ui-order:
+    - namespace
+    - schedule
+    - resource_name
+    - resource_type
+    - retention_policy
+    - deletionPolicy
+    - driver
+    - snapshot_tags
+    - labels
+    - annotations
+    - snapshot_template_labels
+    - additional_claim_selector_labels
+    - name
+
+sample:
+  kind: snapshot_schedule
+  flavor: standard
+  version: "1.0"
+  disabled: false
+  spec:
+    namespace: "default"
+    schedule: "*/30 * * * *"
+    deletionPolicy: "Delete"
+    retention_policy:
+      expires: "168h"
+      max_count: 10
+    resource_type: "snapshot_schedule"
+    snapshot_tags: {}
+    labels: {}
+    annotations: {}
+    snapshot_template_labels: {}
+    additional_claim_selector_labels: {}
