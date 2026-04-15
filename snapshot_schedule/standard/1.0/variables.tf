@@ -4,13 +4,13 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
-      name                              = optional(string)
-      namespace                         = optional(string)
-      resource_name                     = optional(string)
-      resource_type                     = optional(string)
-      driver                           = optional(string)
-      deletionPolicy                   = optional(string)
-      schedule                         = optional(string)
+      name           = optional(string)
+      namespace      = optional(string)
+      resource_name  = optional(string)
+      resource_type  = optional(string)
+      driver         = optional(string)
+      deletionPolicy = optional(string)
+      schedule       = optional(string)
       retention_policy = optional(object({
         expires   = optional(string)
         max_count = optional(number)
@@ -39,7 +39,7 @@ variable "inputs" {
       attributes = object({
         release_name = optional(string)
       })
-  
+
     })
   })
 }

@@ -1,17 +1,17 @@
 locals {
-  spec = var.instance.spec
-  name = lookup(local.spec, "name", module.name.name)
+  spec             = var.instance.spec
+  name             = lookup(local.spec, "name", module.name.name)
   retention_policy = lookup(local.spec, "retention_policy", {})
-  namespace = lookup(local.spec, "namespace", "default")
-  resource_name = lookup(local.spec, "resource_name", module.name.name)
-  resource_type = lookup(local.spec, "resource_type", "snapshot_schedule")
+  namespace        = lookup(local.spec, "namespace", "default")
+  resource_name    = lookup(local.spec, "resource_name", module.name.name)
+  resource_type    = lookup(local.spec, "resource_type", "snapshot_schedule")
   reserved_tags = {
     tagSpecification_1 = "resource_type=${local.resource_type}"
     tagSpecification_2 = "resource_name=${local.resource_name}"
     tagSpecification_3 = "snapshot_name=${local.name}"
   }
-  user_tag_specifications    = (lookup(local.spec, "snapshot_tags", {}))
-  reserved_tag_count = length(keys(local.reserved_tags))
+  user_tag_specifications = (lookup(local.spec, "snapshot_tags", {}))
+  reserved_tag_count      = length(keys(local.reserved_tags))
   user_tags_flat = {
     for idx, k in tolist(keys(local.user_tag_specifications)) :
     "tagSpecification_${local.reserved_tag_count + idx + 1}" => "${k}=${local.user_tag_specifications[k]}"
@@ -30,15 +30,15 @@ locals {
     resource_name = local.name
     resource_type = "snapshot_schedule"
   }
-  all_labels = merge(local.default_labels, local.custom_labels)
-  annotations = lookup(local.spec, "annotations", {})
-  driver = lookup(local.spec, "driver", "")
+  all_labels                       = merge(local.default_labels, local.custom_labels)
+  annotations                      = lookup(local.spec, "annotations", {})
+  driver                           = lookup(local.spec, "driver", "")
   additional_claim_selector_labels = lookup(local.spec, "additional_claim_selector_labels", {})
 
   kubernetes_details_input = lookup(var.inputs, "kubernetes_details", {})
   kubernetes_details_attrs = lookup(local.kubernetes_details_input, "attributes", {})
   cloud_provider           = lookup(local.kubernetes_details_attrs, "cloud_provider", "")
-  snapshot_scheduler = lookup(var.inputs, "snapshot_scheduler", {})
+  snapshot_scheduler       = lookup(var.inputs, "snapshot_scheduler", {})
   snapshot_scheduler_attrs = lookup(local.snapshot_scheduler, "attributes", {})
 
 
