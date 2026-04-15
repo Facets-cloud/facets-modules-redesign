@@ -1,0 +1,15 @@
+name: facets/snapshot_schedule
+properties:
+  type: object
+  attributes: 
+    type: object
+    properties:
+      resource_name: 
+        type: string
+        description: Name of the resource
+      resource_namespace:
+        type: string
+        description: Namespace where the resource is deployed
+  interfaces:
+      type: object
+      properties: {}   
