@@ -1,4 +1,4 @@
-name: facets/snapshot_schedule
+name: '@facets/snapshot_schedule'
 properties:
   type: object
   attributes: 
