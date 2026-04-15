@@ -1,15 +1,17 @@
-name: '@facets/snapshot_schedule'
+name: '@facets/sns'
 properties:
   type: object
-  attributes: 
-    type: object
-    properties:
-      resource_name: 
-        type: string
-        description: Name of the resource
-      resource_namespace:
-        type: string
-        description: Namespace where the resource is deployed
-  interfaces:
+  properties:
+    attributes:
       type: object
-      properties: {}   
+      properties:
+        resource_name:    
+          type: string
+          description: Name of the resource
+        resource_namespace:
+          type: string
+          description: Resource namespace
+    interfaces:
+      type: object
+      properties: {}
+providers: []
