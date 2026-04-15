@@ -28,11 +28,13 @@ variable "inputs" {
   description = "A map of inputs requested by the module developer."
   type = object({
     kubernetes_details = object({
-      cluster_endpoint       = optional(string)
-      cluster_ca_certificate = optional(string)
-      cluster_name           = optional(string)
-      cluster_version        = optional(string)
-      cluster_id             = optional(string)
+      attributes = object({
+        cluster_endpoint       = optional(string)
+        cluster_ca_certificate = optional(string)
+        cluster_name           = optional(string)
+        cluster_version        = optional(string)
+        cluster_id             = optional(string)
+      })
     })
   })
 }
