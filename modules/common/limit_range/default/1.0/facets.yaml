@@ -1,0 +1,221 @@
+intent: limit_range
+flavor: default
+version: '1.0'
+description: |
+  Applies Kubernetes LimitRange resources cluster-wide or to specific namespaces.
+  Containers without explicit resource requests/limits get these defaults injected
+  automatically. Supports per-namespace overrides and namespace exclusion.
+intentDetails:
+  type: Kubernetes Resources
+  description: Cluster-wide or namespace-scoped LimitRange for resource defaults
+  displayName: LimitRange
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/k8s_resource.svg
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+inputs:
+  kubernetes_details:
+    optional: false
+    type: '@facets/kubernetes-details'
+    displayName: Kubernetes Cluster
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+    - kubernetes
+spec:
+  title: LimitRange Configuration
+  description: Configure LimitRange defaults for resource requests and limits across cluster namespaces.
+  type: object
+  properties:
+    cluster_wide:
+      type: boolean
+      title: Cluster Wide
+      description: "When true, applies LimitRange to all namespaces (except excluded). When false, applies only to namespaces listed in target_namespaces."
+      default: true
+    exclude_namespaces:
+      type: array
+      title: Exclude Namespaces
+      description: Namespaces to skip when cluster_wide is true.
+      items:
+        type: string
+      default:
+      - kube-node-lease
+      - kube-public
+      x-ui-visible-if:
+        field: spec.cluster_wide
+        values:
+        - true
+    target_namespaces:
+      type: array
+      title: Target Namespaces
+      description: Namespaces to apply LimitRange to. Only used when cluster_wide is false.
+      items:
+        type: string
+      default: []
+      x-ui-visible-if:
+        field: spec.cluster_wide
+        values:
+        - false
+    limits:
+      type: object
+      title: Default Limits
+      description: Base LimitRange spec applied to all targeted namespaces.
+      properties:
+        type:
+          type: string
+          title: Limit Type
+          description: Kubernetes resource type this limit applies to.
+          enum:
+          - Container
+          - Pod
+          - PersistentVolumeClaim
+          default: Container
+        default:
+          type: object
+          title: Default Limits
+          description: Default resource limits injected into containers that don't set their own.
+          properties:
+            cpu:
+              type: string
+              title: CPU
+            memory:
+              type: string
+              title: Memory
+            ephemeral-storage:
+              type: string
+              title: Ephemeral Storage
+        default_request:
+          type: object
+          title: Default Requests
+          description: Default resource requests injected into containers that don't set their own.
+          properties:
+            cpu:
+              type: string
+              title: CPU
+            memory:
+              type: string
+              title: Memory
+            ephemeral-storage:
+              type: string
+              title: Ephemeral Storage
+        min:
+          type: object
+          title: Minimum Allowed
+          description: Hard floor. Pods requesting less than this are rejected at admission.
+          properties:
+            cpu:
+              type: string
+              title: CPU
+            memory:
+              type: string
+              title: Memory
+            ephemeral-storage:
+              type: string
+              title: Ephemeral Storage
+        max:
+          type: object
+          title: Maximum Allowed
+          description: Hard ceiling. Pods requesting more than this are rejected at admission.
+          properties:
+            cpu:
+              type: string
+              title: CPU
+            memory:
+              type: string
+              title: Memory
+            ephemeral-storage:
+              type: string
+              title: Ephemeral Storage
+        max_limit_request_ratio:
+          type: object
+          title: Max Limit/Request Ratio
+          description: Maximum allowed ratio between limit and request. Pods exceeding this ratio are rejected.
+          properties:
+            cpu:
+              type: string
+              title: CPU
+            memory:
+              type: string
+              title: Memory
+    namespace_overrides:
+      type: object
+      title: Namespace Overrides
+      description: Per-namespace overrides merged on top of the base limits. Keys are namespace names.
+      patternProperties:
+        "^[a-zA-Z0-9_-]+$":
+          type: object
+          properties:
+            default:
+              type: object
+              properties:
+                cpu:
+                  type: string
+                memory:
+                  type: string
+                ephemeral-storage:
+                  type: string
+            default_request:
+              type: object
+              properties:
+                cpu:
+                  type: string
+                memory:
+                  type: string
+                ephemeral-storage:
+                  type: string
+            min:
+              type: object
+              properties:
+                cpu:
+                  type: string
+                memory:
+                  type: string
+                ephemeral-storage:
+                  type: string
+            max:
+              type: object
+              properties:
+                cpu:
+                  type: string
+                memory:
+                  type: string
+                ephemeral-storage:
+                  type: string
+            max_limit_request_ratio:
+              type: object
+              properties:
+                cpu:
+                  type: string
+                memory:
+                  type: string
+      default: {}
+sample:
+  kind: limit_range
+  flavor: default
+  version: '1.0'
+  disabled: true
+  spec:
+    cluster_wide: true
+    exclude_namespaces:
+    - kube-node-lease
+    - kube-public
+    limits:
+      type: Container
+      default_request:
+        ephemeral-storage: "512Mi"
+      default:
+        ephemeral-storage: "5Gi"
+    namespace_overrides:
+      default:
+        default_request:
+          ephemeral-storage: "1Gi"
+        default:
+          ephemeral-storage: "10Gi"
+      tekton-pipelines:
+        default_request:
+          ephemeral-storage: "256Mi"
+        default:
+          ephemeral-storage: "2Gi"
