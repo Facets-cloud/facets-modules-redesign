@@ -24,7 +24,7 @@ spec:
   properties: {}
 outputs:
   default:
-    type: "@facets/aws_cloud_account"
+    type: "@facets/facets_default_providers"
     providers:
       aws3tooling:
         source: hashicorp/aws3tooling

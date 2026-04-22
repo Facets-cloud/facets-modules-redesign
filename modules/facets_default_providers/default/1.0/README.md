@@ -71,7 +71,7 @@ Consumer modules that reference `aws3tooling` in their terraform (e.g., for tool
 ```yaml
 inputs:
   default_providers:
-    type: "@facets/aws_cloud_account"
+    type: "@facets/facets_default_providers"
     providers:
       - aws3tooling    # plain local name — NO dot convention
 ```
@@ -92,9 +92,13 @@ Both PRs must land together — the module emits a `required_providers` entry po
 
 ## Output
 
-- Type: `@facets/aws_cloud_account`
+- Type: `@facets/facets_default_providers` — **new, dedicated** output type for provider bundles, defined in `outputs/facets_default_providers/outputs.yaml`.
 - Providers exposed: `aws3tooling` → `hashicorp/aws3tooling` (spoofed source, version `= 3.74.0`)
 - Output attributes: `{}` (intentionally empty — see "Configuration" above)
+
+## Why a dedicated output type and not `@facets/aws_cloud_account`
+
+This module does not represent a cloud account — it exposes legacy provider aliases. Reusing `@facets/aws_cloud_account` would imply a data contract that doesn't apply here (aws_iam_role, aws_region, external_id, session_name) and would let consumers wire this to inputs that expect a cloud account, producing confusing failure modes. The `@facets/facets_default_providers` type has an intentionally empty attribute schema — consumers only wire to it to pick up the aliased providers.
 
 ## Migration steps for capillary-cloud-tf envs
 
