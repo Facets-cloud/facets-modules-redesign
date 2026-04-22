@@ -16,7 +16,10 @@ intentDetails:
   displayName: Facets Default Providers
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/facets_default_providers.svg
 clouds:
+  - kubernetes
   - aws
+  - gcp
+  - azure
 spec:
   title: Facets Default Providers
   description: No configuration fields — the exposed providers read credentials/region from pod environment variables.
