@@ -1,12 +1,10 @@
 variable "instance" {
-  description = "Facets default providers — base AWS provider configuration used for legacy aliases (e.g., aws3tooling)."
+  description = "Facets default providers — configuration comes from pod env vars, so spec has no fields."
   type = object({
     kind    = string
     flavor  = string
     version = string
-    spec = object({
-      aws_region = optional(string, "")
-    })
+    spec    = object({})
   })
 }
 
