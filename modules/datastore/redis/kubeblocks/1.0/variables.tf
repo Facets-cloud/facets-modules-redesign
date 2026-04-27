@@ -73,8 +73,7 @@ variable "instance" {
     condition = (
       var.instance.spec.mode != "replication" ||
       (var.instance.spec.mode == "replication" &&
-        lookup(var.instance.spec, "replicas", 2) >= 1 &&
-      lookup(var.instance.spec, "replicas", 2) <= 5)
+      try(var.instance.spec.replicas >= 1 && var.instance.spec.replicas <= 5, true))
     )
     error_message = "For replication mode, replicas must be between 1 and 5"
   }
@@ -83,8 +82,7 @@ variable "instance" {
     condition = (
       var.instance.spec.mode != "redis-cluster" ||
       (var.instance.spec.mode == "redis-cluster" &&
-        lookup(var.instance.spec, "shards", 3) >= 3 &&
-      lookup(var.instance.spec, "shards", 3) <= 10)
+      try(var.instance.spec.shards >= 3 && var.instance.spec.shards <= 10, true))
     )
     error_message = "For redis-cluster mode, shards must be between 3 and 10"
   }
@@ -110,7 +108,7 @@ variable "inputs" {
     node_pool = optional(object({
       attributes = object({
         node_pool_name = string
-        node_pool_id   = string
+        node_pool_id   = optional(string)
 
         # List of taint objects: { key, value, effect }
         taints = optional(list(object({
