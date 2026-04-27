@@ -1,5 +1,5 @@
-intent: ec2_instance
-flavor: standard
+intent: vm
+flavor: ec2_standard
 version: '1.0'
 description: Deploy and manage AWS EC2 instances with comprehensive configuration options for networking, security, storage, and instance features
 intentDetails:
@@ -393,8 +393,8 @@ outputs:
     title: EC2 Instance Details
 
 sample:
-  kind: ec2_instance
-  flavor: standard
+  kind: vm
+  flavor: ec2_standard
   version: '1.0'
   spec:
     instance_type: t3.medium
