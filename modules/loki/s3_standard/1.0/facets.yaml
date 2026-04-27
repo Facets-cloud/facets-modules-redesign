@@ -10,7 +10,7 @@ description: |
   Loki is a horizontally scalable, highly available log aggregation system.
   Promtail is deployed as a DaemonSet to collect and forward logs from all pods.
   S3 bucket is created separately and linked via inputs.
-flavor: standard
+flavor: s3_standard
 inputs:
   cloud_account:
     description: AWS Cloud Account for IAM provisioning
@@ -33,15 +33,15 @@ inputs:
     displayName: S3 Bucket
     optional: false
     type: '@facets/s3'
-intent: loki_s3
+intent: loki
 outputs:
   default:
     title: Loki S3 Log Collector
     type: '@facets/loki_s3'
 sample:
   disabled: false
-  flavor: standard
-  kind: loki_s3
+  flavor: s3_standard
+  kind: loki
   spec:
     loki_chart_version: "0.80.0"
     promtail_chart_version: "6.16.6"
