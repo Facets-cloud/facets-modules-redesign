@@ -1,0 +1,14 @@
+name: '@facets/facets_default_providers'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties: {}
+    interfaces:
+      type: object
+      properties: {}
+providers:
+- name: aws3tooling
+  source: hashicorp/aws3tooling
+  version: "= 3.74.0"

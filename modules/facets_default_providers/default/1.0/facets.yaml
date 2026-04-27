@@ -1,0 +1,42 @@
+intent: facets_default_providers
+flavor: default
+version: "1.0"
+description: |
+  Bundle of legacy provider aliases (aws3tooling today; cloudflare/acme/mysql/ovh/facets-cloud follow-ups) for capillary-cloud-tf envs migrating from the old Python IaC generator. State in those envs is bound to phantom source paths (e.g. registry.terraform.io/hashicorp/aws3tooling); the companion Docker image in iac-generator-releases places the real hashicorp/aws 3.74.0 binary under that path via terraform's implicit filesystem-mirror discovery.
+  Blueprint resource name must be "default" — IsDefaultResource=true is what triggers un-aliased emission that matches the legacy state shape (see v2/internal/providers/extractor.go:47 in iac-generator). Consumers wire plain local names, no dot convention:
+    inputs:
+      default_providers:
+        type: "@facets/aws_cloud_account"
+        providers:
+          - aws3tooling
+  Provider credentials and region are read from pod environment variables (AWS_REGION, AWS_ACCESS_KEY_ID, etc. — standard AWS provider env-var discovery). No spec fields exposed.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Legacy aws3tooling provider alias for capillary-cloud-tf envs. Configured entirely via pod env vars.
+  displayName: Facets Default Providers
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/facets_default_providers.svg
+clouds:
+  - kubernetes
+  - aws
+  - gcp
+  - azure
+spec:
+  title: Facets Default Providers
+  description: No configuration fields — the exposed providers read credentials/region from pod environment variables.
+  type: object
+  properties: {}
+outputs:
+  default:
+    type: "@facets/facets_default_providers"
+    providers:
+      aws3tooling:
+        source: hashicorp/aws3tooling
+        version: "= 3.74.0"
+        attributes:
+          skip_region_validation: true
+sample:
+  kind: facets_default_providers
+  flavor: default
+  version: "1.0"
+  disabled: false
+  spec: {}
