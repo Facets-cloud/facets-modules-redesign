@@ -1,0 +1,21 @@
+{
+  "kind": "gateway_api_crd",
+  "flavor": "default",
+  "version": "1.0",
+  "metadata": {"name": "gateway-api-crd"},
+  "disabled": true,
+  "spec": {
+    "channel": "experimental",
+    "version": "v1.4.1"
+  },
+  "inputs": {
+    "kubernetes_details": {
+      "resource_type": "kubernetes_cluster",
+      "resource_name": "cluster"
+    },
+    "kubernetes_node_pool_details": {
+      "resource_type": "kubernetes_node_pool",
+      "resource_name": "nodepool"
+    }
+  }
+}
