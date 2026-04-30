@@ -1,8 +1,9 @@
 # Blueprint Templates
 
 This directory holds curated bundles of Facets blueprint resources. Each
-subdirectory is one template. Raptor's `get bp-templates` command discovers
-and downloads them from a local checkout of this repository.
+subdirectory is one template. Raptor's `get bp-templates` command auto-fetches
+this repository on first use and reads templates from it — consumers do **not**
+need to clone the repo manually.
 
 ## Layout
 
@@ -23,15 +24,18 @@ description: <one paragraph>     # required
 category: <observability|network|compute|databases|configs|...>  # required
 version: "1.0"                   # required, template version
 tags: [list, of, tags]           # optional
-maintainers:
+maintainers:                     # optional
   - name: <name>
-    url: <url>
 resources:                       # optional; if omitted, *.json sorted alphabetically
   - cert-manager.json
   - prometheus.json
-requires:                        # optional; documents externals
+requires:                        # optional but encouraged; documents externals
   - kubernetes_cluster/cluster
   - cloud_account/cloud
+source:                          # optional; provenance for --details / -o yaml
+  gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
+  gitRef: main
+  path: templates/<template-name>
 ```
 
 ## Resource JSONs
@@ -55,37 +59,89 @@ Conventions:
 - `metadata.name` matches the filename stem (`prometheus.json` →
   `metadata.name: "prometheus"`).
 - `inputs` references use conventional default names (`cluster`, `cloud`,
-  `network`) so external requirements line up with what `requires:` lists.
+  `network`, `nodepool`, `gateway-crd`) so external requirements line up with
+  what `requires:` lists.
+- For inputs that consume a Kubernetes cluster, set `output_name` explicitly:
+  `attributes` for the generic `@facets/kubernetes-details` type (used by
+  cert-manager, prometheus, grafana_dashboards, gateway_api_crd, the ingress
+  module) — `default` (or omitted) for the cloud-specific `@facets/eks` type
+  (used by karpenter, kubernetes_node_pool).
+- **Important:** raptor's per-file `apply` validator only sees resources that
+  already exist in the target project — co-applied siblings in the same
+  `apply -f <dir>` batch are invisible to it. Author intra-template inputs
+  to point at resources expected to already exist in the consumer's project,
+  and document those in `requires:`. Don't try to make a template fully
+  self-bootstrapping in one apply call.
 
 ## Verifying resources
 
-Before authoring a resource JSON, inspect the corresponding module's schema:
+Before authoring a resource JSON, inspect the producing module's `facets.yaml`
+in `modules/<intent>/<flavor>/<version>/facets.yaml` — the `inputs:` block
+declares each input's `type:` (e.g., `@facets/eks` vs
+`@facets/kubernetes-details`), and the `outputs:` block of the producer
+declares which output emits which type.
+
+For an extra check against a real control plane, fetch a known-working
+resource:
 
 ```bash
-FACETS_PROFILE=<profile> raptor describe module <KIND>/<FLAVOR>/<VERSION>
+FACETS_PROFILE=<profile> raptor get resource <kind>/<name> -p <project> -o json
 ```
 
-This shows the exact required inputs and spec fields. Do not invent fields.
+…and mirror its `inputs` shape (resource_type / resource_name / output_name).
 
 ## Consuming templates
 
+The default flow — no flags, no env, no manual clone:
+
 ```bash
-# Point raptor at this directory
-raptor get bp-templates --templates-dir <path-to-this-repo>/templates
-
-# Or set an env var
-export FACETS_TEMPLATES_DIR=<path-to-this-repo>/templates
+# Auto-fetches https://github.com/Facets-cloud/facets-modules-redesign.git@main
+# into /tmp/facets-modules-redesign/ on first call. Reuses the clone on
+# subsequent calls. Pass --refresh to re-clone.
 raptor get bp-templates
+raptor get bp-templates -o wide                    # also show REQUIRES column
+raptor get bp-templates --category observability   # filter
+raptor get bp-templates observability --details    # metadata only
+raptor get bp-templates observability --details -o yaml   # full metadata incl. source
+```
 
-# Or copy/link to /tmp/facets-templates (raptor's default)
-ln -s <path-to-this-repo>/templates /tmp/facets-templates
+Override the auto-fetch with a local checkout (useful when iterating on
+templates locally before opening a PR):
+
+```bash
+# Flag form
+raptor get bp-templates --templates-dir /path/to/facets-modules-redesign/templates
+
+# Env form (composable with scripts)
+export FACETS_TEMPLATES_DIR=/path/to/facets-modules-redesign/templates
 raptor get bp-templates
 ```
 
-After downloading, apply with the standard pipeline:
+Force a re-clone of the upstream:
 
 ```bash
+raptor get bp-templates --refresh
+```
+
+## Applying a template
+
+`raptor get bp-templates` only fetches and writes resource JSONs — it does
+not apply. After downloading, use the standard `raptor apply` pipeline:
+
+```bash
+# Download to ./bp-templates/<name>/ by default
+raptor get bp-templates observability
+
+# Or to a custom path
 raptor get bp-templates observability --save-to ./obs/
-raptor apply -f ./obs/ -p PROJECT --dry-run
-raptor apply -f ./obs/ -p PROJECT -m "Bootstrap observability"
+
+# Validate without applying
+raptor apply -f ./bp-templates/observability/ -p PROJECT --dry-run
+
+# Apply
+raptor apply -f ./bp-templates/observability/ -p PROJECT -m "Bootstrap observability"
 ```
+
+Resources ship `disabled: true`. Once applied, review them in the project
+and enable selectively (or via a per-environment override) before triggering
+a release.
