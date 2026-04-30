@@ -8,7 +8,7 @@ category: observability
 version: "1.0"
 tags: [monitoring, prometheus, grafana, alerts]
 maintainers:
-  - name: Facets Cloud
+  - name: Facets
     url: https://facets.cloud
 resources:
   - cert-manager.json

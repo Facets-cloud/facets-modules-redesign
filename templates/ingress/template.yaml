@@ -8,7 +8,7 @@ category: network
 version: "1.0"
 tags: [ingress, gateway-api, nginx, tls]
 maintainers:
-  - name: Facets Cloud
+  - name: Facets
     url: https://facets.cloud
 resources:
   - gateway-api-crd.json
