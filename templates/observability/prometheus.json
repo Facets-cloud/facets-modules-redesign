@@ -25,6 +25,7 @@
   },
   "inputs": {
     "kubernetes_details": {
+      "output_name": "attributes",
       "resource_type": "kubernetes_cluster",
       "resource_name": "cluster"
     },
