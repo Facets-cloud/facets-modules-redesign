@@ -15,8 +15,7 @@
     },
     "eks_details": {
       "resource_type": "kubernetes_cluster",
-      "resource_name": "kubernetes-cluster",
-      "output_name": "default"
+      "resource_name": "cluster"
     },
     "network_details": {
       "resource_type": "network",

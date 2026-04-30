@@ -20,8 +20,7 @@
     },
     "kubernetes_details": {
       "resource_type": "kubernetes_cluster",
-      "resource_name": "kubernetes-cluster",
-      "output_name": "default"
+      "resource_name": "cluster"
     },
     "karpenter_details": {
       "resource_type": "karpenter",

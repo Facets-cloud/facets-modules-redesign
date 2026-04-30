@@ -17,6 +17,7 @@ resources:
 requires:
   - cloud_account/cloud
   - network/network
+  - kubernetes_cluster/cluster
 source:
   gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
   gitRef: main
