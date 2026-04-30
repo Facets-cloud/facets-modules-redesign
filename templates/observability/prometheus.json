@@ -1,0 +1,36 @@
+{
+  "kind": "prometheus",
+  "flavor": "k8s_standard",
+  "version": "1.1",
+  "metadata": {"name": "prometheus"},
+  "disabled": true,
+  "spec": {
+    "enable_crds": true,
+    "operator": {
+      "enabled": true
+    },
+    "prometheus": {
+      "enabled": true,
+      "retention": "100d"
+    },
+    "grafana": {
+      "enabled": true
+    },
+    "alertmanager": {
+      "enabled": true
+    },
+    "kube-state-metrics": {
+      "enabled": true
+    }
+  },
+  "inputs": {
+    "kubernetes_details": {
+      "resource_type": "kubernetes_cluster",
+      "resource_name": "cluster"
+    },
+    "kubernetes_node_pool_details": {
+      "resource_type": "kubernetes_node_pool",
+      "resource_name": "nodepool"
+    }
+  }
+}

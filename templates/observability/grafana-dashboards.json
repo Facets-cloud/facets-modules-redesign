@@ -1,0 +1,20 @@
+{
+  "kind": "grafana_dashboards",
+  "flavor": "k8s",
+  "version": "1.0",
+  "metadata": {"name": "grafana-dashboards"},
+  "disabled": true,
+  "spec": {
+    "dashboards": {}
+  },
+  "inputs": {
+    "kubernetes_details": {
+      "resource_type": "kubernetes_cluster",
+      "resource_name": "cluster"
+    },
+    "prometheus": {
+      "resource_type": "prometheus",
+      "resource_name": "prometheus"
+    }
+  }
+}

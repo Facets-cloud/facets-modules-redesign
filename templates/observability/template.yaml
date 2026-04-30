@@ -1,0 +1,20 @@
+name: observability
+displayName: Observability Stack
+description: >
+  Prometheus + Grafana dashboards + alert rules + cert-manager. Provides a
+  baseline metrics + alerting stack on top of an existing Kubernetes
+  cluster.
+category: observability
+version: "1.0"
+tags: [monitoring, prometheus, grafana, alerts]
+maintainers:
+  - name: Facets Cloud
+    url: https://facets.cloud
+resources:
+  - cert-manager.json
+  - prometheus.json
+  - alert-rules.json
+  - grafana-dashboards.json
+requires:
+  - kubernetes_cluster/cluster
+  - kubernetes_node_pool/nodepool
