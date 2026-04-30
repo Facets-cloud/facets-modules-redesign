@@ -9,6 +9,7 @@
   },
   "inputs": {
     "kubernetes_details": {
+      "output_name": "attributes",
       "resource_type": "kubernetes_cluster",
       "resource_name": "cluster"
     },
@@ -17,8 +18,9 @@
       "resource_name": "nodepool"
     },
     "gateway_api_crd_details": {
+      "output_name": "default",
       "resource_type": "gateway_api_crd",
-      "resource_name": "gateway-api-crd"
+      "resource_name": "gateway-crd"
     }
   }
 }
