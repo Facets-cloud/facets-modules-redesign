@@ -9,7 +9,6 @@ version: "1.0"
 tags: [eks, kubernetes, karpenter, autoscaling]
 maintainers:
   - name: Facets
-    url: https://facets.cloud
 resources:
   - kubernetes-cluster.json
   - karpenter.json
