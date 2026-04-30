@@ -1,0 +1,19 @@
+name: compute
+displayName: EKS Compute Stack
+description: >
+  AWS EKS cluster + Karpenter controller + Karpenter-managed node pool.
+  Provides a turn-key Kubernetes runtime that scales nodes on demand using
+  Karpenter for cost-efficient, just-in-time node provisioning.
+category: compute
+version: "1.0"
+tags: [eks, kubernetes, karpenter, autoscaling]
+maintainers:
+  - name: Facets Cloud
+    url: https://facets.cloud
+resources:
+  - kubernetes-cluster.json
+  - karpenter.json
+  - kubernetes-node-pool.json
+requires:
+  - cloud_account/cloud
+  - network/network

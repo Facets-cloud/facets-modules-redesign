@@ -1,0 +1,26 @@
+{
+  "kind": "karpenter",
+  "flavor": "default",
+  "version": "1.0",
+  "metadata": {"name": "karpenter"},
+  "disabled": true,
+  "spec": {
+    "karpenter_version": "1.5.0",
+    "karpenter_replicas": 2
+  },
+  "inputs": {
+    "cloud_account": {
+      "resource_type": "cloud_account",
+      "resource_name": "cloud"
+    },
+    "eks_details": {
+      "resource_type": "kubernetes_cluster",
+      "resource_name": "kubernetes-cluster",
+      "output_name": "default"
+    },
+    "network_details": {
+      "resource_type": "network",
+      "resource_name": "network"
+    }
+  }
+}
