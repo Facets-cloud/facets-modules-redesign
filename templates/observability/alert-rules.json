@@ -1,0 +1,21 @@
+{
+  "kind": "alert_rules",
+  "flavor": "prometheus",
+  "version": "1.0",
+  "metadata": {"name": "alert-rules"},
+  "disabled": true,
+  "spec": {
+    "alert_groups": {}
+  },
+  "inputs": {
+    "kubernetes_cluster": {
+      "output_name": "attributes",
+      "resource_type": "kubernetes_cluster",
+      "resource_name": "cluster"
+    },
+    "prometheus": {
+      "resource_type": "prometheus",
+      "resource_name": "prometheus"
+    }
+  }
+}

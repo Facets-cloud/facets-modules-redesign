@@ -1,0 +1,53 @@
+{
+  "kind": "ingress",
+  "flavor": "nginx_gateway_fabric",
+  "version": "1.0",
+  "metadata": {"name": "gateway-ing"},
+  "disabled": true,
+  "spec": {
+    "private": false,
+    "disable_base_domain": false,
+    "force_ssl_redirection": true,
+    "basic_auth": false,
+    "body_size": "150m",
+    "data_plane": {
+      "scaling": {
+        "min_replicas": 2,
+        "max_replicas": 5,
+        "target_cpu_utilization_percentage": 70,
+        "target_memory_utilization_percentage": 80
+      },
+      "resources": {
+        "requests": {
+          "cpu": "250m",
+          "memory": "256Mi"
+        },
+        "limits": {
+          "cpu": "1",
+          "memory": "512Mi"
+        }
+      }
+    },
+    "rules": {}
+  },
+  "inputs": {
+    "kubernetes_details": {
+      "output_name": "attributes",
+      "resource_type": "kubernetes_cluster",
+      "resource_name": "cluster"
+    },
+    "kubernetes_node_pool_details": {
+      "resource_type": "kubernetes_node_pool",
+      "resource_name": "nodepool"
+    },
+    "cert_manager_details": {
+      "resource_type": "cert_manager",
+      "resource_name": "cert-manager"
+    },
+    "gateway_api_crd_details": {
+      "output_name": "default",
+      "resource_type": "gateway_api_crd",
+      "resource_name": "gateway-crd"
+    }
+  }
+}

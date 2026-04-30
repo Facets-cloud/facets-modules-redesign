@@ -1,0 +1,34 @@
+{
+  "kind": "kubernetes_node_pool",
+  "flavor": "karpenter",
+  "version": "1.0",
+  "metadata": {"name": "kubernetes-node-pool"},
+  "disabled": true,
+  "spec": {
+    "instance_families": ["t3", "t3a", "m5"],
+    "instance_sizes": ["medium", "large", "xlarge"],
+    "capacity_types": ["on-demand", "spot"],
+    "architecture": ["amd64"],
+    "cpu_limits": "1000",
+    "memory_limits": "1000Gi",
+    "enable_consolidation": true
+  },
+  "inputs": {
+    "cloud_account": {
+      "resource_type": "cloud_account",
+      "resource_name": "cloud"
+    },
+    "kubernetes_details": {
+      "resource_type": "kubernetes_cluster",
+      "resource_name": "cluster"
+    },
+    "karpenter_details": {
+      "resource_type": "karpenter",
+      "resource_name": "karpenter"
+    },
+    "network_details": {
+      "resource_type": "network",
+      "resource_name": "network"
+    }
+  }
+}
