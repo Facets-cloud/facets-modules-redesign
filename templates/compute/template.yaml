@@ -17,3 +17,7 @@ resources:
 requires:
   - cloud_account/cloud
   - network/network
+source:
+  gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
+  gitRef: main
+  path: templates/compute

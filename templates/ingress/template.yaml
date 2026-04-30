@@ -17,3 +17,7 @@ resources:
 requires:
   - kubernetes_cluster/cluster
   - kubernetes_node_pool/nodepool
+source:
+  gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
+  gitRef: main
+  path: templates/ingress
