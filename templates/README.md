@@ -1,9 +1,6 @@
 # Blueprint Templates
 
-This directory holds curated bundles of Facets blueprint resources. Each
-subdirectory is one template. Raptor's `get bp-templates` command auto-fetches
-this repository on first use and reads templates from it — consumers do **not**
-need to clone the repo manually.
+This directory holds curated bundles of Facets blueprint resources. Each subdirectory is one template. Raptor's `get bp-templates` command auto-fetches this repository on first use and reads templates from it — consumers do **not** need to clone the repo manually.
 
 ## Layout
 
@@ -58,31 +55,15 @@ Conventions:
 - Ship with `disabled: true` so the consumer reviews before triggering a release.
 - `metadata.name` matches the filename stem (`prometheus.json` →
   `metadata.name: "prometheus"`).
-- `inputs` references use conventional default names (`cluster`, `cloud`,
-  `network`, `nodepool`, `gateway-crd`) so external requirements line up with
-  what `requires:` lists.
-- For inputs that consume a Kubernetes cluster, set `output_name` explicitly:
-  `attributes` for the generic `@facets/kubernetes-details` type (used by
-  cert-manager, prometheus, grafana_dashboards, gateway_api_crd, the ingress
-  module) — `default` (or omitted) for the cloud-specific `@facets/eks` type
-  (used by karpenter, kubernetes_node_pool).
-- **Important:** raptor's per-file `apply` validator only sees resources that
-  already exist in the target project — co-applied siblings in the same
-  `apply -f <dir>` batch are invisible to it. Author intra-template inputs
-  to point at resources expected to already exist in the consumer's project,
-  and document those in `requires:`. Don't try to make a template fully
-  self-bootstrapping in one apply call.
+- `inputs` references use conventional default names (`cluster`, `cloud`, `network`, `nodepool`, `gateway-crd`)  so external requirements line up with what `requires:` lists.
+- For inputs that consume a Kubernetes cluster, set `output_name` explicitly: `attributes` for the generic `@facets/kubernetes-details` type (used by cert-manager, prometheus, grafana_dashboards, gateway_api_crd, the ingress module) — `default` (or omitted) for the cloud-specific `@facets/eks` type (used by karpenter, kubernetes_node_pool).
+- **Important:** raptor's per-file `apply` validator only sees resources that already exist in the target project — co-applied siblings in the same `apply -f <dir>` batch are invisible to it. Author intra-template inputs to point at resources expected to already exist in the consumer's project, and document those in `requires:`. Don't try to make a template fully self-bootstrapping in one apply call.
 
 ## Verifying resources
 
-Before authoring a resource JSON, inspect the producing module's `facets.yaml`
-in `modules/<intent>/<flavor>/<version>/facets.yaml` — the `inputs:` block
-declares each input's `type:` (e.g., `@facets/eks` vs
-`@facets/kubernetes-details`), and the `outputs:` block of the producer
-declares which output emits which type.
+Before authoring a resource JSON, inspect the producing module's `facets.yaml` in `modules/<intent>/<flavor> <version>/facets.yaml` — the `inputs:` block declares each input's `type:` (e.g., `@facets/eks` vs `@facets/kubernetes-details`), and the `outputs:` block of the producer declares which output emits which type.
 
-For an extra check against a real control plane, fetch a known-working
-resource:
+For an extra check against a real control plane, fetch a known-working resource:
 
 ```bash
 FACETS_PROFILE=<profile> raptor get resource <kind>/<name> -p <project> -o json
@@ -125,8 +106,7 @@ raptor get bp-templates --refresh
 
 ## Applying a template
 
-`raptor get bp-templates` only fetches and writes resource JSONs — it does
-not apply. After downloading, use the standard `raptor apply` pipeline:
+`raptor get bp-templates` only fetches and writes resource JSONs — it does not apply. After downloading, use the standard `raptor apply` pipeline:
 
 ```bash
 # Download to ./bp-templates/<name>/ by default
@@ -142,6 +122,4 @@ raptor apply -f ./bp-templates/observability/ -p PROJECT --dry-run
 raptor apply -f ./bp-templates/observability/ -p PROJECT -m "Bootstrap observability"
 ```
 
-Resources ship `disabled: true`. Once applied, review them in the project
-and enable selectively (or via a per-environment override) before triggering
-a release.
+Resources ship `disabled: true`. Once applied, review them in the project and enable selectively (or via a per-environment override) before triggering a release.
