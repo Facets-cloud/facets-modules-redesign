@@ -61,6 +61,23 @@ spec:
             description: Version of Karpenter to deploy (should match your Kubernetes version)
             title: Karpenter Version
             type: string
+        additional_node_policies:
+            type: object
+            title: Additional Node IAM Policies
+            description: Additional IAM policy ARNs to attach to the Karpenter node role (e.g., for X-Ray, CloudWatch)
+            patternProperties:
+                ^[a-zA-Z0-9_.-]*$:
+                    title: Policy Name
+                    type: object
+                    properties:
+                        arn:
+                            title: ARN
+                            type: string
+                            pattern: ^(arn:aws:iam::(\d{12}|aws):policy\/[A-Za-z0-9+=,.@\-_]+|\$\{[A-Za-z0-9._-]+\})$
+                            x-ui-placeholder: 'IAM policy ARN. Eg: arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess'
+                            x-ui-error-message: 'Value doesn''t match pattern, accepted value pattern Eg: arn:aws:iam::123456789012:policy/policy1'
+                    required:
+                        - arn
         tags:
             description: Additional AWS tags to apply to Karpenter resources
             title: Resource Tags
@@ -73,5 +90,6 @@ spec:
     x-ui-order:
         - karpenter_version
         - karpenter_replicas
+        - additional_node_policies
         - tags
 version: "1.0"
