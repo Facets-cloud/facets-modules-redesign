@@ -36,6 +36,10 @@ variable "instance" {
 
       container_insights_enabled = optional(bool, false)
 
+      cloudwatch_agent_policies = optional(map(object({
+        arn = string
+      })), {})
+
       enabled_log_types = optional(list(string), ["api", "audit", "authenticator", "controllerManager", "scheduler"])
 
       cluster_tags = optional(map(string), {})

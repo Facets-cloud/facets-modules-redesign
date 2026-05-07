@@ -84,7 +84,7 @@ locals {
     amazon-cloudwatch-observability = local.container_insights_enabled ? {
       addon_version            = null
       resolve_conflicts        = "OVERWRITE"
-      service_account_role_arn = null
+      service_account_role_arn = local.needs_cloudwatch_iam_policy ? aws_iam_role.cloudwatch_agent_irsa[0].arn : null
     } : null
 
     metrics-server = lookup(lookup(var.instance.spec.cluster_addons, "metrics_server", {}), "enabled", true) ? {
@@ -224,4 +224,43 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_agent" {
 
   role       = each.value.iam_role_name
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
+# IAM Role for CloudWatch Agent (IRSA)
+resource "aws_iam_role" "cloudwatch_agent_irsa" {
+  count = local.needs_cloudwatch_iam_policy ? 1 : 0
+
+  name = "${local.cluster_name}-cw-agent"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = module.eks.oidc_provider_arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "${module.eks.oidc_provider}:aud" = "sts.amazonaws.com"
+            "${module.eks.oidc_provider}:sub" = "system:serviceaccount:amazon-cloudwatch:cloudwatch-agent"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = local.cluster_tags
+}
+
+# Attach CloudWatchAgentServerPolicy and any additional user-provided policies to IRSA role
+resource "aws_iam_role_policy_attachment" "cloudwatch_agent_irsa" {
+  for_each = local.needs_cloudwatch_iam_policy ? toset(concat(
+    ["arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"],
+    [for policy in values(lookup(var.instance.spec, "cloudwatch_agent_policies", {})) : policy.arn]
+  )) : toset([])
+
+  role       = aws_iam_role.cloudwatch_agent_irsa[0].name
+  policy_arn = each.value
 }

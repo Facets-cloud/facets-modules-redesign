@@ -282,6 +282,27 @@ spec:
             description: Enable CloudWatch Container Insights for cluster monitoring.
             title: Container Insights
             type: boolean
+        cloudwatch_agent_policies:
+            type: object
+            title: CloudWatch Agent IAM Policies
+            description: Additional IAM policy ARNs to attach to the CloudWatch Agent IRSA role (e.g., for X-Ray, custom metrics)
+            x-ui-visible-if:
+                field: spec.container_insights_enabled
+                values:
+                    - true
+            patternProperties:
+                ^[a-zA-Z0-9_.-]*$:
+                    title: Policy Name
+                    type: object
+                    properties:
+                        arn:
+                            title: ARN
+                            type: string
+                            pattern: ^(arn:aws:iam::(\d{12}|aws):policy\/[A-Za-z0-9+=,.@\-_]+|\$\{[A-Za-z0-9._-]+\})$
+                            x-ui-placeholder: 'IAM policy ARN. Eg: arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess'
+                            x-ui-error-message: 'Value doesn''t match pattern, accepted value pattern Eg: arn:aws:iam::123456789012:policy/policy1'
+                    required:
+                        - arn
         customer_managed_kms:
             default: true
             description: Use a customer-managed KMS key for Kubernetes secrets encryption. Required for compliance (PCI-DSS, HIPAA). EKS always encrypts secrets with AWS-owned keys by default.
@@ -317,6 +338,7 @@ spec:
         - customer_managed_kms
         - enabled_log_types
         - container_insights_enabled
+        - cloudwatch_agent_policies
         - cluster_addons
         - default_node_pool
         - cluster_tags
