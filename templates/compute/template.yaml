@@ -11,7 +11,7 @@ maintainers:
   - name: Facets
 resources:
   - karpenter.json
-  - kubernetes-node-pool.json
+  - nodepool.json
 requires:
   - cloud_account/cloud
   - network/network

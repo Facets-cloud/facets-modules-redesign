@@ -2,7 +2,7 @@
   "kind": "kubernetes_node_pool",
   "flavor": "karpenter",
   "version": "1.0",
-  "metadata": {"name": "kubernetes-node-pool"},
+  "metadata": {"name": "nodepool"},
   "disabled": true,
   "spec": {
     "instance_families": ["t3", "t3a", "m5"],
