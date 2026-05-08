@@ -301,6 +301,8 @@ spec:
                             pattern: ^(arn:aws:iam::(\d{12}|aws):policy\/[A-Za-z0-9+=,.@\-_]+|\$\{[A-Za-z0-9._-]+\})$
                             x-ui-placeholder: 'IAM policy ARN. Eg: arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess'
                             x-ui-error-message: 'Value doesn''t match pattern, accepted value pattern Eg: arn:aws:iam::123456789012:policy/policy1'
+                            x-ui-output-type: iam_policy_arn
+                            x-ui-typeable: true
                     required:
                         - arn
         customer_managed_kms:
