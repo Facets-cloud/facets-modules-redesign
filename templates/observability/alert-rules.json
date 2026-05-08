@@ -37,11 +37,11 @@
             "description": "Memory usage on {{ $labels.instance }} has exceeded 90% for 10 minutes."
           },
           "high_cpu_saturation": {
-            "expression": "(1 - rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) > 0.9",
+            "expression": "(1 - avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m]))) > 0.9",
             "duration": "10m",
             "severity": "warning",
             "summary": "High CPU saturation on {{ $labels.instance }}",
-            "description": "CPU utilization on {{ $labels.instance }} has exceeded 90% for 10 minutes."
+            "description": "Average CPU utilization on {{ $labels.instance }} (across all cores) has exceeded 90% for 10 minutes."
           }
         }
       }

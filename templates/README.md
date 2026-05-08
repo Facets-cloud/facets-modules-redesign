@@ -23,19 +23,23 @@ Templates are split into two tiers:
 that other templates depend on. Apply these first to any project that
 doesn't already have the equivalent resource.
 
-| Template | Provides |
-|---|---|
-| `compute` | `karpenter/karpenter` (updates if present) and `kubernetes_node_pool/nodepool` |
-| `cert-manager` | `cert_manager/cert-manager` for TLS issuance |
-| `gateway-api-crd` | `gateway_api_crd/gateway-api-crd` for Gateway API CRDs |
+| Template | Provides | Cloud |
+|---|---|---|
+| `compute` | `karpenter/karpenter` (updates if present) and `kubernetes_node_pool/nodepool` | AWS-only (uses `karpenter/default/1.0` and `kubernetes_node_pool/karpenter/1.0`) |
+| `cert-manager` | `cert_manager/cert-manager` for TLS issuance | cloud-agnostic |
+| `gateway-api-crd` | `gateway_api_crd/gateway-api-crd` for Gateway API CRDs | cloud-agnostic |
 
 **Leaf templates** ship a complete stack that consumes foundational
 resources via their `requires:` declarations.
 
-| Template | Consumes |
-|---|---|
-| `observability` | `cluster`, `nodepool` — ships prometheus + alert-rules + grafana-dashboards |
-| `ingress` | `cluster`, `nodepool`, `cert-manager`, `gateway-api-crd` — ships the NGINX Gateway Fabric ingress |
+| Template | Consumes | Cloud |
+|---|---|---|
+| `observability` | `cluster`, `nodepool` — ships prometheus + alert-rules + grafana-dashboards | cloud-agnostic |
+| `ingress` | `cluster`, `nodepool`, `cert-manager`, `gateway-api-crd` — ships the NGINX Gateway Fabric ingress on AWS (`nginx_gateway_fabric_aws/1.0`) | AWS-only |
+
+GCP / Azure / OVH variants of `compute` and `ingress` will land as
+separate templates (e.g. `compute-gcp`, `ingress-azure`) following the
+same pattern.
 
 Most leaves contain an internal dependency chain too (e.g. observability's
 `alert-rules` and `grafana-dashboards` reference its `prometheus`).
@@ -47,12 +51,17 @@ below works around this honestly.
 ## Apply order
 
 The end-to-end workflow that has been tested against a fresh project
-(redesign-aws project type, no extra customization):
+(`redesign-aws` project type, no extra customization). Other project
+types may name resources differently — see "Adapting to a different
+bootstrap" below.
 
 ```bash
 # 0. Project bootstrap provides: cluster, cloud, network (+ karpenter)
 
-# 1. Apply compute — creates kubernetes_node_pool/nodepool, updates karpenter
+# 1. Apply compute — creates kubernetes_node_pool/nodepool, updates karpenter.
+#    If your project's bootstrap doesn't already include karpenter, apply
+#    karpenter.json first (release), then nodepool.json — kubernetes-node-pool
+#    references karpenter and the validator can't see co-applied siblings.
 raptor get bp-templates compute --save-to ./compute/
 raptor apply -f ./compute/ -p PROJECT
 
@@ -76,6 +85,15 @@ raptor apply -f ./ing/ -p PROJECT
 Resources ship `disabled: true`. After applying, enable them and trigger
 a release.
 
+### Adapting to a different bootstrap
+
+These templates assume conventional resource names: `cluster` (for
+`kubernetes_cluster`), `nodepool`, `cloud`, `network`, `cert-manager`,
+`gateway-api-crd`, `prometheus`. If your project's bootstrap uses
+different names, edit the downloaded JSONs' `inputs.<key>.resource_name`
+values before applying — `raptor get bp-templates <name>` writes them to
+disk first, so the consumer (or AI agent) can rewrite refs in place.
+
 ## template.yaml
 
 ```yaml
@@ -83,7 +101,8 @@ name: <template-name>            # required, must match dir name
 displayName: <human name>        # required
 description: <one paragraph>     # required
 category: <observability|network|compute|security|...>  # required
-version: "1.0"                   # required, template version
+version: "1.0"                   # required; bump on backwards-incompatible changes
+                                 # (resource removed, requires: tightened, etc.)
 tags: [list, of, tags]           # optional
 maintainers:                     # optional
   - name: <name>
@@ -124,11 +143,20 @@ Conventions:
   externals line up with what foundational templates provide and with
   what `requires:` lists.
 - For inputs that consume a Kubernetes cluster, set `output_name`
-  explicitly: `"attributes"` for the generic `@facets/kubernetes-details`
-  type (used by cert-manager, prometheus, grafana-dashboards,
-  gateway-api-crd, the ingress module) — `"default"` (or omitted) for
-  the cloud-specific `@facets/eks` type (used by karpenter,
-  kubernetes_node_pool).
+  explicitly. The right value depends on what the consuming module's
+  `kubernetes_details` (or equivalent) input declares as its `type:`:
+    - `@facets/kubernetes-details` (cloud-agnostic) → `output_name: "attributes"`
+      — used by cert-manager, prometheus, grafana-dashboards, gateway-api-crd.
+    - `@facets/eks` (or `@facets/gke` / `@facets/azure_aks`, cloud-specific) →
+      `output_name: "default"` (or omitted) — used by karpenter,
+      kubernetes_node_pool, **and the AWS ingress flavor**
+      (`nginx_gateway_fabric_aws`). Always check the producing module's
+      `facets.yaml` to be sure.
+- Input KEY names are dictated by the consuming module's `facets.yaml`
+  and aren't always uniform — e.g. most modules call the Kubernetes
+  cluster input `kubernetes_details`, but `alert_rules/prometheus`
+  calls it `kubernetes_cluster`. Mirror what the module declares
+  rather than guessing.
 
 ## Verifying resources
 
