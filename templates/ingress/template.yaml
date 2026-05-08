@@ -12,7 +12,7 @@ maintainers:
 resources:
   - gateway-api-crd.json
   - cert-manager.json
-  - ingress.json
+  - gateway-ing.json
 requires:
   - kubernetes_cluster/cluster
   - kubernetes_node_pool/nodepool

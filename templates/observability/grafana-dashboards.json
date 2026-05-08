@@ -5,7 +5,13 @@
   "metadata": {"name": "grafana-dashboards"},
   "disabled": true,
   "spec": {
-    "dashboards": {}
+    "dashboards": {
+      "cluster-overview": {
+        "name": "Cluster Overview",
+        "folder": "Kubernetes",
+        "json": "{\"annotations\":{\"list\":[]},\"editable\":true,\"fiscalYearStartMonth\":0,\"graphTooltip\":0,\"links\":[],\"liveNow\":false,\"panels\":[{\"datasource\":{\"type\":\"prometheus\",\"uid\":\"prometheus\"},\"fieldConfig\":{\"defaults\":{\"color\":{\"mode\":\"thresholds\"},\"thresholds\":{\"mode\":\"absolute\",\"steps\":[{\"color\":\"green\",\"value\":null}]}},\"overrides\":[]},\"gridPos\":{\"h\":8,\"w\":8,\"x\":0,\"y\":0},\"id\":1,\"options\":{\"colorMode\":\"value\",\"graphMode\":\"area\",\"justifyMode\":\"auto\",\"orientation\":\"auto\",\"reduceOptions\":{\"calcs\":[\"lastNotNull\"],\"fields\":\"\",\"values\":false},\"textMode\":\"auto\"},\"targets\":[{\"datasource\":{\"type\":\"prometheus\",\"uid\":\"prometheus\"},\"expr\":\"count(kube_pod_info)\",\"refId\":\"A\"}],\"title\":\"Total Pods\",\"type\":\"stat\"},{\"datasource\":{\"type\":\"prometheus\",\"uid\":\"prometheus\"},\"fieldConfig\":{\"defaults\":{\"color\":{\"mode\":\"thresholds\"},\"thresholds\":{\"mode\":\"absolute\",\"steps\":[{\"color\":\"green\",\"value\":null}]}},\"overrides\":[]},\"gridPos\":{\"h\":8,\"w\":8,\"x\":8,\"y\":0},\"id\":2,\"options\":{},\"targets\":[{\"datasource\":{\"type\":\"prometheus\",\"uid\":\"prometheus\"},\"expr\":\"count(kube_node_info)\",\"refId\":\"A\"}],\"title\":\"Total Nodes\",\"type\":\"stat\"},{\"datasource\":{\"type\":\"prometheus\",\"uid\":\"prometheus\"},\"fieldConfig\":{\"defaults\":{\"color\":{\"mode\":\"thresholds\"},\"thresholds\":{\"mode\":\"absolute\",\"steps\":[{\"color\":\"green\",\"value\":null}]}},\"overrides\":[]},\"gridPos\":{\"h\":8,\"w\":8,\"x\":16,\"y\":0},\"id\":3,\"options\":{},\"targets\":[{\"datasource\":{\"type\":\"prometheus\",\"uid\":\"prometheus\"},\"expr\":\"count(up == 1)\",\"refId\":\"A\"}],\"title\":\"Healthy Targets\",\"type\":\"stat\"}],\"refresh\":\"30s\",\"schemaVersion\":38,\"tags\":[\"kubernetes\",\"facets\"],\"templating\":{\"list\":[]},\"time\":{\"from\":\"now-6h\",\"to\":\"now\"},\"timepicker\":{},\"timezone\":\"\",\"title\":\"Cluster Overview\",\"version\":1,\"weekStart\":\"\"}"
+      }
+    }
   },
   "inputs": {
     "kubernetes_details": {

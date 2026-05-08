@@ -104,22 +104,10 @@ Force a re-clone of the upstream:
 raptor get bp-templates --refresh
 ```
 
-## Applying a template
+## After fetching
 
-`raptor get bp-templates` only fetches and writes resource JSONs — it does not apply. After downloading, use the standard `raptor apply` pipeline:
-
-```bash
-# Download to ./bp-templates/<name>/ by default
-raptor get bp-templates observability
-
-# Or to a custom path
-raptor get bp-templates observability --save-to ./obs/
-
-# Validate without applying
-raptor apply -f ./bp-templates/observability/ -p PROJECT --dry-run
-
-# Apply
-raptor apply -f ./bp-templates/observability/ -p PROJECT -m "Bootstrap observability"
-```
-
-Resources ship `disabled: true`. Once applied, review them in the project and enable selectively (or via a per-environment override) before triggering a release.
+`raptor get bp-templates` is fetch-only — it does not apply. See
+`raptor apply --help` for how to apply the downloaded resource JSONs to
+a project. Resources ship `disabled: true`, so review them and enable
+selectively (or via a per-environment override) before triggering a
+release.
