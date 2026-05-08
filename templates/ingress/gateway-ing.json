@@ -47,7 +47,7 @@
     "gateway_api_crd_details": {
       "output_name": "default",
       "resource_type": "gateway_api_crd",
-      "resource_name": "gateway-crd"
+      "resource_name": "gateway-api-crd"
     }
   }
 }
