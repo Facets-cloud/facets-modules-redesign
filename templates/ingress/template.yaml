@@ -1,11 +1,13 @@
 name: ingress
-displayName: NGINX Gateway Fabric Ingress
+displayName: NGINX Gateway Fabric Ingress (AWS)
 description: >
-  NGINX Gateway Fabric ingress for AWS. TLS-terminated Gateway API
+  NGINX Gateway Fabric ingress on AWS / EKS. TLS-terminated Gateway API
   based ingress on top of an existing EKS cluster with a node pool,
-  cert-manager, and Gateway API CRDs already in place. Apply the
+  cert-manager, and Gateway API CRDs already in place. Uses the
+  AWS-specific ingress flavor (nginx_gateway_fabric_aws). Apply the
   cert-manager and gateway-api-crd templates first if your project
-  doesn't already have them.
+  doesn't already have them. GCP/Azure variants will follow as separate
+  templates.
 category: network
 version: "1.0"
 tags: [ingress, gateway-api, nginx, tls]
