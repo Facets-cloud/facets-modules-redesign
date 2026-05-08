@@ -192,12 +192,12 @@ resource "aws_iam_role" "karpenter_node" {
 
 # Attach required policies to node role
 resource "aws_iam_role_policy_attachment" "karpenter_node_policies" {
-  for_each = toset([
+  for_each = toset(concat([
     "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
     "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
     "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
     "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-  ])
+  ], [for policy in values(var.instance.spec.additional_node_policies) : policy.arn]))
 
   role       = aws_iam_role.karpenter_node.name
   policy_arn = each.value
