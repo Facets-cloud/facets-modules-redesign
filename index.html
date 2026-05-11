@@ -631,38 +631,6 @@ body {
 }
 
 /* Templates panel — populated state */
-.templates-intro {
-  margin: 24px 0 32px;
-  padding: 18px 22px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-left: 3px solid var(--accent-primary);
-  border-radius: var(--radius-md);
-}
-
-.templates-intro h2 {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 6px;
-}
-
-.templates-intro p {
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.55;
-  color: var(--text-secondary);
-}
-
-.templates-intro code {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 12.5px;
-  background: var(--bg-code);
-  padding: 2px 6px;
-  border-radius: 4px;
-  color: var(--text-code);
-}
-
 .templates-section-label {
   font-size: 11px;
   font-weight: 700;
@@ -982,17 +950,41 @@ body {
   <!-- Templates Panel -->
   <div class="tab-panel" id="panel-templates" role="tabpanel" aria-labelledby="tab-templates">
 
-    <div class="templates-intro">
-      <h2>Blueprint Templates</h2>
-      <p>
-        Curated bundles of Facets blueprint resource JSONs. Fetch any template
-        with <code>raptor get bp-templates &lt;name&gt;</code> — raptor fetches
-        the files over HTTPS from this repo and writes them locally so you can
-        review, edit, and apply with <code>raptor apply -f &lt;dir&gt;</code>.
-      </p>
+    <div class="detail-section">
+      <div class="section-label praxis-label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="praxis-g-tpl" x1="2" y1="1" x2="22" y2="23" gradientUnits="userSpaceOnUse"><stop stop-color="#60a5fa"/><stop offset="0.5" stop-color="#a78bfa"/><stop offset="1" stop-color="#f472b6"/></linearGradient></defs><path d="M12.2112 1C13.5223 1.01464 14.4798 1.92647 15.0774 2.73047C15.6119 3.44961 15.9359 4.18521 16.0433 4.44727L16.0765 4.5293C16.1698 4.7717 16.2426 5.01313 16.3011 5.25098C16.4977 5.20755 16.7015 5.1735 16.9114 5.14941C17.0102 5.1382 17.9534 5.04241 19.014 5.21289C20.049 5.37928 21.3735 5.82994 21.9837 7.06055C22.5662 8.23558 22.1887 9.502 21.7434 10.3994C21.3735 11.145 20.9071 11.7341 20.6946 11.9863C20.9378 12.2802 21.3502 12.8177 21.6917 13.4775C22.1735 14.4085 22.5996 15.7415 21.9729 16.9639C21.3745 18.1307 20.1311 18.5801 19.1448 18.7559C18.1372 18.9354 17.2332 18.8604 17.0891 18.8467C16.8183 18.8208 16.5586 18.7753 16.3099 18.7178C16.2503 18.9658 16.1748 19.2179 16.0774 19.4707C16.0253 19.6055 15.6879 20.4482 15.0774 21.2695C14.4798 22.0735 13.5231 22.9853 12.2122 23H12.1477C10.807 22.9845 9.8264 22.0242 9.21806 21.1904C8.58436 20.3219 8.24076 19.4372 8.20634 19.3447C8.13309 19.1481 8.072 18.9525 8.02177 18.7588C7.78339 18.8147 7.53509 18.8599 7.27665 18.8867C7.1329 18.9016 6.22929 18.9838 5.22001 18.8125C4.24773 18.6474 3.02441 18.2194 2.40653 17.0977L2.37723 17.0439C1.74037 15.8267 2.15598 14.4897 2.63016 13.5547C2.96676 12.8911 3.3744 12.3489 3.61454 12.0537C3.39867 11.8018 2.93012 11.2164 2.55497 10.4756C2.10244 9.58197 1.71414 8.3192 2.28641 7.13965L2.31571 7.08203C2.9285 5.88928 4.22484 5.43956 5.24247 5.26758C6.16968 5.11092 7.00837 5.15941 7.26884 5.18066L7.34403 5.1875C7.57294 5.21172 7.794 5.24857 8.00712 5.2959C8.05984 5.08398 8.12567 4.8691 8.20634 4.65332C8.24327 4.55436 8.58601 3.67349 9.21708 2.80859C9.8254 1.97489 10.8061 1.01557 12.1468 1H12.2112Z" fill="url(#praxis-g-tpl)"/></svg> Ask Praxis AI</div>
+      <div class="code-block-wrapper">
+        <pre class="code-block praxis-code">Fetch the observability blueprint template and apply it to my project.
+
+raptor get bp-templates observability
+raptor apply -f ./bp-templates/observability -p my-project</pre>
+        <button class="copy-btn" aria-label="Copy Praxis AI prompt to clipboard" onclick="copyCode(this, 'Fetch the observability blueprint template and apply it to my project.\n\nraptor get bp-templates observability\nraptor apply -f ./bp-templates/observability -p my-project')">Copy</button>
+      </div>
     </div>
 
-    <div class="templates-section-label">Foundational</div>
+    <div class="detail-section">
+      <div class="section-label">Raptor CLI</div>
+      <div class="code-block-wrapper">
+        <pre class="code-block">raptor get bp-templates</pre>
+        <button class="copy-btn" aria-label="Copy raptor get bp-templates to clipboard" onclick="copyCode(this, 'raptor get bp-templates')">Copy</button>
+      </div>
+      <div class="code-sublabel">Fetch a specific template:</div>
+      <div class="code-block-wrapper">
+        <pre class="code-block">raptor get bp-templates observability</pre>
+        <button class="copy-btn" aria-label="Copy fetch command to clipboard" onclick="copyCode(this, 'raptor get bp-templates observability')">Copy</button>
+      </div>
+      <div class="code-sublabel">Custom save location:</div>
+      <div class="code-block-wrapper">
+        <pre class="code-block">raptor get bp-templates observability --save-to ./obs/</pre>
+        <button class="copy-btn" aria-label="Copy fetch-with-save-to command to clipboard" onclick="copyCode(this, 'raptor get bp-templates observability --save-to ./obs/')">Copy</button>
+      </div>
+      <div class="code-sublabel">Inspect metadata without downloading:</div>
+      <div class="code-block-wrapper">
+        <pre class="code-block">raptor get bp-templates observability --details</pre>
+        <button class="copy-btn" aria-label="Copy details command to clipboard" onclick="copyCode(this, 'raptor get bp-templates observability --details')">Copy</button>
+      </div>
+    </div>
+
+    <div class="templates-section-label">Foundations</div>
     <div class="template-grid">
 
       <article class="template-card">
@@ -1000,7 +992,7 @@ body {
           <span class="template-cat-chip cat-security">security</span>
           <span class="template-resource-count">1 resource</span>
         </div>
-        <h3 class="template-card-name">Cert-Manager <span class="tier-badge">foundational</span></h3>
+        <h3 class="template-card-name">Cert-Manager <span class="tier-badge">foundation</span></h3>
         <p class="template-card-desc">
           TLS certificate management via cert-manager. Apply this first if either
           observability or ingress needs cert-manager and your project doesn't
@@ -1021,7 +1013,7 @@ body {
           <span class="template-cat-chip cat-compute">compute</span>
           <span class="template-resource-count">2 resources</span>
         </div>
-        <h3 class="template-card-name">EKS Compute Add-ons <span class="tier-badge">foundational</span></h3>
+        <h3 class="template-card-name">EKS Compute Add-ons <span class="tier-badge">foundation</span></h3>
         <p class="template-card-desc">
           Karpenter controller + Karpenter-managed node pool on top of an
           existing EKS cluster. Adds cost-efficient, just-in-time node
@@ -1043,7 +1035,7 @@ body {
           <span class="template-cat-chip cat-network">network</span>
           <span class="template-resource-count">1 resource</span>
         </div>
-        <h3 class="template-card-name">Gateway API CRDs <span class="tier-badge">foundational</span></h3>
+        <h3 class="template-card-name">Gateway API CRDs <span class="tier-badge">foundation</span></h3>
         <p class="template-card-desc">
           Installs the Kubernetes Gateway API CustomResourceDefinitions.
           Required by the ingress template; apply first if your project
@@ -1061,7 +1053,7 @@ body {
 
     </div>
 
-    <div class="templates-section-label">Leaf</div>
+    <div class="templates-section-label">Stacks</div>
     <div class="template-grid">
 
       <article class="template-card">
@@ -1069,7 +1061,7 @@ body {
           <span class="template-cat-chip cat-observability">observability</span>
           <span class="template-resource-count">3 resources</span>
         </div>
-        <h3 class="template-card-name">Observability Stack <span class="tier-badge">leaf</span></h3>
+        <h3 class="template-card-name">Observability Stack <span class="tier-badge">stack</span></h3>
         <p class="template-card-desc">
           Prometheus + Grafana dashboards + alert rules. Baseline metrics and
           alerting stack on top of an existing Kubernetes cluster. Ships with
@@ -1090,7 +1082,7 @@ body {
           <span class="template-cat-chip cat-network">network</span>
           <span class="template-resource-count">1 resource</span>
         </div>
-        <h3 class="template-card-name">NGINX Gateway Fabric Ingress (AWS) <span class="tier-badge">leaf</span></h3>
+        <h3 class="template-card-name">NGINX Gateway Fabric Ingress (AWS) <span class="tier-badge">stack</span></h3>
         <p class="template-card-desc">
           TLS-terminated Gateway API based ingress for AWS / EKS. Uses the
           AWS-specific ingress flavor. Apply the cert-manager and
