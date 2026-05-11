@@ -1,0 +1,61 @@
+{
+  "kind": "alert_rules",
+  "flavor": "prometheus",
+  "version": "1.0",
+  "metadata": {"name": "alert-rules"},
+  "disabled": true,
+  "spec": {
+    "alert_groups": {
+      "kubernetes_baseline": {
+        "rules": {
+          "kube_pod_crash_looping": {
+            "expression": "increase(kube_pod_container_status_restarts_total[15m]) > 5",
+            "duration": "5m",
+            "severity": "warning",
+            "summary": "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash-looping",
+            "description": "Container {{ $labels.container }} in pod {{ $labels.namespace }}/{{ $labels.pod }} has restarted more than 5 times in the last 15 minutes."
+          },
+          "kube_node_not_ready": {
+            "expression": "kube_node_status_condition{condition=\"Ready\",status=\"true\"} == 0",
+            "duration": "5m",
+            "severity": "critical",
+            "summary": "Node {{ $labels.node }} is not ready",
+            "description": "Node {{ $labels.node }} has been NotReady for at least 5 minutes."
+          },
+          "kubelet_down": {
+            "expression": "up{job=\"kubelet\"} == 0",
+            "duration": "5m",
+            "severity": "critical",
+            "summary": "Kubelet on {{ $labels.node }} is down",
+            "description": "The kubelet on {{ $labels.node }} has been unreachable for 5 minutes; new pod scheduling and existing pod state may be affected."
+          },
+          "high_memory_pressure": {
+            "expression": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.9",
+            "duration": "10m",
+            "severity": "warning",
+            "summary": "High memory usage on {{ $labels.instance }}",
+            "description": "Memory usage on {{ $labels.instance }} has exceeded 90% for 10 minutes."
+          },
+          "high_cpu_saturation": {
+            "expression": "(1 - avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m]))) > 0.9",
+            "duration": "10m",
+            "severity": "warning",
+            "summary": "High CPU saturation on {{ $labels.instance }}",
+            "description": "Average CPU utilization on {{ $labels.instance }} (across all cores) has exceeded 90% for 10 minutes."
+          }
+        }
+      }
+    }
+  },
+  "inputs": {
+    "kubernetes_cluster": {
+      "output_name": "attributes",
+      "resource_type": "kubernetes_cluster",
+      "resource_name": "cluster"
+    },
+    "prometheus": {
+      "resource_type": "prometheus",
+      "resource_name": "prometheus"
+    }
+  }
+}
