@@ -630,6 +630,152 @@ body {
   max-width: 400px;
 }
 
+/* Templates panel — populated state */
+.templates-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin: 28px 0 12px;
+}
+
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.template-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition:
+    transform 200ms var(--ease-default),
+    border-color 200ms var(--ease-default),
+    box-shadow 200ms var(--ease-default),
+    background 200ms var(--ease-default);
+  box-shadow: var(--shadow-card);
+}
+
+.template-card:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-surface-hover);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+}
+
+.template-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.template-cat-chip {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.template-cat-chip.cat-observability { background: var(--color-success-muted); color: var(--color-success); }
+.template-cat-chip.cat-network       { background: var(--color-azure-muted);   color: var(--color-azure); }
+.template-cat-chip.cat-compute       { background: var(--color-aws-muted);     color: var(--color-aws); }
+.template-cat-chip.cat-security      { background: var(--accent-primary-muted); color: var(--accent-primary); }
+
+.template-resource-count {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+
+.template-card-name {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  color: var(--text-primary);
+}
+
+.template-card-name .tier-badge {
+  display: inline-block;
+  margin-left: 8px;
+  vertical-align: middle;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+}
+
+.template-card-desc {
+  font-size: 13.5px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.template-requires {
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.template-requires .req-label {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  font-size: 10.5px;
+}
+
+.template-requires .req-item {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11.5px;
+  color: var(--text-code);
+  background: var(--bg-code);
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-default);
+  display: inline-block;
+  margin-right: 6px;
+  margin-top: 4px;
+}
+
+.template-cmd {
+  margin-top: auto;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 12px;
+  background: var(--bg-code);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  color: var(--text-code);
+  box-shadow: var(--shadow-code);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.template-cmd .cmd-prompt {
+  color: var(--text-tertiary);
+  user-select: none;
+  margin-right: 6px;
+}
+
 /* Footer */
 .footer {
   padding: 48px 0 32px;
@@ -741,7 +887,7 @@ body {
   <nav class="tab-bar" role="tablist" aria-label="Catalog sections">
     <div class="tab-container">
       <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-project-types" id="tab-project-types" onclick="switchTab('project-types')">Project Types</button>
-      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-templates" id="tab-templates" onclick="switchTab('templates')">Templates <span class="coming-soon-badge" aria-label="coming soon">Coming Soon</span></button>
+      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-templates" id="tab-templates" onclick="switchTab('templates')">Templates</button>
     </div>
   </nav>
 
@@ -803,20 +949,160 @@ body {
 
   <!-- Templates Panel -->
   <div class="tab-panel" id="panel-templates" role="tabpanel" aria-labelledby="tab-templates">
-    <div class="templates-placeholder">
-      <svg class="placeholder-icon" width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="10" y="10" width="44" height="44" rx="8" stroke="#645DF6" stroke-width="2" opacity="0.3"/>
-        <rect x="66" y="10" width="44" height="44" rx="8" stroke="#645DF6" stroke-width="2" opacity="0.2"/>
-        <rect x="10" y="66" width="44" height="44" rx="8" stroke="#645DF6" stroke-width="2" opacity="0.2"/>
-        <rect x="66" y="66" width="44" height="44" rx="8" stroke="#645DF6" stroke-width="2" opacity="0.15"/>
-        <path d="M32 28v8M28 32h8" stroke="#645DF6" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
-        <path d="M88 28v8M84 32h8" stroke="#645DF6" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
-        <path d="M32 84v8M28 88h8" stroke="#645DF6" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
-        <path d="M88 84v8M84 88h8" stroke="#645DF6" stroke-width="2" stroke-linecap="round" opacity="0.2"/>
-      </svg>
-      <h2>Templates are coming soon</h2>
-      <p>Pre-configured environment stacks for common deployment patterns like web apps, data pipelines, and API gateways.</p>
+
+    <div class="detail-section">
+      <div class="section-label praxis-label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="praxis-g-tpl" x1="2" y1="1" x2="22" y2="23" gradientUnits="userSpaceOnUse"><stop stop-color="#60a5fa"/><stop offset="0.5" stop-color="#a78bfa"/><stop offset="1" stop-color="#f472b6"/></linearGradient></defs><path d="M12.2112 1C13.5223 1.01464 14.4798 1.92647 15.0774 2.73047C15.6119 3.44961 15.9359 4.18521 16.0433 4.44727L16.0765 4.5293C16.1698 4.7717 16.2426 5.01313 16.3011 5.25098C16.4977 5.20755 16.7015 5.1735 16.9114 5.14941C17.0102 5.1382 17.9534 5.04241 19.014 5.21289C20.049 5.37928 21.3735 5.82994 21.9837 7.06055C22.5662 8.23558 22.1887 9.502 21.7434 10.3994C21.3735 11.145 20.9071 11.7341 20.6946 11.9863C20.9378 12.2802 21.3502 12.8177 21.6917 13.4775C22.1735 14.4085 22.5996 15.7415 21.9729 16.9639C21.3745 18.1307 20.1311 18.5801 19.1448 18.7559C18.1372 18.9354 17.2332 18.8604 17.0891 18.8467C16.8183 18.8208 16.5586 18.7753 16.3099 18.7178C16.2503 18.9658 16.1748 19.2179 16.0774 19.4707C16.0253 19.6055 15.6879 20.4482 15.0774 21.2695C14.4798 22.0735 13.5231 22.9853 12.2122 23H12.1477C10.807 22.9845 9.8264 22.0242 9.21806 21.1904C8.58436 20.3219 8.24076 19.4372 8.20634 19.3447C8.13309 19.1481 8.072 18.9525 8.02177 18.7588C7.78339 18.8147 7.53509 18.8599 7.27665 18.8867C7.1329 18.9016 6.22929 18.9838 5.22001 18.8125C4.24773 18.6474 3.02441 18.2194 2.40653 17.0977L2.37723 17.0439C1.74037 15.8267 2.15598 14.4897 2.63016 13.5547C2.96676 12.8911 3.3744 12.3489 3.61454 12.0537C3.39867 11.8018 2.93012 11.2164 2.55497 10.4756C2.10244 9.58197 1.71414 8.3192 2.28641 7.13965L2.31571 7.08203C2.9285 5.88928 4.22484 5.43956 5.24247 5.26758C6.16968 5.11092 7.00837 5.15941 7.26884 5.18066L7.34403 5.1875C7.57294 5.21172 7.794 5.24857 8.00712 5.2959C8.05984 5.08398 8.12567 4.8691 8.20634 4.65332C8.24327 4.55436 8.58601 3.67349 9.21708 2.80859C9.8254 1.97489 10.8061 1.01557 12.1468 1H12.2112Z" fill="url(#praxis-g-tpl)"/></svg> Ask Praxis AI</div>
+      <div class="code-block-wrapper">
+        <pre class="code-block praxis-code">Fetch the observability blueprint template and apply it to my project.
+
+raptor get bp-templates observability
+raptor apply -f ./bp-templates/observability -p my-project</pre>
+        <button class="copy-btn" aria-label="Copy Praxis AI prompt to clipboard" onclick="copyCode(this, 'Fetch the observability blueprint template and apply it to my project.\n\nraptor get bp-templates observability\nraptor apply -f ./bp-templates/observability -p my-project')">Copy</button>
+      </div>
     </div>
+
+    <div class="detail-section">
+      <div class="section-label">Raptor CLI</div>
+      <div class="code-block-wrapper">
+        <pre class="code-block">raptor get bp-templates</pre>
+        <button class="copy-btn" aria-label="Copy raptor get bp-templates to clipboard" onclick="copyCode(this, 'raptor get bp-templates')">Copy</button>
+      </div>
+      <div class="code-sublabel">Fetch a specific template:</div>
+      <div class="code-block-wrapper">
+        <pre class="code-block">raptor get bp-templates observability</pre>
+        <button class="copy-btn" aria-label="Copy fetch command to clipboard" onclick="copyCode(this, 'raptor get bp-templates observability')">Copy</button>
+      </div>
+      <div class="code-sublabel">Custom save location:</div>
+      <div class="code-block-wrapper">
+        <pre class="code-block">raptor get bp-templates observability --save-to ./obs/</pre>
+        <button class="copy-btn" aria-label="Copy fetch-with-save-to command to clipboard" onclick="copyCode(this, 'raptor get bp-templates observability --save-to ./obs/')">Copy</button>
+      </div>
+      <div class="code-sublabel">Inspect metadata without downloading:</div>
+      <div class="code-block-wrapper">
+        <pre class="code-block">raptor get bp-templates observability --details</pre>
+        <button class="copy-btn" aria-label="Copy details command to clipboard" onclick="copyCode(this, 'raptor get bp-templates observability --details')">Copy</button>
+      </div>
+    </div>
+
+    <div class="templates-section-label">Foundations</div>
+    <div class="template-grid">
+
+      <article class="template-card">
+        <div class="template-card-head">
+          <span class="template-cat-chip cat-security">security</span>
+          <span class="template-resource-count">1 resource</span>
+        </div>
+        <h3 class="template-card-name">Cert-Manager <span class="tier-badge">foundation</span></h3>
+        <p class="template-card-desc">
+          TLS certificate management via cert-manager. Apply this first if either
+          observability or ingress needs cert-manager and your project doesn't
+          already have one.
+        </p>
+        <div class="template-requires">
+          <span class="req-label">Requires</span>
+          <div>
+            <span class="req-item">kubernetes_cluster/cluster</span>
+            <span class="req-item">kubernetes_node_pool/nodepool</span>
+          </div>
+        </div>
+        <div class="template-cmd"><span class="cmd-prompt">$</span>raptor get bp-templates cert-manager</div>
+      </article>
+
+      <article class="template-card">
+        <div class="template-card-head">
+          <span class="template-cat-chip cat-compute">compute</span>
+          <span class="template-resource-count">2 resources</span>
+        </div>
+        <h3 class="template-card-name">EKS Compute Add-ons <span class="tier-badge">foundation</span></h3>
+        <p class="template-card-desc">
+          Karpenter controller + Karpenter-managed node pool on top of an
+          existing EKS cluster. Adds cost-efficient, just-in-time node
+          provisioning to a cluster your project already has.
+        </p>
+        <div class="template-requires">
+          <span class="req-label">Requires</span>
+          <div>
+            <span class="req-item">cloud_account/cloud</span>
+            <span class="req-item">network/network</span>
+            <span class="req-item">kubernetes_cluster/cluster</span>
+          </div>
+        </div>
+        <div class="template-cmd"><span class="cmd-prompt">$</span>raptor get bp-templates compute</div>
+      </article>
+
+      <article class="template-card">
+        <div class="template-card-head">
+          <span class="template-cat-chip cat-network">network</span>
+          <span class="template-resource-count">1 resource</span>
+        </div>
+        <h3 class="template-card-name">Gateway API CRDs <span class="tier-badge">foundation</span></h3>
+        <p class="template-card-desc">
+          Installs the Kubernetes Gateway API CustomResourceDefinitions.
+          Required by the ingress template; apply first if your project
+          doesn't already have a gateway_api_crd resource.
+        </p>
+        <div class="template-requires">
+          <span class="req-label">Requires</span>
+          <div>
+            <span class="req-item">kubernetes_cluster/cluster</span>
+            <span class="req-item">kubernetes_node_pool/nodepool</span>
+          </div>
+        </div>
+        <div class="template-cmd"><span class="cmd-prompt">$</span>raptor get bp-templates gateway-api-crd</div>
+      </article>
+
+    </div>
+
+    <div class="templates-section-label">Stacks</div>
+    <div class="template-grid">
+
+      <article class="template-card">
+        <div class="template-card-head">
+          <span class="template-cat-chip cat-observability">observability</span>
+          <span class="template-resource-count">3 resources</span>
+        </div>
+        <h3 class="template-card-name">Observability Stack <span class="tier-badge">stack</span></h3>
+        <p class="template-card-desc">
+          Prometheus + Grafana dashboards + alert rules. Baseline metrics and
+          alerting stack on top of an existing Kubernetes cluster. Ships with
+          5 baseline alert rules and a kube-state-metrics dashboard.
+        </p>
+        <div class="template-requires">
+          <span class="req-label">Requires</span>
+          <div>
+            <span class="req-item">kubernetes_cluster/cluster</span>
+            <span class="req-item">kubernetes_node_pool/nodepool</span>
+          </div>
+        </div>
+        <div class="template-cmd"><span class="cmd-prompt">$</span>raptor get bp-templates observability</div>
+      </article>
+
+      <article class="template-card">
+        <div class="template-card-head">
+          <span class="template-cat-chip cat-network">network</span>
+          <span class="template-resource-count">1 resource</span>
+        </div>
+        <h3 class="template-card-name">NGINX Gateway Fabric Ingress (AWS) <span class="tier-badge">stack</span></h3>
+        <p class="template-card-desc">
+          TLS-terminated Gateway API based ingress for AWS / EKS. Uses the
+          AWS-specific ingress flavor. Apply the cert-manager and
+          gateway-api-crd templates first if your project doesn't already
+          have them.
+        </p>
+        <div class="template-requires">
+          <span class="req-label">Requires</span>
+          <div>
+            <span class="req-item">kubernetes_cluster/cluster</span>
+            <span class="req-item">kubernetes_node_pool/nodepool</span>
+            <span class="req-item">cert_manager/cert-manager</span>
+            <span class="req-item">gateway_api_crd/gateway-api-crd</span>
+          </div>
+        </div>
+        <div class="template-cmd"><span class="cmd-prompt">$</span>raptor get bp-templates ingress</div>
+      </article>
+
+    </div>
+
   </div>
 
   <!-- Footer -->
@@ -824,7 +1110,7 @@ body {
     <div class="footer-inner">
       <span>Built with <a href="https://facets.cloud" target="_blank" rel="noopener">Facets.cloud</a></span>
       <span class="footer-sep">|</span>
-      <span>Powered by <a href="https://facets.cloud" target="_blank" rel="noopener">Praxis AI</a></span>
+      <span>Powered by <a href="https://www.askpraxis.ai" target="_blank" rel="noopener">Praxis AI</a></span>
     </div>
   </footer>
 
