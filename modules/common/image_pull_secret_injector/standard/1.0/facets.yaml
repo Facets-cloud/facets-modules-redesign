@@ -1,0 +1,120 @@
+intent: image_pull_secret_injector
+flavor: standard
+version: "1.0"
+description: |
+  Installs an image pull secret injector on a Kubernetes cluster to automatically
+  inject image pull secrets into pods for private container registry access.
+clouds:
+  - aws
+  - gcp
+  - azure
+  - kubernetes
+intentDetails:
+  type: Kubernetes
+  description: Automatically inject image pull secrets into pods for private container registry access
+  displayName: Image Pull Secret Injector
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules/master/icons/image_pull_secret_injector.svg
+inputs:
+  kubernetes_details:
+    type: "@facets/kubernetes-details"
+    displayName: Kubernetes Cluster
+    description: The details of kubernetes cluster where the image pull secret injector will be installed
+    optional: false
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+      - kubernetes
+      - helm
+  artifactories:
+    type: "@facets/artifactories"
+    displayName: Artifactories
+    description: The details of container registries associated with this Artifactory.
+    optional: false
+    default:
+      resource_type: artifactories
+      resource_name: default
+  kubernetes_node_pool_details:
+    type: "@facets/kubernetes_nodepool"
+    displayName: Node Pool
+    description: The node pool details for scheduling the image pull secret injector pods.
+    optional: true
+outputs:
+  default:
+    type: '@facets/image_pull_secret_injector'
+    title: Image Pull Secret Injector
+spec:
+  title: Image Pull Secret Injector Spec
+  description: Specifications for Image Pull Secret Injector
+  type: object
+  properties:
+    size:
+      type: object
+      title: Size
+      description: Sizing for Image Pull Secret Injector
+      properties:
+        cpu_limit:
+          type: string
+          title: CPU Limit
+          description: CPU limit for the instance
+          minLength: 1
+          pattern: "^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$"
+          x-ui-placeholder: "Enter CPU requests for your application"
+          x-ui-error-message: "Value doesn't match pattern, it should be number ranging from 1 to 32 or 1m to 32000m"
+        memory_limit:
+          type: string
+          title: Memory Limit
+          description: Memory limit for the instance
+          minLength: 1
+          pattern: "^(0\\.[1-9]|[1-9](\\.[0-9]+)?|[1-5][0-9](\\.[0-9]+)?|6[0-4])Gi$|^([1-9](\\.[0-9]+)?|[1-9][0-9]{1,3}(\\.[0-9]+)?|[1-5][0-9]{4}(\\.[0-9]+)?|6[0-3][0-9]{3}(\\.[0-9]+)?|64000)Mi$"
+          x-ui-placeholder: "Enter Memory requests for your application"
+          x-ui-error-message: "Value doesn't match pattern, it should be number ranging from 1Gi to 64Gi or 1Mi to 64000Mi"
+    values:
+      type: object
+      title: Values
+      description: The values to be passed on to the chart in the form of a YAML object
+      x-ui-yaml-editor: true
+      x-ui-placeholder: Enter values in YAML format
+    image_pull_secret_injector:
+      type: object
+      title: Helm Configuration
+      description: Configuration options for the image pull secret injector Helm chart
+      properties:
+        version:
+          type: string
+          title: Chart Version
+          description: Helm chart version
+        cleanup_on_fail:
+          type: boolean
+          title: Cleanup on Fail
+          description: Allow deletion of new resources created during a failed update
+        create_namespace:
+          type: boolean
+          title: Create Namespace
+          description: Create the namespace if it does not exist
+        wait:
+          type: boolean
+          title: Wait
+          description: Wait until all resources are in a ready state
+        atomic:
+          type: boolean
+          title: Atomic
+          description: Rollback on failure
+        timeout:
+          type: integer
+          title: Timeout
+          description: Time in seconds to wait for any individual Kubernetes operation
+        recreate_pods:
+          type: boolean
+          title: Recreate Pods
+          description: Perform pods restart during upgrade/rollback
+sample:
+  kind: image_pull_secret_injector
+  flavor: standard
+  version: "1.0"
+  disabled: true
+  spec:
+    size:
+      cpu_limit: 200m
+      memory_limit: 200Mi
+    values: {}
