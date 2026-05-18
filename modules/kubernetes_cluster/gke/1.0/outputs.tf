@@ -1,6 +1,10 @@
 locals {
-  # Pure bash one-liner: generates GCP access token from SA key using curl+openssl, outputs ExecCredential JSON
-  exec_bash_command = "set -e; echo '${local.credentials}' > /tmp/gc-$$.json; SA=$(grep -o '\"client_email\" *: *\"[^\"]*\"' /tmp/gc-$$.json | head -1 | cut -d'\"' -f4); sed -n '/\"private_key\"/s/.*\"private_key\" *: *\"//p' /tmp/gc-$$.json | sed 's/\",*$//' | sed 's/\\\\n/\\n/g' > /tmp/pk-$$.pem; NOW=$(date +%s); EXP=$((NOW+3600)); H=$(printf '{\"alg\":\"RS256\",\"typ\":\"JWT\"}' | openssl base64 | tr -d '=\\n' | tr '/+' '_-'); C=$(printf '{\"iss\":\"%s\",\"scope\":\"https://www.googleapis.com/auth/cloud-platform\",\"aud\":\"https://oauth2.googleapis.com/token\",\"iat\":%d,\"exp\":%d}' \"$SA\" \"$NOW\" \"$EXP\" | openssl base64 | tr -d '=\\n' | tr '/+' '_-'); S=$(printf '%s.%s' \"$H\" \"$C\" | openssl dgst -sha256 -sign /tmp/pk-$$.pem -binary | openssl base64 | tr -d '=\\n' | tr '/+' '_-'); RESP=$(curl -sf -X POST https://oauth2.googleapis.com/token -d \"grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=$H.$C.$S\"); AT=$(echo \"$RESP\" | grep -o '\"access_token\" *: *\"[^\"]*\"' | head -1 | cut -d'\"' -f4); printf '{\"apiVersion\":\"client.authentication.k8s.io/v1\",\"kind\":\"ExecCredential\",\"status\":{\"token\":\"%s\"}}' \"$AT\"; rm -f /tmp/gc-$$.json /tmp/pk-$$.pem"
+  # GKE exec-auth helper: runs the OAuth2 JWT-bearer flow in pure bash and
+  # emits an ExecCredential. See gke-exec-auth.sh.tftpl for the script.
+  exec_bash_command = templatefile(
+    "${path.module}/gke-exec-auth.sh.tftpl",
+    { credentials = local.credentials }
+  )
 
   output_attributes = {
     # Cluster identification
@@ -44,7 +48,7 @@ locals {
     # Maintenance window
     maintenance_policy_enabled = local.auto_upgrade
 
-    secrets = "[\"cluster_ca_certificate\"]"
+    secrets = ["cluster_ca_certificate"]
   }
 
   output_interfaces = {
@@ -56,7 +60,7 @@ locals {
         command     = "bash"
         args        = ["-c", local.exec_bash_command]
       }
-      secrets = "[\"cluster_ca_certificate\"]"
+      secrets = ["cluster_ca_certificate"]
     }
   }
 }
