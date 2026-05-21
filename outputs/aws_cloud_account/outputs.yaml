@@ -17,6 +17,11 @@ properties:
         session_name:
           description: AWS session name with UUID
           type: string
+        secrets:
+          description: List of sensitive attribute names
+          type: array
+          items:
+            type: string
     interfaces:
       type: object
       properties: {}
