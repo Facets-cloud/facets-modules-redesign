@@ -119,7 +119,7 @@ locals {
 
   # Container Insights
   container_insights_enabled  = lookup(var.instance.spec, "container_insights_enabled", false)
-  needs_cloudwatch_iam_policy = contains(keys(local.enabled_cluster_addons), "amazon-cloudwatch-observability")
+  needs_cloudwatch_iam_policy = local.container_insights_enabled
 
   # KMS key for secrets encryption (only if enabled)
   enable_kms_key = lookup(var.instance.spec, "customer_managed_kms", true)
