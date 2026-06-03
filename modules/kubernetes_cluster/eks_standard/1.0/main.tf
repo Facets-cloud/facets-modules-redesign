@@ -52,31 +52,37 @@ locals {
   # Only the default system node group
   eks_managed_node_groups = local.default_system_node_group
 
+  # cluster_addons is an OPTIONAL spec field (only cluster_version is required). Default to {}
+  # so an omitted block doesn't crash on direct attribute access — RULE-015. The per-addon
+  # `enabled`/`version` defaults below then apply, so omitting cluster_addons enables all
+  # default addons (matching the schema/UI defaults).
+  cluster_addons_spec = lookup(var.instance.spec, "cluster_addons", {})
+
   # Check if EBS CSI driver addon is enabled (default: true)
-  ebs_csi_enabled = lookup(lookup(var.instance.spec.cluster_addons, "ebs_csi", {}), "enabled", true)
+  ebs_csi_enabled = lookup(lookup(local.cluster_addons_spec, "ebs_csi", {}), "enabled", true)
 
   # Build cluster addons configuration - default addons
   default_addons = {
-    vpc-cni = lookup(var.instance.spec.cluster_addons.vpc_cni, "enabled", true) ? {
-      addon_version            = lookup(var.instance.spec.cluster_addons.vpc_cni, "version", "latest") == "latest" ? null : lookup(var.instance.spec.cluster_addons.vpc_cni, "version", null)
+    vpc-cni = lookup(lookup(local.cluster_addons_spec, "vpc_cni", {}), "enabled", true) ? {
+      addon_version            = lookup(lookup(local.cluster_addons_spec, "vpc_cni", {}), "version", "latest") == "latest" ? null : lookup(lookup(local.cluster_addons_spec, "vpc_cni", {}), "version", null)
       resolve_conflicts        = "OVERWRITE"
       service_account_role_arn = null
     } : null
 
-    kube-proxy = lookup(var.instance.spec.cluster_addons.kube_proxy, "enabled", true) ? {
-      addon_version            = lookup(var.instance.spec.cluster_addons.kube_proxy, "version", "latest") == "latest" ? null : lookup(var.instance.spec.cluster_addons.kube_proxy, "version", null)
+    kube-proxy = lookup(lookup(local.cluster_addons_spec, "kube_proxy", {}), "enabled", true) ? {
+      addon_version            = lookup(lookup(local.cluster_addons_spec, "kube_proxy", {}), "version", "latest") == "latest" ? null : lookup(lookup(local.cluster_addons_spec, "kube_proxy", {}), "version", null)
       resolve_conflicts        = "OVERWRITE"
       service_account_role_arn = null
     } : null
 
-    coredns = lookup(var.instance.spec.cluster_addons.coredns, "enabled", true) ? {
-      addon_version            = lookup(var.instance.spec.cluster_addons.coredns, "version", "latest") == "latest" ? null : lookup(var.instance.spec.cluster_addons.coredns, "version", null)
+    coredns = lookup(lookup(local.cluster_addons_spec, "coredns", {}), "enabled", true) ? {
+      addon_version            = lookup(lookup(local.cluster_addons_spec, "coredns", {}), "version", "latest") == "latest" ? null : lookup(lookup(local.cluster_addons_spec, "coredns", {}), "version", null)
       resolve_conflicts        = "OVERWRITE"
       service_account_role_arn = null
     } : null
 
     aws-ebs-csi-driver = local.ebs_csi_enabled ? {
-      addon_version            = lookup(lookup(var.instance.spec.cluster_addons, "ebs_csi", {}), "version", "latest") == "latest" ? null : lookup(lookup(var.instance.spec.cluster_addons, "ebs_csi", {}), "version", null)
+      addon_version            = lookup(lookup(local.cluster_addons_spec, "ebs_csi", {}), "version", "latest") == "latest" ? null : lookup(lookup(local.cluster_addons_spec, "ebs_csi", {}), "version", null)
       resolve_conflicts        = "OVERWRITE"
       service_account_role_arn = aws_iam_role.ebs_csi_driver[0].arn
     } : null
@@ -87,8 +93,8 @@ locals {
       service_account_role_arn = local.needs_cloudwatch_iam_policy ? aws_iam_role.cloudwatch_agent_irsa[0].arn : null
     } : null
 
-    metrics-server = lookup(lookup(var.instance.spec.cluster_addons, "metrics_server", {}), "enabled", true) ? {
-      addon_version            = lookup(lookup(var.instance.spec.cluster_addons, "metrics_server", {}), "version", "latest") == "latest" ? null : lookup(lookup(var.instance.spec.cluster_addons, "metrics_server", {}), "version", null)
+    metrics-server = lookup(lookup(local.cluster_addons_spec, "metrics_server", {}), "enabled", true) ? {
+      addon_version            = lookup(lookup(local.cluster_addons_spec, "metrics_server", {}), "version", "latest") == "latest" ? null : lookup(lookup(local.cluster_addons_spec, "metrics_server", {}), "version", null)
       resolve_conflicts        = "OVERWRITE"
       service_account_role_arn = null
     } : null
@@ -96,7 +102,7 @@ locals {
 
   # Build additional/custom addons configuration
   additional_addons = {
-    for addon_name, addon_config in lookup(var.instance.spec.cluster_addons, "additional_addons", {}) :
+    for addon_name, addon_config in lookup(local.cluster_addons_spec, "additional_addons", {}) :
     addon_name => lookup(addon_config, "enabled", true) ? {
       addon_version            = lookup(addon_config, "version", "latest") == "latest" ? null : lookup(addon_config, "version", null)
       resolve_conflicts        = "OVERWRITE"
