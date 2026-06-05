@@ -47,5 +47,7 @@ modules:
       flavor: k8s_standard
     - intent: prometheus
       flavor: k8s_standard
+    - intent: log_collector
+      flavor: loki_gcs
     - intent: vpa
       flavor: standard
