@@ -39,7 +39,20 @@ resource "linode_lke_cluster" "cluster" {
   subnet_id = local.subnet_id
 
   control_plane {
-    high_availability = var.instance.spec.high_availability
+    high_availability  = var.instance.spec.high_availability
+    audit_logs_enabled = var.instance.spec.audit_logs_enabled
+
+    # Optional API-server IP allow-list. Only enabled when CIDRs are provided,
+    # otherwise the API server stays open (required for the deployment runner to reach it).
+    dynamic "acl" {
+      for_each = length(var.instance.spec.api_server_allowed_cidrs) > 0 ? [1] : []
+      content {
+        enabled = true
+        addresses {
+          ipv4 = var.instance.spec.api_server_allowed_cidrs
+        }
+      }
+    }
   }
 
   pool {

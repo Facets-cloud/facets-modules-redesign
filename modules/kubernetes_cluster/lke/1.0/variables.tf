@@ -5,8 +5,10 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
-      k8s_version       = string
-      high_availability = optional(bool, false)
+      k8s_version              = string
+      high_availability        = optional(bool, false)
+      audit_logs_enabled       = optional(bool, false)
+      api_server_allowed_cidrs = optional(list(string), [])
       default_pool = object({
         node_type  = string
         node_count = number
@@ -20,8 +22,8 @@ variable "instance" {
   })
 
   validation {
-    condition     = contains(["1.31", "1.32", "1.33"], var.instance.spec.k8s_version)
-    error_message = "k8s_version must be one of: 1.31, 1.32, 1.33."
+    condition     = contains(["1.34", "1.35"], var.instance.spec.k8s_version)
+    error_message = "k8s_version must be one of: 1.34, 1.35."
   }
 
   validation {
