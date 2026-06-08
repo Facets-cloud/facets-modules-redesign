@@ -1,0 +1,29 @@
+{
+  "kind": "kubernetes_cluster",
+  "flavor": "lke",
+  "version": "1.0",
+  "disabled": false,
+  "spec": {
+    "k8s_version": "1.32",
+    "high_availability": false,
+    "default_pool": {
+      "node_type": "g6-standard-2",
+      "node_count": 3,
+      "autoscaler": {
+        "enabled": false,
+        "min": 1,
+        "max": 5
+      }
+    }
+  },
+  "inputs": {
+    "linode_cloud_account": {
+      "resource_name": "cloud",
+      "resource_type": "cloud_account"
+    },
+    "network": {
+      "resource_name": "network",
+      "resource_type": "network"
+    }
+  }
+}

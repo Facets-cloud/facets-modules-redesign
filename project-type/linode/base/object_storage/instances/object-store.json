@@ -1,0 +1,18 @@
+{
+  "kind": "object_storage",
+  "flavor": "linode",
+  "version": "1.0",
+  "disabled": false,
+  "spec": {
+    "region": "us-east",
+    "acl": "private",
+    "versioning_enabled": false,
+    "cors_enabled": false
+  },
+  "inputs": {
+    "linode_cloud_account": {
+      "resource_name": "cloud",
+      "resource_type": "cloud_account"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "kind": "postgres",
+  "flavor": "linode",
+  "version": "1.0",
+  "disabled": false,
+  "spec": {
+    "version_config": {
+      "version": "16"
+    },
+    "sizing": {
+      "type": "g6-nanode-1",
+      "cluster_size": 1
+    },
+    "network_access": {
+      "allow_list": []
+    }
+  },
+  "inputs": {
+    "linode_cloud_account": {
+      "resource_name": "cloud",
+      "resource_type": "cloud_account"
+    }
+  }
+}

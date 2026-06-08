@@ -152,6 +152,23 @@ raptor import project-type --managed facets/azure --name "My Platform"
 
 ---
 
+### Linode (Akamai) — Preview
+
+LKE (Linode Kubernetes Engine) clusters with node pools, Linode VPC networking, S3-compatible object storage, and managed PostgreSQL. The project type is defined in [`project-type/linode/`](project-type/linode/).
+
+<details>
+<summary><strong>What's included</strong></summary>
+
+**Infrastructure**
+`Cloud Account (linode_provider)` `Network/VPC (linode_vpc)` `LKE Cluster (lke)` `Node Pool (lke)` `Object Storage (linode)`
+
+**Managed Datastores**
+`PostgreSQL (linode)`
+
+</details>
+
+---
+
 ## Links
 
 - [Facets Control Plane](https://facets.cloud)

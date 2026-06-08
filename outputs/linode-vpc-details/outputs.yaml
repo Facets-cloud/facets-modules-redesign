@@ -1,0 +1,31 @@
+name: '@facets/linode-vpc-details'
+title: "Linode VPC Network Details"
+description: "Linode VPC and subnet details for downstream Kubernetes and managed-service connectivity"
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        vpc_id:
+          type: string
+          description: "Linode VPC ID"
+        vpc_label:
+          type: string
+          description: "Linode VPC label"
+        region:
+          type: string
+          description: "Linode region where the VPC is created"
+        subnet_id:
+          type: string
+          description: "Primary subnet ID"
+        subnet_label:
+          type: string
+          description: "Primary subnet label"
+        subnet_cidr:
+          type: string
+          description: "Primary subnet CIDR block"
+    interfaces:
+      type: object
+      properties: {}
+providers: []

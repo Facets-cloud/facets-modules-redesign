@@ -1,0 +1,147 @@
+intent: kubernetes_cluster
+flavor: lke
+version: "1.0"
+clouds:
+  - kubernetes
+description: Creates a Linode Kubernetes Engine (LKE) cluster with a default node pool, exposing Kubernetes and Helm providers
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Linode Kubernetes Engine (LKE) cluster with provider configuration
+  displayName: Kubernetes Cluster
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_cluster.svg
+spec:
+  title: Linode Kubernetes Engine Cluster
+  description: Configure an LKE cluster and its default node pool
+  type: object
+  x-ui-order:
+    - k8s_version
+    - high_availability
+    - default_pool
+  properties:
+    k8s_version:
+      type: string
+      title: Kubernetes Version
+      description: Kubernetes version for the LKE cluster
+      enum:
+        - "1.31"
+        - "1.32"
+        - "1.33"
+      default: "1.32"
+    high_availability:
+      type: boolean
+      title: High Availability Control Plane
+      description: Enable the HA control plane (additional cost). Recommended for production.
+      default: false
+    default_pool:
+      type: object
+      title: Default Node Pool
+      x-ui-order:
+        - node_type
+        - node_count
+        - autoscaler
+      properties:
+        node_type:
+          type: string
+          title: Node Type
+          description: Linode instance type for the default node pool
+          enum:
+            - g6-standard-1
+            - g6-standard-2
+            - g6-standard-4
+            - g6-standard-6
+            - g6-dedicated-2
+            - g6-dedicated-4
+            - g6-dedicated-8
+          default: g6-standard-2
+        node_count:
+          type: integer
+          title: Node Count
+          description: Number of nodes in the default pool (initial count when autoscaling)
+          minimum: 1
+          maximum: 100
+          default: 3
+        autoscaler:
+          type: object
+          title: Autoscaler
+          x-ui-toggle: true
+          properties:
+            enabled:
+              type: boolean
+              title: Enable Autoscaling
+              default: false
+            min:
+              type: integer
+              title: Minimum Nodes
+              minimum: 1
+              default: 1
+            max:
+              type: integer
+              title: Maximum Nodes
+              minimum: 1
+              default: 5
+      required:
+        - node_type
+        - node_count
+  required:
+    - k8s_version
+    - default_pool
+inputs:
+  linode_cloud_account:
+    type: "@facets/linode_cloud_account"
+    optional: false
+    displayName: Linode Cloud Account
+    description: Linode provider configuration and default region
+    providers:
+      - linode
+  network:
+    type: "@facets/linode-vpc-details"
+    optional: true
+    displayName: Linode VPC
+    description: Optional VPC and subnet to place the cluster nodes in. When wired, the cluster region is taken from the VPC.
+    providers: []
+outputs:
+  default:
+    type: "@facets/lke"
+    title: LKE Cluster Attributes
+    description: Linode Kubernetes Engine cluster attributes without provider configuration
+  attributes:
+    type: "@facets/kubernetes-details"
+    title: Kubernetes Cluster Output
+    description: Generic Kubernetes cluster attributes with Kubernetes and Helm provider configuration
+    providers:
+      kubernetes:
+        source: hashicorp/kubernetes
+        version: 2.38.0
+        attributes:
+          host: cluster_endpoint
+          cluster_ca_certificate: cluster_ca_certificate
+          token: token
+      helm:
+        source: hashicorp/helm
+        version: 2.17.0
+        attributes:
+          kubernetes:
+            host: cluster_endpoint
+            cluster_ca_certificate: cluster_ca_certificate
+            token: token
+sample:
+  kind: kubernetes_cluster
+  flavor: lke
+  version: "1.0"
+  disabled: true
+  spec:
+    k8s_version: "1.32"
+    high_availability: false
+    default_pool:
+      node_type: g6-standard-2
+      node_count: 3
+      autoscaler:
+        enabled: false
+        min: 1
+        max: 5
+iac:
+  validated_files:
+    - main.tf
+    - variables.tf
+    - outputs.tf
+    - versions.tf

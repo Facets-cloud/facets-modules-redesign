@@ -1,0 +1,114 @@
+intent: postgres
+flavor: linode
+version: "1.0"
+clouds:
+  - kubernetes
+description: Managed PostgreSQL database on Linode (Akamai) with SSL/TLS and IP allow-listing
+intentDetails:
+  type: Datastores
+  description: Linode (Akamai) managed PostgreSQL database service
+  displayName: PostgreSQL
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/postgres.svg
+spec:
+  title: Linode Managed PostgreSQL Database
+  description: Managed PostgreSQL database on Linode (Akamai)
+  type: object
+  x-ui-order:
+    - version_config
+    - sizing
+    - network_access
+  properties:
+    version_config:
+      type: object
+      title: Version Configuration
+      x-ui-order:
+        - version
+      properties:
+        version:
+          type: string
+          title: PostgreSQL Version
+          description: PostgreSQL engine major version
+          enum:
+            - "13"
+            - "14"
+            - "15"
+            - "16"
+          default: "16"
+      required:
+        - version
+    sizing:
+      type: object
+      title: Sizing & Performance
+      x-ui-order:
+        - type
+        - cluster_size
+      properties:
+        type:
+          type: string
+          title: Instance Type
+          description: Linode instance type for database nodes
+          enum:
+            - g6-nanode-1
+            - g6-standard-1
+            - g6-standard-2
+            - g6-dedicated-2
+            - g6-dedicated-4
+          default: g6-nanode-1
+        cluster_size:
+          type: integer
+          title: Cluster Size
+          description: Number of nodes (1 = single node, 3 = high availability)
+          enum:
+            - 1
+            - 3
+          default: 1
+      required:
+        - type
+        - cluster_size
+    network_access:
+      type: object
+      title: Network Access
+      properties:
+        allow_list:
+          type: array
+          title: Allowed CIDRs
+          description: List of CIDRs permitted to connect (empty denies all external access)
+          default: []
+          items:
+            type: string
+            pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$
+      required: []
+  required:
+    - version_config
+    - sizing
+inputs:
+  linode_cloud_account:
+    type: "@facets/linode_cloud_account"
+    optional: false
+    displayName: Linode Cloud Account
+    description: Linode provider configuration and default region
+    providers:
+      - linode
+outputs:
+  default:
+    type: "@facets/postgres"
+    title: Linode PostgreSQL Database
+sample:
+  kind: postgres
+  flavor: linode
+  version: "1.0"
+  disabled: true
+  spec:
+    version_config:
+      version: "16"
+    sizing:
+      type: g6-nanode-1
+      cluster_size: 1
+    network_access:
+      allow_list: []
+iac:
+  validated_files:
+    - main.tf
+    - variables.tf
+    - outputs.tf
+    - versions.tf

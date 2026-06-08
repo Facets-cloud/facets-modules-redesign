@@ -1,0 +1,93 @@
+name: Linode
+description: Linode (Akamai) project type with LKE, VPC, object storage, and managed PostgreSQL
+
+# Git repository details
+gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
+gitRef: main
+baseTemplatePath: project-type/linode/base
+
+iacTool: OPENTOFU
+iacToolVersion: "1.11.5"
+
+allowedClouds:
+  - KUBERNETES
+
+# IaC modules to include
+modules:
+  # Cloud Account Setup
+  - intent: cloud_account
+    flavor: linode_provider
+
+  # Networking
+  - intent: network
+    flavor: linode_vpc
+
+  # Kubernetes Cluster
+  - intent: kubernetes_cluster
+    flavor: lke
+
+  # Node Pools
+  - intent: kubernetes_node_pool
+    flavor: lke
+
+  # Object Storage
+  - intent: object_storage
+    flavor: linode
+
+  # Managed Database
+  - intent: postgres
+    flavor: linode
+
+  # Self-hosted datastores via KubeBlocks (run on the LKE cluster)
+  - intent: postgres
+    flavor: kubeblocks
+  - intent: mysql
+    flavor: kubeblocks
+  - intent: mongo
+    flavor: kubeblocks
+  - intent: redis
+    flavor: kubeblocks
+
+  # K8s platform (cloud-agnostic, run on any cluster)
+  - intent: service
+    flavor: k8s
+  - intent: helm
+    flavor: k8s_standard
+  - intent: helm
+    flavor: k8s_git
+  - intent: ingress
+    flavor: nginx_k8s
+  - intent: cert_manager
+    flavor: standard
+  - intent: config_map
+    flavor: k8s_standard
+  - intent: kubernetes_secret
+    flavor: k8s_standard
+  - intent: pvc
+    flavor: k8s_standard
+  - intent: k8s_resource
+    flavor: k8s_standard
+  - intent: k8s_access_controls
+    flavor: k8s_standard
+  - intent: k8s_callback
+    flavor: k8s_standard
+  - intent: gateway_api_crd
+    flavor: default
+  - intent: artifactories
+    flavor: standard
+
+  # Operators & monitoring (cloud-agnostic)
+  - intent: kubeblocks-operator
+    flavor: standard
+  - intent: kubeblocks-crd
+    flavor: standard
+  - intent: eck-operator
+    flavor: helm
+  - intent: prometheus
+    flavor: k8s_standard
+  - intent: grafana_dashboards
+    flavor: k8s
+  - intent: alert_rules
+    flavor: prometheus
+  - intent: monitoring
+    flavor: mongo

@@ -1,0 +1,42 @@
+name: '@facets/lke'
+title: "LKE Cluster"
+description: "Linode Kubernetes Engine (LKE) cluster attributes"
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        cluster_id:
+          type: string
+          description: "LKE cluster ID"
+        cluster_name:
+          type: string
+          description: "LKE cluster label"
+        cluster_endpoint:
+          type: string
+          description: "Kubernetes API server endpoint"
+        region:
+          type: string
+          description: "Linode region where the cluster is deployed"
+        k8s_version:
+          type: string
+          description: "Kubernetes version"
+        status:
+          type: string
+          description: "Cluster status"
+        dashboard_url:
+          type: string
+          description: "LKE dashboard URL"
+        kubeconfig:
+          type: string
+          description: "Base64-encoded kubeconfig"
+        secrets:
+          type: array
+          items:
+            type: string
+          description: "List of secret field names"
+    interfaces:
+      type: object
+      properties: {}
+providers: []
