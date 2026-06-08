@@ -32,34 +32,6 @@ variable "instance" {
       }))
     })
   })
-
-  validation {
-    condition     = contains(["14.21", "15.16", "16.12", "17.8"], var.instance.spec.version_config.engine_version)
-    error_message = "PostgreSQL version must be one of: 14.21, 15.16, 16.12, 17.8"
-  }
-
-  validation {
-    condition = contains([
-      "db.t3.micro", "db.t3.small", "db.t3.medium",
-      "db.m5.large", "db.m5.xlarge"
-    ], var.instance.spec.sizing.instance_class)
-    error_message = "Instance class must be one of: db.t3.micro, db.t3.small, db.t3.medium, db.m5.large, db.m5.xlarge"
-  }
-
-  validation {
-    condition     = var.instance.spec.sizing.allocated_storage >= 20 && var.instance.spec.sizing.allocated_storage <= 65536
-    error_message = "Allocated storage must be between 20 and 65536 GB"
-  }
-
-  validation {
-    condition     = var.instance.spec.sizing.read_replica_count >= 0 && var.instance.spec.sizing.read_replica_count <= 5
-    error_message = "Read replica count must be between 0 and 5"
-  }
-
-  validation {
-    condition     = can(regex("^[a-zA-Z][a-zA-Z0-9_]*$", var.instance.spec.version_config.database_name))
-    error_message = "Database name must start with a letter and contain only letters, numbers, and underscores"
-  }
 }
 
 variable "instance_name" {

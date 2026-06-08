@@ -82,8 +82,12 @@ locals {
 
   postgres_database = "postgres"
 
+  # KubeBlocks component name (matches componentSpecs[].name in main.tf)
+  component_name = "postgresql"
+
   # Writer/Primary endpoint (always exists)
-  writer_host = "${local.cluster_name}-postgresql.${local.namespace}.svc.cluster.local"
+  # KubeBlocks creates the writer service as: {cluster_name}-{component_name}-{component_name}
+  writer_host = "${local.cluster_name}-${local.component_name}-${local.component_name}.${local.namespace}.svc.cluster.local"
   writer_port = 5432
 
   # PgBouncer connection pool endpoints

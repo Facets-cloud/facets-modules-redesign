@@ -9,6 +9,11 @@ variable "instance" {
       karpenter_replicas    = optional(number, 2)
       interruption_handling = optional(bool, false)
 
+      # Additional IAM policies for node role
+      additional_node_policies = optional(map(object({
+        arn = string
+      })), {})
+
       # Tags
       tags = optional(map(string), {})
     })

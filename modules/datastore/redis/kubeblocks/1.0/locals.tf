@@ -4,7 +4,7 @@
 locals {
   # Cluster configuration
   cluster_name = module.name.name
-  namespace    = try(var.instance.spec.namespace_override, "") != "" ? var.instance.spec.namespace_override : var.environment.namespace
+  namespace    = (var.instance.spec.namespace_override != null && var.instance.spec.namespace_override != "") ? var.instance.spec.namespace_override : var.environment.namespace
 
   # Mode-specific replica configuration
   mode = var.instance.spec.mode
@@ -12,30 +12,29 @@ locals {
   # For standalone: 1 replica (1 pod)
   # For replication: user-defined replicas (default 2)
   # For redis-cluster: user-defined replicas per shard (default 2 for HA)
-  base_replicas = local.mode == "standalone" ? 1 : lookup(var.instance.spec, "replicas", 2)
-  shards        = local.mode == "redis-cluster" ? lookup(var.instance.spec, "shards", 3) : 1
+  base_replicas = local.mode == "standalone" ? 1 : try(var.instance.spec.replicas, null) != null ? var.instance.spec.replicas : 2
+  shards        = local.mode == "redis-cluster" ? (try(var.instance.spec.shards, null) != null ? var.instance.spec.shards : 3) : 1
 
   # For redis-cluster: pods per shard (2 = 1 master + 1 replica for HA)
   # For other modes: use base_replicas
-  replicas = local.mode == "redis-cluster" ? lookup(var.instance.spec, "replicas", 2) : local.base_replicas
+  replicas = local.mode == "redis-cluster" ? (try(var.instance.spec.replicas, null) != null ? var.instance.spec.replicas : 2) : local.base_replicas
 
   # HA settings
   ha_enabled = local.mode == "replication" || local.mode == "redis-cluster"
 
   # Anti-affinity settings (soft anti-affinity - prefers different nodes)
-  ha_config                = lookup(var.instance.spec, "high_availability", {})
-  enable_pod_anti_affinity = lookup(local.ha_config, "enable_pod_anti_affinity", true) && local.ha_enabled
+  ha_config                = try(var.instance.spec.high_availability, {})
+  enable_pod_anti_affinity = try(local.ha_config.enable_pod_anti_affinity, true) && local.ha_enabled
 
   # PDB settings - maxUnavailable=1 ensures only 1 pod disrupted at a time
-  enable_pdb = lookup(local.ha_config, "enable_pdb", false) && local.ha_enabled
+  enable_pdb = try(local.ha_config.enable_pdb, false) && local.ha_enabled
 
   create_read_service = local.mode == "replication" # Only for replication mode with sentinel
 
   # Get node pool details from input
-  node_pool_input  = lookup(var.inputs, "node_pool", {})
-  node_pool_attrs  = lookup(local.node_pool_input, "attributes", {})
+  node_pool_attrs  = try(var.inputs.node_pool.attributes, {})
   node_selector    = lookup(local.node_pool_attrs, "node_selector", {})
-  node_pool_taints = lookup(local.node_pool_attrs, "taints", [])
+  node_pool_taints = try(local.node_pool_attrs.taints, [])
 
   # Convert taints from {key, value, effect} to tolerations format
   tolerations = [
@@ -53,27 +52,27 @@ locals {
 
 
   # Backup settings - mapped to ClusterBackup API
-  backup_config = lookup(var.instance.spec, "backup", {})
+  backup_config = try(var.instance.spec.backup, {})
 
   # Ensure boolean types
-  backup_enabled = try(lookup(local.backup_config, "enabled", false), false) == true
+  backup_enabled = try(local.backup_config.enabled, false) == true
 
   # Backup schedule settings (for Cluster.spec.backup)
   backup_schedule_enabled = true
-  backup_cron_expression  = try(lookup(local.backup_config, "schedule_cron", "0 2 * * *"), "0 2 * * *")
-  backup_retention_period = try(lookup(local.backup_config, "retention_period", "7d"), "7d")
+  backup_cron_expression  = try(local.backup_config.schedule_cron, "0 2 * * *")
+  backup_retention_period = try(local.backup_config.retention_period, "7d")
 
   # Backup method - volume-snapshot for Redis
   backup_method = "volume-snapshot"
 
   # Restore configuration - annotation-based restore from backup
-  restore_config  = lookup(var.instance.spec, "restore", {})
-  restore_enabled = lookup(local.restore_config, "enabled", false) == true
+  restore_config  = try(var.instance.spec.restore, {})
+  restore_enabled = try(local.restore_config.enabled, false) == true
 
   # Restore source details
   # Backup naming pattern from KubeBlocks:
   # - Volume-snapshot backups: {cluster-name}-backup-{timestamp}
-  restore_backup_name = lookup(local.restore_config, "backup_name", "")
+  restore_backup_name = try(local.restore_config.backup_name, "")
 
   # Component definition
   redis_version = var.instance.spec.redis_version

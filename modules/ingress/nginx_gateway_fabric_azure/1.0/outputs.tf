@@ -47,3 +47,7 @@ output "load_balancer_ip" {
   value       = module.nginx_gateway_fabric.load_balancer_ip
   description = "Load balancer IP address (for A records)"
 }
+
+output "legacy_resource_details" {
+  value = module.nginx_gateway_fabric.legacy_resource_details
+}

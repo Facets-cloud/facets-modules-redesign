@@ -78,7 +78,7 @@ variable "inputs" {
     node_pool = optional(object({
       attributes = object({
         node_pool_name = string
-        node_pool_id   = string
+        node_pool_id   = optional(string)
 
         # List of taint objects: { key, value, effect }
         taints = optional(list(object({
