@@ -38,12 +38,18 @@ This guide walks you through standing up Linode (Akamai Cloud) as a target cloud
 The project type bundles the Linode cloud modules plus the cloud-agnostic Kubernetes modules (service, KubeBlocks datastores, helm, ingress, cert-manager, monitoring, operators).
 
 ```bash
-# From a clone of facets-modules-redesign
-raptor import project-type -f ./project-type/linode/project-type.yml --outputs-dir ./outputs
+# From a clone of facets-modules-redesign.
+# --modules-dir uploads the module code, --outputs-dir registers the output types.
+# No --include-base-template, so projects created from this type start empty.
+raptor import project-type -f ./project-type/linode/project-type.yml \
+  --modules-dir ./modules --outputs-dir ./outputs
 
 # With a custom display name
-raptor import project-type -f ./project-type/linode/project-type.yml --outputs-dir ./outputs --name "Linode Platform"
+raptor import project-type -f ./project-type/linode/project-type.yml \
+  --modules-dir ./modules --outputs-dir ./outputs --name "Linode Platform"
 ```
+
+> If the Linode modules are already published to your control plane, you can omit `--modules-dir`. Omit `--include-base-template` always — this project type intentionally has no base blueprint.
 
 **Prompt for Praxis:**
 
@@ -77,9 +83,9 @@ raptor apply resource cloud_account/linode_provider/1.0 -p my-linode-app -n clou
 
 ---
 
-## 6. Add the infrastructure (or use the base blueprint)
+## 6. Add the infrastructure
 
-The project type ships a base blueprint wiring all resources. To build it by hand, apply in this order (each wires to the resources before it):
+This project type has **no base template** — a new project starts empty and you add resources to the blueprint. Apply in this order (each wires to the resources before it):
 
 ```bash
 # VPC

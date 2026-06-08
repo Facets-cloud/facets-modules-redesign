@@ -165,16 +165,18 @@ Import the Linode project type for me from the facets-modules-redesign repo
 (project-type/linode/project-type.yml) along with its output types.
 ```
 
-**Raptor CLI:**
+**Raptor CLI:** (imports the project type + modules + outputs; no base template — projects start empty)
 
 ```bash
-raptor import project-type -f ./project-type/linode/project-type.yml --outputs-dir ./outputs
+raptor import project-type -f ./project-type/linode/project-type.yml \
+  --modules-dir ./modules --outputs-dir ./outputs
 ```
 
 With custom name:
 
 ```bash
-raptor import project-type -f ./project-type/linode/project-type.yml --outputs-dir ./outputs --name "Linode Platform"
+raptor import project-type -f ./project-type/linode/project-type.yml \
+  --modules-dir ./modules --outputs-dir ./outputs --name "Linode Platform"
 ```
 
 <details>

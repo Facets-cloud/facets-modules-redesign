@@ -1,10 +1,8 @@
-name: Linode
+name: linode
 description: Linode (Akamai) project type with LKE, VPC, object storage, and managed PostgreSQL
 
-# Git repository details
-gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
-gitRef: main
-baseTemplatePath: project-type/linode/base
+# No base template: projects created from this type start empty.
+# Resources are added to the blueprint after project creation.
 
 iacTool: OPENTOFU
 iacToolVersion: "1.11.5"

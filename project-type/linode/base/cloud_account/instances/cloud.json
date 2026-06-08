@@ -1,9 +1,0 @@
-{
-  "kind": "cloud_account",
-  "flavor": "linode_provider",
-  "version": "1.0",
-  "disabled": false,
-  "spec": {
-    "region": "us-east"
-  }
-}
