@@ -1,0 +1,147 @@
+intent: kubernetes_node_pool
+flavor: lke
+version: "1.0"
+clouds:
+  - kubernetes
+description: Creates and manages an additional node pool on a Linode Kubernetes Engine (LKE) cluster
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Linode Kubernetes Engine node pool with optional autoscaling
+  displayName: Kubernetes Node Pool
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_node_pool.svg
+spec:
+  title: Linode Kubernetes Engine Node Pool
+  description: Configure an additional LKE node pool
+  type: object
+  x-ui-order:
+    - node_type
+    - node_count
+    - autoscaler
+    - labels
+    - taints
+  properties:
+    node_type:
+      type: string
+      title: Node Type
+      description: Linode instance type for the node pool
+      enum:
+        - g6-standard-1
+        - g6-standard-2
+        - g6-standard-4
+        - g6-standard-6
+        - g6-dedicated-2
+        - g6-dedicated-4
+        - g6-dedicated-8
+      default: g6-standard-2
+    node_count:
+      type: integer
+      title: Node Count
+      description: Number of nodes (initial count when autoscaling is enabled)
+      minimum: 1
+      maximum: 100
+      default: 2
+    autoscaler:
+      type: object
+      title: Autoscaler
+      x-ui-toggle: true
+      properties:
+        enabled:
+          type: boolean
+          title: Enable Autoscaling
+          default: false
+        min:
+          type: integer
+          title: Minimum Nodes
+          minimum: 1
+          default: 1
+        max:
+          type: integer
+          title: Maximum Nodes
+          minimum: 1
+          default: 5
+    labels:
+      type: object
+      title: Node Labels
+      description: Labels applied to all nodes in the pool
+      default: {}
+      patternProperties:
+        ".*":
+          type: object
+          properties:
+            key:
+              type: string
+              description: Label key
+            value:
+              type: string
+              description: Label value
+          required:
+            - key
+            - value
+    taints:
+      type: object
+      title: Node Taints
+      description: "Map of taints keyed by taint key. Eg: my-key: {value: 'true', effect: NoSchedule}"
+      x-ui-yaml-editor: true
+      default: {}
+      patternProperties:
+        ".*":
+          type: object
+          properties:
+            value:
+              type: string
+              description: Taint value
+              default: ""
+            effect:
+              type: string
+              description: Taint effect
+              enum:
+                - NoSchedule
+                - PreferNoSchedule
+                - NoExecute
+          required:
+            - effect
+  required:
+    - node_type
+    - node_count
+inputs:
+  linode_cloud_account:
+    type: "@facets/linode_cloud_account"
+    optional: false
+    displayName: Linode Cloud Account
+    description: Linode provider configuration
+    providers:
+      - linode
+  kubernetes_cluster:
+    type: "@facets/lke"
+    optional: false
+    displayName: LKE Cluster
+    description: The LKE cluster to add the node pool to
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers: []
+outputs:
+  default:
+    type: "@facets/kubernetes_nodepool"
+    title: Kubernetes Node Pool
+    description: Node pool attributes including name, taints, and node selector
+sample:
+  kind: kubernetes_node_pool
+  flavor: lke
+  version: "1.0"
+  disabled: true
+  spec:
+    node_type: g6-standard-2
+    node_count: 2
+    autoscaler:
+      enabled: false
+      min: 1
+      max: 5
+    labels: {}
+    taints: {}
+iac:
+  validated_files:
+    - main.tf
+    - variables.tf
+    - outputs.tf
+    - versions.tf

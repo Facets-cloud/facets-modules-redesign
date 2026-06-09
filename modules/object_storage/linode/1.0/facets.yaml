@@ -1,0 +1,77 @@
+intent: object_storage
+flavor: linode
+version: "1.0"
+clouds:
+  - kubernetes
+description: S3-compatible object storage bucket on Linode (Akamai) with access credentials
+intentDetails:
+  type: Cloud & Infrastructure
+  description: S3-compatible object storage with versioning on Linode (Akamai)
+  displayName: Object Storage
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/object_storage.svg
+spec:
+  title: Linode Object Storage
+  description: S3-compatible object storage bucket for storing unstructured data on Linode
+  type: object
+  x-ui-order:
+    - region
+    - acl
+    - versioning_enabled
+    - cors_enabled
+  properties:
+    region:
+      type: string
+      title: Region
+      description: Linode object storage region (region/cluster-scoped, e.g. us-east, us-ord, eu-central)
+      default: us-east
+      x-ui-placeholder: us-east
+      x-ui-overrides-only: true
+    acl:
+      type: string
+      title: Access Control
+      description: Canned ACL for the bucket
+      enum:
+        - private
+        - public-read
+        - authenticated-read
+        - public-read-write
+      default: private
+    versioning_enabled:
+      type: boolean
+      title: Enable Versioning
+      description: Enable object versioning for the bucket
+      default: false
+    cors_enabled:
+      type: boolean
+      title: Enable CORS
+      description: Enable CORS for the bucket
+      default: false
+  required: []
+inputs:
+  linode_cloud_account:
+    type: "@facets/linode_cloud_account"
+    optional: false
+    displayName: Linode Cloud Account
+    description: Linode provider configuration
+    providers:
+      - linode
+outputs:
+  default:
+    type: "@facets/linode-object-storage"
+    title: Linode Object Storage Bucket
+sample:
+  kind: object_storage
+  flavor: linode
+  version: "1.0"
+  disabled: true
+  spec:
+    region: us-east
+    acl: private
+    versioning_enabled: false
+    cors_enabled: false
+iac:
+  validated_files:
+    - main.tf
+    - variables.tf
+    - outputs.tf
+    - versions.tf

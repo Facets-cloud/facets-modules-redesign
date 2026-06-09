@@ -38,7 +38,8 @@ spec:
           - '15.16'
           - '16.12'
           - '17.8'
-          default: '16.12'
+          - '18.1'
+          default: '18.1'
         database_name:
           type: string
           title: Database Name
@@ -249,7 +250,7 @@ sample:
   disabled: true
   spec:
     version_config:
-      engine_version: '16.12'
+      engine_version: '18.1'
       database_name: postgres
     sizing:
       instance_class: db.t3.small

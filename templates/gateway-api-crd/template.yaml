@@ -1,0 +1,21 @@
+name: gateway-api-crd
+displayName: Gateway API CRDs
+description: >
+  Installs the Kubernetes Gateway API CustomResourceDefinitions.
+  Foundational template required by the ingress template; apply this
+  first if the consumer's project doesn't already have a
+  gateway_api_crd resource.
+category: network
+version: "1.0"
+tags: [gateway-api, crd, kubernetes]
+maintainers:
+  - name: Facets
+resources:
+  - gateway-api-crd.json
+requires:
+  - kubernetes_cluster/cluster
+  - kubernetes_node_pool/nodepool
+source:
+  gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
+  gitRef: main
+  path: templates/gateway-api-crd

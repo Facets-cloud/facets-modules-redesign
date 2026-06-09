@@ -1,0 +1,59 @@
+intent: network
+flavor: linode_vpc
+version: "1.0"
+clouds:
+  - kubernetes
+description: Creates a Linode VPC with a subnet for Kubernetes and managed services
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Linode VPC network infrastructure for Kubernetes and managed services
+  displayName: Network
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/network.svg
+spec:
+  title: Linode VPC Network
+  description: Configure a Linode VPC and primary subnet
+  type: object
+  properties:
+    region:
+      type: string
+      title: Region
+      description: Linode region for the VPC (defaults to the cloud account region if left empty)
+      x-ui-placeholder: us-east
+      x-ui-overrides-only: true
+    subnet_cidr:
+      type: string
+      title: Subnet CIDR
+      description: CIDR block for the primary subnet (e.g. 10.0.0.0/24)
+      default: "10.0.0.0/24"
+      x-ui-overrides-only: true
+  required:
+    - subnet_cidr
+  x-ui-order:
+    - region
+    - subnet_cidr
+inputs:
+  linode_cloud_account:
+    type: "@facets/linode_cloud_account"
+    optional: false
+    displayName: Linode Cloud Account
+    description: Linode provider configuration
+    providers:
+      - linode
+outputs:
+  default:
+    type: "@facets/linode-vpc-details"
+    title: Linode VPC Network Details
+sample:
+  kind: network
+  flavor: linode_vpc
+  version: "1.0"
+  disabled: true
+  spec:
+    region: us-east
+    subnet_cidr: "10.0.0.0/24"
+iac:
+  validated_files:
+    - main.tf
+    - variables.tf
+    - outputs.tf
+    - versions.tf

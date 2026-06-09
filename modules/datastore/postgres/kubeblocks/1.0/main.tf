@@ -67,7 +67,7 @@ module "postgresql_cluster" {
         componentSpecs = [
           merge(
             {
-              name           = "postgresql"
+              name           = local.component_name
               componentDef   = local.component_def
               serviceVersion = local.postgres_version
               replicas       = local.replicas
@@ -118,7 +118,7 @@ module "postgresql_cluster" {
                               matchLabels = {
                                 "app.kubernetes.io/instance"        = local.cluster_name
                                 "app.kubernetes.io/managed-by"      = "kubeblocks"
-                                "apps.kubeblocks.io/component-name" = "postgresql"
+                                "apps.kubeblocks.io/component-name" = local.component_name
                               }
                             }
                             topologyKey = "kubernetes.io/hostname"
@@ -191,7 +191,7 @@ resource "kubernetes_pod_disruption_budget_v1" "postgresql_pdb" {
       match_labels = {
         "app.kubernetes.io/instance"        = local.cluster_name
         "app.kubernetes.io/managed-by"      = "kubeblocks"
-        "apps.kubeblocks.io/component-name" = "postgresql"
+        "apps.kubeblocks.io/component-name" = local.component_name
       }
     }
   }
@@ -210,7 +210,7 @@ resource "kubernetes_service" "postgres_read" {
     labels = {
       "app.kubernetes.io/instance"        = local.cluster_name
       "app.kubernetes.io/managed-by"      = "kubeblocks"
-      "apps.kubeblocks.io/component-name" = "postgresql"
+      "apps.kubeblocks.io/component-name" = local.component_name
       "facets.io/created-by"              = "terraform"
     }
   }
@@ -222,7 +222,7 @@ resource "kubernetes_service" "postgres_read" {
     selector = {
       "app.kubernetes.io/instance"        = local.cluster_name
       "app.kubernetes.io/managed-by"      = "kubeblocks"
-      "apps.kubeblocks.io/component-name" = "postgresql"
+      "apps.kubeblocks.io/component-name" = local.component_name
       "kubeblocks.io/role"                = "secondary"
     }
 
