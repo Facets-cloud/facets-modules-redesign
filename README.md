@@ -152,6 +152,55 @@ raptor import project-type --managed facets/azure --name "My Platform"
 
 ---
 
+### Linode (Akamai) — Preview
+
+LKE (Linode Kubernetes Engine) clusters with node pools, Linode VPC networking, S3-compatible object storage, managed PostgreSQL, and a cloud-agnostic Kubernetes service — plus the shared K8s platform and KubeBlocks datastores.
+
+**First, create a Linode API token** at https://cloud.linode.com/profile/tokens with read/write on Linodes, Kubernetes, VPCs, IPs, Object Storage, and Databases. Full walkthrough: [`project-type/linode/ONBOARDING.md`](project-type/linode/ONBOARDING.md).
+
+**Prompt for Praxis:**
+
+```
+Import the Linode project type for me from the facets-modules-redesign repo
+(project-type/linode/project-type.yml) along with its output types.
+```
+
+**Raptor CLI:** (imports the project type + modules + outputs; no base template — projects start empty)
+
+```bash
+raptor import project-type -f ./project-type/linode/project-type.yml \
+  --modules-dir ./modules --outputs-dir ./outputs
+```
+
+With custom name:
+
+```bash
+raptor import project-type -f ./project-type/linode/project-type.yml \
+  --modules-dir ./modules --outputs-dir ./outputs --name "Linode Platform"
+```
+
+<details>
+<summary><strong>What's included</strong></summary>
+
+**Infrastructure**
+`Cloud Account (linode_provider)` `Network/VPC (linode_vpc)` `LKE Cluster (lke)` `Node Pool (lke)` `Object Storage (linode)` `Service (k8s)`
+
+**Managed Datastores**
+`PostgreSQL (linode)`
+
+**Self-hosted via KubeBlocks**
+`PostgreSQL` `MySQL` `MongoDB` `Redis`
+
+**K8s Platform**
+`Helm` `Ingress/NGINX` `cert-manager` `ConfigMap` `Secrets` `PVC` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `Artifactories`
+
+**Operators & Monitoring**
+`KubeBlocks` `ECK` `Prometheus` `Grafana` `Alert Rules` `Monitoring`
+
+</details>
+
+---
+
 ## Links
 
 - [Facets Control Plane](https://facets.cloud)

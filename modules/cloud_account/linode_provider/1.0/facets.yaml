@@ -1,0 +1,54 @@
+intent: cloud_account
+flavor: linode_provider
+version: "1.0"
+description: Module to configure and provision resources within a Linode (Akamai) cloud account
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Configure and provision resources within a Linode (Akamai) cloud account
+  displayName: Cloud Account
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloud_account.svg
+clouds:
+  - kubernetes
+spec:
+  title: Linode Provider Configuration
+  description: Configure Linode (Akamai) API access credentials and the default region
+  type: object
+  properties:
+    token:
+      type: string
+      title: Linode API Token
+      description: Linode Personal Access Token with read/write scopes for the resources you intend to manage
+      x-ui-secret-ref: true
+    region:
+      type: string
+      title: Linode Region
+      description: Default Linode region for downstream resources (e.g. us-east, us-ord, eu-west, ap-south)
+      x-ui-placeholder: us-east
+      x-ui-overrides-only: true
+  required:
+    - token
+    - region
+  x-ui-order:
+    - token
+    - region
+outputs:
+  default:
+    type: "@facets/linode_cloud_account"
+    providers:
+      linode:
+        source: linode/linode
+        version: 3.13.0
+        attributes:
+          token: attributes.token
+sample:
+  kind: cloud_account
+  flavor: linode_provider
+  version: "1.0"
+  disabled: true
+  spec:
+    token: ""
+    region: us-east
+iac:
+  validated_files:
+    - main.tf
+    - variables.tf
