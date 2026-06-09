@@ -1,0 +1,91 @@
+name: vultr
+description: Vultr project type with VKE, VPC, object storage, and managed PostgreSQL
+
+# No base template: projects created from this type start empty.
+# Resources are added to the blueprint after project creation.
+
+iacTool: OPENTOFU
+iacToolVersion: "1.11.5"
+
+allowedClouds:
+  - KUBERNETES
+
+# IaC modules to include
+modules:
+  # Cloud Account Setup
+  - intent: cloud_account
+    flavor: vultr_provider
+
+  # Networking
+  - intent: network
+    flavor: vultr_vpc
+
+  # Kubernetes Cluster
+  - intent: kubernetes_cluster
+    flavor: vke
+
+  # Node Pools
+  - intent: kubernetes_node_pool
+    flavor: vke
+
+  # Object Storage
+  - intent: object_storage
+    flavor: vultr
+
+  # Managed Database
+  - intent: postgres
+    flavor: vultr
+
+  # Self-hosted datastores via KubeBlocks (run on the VKE cluster)
+  - intent: postgres
+    flavor: kubeblocks
+  - intent: mysql
+    flavor: kubeblocks
+  - intent: mongo
+    flavor: kubeblocks
+  - intent: redis
+    flavor: kubeblocks
+
+  # K8s platform (cloud-agnostic, run on any cluster)
+  - intent: service
+    flavor: k8s
+  - intent: helm
+    flavor: k8s_standard
+  - intent: helm
+    flavor: k8s_git
+  - intent: ingress
+    flavor: nginx_k8s
+  - intent: cert_manager
+    flavor: standard
+  - intent: config_map
+    flavor: k8s_standard
+  - intent: kubernetes_secret
+    flavor: k8s_standard
+  - intent: pvc
+    flavor: k8s_standard
+  - intent: k8s_resource
+    flavor: k8s_standard
+  - intent: k8s_access_controls
+    flavor: k8s_standard
+  - intent: k8s_callback
+    flavor: k8s_standard
+  - intent: gateway_api_crd
+    flavor: default
+  - intent: artifactories
+    flavor: standard
+
+  # Operators & monitoring (cloud-agnostic)
+  - intent: kubeblocks-operator
+    flavor: standard
+  - intent: kubeblocks-crd
+    flavor: standard
+  - intent: eck-operator
+    flavor: helm
+  - intent: prometheus
+    flavor: k8s_standard
+  - intent: grafana_dashboards
+    flavor: k8s
+  - intent: alert_rules
+    flavor: prometheus
+  - intent: monitoring
+    flavor: mongo

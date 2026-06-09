@@ -152,6 +152,55 @@ raptor import project-type --managed facets/azure --name "My Platform"
 
 ---
 
+### Vultr — Preview
+
+VKE (Vultr Kubernetes Engine) clusters with node pools, Vultr VPC networking, S3-compatible object storage, managed PostgreSQL, and a cloud-agnostic Kubernetes service — plus the shared K8s platform and KubeBlocks datastores.
+
+**First, create a Vultr API key** at https://my.vultr.com/settings/#settingsapi and add your control plane egress IP to the API access-control allow-list. Full walkthrough: [`project-type/vultr/ONBOARDING.md`](project-type/vultr/ONBOARDING.md).
+
+**Prompt for Praxis:**
+
+```
+Import the Vultr project type for me from the facets-modules-redesign repo
+(project-type/vultr/project-type.yml) along with its output types.
+```
+
+**Raptor CLI:** (imports the project type + modules + outputs; no base template — projects start empty)
+
+```bash
+raptor import project-type -f ./project-type/vultr/project-type.yml \
+  --modules-dir ./modules --outputs-dir ./outputs
+```
+
+With custom name:
+
+```bash
+raptor import project-type -f ./project-type/vultr/project-type.yml \
+  --modules-dir ./modules --outputs-dir ./outputs --name "Vultr Platform"
+```
+
+<details>
+<summary><strong>What's included</strong></summary>
+
+**Infrastructure**
+`Cloud Account (vultr_provider)` `Network/VPC (vultr_vpc)` `VKE Cluster (vke)` `Node Pool (vke)` `Object Storage (vultr)` `Service (k8s)`
+
+**Managed Datastores**
+`PostgreSQL (vultr)`
+
+**Self-hosted via KubeBlocks**
+`PostgreSQL` `MySQL` `MongoDB` `Redis`
+
+**K8s Platform**
+`Helm` `Ingress/NGINX` `cert-manager` `ConfigMap` `Secrets` `PVC` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `Artifactories`
+
+**Operators & Monitoring**
+`KubeBlocks` `ECK` `Prometheus` `Grafana` `Alert Rules` `Monitoring`
+
+</details>
+
+---
+
 ## Links
 
 - [Facets Control Plane](https://facets.cloud)
