@@ -5,8 +5,8 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
-      region  = optional(string, "ewr")
-      tier_id = optional(number, 1)
+      cluster_hostname = optional(string, "ewr1.vultrobjects.com")
+      tier_id          = optional(number, 2)
     })
   })
 }

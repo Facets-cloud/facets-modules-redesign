@@ -17,11 +17,14 @@ locals {
   store_label = lower(replace(module.name.name, "_", "-"))
 }
 
-# Resolve the object storage cluster for the requested region.
+# Resolve the object storage cluster by its unique hostname. Vultr exposes
+# multiple object storage clusters per region (e.g. ewr -> ewr1, ewr2), so a
+# region filter is ambiguous and the data source errors on >1 match. The
+# hostname uniquely identifies a single cluster.
 data "vultr_object_storage_cluster" "selected" {
   filter {
-    name   = "region"
-    values = [var.instance.spec.region]
+    name   = "hostname"
+    values = [var.instance.spec.cluster_hostname]
   }
 }
 

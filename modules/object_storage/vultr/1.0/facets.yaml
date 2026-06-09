@@ -14,23 +14,22 @@ spec:
   description: S3-compatible object storage subscription for storing unstructured data on Vultr
   type: object
   x-ui-order:
-    - region
+    - cluster_hostname
     - tier_id
   properties:
-    region:
+    cluster_hostname:
       type: string
-      title: Region
-      description: Vultr object storage region (selects the object storage cluster, e.g. ewr, ord, ams)
-      default: ewr
-      x-ui-placeholder: ewr
-      x-ui-overrides-only: true
+      title: Object Storage Cluster
+      description: Vultr object storage cluster hostname; uniquely selects the cluster (a region may host several, e.g. ewr1/ewr2). List clusters via the Vultr API (GET /v2/object-storage/clusters).
+      default: ewr1.vultrobjects.com
+      x-ui-placeholder: ewr1.vultrobjects.com
     tier_id:
       type: integer
       title: Storage Tier
-      description: Vultr object storage tier ID (1 = Standard). List tiers via the Vultr API (GET /v2/object-storage/tiers).
-      default: 1
+      description: Vultr object storage tier ID (1 = Legacy, 2 = Standard, ...). The tier must be available at the chosen cluster — list tiers and their locations via the Vultr API (GET /v2/object-storage/tiers).
+      default: 2
   required:
-    - region
+    - cluster_hostname
 inputs:
   vultr_cloud_account:
     type: "@facets/vultr_cloud_account"
@@ -49,8 +48,8 @@ sample:
   version: "1.0"
   disabled: true
   spec:
-    region: ewr
-    tier_id: 1
+    cluster_hostname: ewr1.vultrobjects.com
+    tier_id: 2
 iac:
   validated_files:
     - main.tf
