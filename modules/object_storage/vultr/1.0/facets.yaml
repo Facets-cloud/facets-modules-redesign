@@ -1,0 +1,58 @@
+intent: object_storage
+flavor: vultr
+version: "1.0"
+clouds:
+  - kubernetes
+description: S3-compatible object storage subscription on Vultr with access credentials
+intentDetails:
+  type: Cloud & Infrastructure
+  description: S3-compatible object storage on Vultr
+  displayName: Object Storage
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/object_storage.svg
+spec:
+  title: Vultr Object Storage
+  description: S3-compatible object storage subscription for storing unstructured data on Vultr
+  type: object
+  x-ui-order:
+    - cluster_hostname
+    - tier_id
+  properties:
+    cluster_hostname:
+      type: string
+      title: Object Storage Cluster
+      description: Vultr object storage cluster hostname; uniquely selects the cluster (a region may host several, e.g. ewr1/ewr2). List clusters via the Vultr API (GET /v2/object-storage/clusters).
+      default: ewr1.vultrobjects.com
+      x-ui-placeholder: ewr1.vultrobjects.com
+    tier_id:
+      type: integer
+      title: Storage Tier
+      description: Vultr object storage tier ID (1 = Legacy, 2 = Standard, ...). The tier must be available at the chosen cluster — list tiers and their locations via the Vultr API (GET /v2/object-storage/tiers).
+      default: 2
+  required:
+    - cluster_hostname
+inputs:
+  vultr_cloud_account:
+    type: "@facets/vultr_cloud_account"
+    optional: false
+    displayName: Vultr Cloud Account
+    description: Vultr provider configuration
+    providers:
+      - vultr
+outputs:
+  default:
+    type: "@facets/vultr-object-storage"
+    title: Vultr Object Storage
+sample:
+  kind: object_storage
+  flavor: vultr
+  version: "1.0"
+  disabled: true
+  spec:
+    cluster_hostname: ewr1.vultrobjects.com
+    tier_id: 2
+iac:
+  validated_files:
+    - main.tf
+    - variables.tf
+    - outputs.tf
+    - versions.tf
