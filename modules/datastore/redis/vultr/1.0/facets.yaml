@@ -1,21 +1,22 @@
-intent: postgres
+intent: redis
 flavor: vultr
 version: "1.0"
 clouds:
   - kubernetes
-description: Managed PostgreSQL database on Vultr with SSL/TLS and trusted-IP allow-listing
+description: Managed Valkey (Redis-compatible) cache on Vultr with TLS and trusted-IP allow-listing
 intentDetails:
   type: Datastores
-  description: Vultr managed PostgreSQL database service
-  displayName: PostgreSQL
-  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/postgres.svg
+  description: Vultr managed Valkey (Redis-compatible) cache service
+  displayName: Redis
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/redis.svg
 spec:
-  title: Vultr Managed PostgreSQL Database
-  description: Managed PostgreSQL database on Vultr
+  title: Vultr Managed Valkey (Redis-compatible) Cache
+  description: Managed Valkey cache on Vultr
   type: object
   x-ui-order:
     - version_config
     - sizing
+    - advanced_config
     - network_access
   properties:
     version_config:
@@ -26,15 +27,12 @@ spec:
       properties:
         version:
           type: string
-          title: PostgreSQL Version
-          description: PostgreSQL engine major version
+          title: Valkey Version
+          description: Valkey engine version
           enum:
-            - "13"
-            - "14"
-            - "15"
-            - "16"
-            - "17"
-          default: "16"
+            - "8.1"
+            - "9.0"
+          default: "8.1"
       required:
         - version
     sizing:
@@ -46,11 +44,30 @@ spec:
         plan:
           type: string
           title: Database Plan
-          description: "Vultr managed database plan slug (encodes vCPU/RAM/disk and node count, e.g. vultr-dbaas-hobbyist-cc-1-25-1). List plans via the Vultr API (GET /v2/databases/plans)."
-          default: vultr-dbaas-hobbyist-cc-1-25-1
-          x-ui-placeholder: vultr-dbaas-hobbyist-cc-1-25-1
+          description: "Vultr managed database plan slug (encodes vCPU/RAM/node count, e.g. vultr-dbaas-hobbyist-cc-1-25-1). List plans via the Vultr API (GET /v2/databases/plans)."
+          default: vultr-dbaas-business-cc-hp-amd-2-12-2
+          x-ui-placeholder: vultr-dbaas-business-cc-hp-amd-2-12-2
       required:
         - plan
+    advanced_config:
+      type: object
+      title: Advanced Configuration
+      x-ui-toggle: true
+      properties:
+        eviction_policy:
+          type: string
+          title: Eviction Policy
+          description: How Valkey selects what to remove when memory is full
+          default: noeviction
+          enum:
+            - noeviction
+            - allkeys-lru
+            - volatile-lru
+            - allkeys-random
+            - volatile-random
+            - volatile-ttl
+            - volatile-lfu
+            - allkeys-lfu
     network_access:
       type: object
       title: Network Access
@@ -83,18 +100,20 @@ inputs:
     providers: []
 outputs:
   default:
-    type: "@facets/postgres"
-    title: Vultr PostgreSQL Database
+    type: "@facets/redis"
+    title: Vultr Valkey (Redis-compatible) Cache
 sample:
-  kind: postgres
+  kind: redis
   flavor: vultr
   version: "1.0"
   disabled: true
   spec:
     version_config:
-      version: "16"
+      version: "8.1"
     sizing:
-      plan: vultr-dbaas-hobbyist-cc-1-25-1
+      plan: vultr-dbaas-business-cc-hp-amd-2-12-2
+    advanced_config:
+      eviction_policy: noeviction
     network_access:
       trusted_ips: []
 iac:

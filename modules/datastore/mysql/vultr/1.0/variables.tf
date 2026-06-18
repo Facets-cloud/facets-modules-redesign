@@ -1,5 +1,5 @@
 variable "instance" {
-  description = "Managed PostgreSQL database on Vultr with SSL/TLS and trusted-IP allow-listing"
+  description = "Managed MySQL database on Vultr with SSL/TLS and trusted-IP allow-listing"
   type = object({
     kind    = string
     flavor  = string
@@ -11,6 +11,11 @@ variable "instance" {
       sizing = object({
         plan = string
       })
+      advanced_config = optional(object({
+        slow_query_log      = optional(bool, false)
+        long_query_time     = optional(number, 10)
+        require_primary_key = optional(bool, false)
+      }), {})
       network_access = optional(object({
         trusted_ips = optional(list(string), [])
       }), {})
@@ -18,8 +23,8 @@ variable "instance" {
   })
 
   validation {
-    condition     = contains(["13", "14", "15", "16", "17"], var.instance.spec.version_config.version)
-    error_message = "PostgreSQL version must be one of: 13, 14, 15, 16, 17."
+    condition     = contains(["8", "8.4"], var.instance.spec.version_config.version)
+    error_message = "MySQL version must be one of: 8, 8.4."
   }
 }
 

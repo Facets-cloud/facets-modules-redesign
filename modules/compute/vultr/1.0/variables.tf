@@ -1,25 +1,40 @@
 variable "instance" {
-  description = "Managed PostgreSQL database on Vultr with SSL/TLS and trusted-IP allow-listing"
+  description = "Vultr cloud compute instances (count-scaled)"
   type = object({
     kind    = string
     flavor  = string
     version = string
     spec = object({
-      version_config = object({
-        version = string
-      })
+      region = optional(string)
       sizing = object({
-        plan = string
+        plan  = string
+        count = number
       })
-      network_access = optional(object({
-        trusted_ips = optional(list(string), [])
+      image = object({
+        os_id = number
+      })
+      networking = optional(object({
+        attach_vpc  = optional(bool, true)
+        enable_ipv6 = optional(bool, false)
+      }), {})
+      access = optional(object({
+        ssh_public_keys = optional(list(string), [])
+        startup_script  = optional(string, "")
+      }), {})
+      firewall = optional(object({
+        manage = optional(bool, false)
+        open_ports = optional(map(object({
+          port     = string
+          protocol = optional(string, "tcp")
+          source   = optional(string, "0.0.0.0/0")
+        })), {})
       }), {})
     })
   })
 
   validation {
-    condition     = contains(["13", "14", "15", "16", "17"], var.instance.spec.version_config.version)
-    error_message = "PostgreSQL version must be one of: 13, 14, 15, 16, 17."
+    condition     = var.instance.spec.sizing.count >= 1 && var.instance.spec.sizing.count <= 20
+    error_message = "count must be between 1 and 20."
   }
 }
 
