@@ -1,0 +1,32 @@
+name: '@facets/vultr-load-balancer'
+title: "Vultr Load Balancer"
+description: "Vultr load balancer endpoint details"
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        lb_id:
+          type: string
+        status:
+          type: string
+        ipv4:
+          type: string
+        ipv6:
+          type: string
+    interfaces:
+      type: object
+      properties:
+        frontend:
+          type: object
+          properties:
+            host:
+              type: string
+            ipv6:
+              type: string
+            secrets:
+              type: array
+              items:
+                type: string
+providers: []

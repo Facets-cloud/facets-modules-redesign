@@ -1,5 +1,5 @@
 variable "instance" {
-  description = "Managed PostgreSQL database on Vultr with SSL/TLS and trusted-IP allow-listing"
+  description = "Managed Kafka cluster on Vultr with SASL_SSL auth and trusted-IP allow-listing"
   type = object({
     kind    = string
     flavor  = string
@@ -11,6 +11,11 @@ variable "instance" {
       sizing = object({
         plan = string
       })
+      features = optional(object({
+        enable_kafka_rest      = optional(bool, false)
+        enable_schema_registry = optional(bool, false)
+        enable_kafka_connect   = optional(bool, false)
+      }), {})
       network_access = optional(object({
         trusted_ips = optional(list(string), [])
       }), {})
@@ -18,8 +23,8 @@ variable "instance" {
   })
 
   validation {
-    condition     = contains(["13", "14", "15", "16", "17"], var.instance.spec.version_config.version)
-    error_message = "PostgreSQL version must be one of: 13, 14, 15, 16, 17."
+    condition     = contains(["3.8", "3.9", "4.0", "4.1"], var.instance.spec.version_config.version)
+    error_message = "Kafka version must be one of: 3.8, 3.9, 4.0, 4.1."
   }
 }
 

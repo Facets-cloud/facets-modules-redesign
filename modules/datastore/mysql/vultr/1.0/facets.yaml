@@ -1,21 +1,22 @@
-intent: postgres
+intent: mysql
 flavor: vultr
 version: "1.0"
 clouds:
   - kubernetes
-description: Managed PostgreSQL database on Vultr with SSL/TLS and trusted-IP allow-listing
+description: Managed MySQL database on Vultr with SSL/TLS and trusted-IP allow-listing
 intentDetails:
   type: Datastores
-  description: Vultr managed PostgreSQL database service
-  displayName: PostgreSQL
-  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/postgres.svg
+  description: Vultr managed MySQL database service
+  displayName: MySQL
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mysql.svg
 spec:
-  title: Vultr Managed PostgreSQL Database
-  description: Managed PostgreSQL database on Vultr
+  title: Vultr Managed MySQL Database
+  description: Managed MySQL database on Vultr
   type: object
   x-ui-order:
     - version_config
     - sizing
+    - advanced_config
     - network_access
   properties:
     version_config:
@@ -26,15 +27,12 @@ spec:
       properties:
         version:
           type: string
-          title: PostgreSQL Version
-          description: PostgreSQL engine major version
+          title: MySQL Version
+          description: MySQL engine major version
           enum:
-            - "13"
-            - "14"
-            - "15"
-            - "16"
-            - "17"
-          default: "16"
+            - "8"
+            - "8.4"
+          default: "8"
       required:
         - version
     sizing:
@@ -46,11 +44,33 @@ spec:
         plan:
           type: string
           title: Database Plan
-          description: "Vultr managed database plan slug (encodes vCPU/RAM/disk and node count, e.g. vultr-dbaas-hobbyist-cc-1-25-1). List plans via the Vultr API (GET /v2/databases/plans)."
+          description: "Vultr managed database plan slug (encodes vCPU/RAM/node count, e.g. vultr-dbaas-hobbyist-cc-1-25-1). List plans via the Vultr API (GET /v2/databases/plans)."
           default: vultr-dbaas-hobbyist-cc-1-25-1
           x-ui-placeholder: vultr-dbaas-hobbyist-cc-1-25-1
       required:
         - plan
+    advanced_config:
+      type: object
+      title: Advanced Configuration
+      x-ui-toggle: true
+      properties:
+        slow_query_log:
+          type: boolean
+          title: Slow Query Log
+          description: Enable the MySQL slow query log
+          default: false
+        long_query_time:
+          type: integer
+          title: Long Query Time (seconds)
+          description: Queries slower than this are logged (only applies when slow query log is enabled)
+          minimum: 1
+          maximum: 3600
+          default: 10
+        require_primary_key:
+          type: boolean
+          title: Require Primary Key
+          description: Reject tables created without a primary key
+          default: false
     network_access:
       type: object
       title: Network Access
@@ -83,18 +103,22 @@ inputs:
     providers: []
 outputs:
   default:
-    type: "@facets/postgres"
-    title: Vultr PostgreSQL Database
+    type: "@facets/mysql"
+    title: Vultr MySQL Database
 sample:
-  kind: postgres
+  kind: mysql
   flavor: vultr
   version: "1.0"
   disabled: true
   spec:
     version_config:
-      version: "16"
+      version: "8"
     sizing:
       plan: vultr-dbaas-hobbyist-cc-1-25-1
+    advanced_config:
+      slow_query_log: false
+      long_query_time: 10
+      require_primary_key: false
     network_access:
       trusted_ips: []
 iac:

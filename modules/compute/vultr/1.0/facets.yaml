@@ -1,0 +1,174 @@
+intent: compute
+flavor: vultr
+version: "1.0"
+clouds:
+  - kubernetes
+description: Vultr cloud compute instances (count-scaled VMs) with SSH keys, startup script, and optional firewall
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Vultr cloud compute virtual machines
+  displayName: Compute
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/compute_engine.svg
+spec:
+  title: Vultr Compute Instances
+  description: One or more identical Vultr cloud compute instances
+  type: object
+  x-ui-order:
+    - region
+    - sizing
+    - image
+    - networking
+    - access
+    - firewall
+  properties:
+    region:
+      type: string
+      title: Region
+      description: Vultr region; defaults to the cloud account region when empty
+      x-ui-overrides-only: true
+    sizing:
+      type: object
+      title: Sizing
+      x-ui-order:
+        - plan
+        - count
+      properties:
+        plan:
+          type: string
+          title: Plan
+          description: "Vultr compute plan slug (e.g. vc2-1c-1gb, vc2-1c-2gb, vhf-1c-1gb). List via the Vultr API (GET /v2/plans)."
+          default: vc2-1c-1gb
+          x-ui-placeholder: vc2-1c-1gb
+        count:
+          type: integer
+          title: Instance Count
+          description: Number of identical instances to provision (horizontal scaling)
+          minimum: 1
+          maximum: 20
+          default: 2
+      required:
+        - plan
+        - count
+    image:
+      type: object
+      title: Image
+      properties:
+        os_id:
+          type: integer
+          title: OS ID
+          description: "Vultr OS ID (e.g. 1743 = Ubuntu 22.04 x64, 2136 = Ubuntu 24.04 x64). List via GET /v2/os."
+          default: 1743
+      required:
+        - os_id
+    networking:
+      type: object
+      title: Networking
+      properties:
+        attach_vpc:
+          type: boolean
+          title: Attach to VPC
+          description: Attach instances to the wired VPC (requires the network input)
+          default: true
+        enable_ipv6:
+          type: boolean
+          title: Enable IPv6
+          default: false
+    access:
+      type: object
+      title: Access
+      properties:
+        ssh_public_keys:
+          type: array
+          title: SSH Public Keys
+          description: Public keys installed on the instances
+          default: []
+          items:
+            type: string
+        startup_script:
+          type: string
+          title: Startup Script
+          description: Shell script run on first boot
+          x-ui-widget: textarea
+          default: ""
+    firewall:
+      type: object
+      title: Firewall
+      x-ui-toggle: true
+      properties:
+        manage:
+          type: boolean
+          title: Manage Firewall
+          description: Create a managed firewall group for these instances
+          default: false
+        open_ports:
+          type: object
+          title: Open Ports
+          description: Inbound rules; key is a unique rule id
+          default: {}
+          patternProperties:
+            ".*":
+              type: object
+              properties:
+                port:
+                  type: string
+                  title: Port
+                protocol:
+                  type: string
+                  title: Protocol
+                  enum:
+                    - tcp
+                    - udp
+                  default: tcp
+                source:
+                  type: string
+                  title: Source CIDR
+                  default: 0.0.0.0/0
+              required:
+                - port
+  required:
+    - sizing
+    - image
+inputs:
+  vultr_cloud_account:
+    type: "@facets/vultr_cloud_account"
+    optional: false
+    displayName: Vultr Cloud Account
+    description: Vultr provider configuration and default region
+    providers:
+      - vultr
+  network:
+    type: "@facets/vultr-vpc-details"
+    optional: true
+    displayName: VPC Network
+    description: Optional VPC to attach instances to
+    providers: []
+outputs:
+  default:
+    type: "@facets/vultr-instance-details"
+    title: Vultr Compute Instances
+sample:
+  kind: compute
+  flavor: vultr
+  version: "1.0"
+  disabled: true
+  spec:
+    sizing:
+      plan: vc2-1c-1gb
+      count: 2
+    image:
+      os_id: 1743
+    networking:
+      attach_vpc: true
+      enable_ipv6: false
+    access:
+      ssh_public_keys: []
+      startup_script: ""
+    firewall:
+      manage: false
+      open_ports: {}
+iac:
+  validated_files:
+    - main.tf
+    - variables.tf
+    - outputs.tf
+    - versions.tf
