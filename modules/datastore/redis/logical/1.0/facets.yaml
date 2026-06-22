@@ -1,25 +1,26 @@
 intent: redis
-flavor: reference
+flavor: logical
 version: '1.0'
 clouds:
 - aws
 - gcp
 - azure
-description: Reference (passthrough) Redis datastore — re-exposes the outputs of an
-  existing Redis datastore without provisioning any cloud resource. Useful for staging
-  consolidation where a logical cache points at a shared physical instance, optionally
-  on a separate logical DB index.
+description: Logical — a logical redis datastore hosted on an existing/shared instance
+  (optional db_index); re-exposes its connection outputs (no resources created). Useful
+  for staging consolidation where a logical cache points at a shared physical instance,
+  optionally on a separate logical DB index.
 intentDetails:
   type: Datastores
-  description: Logical reference to an existing Redis datastore (no resources created)
+  description: Logical redis datastore hosted on an existing/shared instance (no resources
+    created)
   displayName: Redis
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/redis.svg
 spec:
-  title: Redis Reference (Passthrough)
-  description: Re-expose an existing Redis datastore's connection outputs as a separate
-    logical resource. Creates no cloud infrastructure. Select a source Redis resource
-    whose full outputs are resolved into this resource; optionally target a different
-    logical DB index on the shared instance.
+  title: Redis Logical (Shared Instance)
+  description: Logical — a logical redis datastore hosted on an existing/shared instance
+    (optional db_index); re-exposes its connection outputs (no resources created).
+    Select a source Redis resource whose full outputs are resolved into this resource;
+    optionally target a different logical DB index on the shared instance.
   type: object
   x-ui-order:
   - source
@@ -55,7 +56,7 @@ iac:
   - outputs.tf
 sample:
   kind: redis
-  flavor: reference
+  flavor: logical
   version: '1.0'
   disabled: true
   spec:

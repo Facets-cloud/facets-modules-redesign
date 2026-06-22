@@ -1,5 +1,5 @@
 variable "instance" {
-  description = "Reference (passthrough) Redis datastore — re-exposes an existing Redis datastore's outputs without provisioning any resource"
+  description = "Logical Redis datastore hosted on an existing/shared instance — re-exposes an existing Redis datastore's outputs without provisioning any resource"
   type = object({
     kind    = string
     flavor  = string
