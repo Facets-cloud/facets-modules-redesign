@@ -1,23 +1,24 @@
 intent: mysql
-flavor: reference
+flavor: logical
 version: '1.0'
 clouds:
 - aws
 - gcp
 - azure
-description: Reference (passthrough) to an existing MySQL datastore — re-exposes another
-  MySQL resource's outputs without provisioning any cloud resource. Useful for staging
-  database consolidation where several logical databases share one physical instance.
+description: Logical — a logical database hosted on an existing/shared MySQL instance;
+  re-exposes its connection outputs (no resources created). Useful for staging database
+  consolidation where several logical databases share one physical instance.
 intentDetails:
   type: Datastores
-  description: Reference an existing MySQL datastore and re-expose its connection details
+  description: A logical database on an existing/shared MySQL instance — re-exposes its connection outputs
   displayName: MySQL
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mysql.svg
 spec:
-  title: MySQL Reference
-  description: Re-expose the outputs of an existing MySQL datastore. Creates no cloud
-    resources — it points at another MySQL resource (the source) and optionally
-    overrides the logical database name in the connection string.
+  title: MySQL Logical Database
+  description: Logical — a logical database hosted on an existing/shared MySQL
+    instance; re-exposes its connection outputs (no resources created). Points at
+    another MySQL resource (the source) and optionally overrides the logical database
+    name in the connection string.
   type: object
   x-ui-order:
   - source
@@ -44,7 +45,7 @@ spec:
 outputs:
   default:
     type: '@facets/mysql'
-    title: MySQL Reference Instance
+    title: MySQL Logical Database
 iac:
   validated_files:
   - main.tf
@@ -52,7 +53,7 @@ iac:
   - outputs.tf
 sample:
   kind: mysql
-  flavor: reference
+  flavor: logical
   version: '1.0'
   disabled: true
   spec:
