@@ -1,5 +1,5 @@
 variable "instance" {
-  description = "Reference to an existing PostgreSQL datastore — re-exposes its connection outputs (no resources created)"
+  description = "A logical database hosted on an existing/shared PostgreSQL instance — re-exposes its connection outputs (no resources created)"
   type = object({
     kind    = string
     flavor  = string
@@ -49,6 +49,6 @@ variable "environment" {
 }
 
 variable "inputs" {
-  description = "A map of inputs requested by the module developer. This reference flavour provisions nothing and requires no inputs."
+  description = "A map of inputs requested by the module developer. This logical flavour provisions nothing and requires no inputs."
   type        = object({})
 }

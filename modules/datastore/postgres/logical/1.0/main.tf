@@ -1,4 +1,4 @@
-# PostgreSQL Reference flavour
+# PostgreSQL Logical flavour
 #
 # This flavour creates NO cloud resources and declares NO providers.
 # It is a pure passthrough: it re-exposes the connection outputs of an

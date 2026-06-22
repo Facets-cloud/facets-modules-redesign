@@ -63,7 +63,7 @@ modules:
   - intent: postgres
     flavor: aws-rds
   - intent: postgres
-    flavor: reference
+    flavor: logical
   - intent: redis
     flavor: aws-elasticache
   - intent: keda

@@ -1,24 +1,23 @@
 intent: postgres
-flavor: reference
+flavor: logical
 version: '1.0'
 clouds:
 - aws
 - gcp
 - azure
-description: Reference — points at an existing postgres datastore and re-exposes its
-  connection outputs (no resources created); use to model a logical DB co-located
-  on a shared instance
+description: Logical — a logical database hosted on an existing/shared postgres instance;
+  re-exposes its connection outputs (no resources created)
 intentDetails:
   type: Datastores
-  description: Reference to an existing PostgreSQL datastore (no resources created)
+  description: A logical database hosted on an existing/shared PostgreSQL instance (no resources created)
   displayName: PostgreSQL
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/postgres.svg
 spec:
-  title: PostgreSQL Reference
-  description: Points at an existing postgres datastore and re-exposes its connection
-    outputs. Creates no cloud resources. Use to model a logical database co-located
-    on a shared physical instance (e.g. staging DB consolidation), optionally
-    overriding the target database name in the connection string.
+  title: PostgreSQL Logical
+  description: A logical database hosted on an existing/shared postgres instance.
+    Re-exposes the shared instance's connection outputs and creates no cloud
+    resources. Use for staging DB consolidation, optionally overriding the
+    target database name in the connection string.
   type: object
   x-ui-order:
   - source
@@ -27,9 +26,9 @@ spec:
     source:
       type: object
       title: Source PostgreSQL Datastore
-      description: The existing postgres datastore whose connection outputs are
-        re-exposed by this reference. Resolves to the selected resource's full
-        outputs (interfaces and attributes).
+      description: The existing/shared postgres instance hosting this logical
+        database, whose connection outputs are re-exposed. Resolves to the
+        selected resource's full outputs (interfaces and attributes).
       x-ui-output-type: '@facets/postgres'
     database_name:
       type: string
@@ -47,7 +46,7 @@ spec:
 outputs:
   default:
     type: '@facets/postgres'
-    title: PostgreSQL Reference
+    title: PostgreSQL Logical
 iac:
   validated_files:
   - main.tf
@@ -55,7 +54,7 @@ iac:
   - outputs.tf
 sample:
   kind: postgres
-  flavor: reference
+  flavor: logical
   version: '1.0'
   disabled: true
   spec:
