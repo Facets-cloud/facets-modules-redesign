@@ -1,0 +1,61 @@
+intent: mysql
+flavor: logical
+version: '1.0'
+clouds:
+- aws
+- gcp
+- azure
+description: Logical — a logical database hosted on an existing/shared MySQL instance;
+  re-exposes its connection outputs (no resources created). Useful for staging database
+  consolidation where several logical databases share one physical instance.
+intentDetails:
+  type: Datastores
+  description: A logical database on an existing/shared MySQL instance — re-exposes its connection outputs
+  displayName: MySQL
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mysql.svg
+spec:
+  title: MySQL Logical Database
+  description: Logical — a logical database hosted on an existing/shared MySQL
+    instance; re-exposes its connection outputs (no resources created). Points at
+    another MySQL resource (the source) and optionally overrides the logical database
+    name in the connection string.
+  type: object
+  x-ui-order:
+  - source
+  - database_name
+  properties:
+    source:
+      type: object
+      title: Source MySQL Datastore
+      description: The existing MySQL datastore whose outputs should be re-exposed.
+        Resolves to the full outputs (attributes + interfaces) of the selected
+        resource.
+      x-ui-output-type: '@facets/mysql'
+    database_name:
+      type: string
+      title: Logical Database Name
+      description: Optional logical database to expose on the shared physical
+        instance. When set, the re-emitted connection_string targets this database
+        instead of the source's database.
+      pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+      minLength: 1
+      maxLength: 64
+  required:
+  - source
+outputs:
+  default:
+    type: '@facets/mysql'
+    title: MySQL Logical Database
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+sample:
+  kind: mysql
+  flavor: logical
+  version: '1.0'
+  disabled: true
+  spec:
+    source: {}
+    database_name: reporting
