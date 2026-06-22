@@ -1,0 +1,61 @@
+intent: mongo
+flavor: reference
+version: '1.0'
+clouds:
+- aws
+- gcp
+- azure
+description: >
+  Reference an existing MongoDB / DocumentDB datastore and re-expose its
+  connection contract without creating any cloud resource.
+intentDetails:
+  type: Datastores
+  description: Passthrough reference to an existing MongoDB-compatible datastore
+  displayName: MongoDB
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mongo.svg
+spec:
+  title: MongoDB Reference (Passthrough)
+  description: >
+    Re-expose the outputs of another mongo / DocumentDB datastore. Creates no
+    cloud resource — useful for consolidating multiple logical databases onto a
+    single physical cluster (e.g. shared staging DB).
+  type: object
+  x-ui-order:
+  - source
+  - database_name
+  properties:
+    source:
+      type: object
+      title: Source MongoDB Datastore
+      description: >
+        Select an existing mongo / DocumentDB datastore. Its full outputs
+        (interfaces + attributes) are resolved into this field. Override per
+        environment to point at the right physical cluster.
+      x-ui-output-type: '@facets/mongo'
+    database_name:
+      type: string
+      title: Logical Database Name
+      description: >
+        Optional logical database to target in the connection string. When set,
+        the database name is injected into the re-exposed connection strings
+        while preserving tls / replicaSet parameters.
+  required:
+  - source
+inputs: {}
+outputs:
+  default:
+    type: '@facets/mongo'
+    title: MongoDB Reference
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+sample:
+  kind: mongo
+  flavor: reference
+  version: '1.0'
+  disabled: true
+  spec:
+    source: {}
+    database_name: app
