@@ -1,0 +1,60 @@
+intent: mysql
+flavor: reference
+version: '1.0'
+clouds:
+- aws
+- gcp
+- azure
+description: Reference (passthrough) to an existing MySQL datastore — re-exposes another
+  MySQL resource's outputs without provisioning any cloud resource. Useful for staging
+  database consolidation where several logical databases share one physical instance.
+intentDetails:
+  type: Datastores
+  description: Reference an existing MySQL datastore and re-expose its connection details
+  displayName: MySQL
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mysql.svg
+spec:
+  title: MySQL Reference
+  description: Re-expose the outputs of an existing MySQL datastore. Creates no cloud
+    resources — it points at another MySQL resource (the source) and optionally
+    overrides the logical database name in the connection string.
+  type: object
+  x-ui-order:
+  - source
+  - database_name
+  properties:
+    source:
+      type: object
+      title: Source MySQL Datastore
+      description: The existing MySQL datastore whose outputs should be re-exposed.
+        Resolves to the full outputs (attributes + interfaces) of the selected
+        resource.
+      x-ui-output-type: '@facets/mysql'
+    database_name:
+      type: string
+      title: Logical Database Name
+      description: Optional logical database to expose on the shared physical
+        instance. When set, the re-emitted connection_string targets this database
+        instead of the source's database.
+      pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+      minLength: 1
+      maxLength: 64
+  required:
+  - source
+outputs:
+  default:
+    type: '@facets/mysql'
+    title: MySQL Reference Instance
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+sample:
+  kind: mysql
+  flavor: reference
+  version: '1.0'
+  disabled: true
+  spec:
+    source: {}
+    database_name: reporting
