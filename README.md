@@ -45,7 +45,7 @@ raptor import project-type --managed facets/aws --name "My Platform"
 `Cloud Account (aws_provider)` `Network/VPC (aws_network)` `EKS Standard (eks_standard)` `EKS Automode (eks_automode)` `Node Pool/Karpenter (karpenter)` `Node Pool/Automode (eks_automode)` `Karpenter (default)` `AWS ALB Controller (standard)` `EFS CSI Driver (standard)` `AWS EFS (standard)` `StorageClass/EBS (aws_ebs)` `StorageClass/EFS (aws_efs)` `Service (aws)` `AWS IAM Policy (standard)` `AWS IAM Role (standard)`
 
 **Managed Datastores**
-`PostgreSQL/RDS (aws-rds)` `PostgreSQL/Aurora (aws-aurora)` `MySQL/RDS (aws-rds)` `MySQL/Aurora (aws-aurora)` `MongoDB/DocumentDB (aws-documentdb)` `Redis/ElastiCache (aws-elasticache)` `Kafka/MSK (aws-msk)`
+`PostgreSQL/RDS (aws-rds)` `PostgreSQL/Aurora (aws-aurora)` `PostgreSQL/Logical (logical)` `MySQL/RDS (aws-rds)` `MySQL/Aurora (aws-aurora)` `MongoDB/DocumentDB (aws-documentdb)` `Redis/ElastiCache (aws-elasticache)` `Kafka/MSK (aws-msk)`
 
 **Self-hosted via KubeBlocks**
 `PostgreSQL` `MySQL` `MongoDB` `Redis`
@@ -91,7 +91,7 @@ raptor import project-type --managed facets/gcp --name "My Platform"
 `Cloud Account (gcp_provider)` `Network/VPC (gcp_network)` `GKE (gke)` `Node Pool (gcp)` `Node Fleet (gcp_node_fleet)` `Service (gcp)` `Workload Identity (gcp)` `Pub/Sub (gcp)` `GCP Secret Manager (gcp)`
 
 **Managed Datastores**
-`PostgreSQL/Cloud SQL (gcp-cloudsql)` `MySQL/Cloud SQL (gcp-cloudsql)` `Redis/Memorystore (gcp-memorystore)`
+`PostgreSQL/Cloud SQL (gcp-cloudsql)` `PostgreSQL/Logical (logical)` `MySQL/Cloud SQL (gcp-cloudsql)` `Redis/Memorystore (gcp-memorystore)`
 
 **Self-hosted via KubeBlocks**
 `PostgreSQL` `MySQL` `MongoDB` `Redis`
@@ -137,7 +137,7 @@ raptor import project-type --managed facets/azure --name "My Platform"
 `Cloud Account (azure_provider)` `Network/VNet (azure_network)` `AKS (aks)` `Node Pool (azure)` `Service (azure)` `Workload Identity (azure)`
 
 **Managed Datastores**
-`PostgreSQL/Flexible Server (azure-flexible-server)` `MySQL/Flexible Server (azure-flexible-server)` `MongoDB/Cosmos DB (cosmosdb)` `Redis/Azure Cache (azure_cache_custom)`
+`PostgreSQL/Flexible Server (azure-flexible-server)` `PostgreSQL/Logical (logical)` `MySQL/Flexible Server (azure-flexible-server)` `MongoDB/Cosmos DB (cosmosdb)` `Redis/Azure Cache (azure_cache_custom)`
 
 **Self-hosted via KubeBlocks**
 `PostgreSQL` `MySQL` `MongoDB` `Redis`
