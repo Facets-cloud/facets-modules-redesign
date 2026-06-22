@@ -1,24 +1,25 @@
 intent: mongo
-flavor: reference
+flavor: logical
 version: '1.0'
 clouds:
 - aws
 - gcp
 - azure
 description: >
-  Reference an existing MongoDB / DocumentDB datastore and re-expose its
-  connection contract without creating any cloud resource.
+  Logical — a logical database hosted on an existing / shared mongo /
+  DocumentDB instance; re-exposes its connection outputs (no resources created).
 intentDetails:
   type: Datastores
-  description: Passthrough reference to an existing MongoDB-compatible datastore
+  description: Logical database on an existing / shared MongoDB-compatible instance
   displayName: MongoDB
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mongo.svg
 spec:
-  title: MongoDB Reference (Passthrough)
+  title: MongoDB Logical Database
   description: >
-    Re-expose the outputs of another mongo / DocumentDB datastore. Creates no
-    cloud resource — useful for consolidating multiple logical databases onto a
-    single physical cluster (e.g. shared staging DB).
+    Logical — a logical database hosted on an existing / shared mongo /
+    DocumentDB instance; re-exposes its connection outputs (no resources
+    created). Useful for consolidating multiple logical databases onto a single
+    physical cluster (e.g. shared staging DB).
   type: object
   x-ui-order:
   - source
@@ -53,7 +54,7 @@ iac:
   - locals.tf
 sample:
   kind: mongo
-  flavor: reference
+  flavor: logical
   version: '1.0'
   disabled: true
   spec:
