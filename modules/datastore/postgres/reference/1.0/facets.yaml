@@ -1,0 +1,63 @@
+intent: postgres
+flavor: reference
+version: '1.0'
+clouds:
+- aws
+- gcp
+- azure
+description: Reference — points at an existing postgres datastore and re-exposes its
+  connection outputs (no resources created); use to model a logical DB co-located
+  on a shared instance
+intentDetails:
+  type: Datastores
+  description: Reference to an existing PostgreSQL datastore (no resources created)
+  displayName: PostgreSQL
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/postgres.svg
+spec:
+  title: PostgreSQL Reference
+  description: Points at an existing postgres datastore and re-exposes its connection
+    outputs. Creates no cloud resources. Use to model a logical database co-located
+    on a shared physical instance (e.g. staging DB consolidation), optionally
+    overriding the target database name in the connection string.
+  type: object
+  x-ui-order:
+  - source
+  - database_name
+  properties:
+    source:
+      type: object
+      title: Source PostgreSQL Datastore
+      description: The existing postgres datastore whose connection outputs are
+        re-exposed by this reference. Resolves to the selected resource's full
+        outputs (interfaces and attributes).
+      x-ui-output-type: '@facets/postgres'
+    database_name:
+      type: string
+      title: Logical Database Name
+      description: Optional logical database name to target on the shared host. When
+        set, the connection string is rebuilt to point at this database instead of
+        the source's default database. Leave empty to pass the source connection
+        through unchanged.
+      x-ui-overrides-only: true
+      pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+      minLength: 1
+      maxLength: 63
+  required:
+  - source
+outputs:
+  default:
+    type: '@facets/postgres'
+    title: PostgreSQL Reference
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+sample:
+  kind: postgres
+  flavor: reference
+  version: '1.0'
+  disabled: true
+  spec:
+    source: {}
+    database_name: app_logical

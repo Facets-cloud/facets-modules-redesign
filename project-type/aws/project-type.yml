@@ -62,6 +62,8 @@ modules:
     flavor: aws-aurora
   - intent: postgres
     flavor: aws-rds
+  - intent: postgres
+    flavor: reference
   - intent: redis
     flavor: aws-elasticache
   - intent: keda
