@@ -72,6 +72,8 @@ modules:
   # === Common Modules ===
   - intent: artifactories
     flavor: standard
+  - intent: image_pull_secret_injector
+    flavor: standard
   - intent: alert_rules
     flavor: prometheus
   - intent: storage_class
