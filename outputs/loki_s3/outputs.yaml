@@ -1,0 +1,44 @@
+name: '@facets/loki_s3'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        loki_release_name:
+          description: Loki Helm release name
+          type: string
+        loki_namespace:
+          description: Kubernetes namespace where Loki is deployed
+          type: string
+        loki_chart_version:
+          description: Loki Helm chart version
+          type: string
+        loki_release_status:
+          description: Loki Helm release status
+          type: string
+        promtail_release_name:
+          description: Promtail Helm release name
+          type: string
+        promtail_chart_version:
+          description: Promtail Helm chart version
+          type: string
+        promtail_release_status:
+          description: Promtail Helm release status
+          type: string
+        loki_gateway_url:
+          description: Loki gateway URL for internal access
+          type: string
+        loki_push_url:
+          description: Loki push API endpoint for log ingestion
+          type: string
+        s3_bucket_name:
+          description: S3 bucket name used for log storage
+          type: string
+        iam_role_arn:
+          description: IAM role ARN used by Loki for S3 access
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

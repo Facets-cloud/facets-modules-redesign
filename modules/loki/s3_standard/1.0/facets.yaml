@@ -1,0 +1,409 @@
+clouds:
+  - aws
+intentDetails:
+  type: Monitoring & Observability
+  description: Deploys Loki distributed log aggregation system with S3 backend and Promtail for log collection
+  displayName: Loki S3
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/loki_s3.svg
+description: |
+  Deploys Loki (distributed mode) with S3 storage backend and Promtail for log scraping.
+  Loki is a horizontally scalable, highly available log aggregation system.
+  Promtail is deployed as a DaemonSet to collect and forward logs from all pods.
+  S3 bucket is created separately and linked via inputs.
+flavor: s3_standard
+inputs:
+  cloud_account:
+    description: AWS Cloud Account for IAM provisioning
+    displayName: Cloud Account
+    optional: false
+    providers:
+      - aws
+    type: '@facets/aws_cloud_account'
+  eks_details:
+    description: EKS cluster details for OIDC/IRSA configuration
+    displayName: EKS Cluster
+    optional: false
+    providers:
+      - helm
+      - kubernetes
+      - kubernetes-alpha
+    type: '@facets/eks'
+  s3_details:
+    description: S3 bucket for Loki log storage
+    displayName: S3 Bucket
+    optional: false
+    type: '@facets/s3'
+intent: loki
+outputs:
+  default:
+    title: Loki S3 Log Collector
+    type: '@facets/loki_s3'
+sample:
+  disabled: false
+  flavor: s3_standard
+  kind: loki
+  spec:
+    loki_chart_version: "0.80.0"
+    promtail_chart_version: "6.16.6"
+    namespace: loki
+    retention_period: "744h"
+  version: "1.0"
+spec:
+  description: Configure Loki distributed log aggregation with S3 backend
+  properties:
+    loki_chart_version:
+      default: "0.80.0"
+      description: Helm chart version for loki-distributed
+      title: Loki Chart Version
+      type: string
+    promtail_chart_version:
+      default: "6.16.6"
+      description: Helm chart version for Promtail
+      title: Promtail Chart Version
+      type: string
+    namespace:
+      default: loki
+      description: Kubernetes namespace for Loki and Promtail deployment
+      title: Namespace
+      type: string
+    retention_period:
+      default: "744h"
+      description: Log retention period (e.g., 744h for 31 days)
+      title: Retention Period
+      type: string
+    loki_size:
+      description: Resource sizing for Loki components
+      properties:
+        distributor:
+          description: Distributor component resources
+          properties:
+            replicas:
+              default: 1
+              description: Number of distributor replicas
+              minimum: 1
+              title: Replicas
+              type: integer
+            requests:
+              description: Resource requests
+              properties:
+                cpu:
+                  default: "250m"
+                  description: CPU request
+                  title: CPU
+                  type: string
+                memory:
+                  default: "256Mi"
+                  description: Memory request
+                  title: Memory
+                  type: string
+              title: Requests
+              type: object
+              x-ui-order:
+                - cpu
+                - memory
+            limits:
+              description: Resource limits
+              properties:
+                cpu:
+                  default: "500m"
+                  description: CPU limit
+                  title: CPU
+                  type: string
+                memory:
+                  default: "512Mi"
+                  description: Memory limit
+                  title: Memory
+                  type: string
+              title: Limits
+              type: object
+              x-ui-order:
+                - cpu
+                - memory
+          title: Distributor
+          type: object
+          x-ui-order:
+            - replicas
+            - requests
+            - limits
+        ingester:
+          description: Ingester component resources
+          properties:
+            replicas:
+              default: 1
+              description: Number of ingester replicas
+              minimum: 1
+              title: Replicas
+              type: integer
+            requests:
+              description: Resource requests
+              properties:
+                cpu:
+                  default: "250m"
+                  description: CPU request
+                  title: CPU
+                  type: string
+                memory:
+                  default: "512Mi"
+                  description: Memory request
+                  title: Memory
+                  type: string
+              title: Requests
+              type: object
+              x-ui-order:
+                - cpu
+                - memory
+            limits:
+              description: Resource limits
+              properties:
+                cpu:
+                  default: "500m"
+                  description: CPU limit
+                  title: CPU
+                  type: string
+                memory:
+                  default: "1Gi"
+                  description: Memory limit
+                  title: Memory
+                  type: string
+              title: Limits
+              type: object
+              x-ui-order:
+                - cpu
+                - memory
+          title: Ingester
+          type: object
+          x-ui-order:
+            - replicas
+            - requests
+            - limits
+        querier:
+          description: Querier component resources
+          properties:
+            replicas:
+              default: 1
+              description: Number of querier replicas
+              minimum: 1
+              title: Replicas
+              type: integer
+            requests:
+              description: Resource requests
+              properties:
+                cpu:
+                  default: "250m"
+                  description: CPU request
+                  title: CPU
+                  type: string
+                memory:
+                  default: "256Mi"
+                  description: Memory request
+                  title: Memory
+                  type: string
+              title: Requests
+              type: object
+              x-ui-order:
+                - cpu
+                - memory
+            limits:
+              description: Resource limits
+              properties:
+                cpu:
+                  default: "500m"
+                  description: CPU limit
+                  title: CPU
+                  type: string
+                memory:
+                  default: "512Mi"
+                  description: Memory limit
+                  title: Memory
+                  type: string
+              title: Limits
+              type: object
+              x-ui-order:
+                - cpu
+                - memory
+          title: Querier
+          type: object
+          x-ui-order:
+            - replicas
+            - requests
+            - limits
+        query_frontend:
+          description: Query frontend component resources
+          properties:
+            replicas:
+              default: 1
+              description: Number of query frontend replicas
+              minimum: 1
+              title: Replicas
+              type: integer
+            requests:
+              description: Resource requests
+              properties:
+                cpu:
+                  default: "125m"
+                  description: CPU request
+                  title: CPU
+                  type: string
+                memory:
+                  default: "128Mi"
+                  description: Memory request
+                  title: Memory
+                  type: string
+              title: Requests
+              type: object
+              x-ui-order:
+                - cpu
+                - memory
+            limits:
+              description: Resource limits
+              properties:
+                cpu:
+                  default: "250m"
+                  description: CPU limit
+                  title: CPU
+                  type: string
+                memory:
+                  default: "256Mi"
+                  description: Memory limit
+                  title: Memory
+                  type: string
+              title: Limits
+              type: object
+              x-ui-order:
+                - cpu
+                - memory
+          title: Query Frontend
+          type: object
+          x-ui-order:
+            - replicas
+            - requests
+            - limits
+        compactor:
+          description: Compactor component resources
+          properties:
+            requests:
+              description: Resource requests
+              properties:
+                cpu:
+                  default: "100m"
+                  description: CPU request
+                  title: CPU
+                  type: string
+                memory:
+                  default: "256Mi"
+                  description: Memory request
+                  title: Memory
+                  type: string
+              title: Requests
+              type: object
+              x-ui-order:
+                - cpu
+                - memory
+            limits:
+              description: Resource limits
+              properties:
+                cpu:
+                  default: "250m"
+                  description: CPU limit
+                  title: CPU
+                  type: string
+                memory:
+                  default: "512Mi"
+                  description: Memory limit
+                  title: Memory
+                  type: string
+              title: Limits
+              type: object
+              x-ui-order:
+                - cpu
+                - memory
+          title: Compactor
+          type: object
+          x-ui-order:
+            - requests
+            - limits
+      title: Loki Component Sizing
+      type: object
+      x-ui-order:
+        - distributor
+        - ingester
+        - querier
+        - query_frontend
+        - compactor
+      x-ui-toggle: true
+    promtail_size:
+      description: Resource sizing for Promtail DaemonSet
+      properties:
+        requests:
+          description: Resource requests for Promtail pods
+          properties:
+            cpu:
+              default: "100m"
+              description: CPU request
+              title: CPU
+              type: string
+            memory:
+              default: "128Mi"
+              description: Memory request
+              title: Memory
+              type: string
+          title: Requests
+          type: object
+          x-ui-order:
+            - cpu
+            - memory
+        limits:
+          description: Resource limits for Promtail pods
+          properties:
+            cpu:
+              default: "200m"
+              description: CPU limit
+              title: CPU
+              type: string
+            memory:
+              default: "256Mi"
+              description: Memory limit
+              title: Memory
+              type: string
+          title: Limits
+          type: object
+          x-ui-order:
+            - cpu
+            - memory
+      title: Promtail Sizing
+      type: object
+      x-ui-order:
+        - requests
+        - limits
+      x-ui-toggle: true
+    query_timeout:
+      default: 60
+      description: Query timeout in seconds
+      minimum: 10
+      title: Query Timeout
+      type: integer
+    loki_custom_values:
+      default: {}
+      description: Additional Helm values for loki-distributed chart (merged last, highest priority)
+      title: Loki Custom Values
+      type: object
+      x-ui-yaml-editor: true
+    promtail_custom_values:
+      default: {}
+      description: Additional Helm values for Promtail chart (merged last, highest priority)
+      title: Promtail Custom Values
+      type: object
+      x-ui-yaml-editor: true
+  title: Loki S3 Configuration
+  type: object
+  x-ui-order:
+    - loki_chart_version
+    - promtail_chart_version
+    - namespace
+    - retention_period
+    - query_timeout
+    - loki_size
+    - promtail_size
+    - loki_custom_values
+    - promtail_custom_values
+version: "1.0"
