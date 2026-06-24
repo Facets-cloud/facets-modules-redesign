@@ -91,7 +91,7 @@ variable "environment" {
 variable "inputs" {
   description = "A map of inputs requested by the module developer."
   type = object({
-    aws_cloud_account = object({
+    aws_provider = object({
       attributes = object({
         aws_iam_role = string
         session_name = string
