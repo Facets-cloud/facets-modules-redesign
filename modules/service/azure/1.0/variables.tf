@@ -15,8 +15,10 @@ variable "instance" {
       # Restart policy (for application/statefulset)
       restart_policy = optional(string)
 
-      # Pod distribution (high-level toggle retained; detailed mapping lives in locals)
+      # Pod distribution settings
       enable_host_anti_affinity = optional(bool, false)
+      pod_distribution_enabled  = optional(bool, false)
+      pod_distribution          = optional(map(any), {})
 
       # Cloud permissions (Azure roles for AAD pod identity and RBAC)
       cloud_permissions = optional(object({
@@ -27,6 +29,25 @@ variable "instance" {
           })), {})
         }), {})
       }), {})
+
+      # Cronjob configuration (visible when spec.type = cronjob)
+      cronjob = optional(object({
+        schedule           = string
+        suspend            = bool
+        concurrency_policy = string
+      }))
+
+      # Job configuration (visible when spec.type = job or cronjob)
+      job = optional(object({
+        retry = string
+      }))
+
+      # Persistent volume claims (visible when spec.type = statefulset)
+      persistent_volume_claims = optional(map(object({
+        access_mode  = string
+        storage_size = string
+        path         = string
+      })), {})
 
       # Runtime configuration
       runtime = object({
@@ -49,11 +70,8 @@ variable "instance" {
           protocol     = string
         })), {})
 
-        # Health checks (optional)
-        health_checks = optional(object({
-          readiness_check_type = string
-          liveness_check_type  = string
-        }))
+        # Health checks (optional, typed as any to support all check type fields)
+        health_checks = optional(any)
 
         # Autoscaling (optional)
         autoscaling = optional(object({
@@ -116,9 +134,11 @@ variable "instance" {
 
       # Init containers
       init_containers = optional(map(object({
-        image       = string
-        pull_policy = string
-        env         = optional(map(string), {})
+        image                   = string
+        pull_policy             = string
+        env                     = optional(map(string), {})
+        additional_k8s_env      = optional(any)
+        additional_k8s_env_from = optional(any)
         runtime = object({
           command = optional(list(string), [])
           args    = optional(list(string), [])
@@ -134,9 +154,11 @@ variable "instance" {
 
       # Sidecar containers
       sidecars = optional(map(object({
-        image       = string
-        pull_policy = string
-        env         = optional(map(string), {})
+        image                   = string
+        pull_policy             = string
+        env                     = optional(map(string), {})
+        additional_k8s_env      = optional(any)
+        additional_k8s_env_from = optional(any)
         runtime = object({
           command = optional(list(string), [])
           args    = optional(list(string), [])
