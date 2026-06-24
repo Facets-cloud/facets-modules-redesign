@@ -14,12 +14,12 @@ variable "instance" {
         disk_size          = number
         read_replica_count = number
       })
-      restore_config = object({
+      restore_config = optional(object({
         restore_from_backup = bool
         source_instance_id  = optional(string)
         master_username     = optional(string)
         master_password     = optional(string)
-      })
+      }), { restore_from_backup = false })
       network_config = optional(object({
         ipv4_enabled = optional(bool, false)
         require_ssl  = optional(bool, true)

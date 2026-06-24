@@ -17,12 +17,12 @@ variable "instance" {
         storage_type          = string
         read_replica_count    = number
       })
-      restore_config = object({
+      restore_config = optional(object({
         restore_from_backup           = bool
         source_db_instance_identifier = optional(string)
         restore_master_username       = optional(string)
         restore_master_password       = optional(string)
-      })
+      }), { restore_from_backup = false })
       imports = optional(object({
         import_existing        = optional(bool, false)
         db_instance_identifier = optional(string)
