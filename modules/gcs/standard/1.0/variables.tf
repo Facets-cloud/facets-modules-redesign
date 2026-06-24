@@ -62,7 +62,7 @@ variable "inputs" {
   type = object({
     cloud_account = object({
       attributes = object({
-        project     = string
+        project_id  = string
         region      = string
         credentials = optional(string)
       })

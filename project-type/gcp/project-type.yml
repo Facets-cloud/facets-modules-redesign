@@ -99,6 +99,8 @@ modules:
     flavor: mongo
   - intent: prometheus
     flavor: k8s_standard
+  - intent: log_collector
+    flavor: loki_gcs
   - intent: strimzi-operator
     flavor: helm
   - intent: vpa
