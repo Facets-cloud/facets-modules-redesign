@@ -1,6 +1,6 @@
 intent: mysql
 flavor: aws-rds
-version: '1.0'
+version: '1.1'
 clouds:
 - aws
 description: Managed MySQL database instance on AWS RDS with high availability, automated
@@ -212,7 +212,7 @@ imports:
   resource_address: random_password.master_password[0]
   required: true
 inputs:
-  aws_cloud_account:
+  aws_provider:
     type: '@facets/aws_cloud_account'
     optional: false
     displayName: AWS Cloud Account
@@ -236,7 +236,7 @@ iac:
 sample:
   kind: mysql
   flavor: aws-rds
-  version: '1.0'
+  version: '1.1'
   disabled: true
   spec:
     version_config:
