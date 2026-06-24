@@ -89,12 +89,19 @@ sample:
                 version: latest
         cluster_endpoint_private_access: true
         cluster_endpoint_public_access: true
-        cluster_version: "1.34"
+        cluster_version: "1.36"
         customer_managed_kms: true
     version: "1.1"
 spec:
     description: Configure your Amazon EKS cluster with managed node groups
     properties:
+        node_subnet_ids:
+            description: Override subnet IDs for the managed node group (defaults to the network's private subnets). Use to pin nodes to specific NAT-egress private subnets.
+            title: Node Group Subnet IDs
+            type: array
+            items:
+                type: string
+            x-ui-overrides-only: true
         cluster_addons:
             description: Managed EKS add-ons configuration
             properties:
@@ -228,7 +235,7 @@ spec:
             type: object
             x-ui-yaml-editor: true
         cluster_version:
-            default: "1.34"
+            default: "1.36"
             description: EKS Kubernetes version
             enum:
                 - "1.28"
@@ -239,6 +246,8 @@ spec:
                 - "1.33"
                 - "1.34"
                 - "1.35"
+                - "1.36"
+                - "1.37"
             title: Kubernetes Version
             type: string
             x-ui-overrides-only: true
