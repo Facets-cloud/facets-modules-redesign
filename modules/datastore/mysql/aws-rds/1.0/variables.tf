@@ -6,9 +6,8 @@ variable "instance" {
     version = string
     spec = object({
       version_config = object({
-        version         = string
-        database_name   = string
-        master_username = string
+        version       = string
+        database_name = string
       })
       sizing = object({
         instance_class        = string
@@ -68,10 +67,6 @@ variable "instance" {
     error_message = "Database name must be between 1 and 64 characters"
   }
 
-  validation {
-    condition     = length(var.instance.spec.version_config.master_username) >= 1 && length(var.instance.spec.version_config.master_username) <= 16
-    error_message = "Master username must be between 1 and 16 characters"
-  }
 }
 
 variable "instance_name" {
