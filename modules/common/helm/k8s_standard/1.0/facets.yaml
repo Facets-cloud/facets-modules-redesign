@@ -103,6 +103,11 @@ spec:
       default: {}
       x-ui-yaml-editor: true
       x-ui-placeholder: Enter values in YAML format
+    enable_actions:
+      type: boolean
+      title: Enable Actions
+      description: Enable Tekton actions for helm history and rollback
+      default: false
   required:
   - helm
   - values
@@ -124,6 +129,7 @@ sample:
       namespace: default
       wait: false
     values: {}
+    enable_actions: false
 iac:
   validated_files:
   - variables.tf

@@ -12,7 +12,8 @@ variable "instance" {
         repository_username = optional(string)
         repository_password = optional(string)
       })
-      values = optional(any)
+      values         = optional(object({}))
+      enable_actions = optional(bool, false)
     })
   })
 

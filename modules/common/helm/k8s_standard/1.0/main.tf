@@ -1,3 +1,7 @@
+locals {
+  enable_actions = lookup(var.instance.spec, "enable_actions", false) ? 1 : 0
+}
+
 resource "helm_release" "external_helm_charts" {
   chart               = var.instance.spec["helm"]["chart"]
   name                = var.instance_name
