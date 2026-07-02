@@ -3,7 +3,7 @@ locals {
   output_interfaces = {
     writer = {
       host              = local.writer_host
-      port              = local.writer_port
+      port              = tostring(local.writer_port)
       username          = local.postgres_username
       password          = local.postgres_password
       database          = local.postgres_database
@@ -12,7 +12,7 @@ locals {
     }
     reader = local.create_read_service ? {
       host              = local.reader_host
-      port              = local.reader_port
+      port              = tostring(local.reader_port)
       username          = local.postgres_username
       password          = local.postgres_password
       database          = local.postgres_database
@@ -20,7 +20,7 @@ locals {
       secrets           = ["password", "connection_string"]
       } : {
       host              = local.writer_host
-      port              = local.writer_port
+      port              = tostring(local.writer_port)
       username          = local.postgres_username
       password          = local.postgres_password
       database          = local.postgres_database
