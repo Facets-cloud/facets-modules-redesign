@@ -14,18 +14,23 @@ variable "instance" {
         enable_pdb = false
       })
       resources = optional(object({
-        cpu_limit      = optional(string)
-        memory_limit   = optional(string)
-        cpu_request    = optional(string)
-        memory_request = optional(string)
-      }))
+        cpu_limit      = optional(string, "1000m")
+        memory_limit   = optional(string, "1Gi")
+        cpu_request    = optional(string, "500m")
+        memory_request = optional(string, "512Mi")
+        }), {
+        cpu_limit      = "1000m"
+        memory_limit   = "1Gi"
+        cpu_request    = "500m"
+        memory_request = "512Mi"
+      })
       database_addons = optional(object({
-        postgresql = optional(bool)
-        mysql      = optional(bool)
-        mongodb    = optional(bool)
-        redis      = optional(bool)
-        kafka      = optional(bool)
-      }))
+        postgresql = optional(bool, true)
+        mysql      = optional(bool, true)
+        mongodb    = optional(bool, true)
+        redis      = optional(bool, true)
+        kafka      = optional(bool, true)
+      }), {})
     })
   })
 }
@@ -48,16 +53,8 @@ variable "inputs" {
   description = "A map of inputs requested by the module developer."
   type = object({
     kubernetes_cluster = object({
-      attributes = optional(object({
-        cluster_name   = optional(string)
-        region         = optional(string)
-        legacy_outputs = optional(any)
-      }))
-      interfaces = optional(object({
-        kubernetes_host                   = optional(string)
-        kubernetes_cluster_ca_certificate = optional(string)
-        kubernetes_token                  = optional(string)
-      }))
+      cluster_name = optional(string)
+      region       = optional(string)
     }),
     node_pool = optional(object({
       attributes = object({
@@ -74,7 +71,7 @@ variable "inputs" {
         # Node labels used as nodeSelector
         node_selector = optional(map(string), {})
       })
-      interfaces = any
+      interfaces = optional(object({}), {})
     }))
   })
 }
