@@ -45,9 +45,11 @@ spec:
       title: Installation Channel
       type: string
     version:
-      default: v1.4.1
+      default: v1.5.1
       description: Version of Gateway API CRDs to install
       enum:
+        - v1.5.1
+        - v1.5.0
         - v1.4.1
         - v1.4.0
         - v1.3.0
@@ -61,5 +63,5 @@ sample:
   kind: gateway_api_crd
   spec:
     channel: experimental
-    version: v1.4.1
+    version: v1.5.1
   version: "1.0"

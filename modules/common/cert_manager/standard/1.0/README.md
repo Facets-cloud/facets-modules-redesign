@@ -1,10 +1,16 @@
 # cert_manager Module v1.0
 
-This module deploys cert-manager for automated SSL/TLS certificate management in Kubernetes clusters using the cert-manager Helm chart v1.17.1.
+This module deploys cert-manager for automated SSL/TLS certificate management in Kubernetes clusters using the cert-manager Helm chart v1.20.3.
 
 ## Overview
 
 The module creates a fully configured cert-manager installation with support for automatic certificate provisioning via Let's Encrypt using HTTP-01 challenge validation.
+
+When the Gateway API CRDs input is present, the module enables the gateway-shim
+(`config.enableGatewayAPI`) plus the `--enable-gateway-api-listenerset` arg and the
+`ListenerSets` feature gate, so cert-manager issues certificates for TLS listeners
+defined on `ListenerSet` resources (not just Gateways). `enableCertificateOwnerRef`
+is on so an issued TLS secret is garbage-collected when its Certificate is deleted.
 
 ## Nodepool Integration
 
