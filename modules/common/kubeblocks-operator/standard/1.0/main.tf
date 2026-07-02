@@ -163,8 +163,13 @@ locals {
     }
   }
 
-  # Filter only enabled addons
-  enabled_addons = local.addon_configs
+  # Filter to only the addons the user enabled via spec.database_addons.
+  # Each toggle defaults to true (see variables.tf), so unset = install all,
+  # preserving behavior for deployments that never set this field.
+  enabled_addons = {
+    for k, v in local.addon_configs : k => v
+    if lookup(var.instance.spec.database_addons, k, true)
+  }
 }
 
 # Install each enabled addon as a separate Helm release

@@ -95,9 +95,9 @@ module "postgresql_cluster" {
                         }
                       }
                     },
-                    {
+                    var.instance.spec.storage.storage_class != "" ? {
                       storageClassName = var.instance.spec.storage.storage_class
-                    }
+                    } : {}
                   )
                 }
               ]
@@ -279,8 +279,6 @@ data "kubernetes_secret" "postgres_credentials" {
     name      = try(data.kubernetes_resources.postgres_secrets.objects[0].metadata.name, "${local.cluster_name}-postgresql-account-postgres")
     namespace = local.namespace
   }
-
-  depends_on = [data.kubernetes_resources.postgres_secrets]
 }
 
 # Data Source: Primary Service

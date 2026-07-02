@@ -51,9 +51,9 @@ variable "instance" {
       }))
 
       restore = optional(object({
-        enabled     = optional(bool)
-        backup_name = optional(string)
-      }))
+        enabled     = optional(bool, false)
+        backup_name = optional(string, "")
+      }), { enabled = false, backup_name = "" })
 
       external_access = optional(map(object({
         annotations = optional(map(string), {})
@@ -73,12 +73,11 @@ variable "inputs" {
         chart_version = optional(string)
         release_id    = optional(string)
       }))
+      interfaces = optional(object({}), {})
     })
     kubernetes_cluster = object({
-      attributes = optional(object({
-        cluster_name = optional(string)
-        region       = optional(string)
-      }))
+      cluster_name = optional(string)
+      region       = optional(string)
     })
     node_pool = optional(object({
       attributes = object({
@@ -95,7 +94,7 @@ variable "inputs" {
         # Node labels used as nodeSelector
         node_selector = optional(map(string), {})
       })
-      interfaces = any
+      interfaces = optional(object({}), {})
     }))
   })
 }

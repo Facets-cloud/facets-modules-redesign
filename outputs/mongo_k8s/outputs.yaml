@@ -6,8 +6,7 @@ properties:
       type: object
       properties:
         external_endpoints:
-          type: object
-          properties: {}
+          type: string
     interfaces:
       type: object
       properties: {}

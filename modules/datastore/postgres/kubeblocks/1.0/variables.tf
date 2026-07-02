@@ -18,7 +18,7 @@ variable "instance" {
   description = "PostgreSQL cluster instance configuration"
   type = object({
     spec = object({
-      namespace_override = optional(string)
+      namespace_override = optional(string, "")
       termination_policy = string
       postgres_version   = string
       mode               = string
@@ -51,9 +51,9 @@ variable "instance" {
         backup_method    = optional(string)
       }))
       restore = optional(object({
-        enabled     = optional(bool)
-        backup_name = optional(string)
-      }))
+        enabled     = optional(bool, false)
+        backup_name = optional(string, "")
+      }), { enabled = false, backup_name = "" })
     })
   })
 }
@@ -68,12 +68,11 @@ variable "inputs" {
         chart_version = optional(string)
         release_id    = optional(string)
       }))
+      interfaces = optional(object({}), {})
     })
     kubernetes_cluster = object({
-      attributes = optional(object({
-        cluster_name = optional(string)
-        region       = optional(string)
-      }))
+      cluster_name = optional(string)
+      region       = optional(string)
     })
     node_pool = optional(object({
       attributes = object({
@@ -90,7 +89,7 @@ variable "inputs" {
         # Node labels used as nodeSelector
         node_selector = optional(map(string), {})
       })
-      interfaces = any
+      interfaces = optional(object({}), {})
     }))
   })
 }
