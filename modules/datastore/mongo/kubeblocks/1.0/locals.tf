@@ -54,11 +54,10 @@ locals {
   backup_method = "volume-snapshot"
 
   # Restore configuration - annotation-based restore from backup
-  restore_config  = lookup(var.instance.spec, "restore", {})
-  restore_enabled = lookup(local.restore_config, "enabled", false) == true
+  restore_enabled = try(var.instance.spec.restore.enabled, false) == true
 
   # Restore source details
-  restore_backup_name = lookup(local.restore_config, "backup_name", "")
+  restore_backup_name = try(var.instance.spec.restore.backup_name, "")
 
   # Component definition and version
   mongodb_version = var.instance.spec.mongodb_version
