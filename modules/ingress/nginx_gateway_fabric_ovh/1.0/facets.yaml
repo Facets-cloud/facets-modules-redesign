@@ -22,6 +22,7 @@ inputs:
       - kubernetes
       - kubernetes-alpha
       - helm
+      - tls
   kubernetes_node_pool_details:
     type: "@facets/kubernetes_nodepool"
     displayName: Node Pool
@@ -64,6 +65,14 @@ spec:
       type: boolean
       title: Private Load Balancer
       description: Set load balancer as private/internal
+    dns01_cluster_issuer:
+      type: string
+      title: DNS-01 ClusterIssuer
+      description: Required when Private Load Balancer is enabled. Name of the DNS-01 ClusterIssuer used to issue certificates — HTTP-01 cannot validate an internal LB, so certificates are issued via DNS (the issuer should use cnameStrategy Follow).
+      x-ui-visible-if:
+        field: spec.private
+        values:
+          - true
     disable_base_domain:
       type: boolean
       title: Disable Base Domain
@@ -219,15 +228,15 @@ spec:
                   title: CPU Request
                   description: Minimum CPU requirement (e.g., 100m, 250m, 500m)
                   pattern: ^([0-9]*\.?[0-9]+m?|[0-9]+)$
-                  default: 200m
-                  x-ui-placeholder: 200m
+                  default: 250m
+                  x-ui-placeholder: 250m
                 memory:
                   type: string
                   title: Memory Request
                   description: Minimum memory requirement (e.g., 256Mi, 512Mi)
                   pattern: ^[0-9]+(\.[0-9]+)?(Ki|Mi|Gi|Ti|Pi|Ei|k|M|G|T|P|E)?$
-                  default: 256Mi
-                  x-ui-placeholder: 256Mi
+                  default: 512Mi
+                  x-ui-placeholder: 512Mi
             limits:
               type: object
               title: Resource Limits
@@ -238,15 +247,15 @@ spec:
                   title: CPU Limit
                   description: Maximum CPU allowed (e.g., 500m, 1, 2)
                   pattern: ^([0-9]*\.?[0-9]+m?|[0-9]+)$
-                  default: 500m
-                  x-ui-placeholder: 500m
+                  default: "1"
+                  x-ui-placeholder: "1"
                 memory:
                   type: string
                   title: Memory Limit
                   description: Maximum memory allowed (e.g., 512Mi, 1Gi)
                   pattern: ^[0-9]+(\.[0-9]+)?(Ki|Mi|Gi|Ti|Pi|Ei|k|M|G|T|P|E)?$
-                  default: 512Mi
-                  x-ui-placeholder: 512Mi
+                  default: 1Gi
+                  x-ui-placeholder: 1Gi
     rules:
       title: Routing Rules
       description: Gateway API routing configurations (HTTP and gRPC)
@@ -870,6 +879,7 @@ spec:
     - force_ssl_redirection
   x-ui-order:
     - private
+    - dns01_cluster_issuer
     - domain_prefix_override
     - disable_base_domain
     - domains
@@ -917,9 +927,9 @@ sample:
         target_memory_utilization_percentage: 80
       resources:
         requests:
-          cpu: 200m
-          memory: 256Mi
-        limits:
-          cpu: 500m
+          cpu: 250m
           memory: 512Mi
+        limits:
+          cpu: "1"
+          memory: 1Gi
     rules: {}

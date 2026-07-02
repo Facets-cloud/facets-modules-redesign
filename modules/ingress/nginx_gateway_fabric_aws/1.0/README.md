@@ -45,8 +45,8 @@ This module deploys **NGINX Gateway Fabric**, NGINX's implementation of the Kube
 
 | Mode | Detection | TLS Termination | Listeners |
 |------|-----------|-----------------|-----------|
-| **cert-manager** (default) | No ACM ARN in `certificate_reference` | Gateway (HTTPS listeners with K8s Secrets) | HTTP:80 + HTTPS:443 per domain |
-| **AWS ACM** | Any domain has `certificate_reference` containing `arn:aws:acm:` | NLB (ACM certificate) | HTTP:80 + HTTP:443 (NLB forwards decrypted traffic) |
+| **cert-manager** (default) | No ACM ARN in `certificate_reference` | Data plane, per-hostname HTTP-01 certs | HTTP:80 on the Gateway + HTTPS:443 per hostname in ListenerSets (chunked at 64) |
+| **AWS ACM** | Any domain has `certificate_reference` containing `arn:aws:acm:` | NLB (ACM certificate, no in-cluster ACK controller) | HTTP:80 + HTTP:443 (NLB forwards decrypted traffic) |
 
 **Why mutually exclusive**: An NLB TLS listener terminates TLS for ALL traffic on port 443. You cannot selectively passthrough some domains to the Gateway.
 

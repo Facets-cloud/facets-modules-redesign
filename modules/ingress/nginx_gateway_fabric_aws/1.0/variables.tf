@@ -1,8 +1,10 @@
 variable "instance" {
   type = object({
     spec = object({
-      private             = optional(bool, false)
-      disable_base_domain = optional(bool, false)
+      private                 = optional(bool, false)
+      dns01_cluster_issuer    = optional(string)
+      cluster_issuer_override = optional(string)
+      disable_base_domain     = optional(bool, false)
       domains = optional(map(object({
         domain                = string
         alias                 = string
@@ -85,15 +87,6 @@ variable "inputs" {
         controller_version         = optional(string)
         controller_role_arn        = optional(string)
         helm_release_id            = optional(string)
-      }))
-    }))
-    ack_acm_controller_details = optional(object({
-      attributes = optional(object({
-        namespace       = optional(string)
-        release_name    = optional(string)
-        chart_version   = optional(string)
-        role_arn        = optional(string)
-        helm_release_id = optional(string)
       }))
     }))
   })
