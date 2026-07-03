@@ -1,0 +1,204 @@
+intent: load_balancer
+flavor: gcp
+version: '1.0'
+clouds:
+- gcp
+description: 'GCP global external/internal HTTP(S) load balancer. Fronts a service (VM ReplicaSet) with a GCE L7 LB stack (global forwarding rule -> target HTTPS proxy -> url map -> backend service -> unmanaged instance group). Dual-mode: adopts existing hand-rolled LB stacks 0-change (import pins), or provisions greenfield (managed cert + routing).'
+intentDetails:
+  type: Networking
+  description: A global L7 HTTP(S) load balancer fronting a VM-backed service, modelled for clean read-only import of existing stacks and greenfield provisioning.
+  displayName: Load Balancer (HTTP/S)
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/gce.svg
+inputs:
+  cloud_account:
+    description: The GCP project where the LB stack lives.
+    displayName: GCP Cloud Account
+    optional: false
+    providers:
+    - google
+    type: '@facets/gcp_cloud_account'
+  network_details:
+    description: The VPC the backend members attach to.
+    displayName: Network
+    optional: false
+    type: '@facets/gcp-network-details'
+outputs:
+  default:
+    title: Load Balancer
+    type: '@custom/load_balancer'
+spec:
+  type: object
+  title: GCP Load Balancer (HTTP/S)
+  description: A global L7 HTTP(S) load balancer fronting a VM-backed service.
+  properties:
+    backend_service:
+      type: string
+      title: Backend Service
+      description: The service (VM ReplicaSet) this LB fronts. Its VM self_links become the backend instance-group members.
+      x-ui-output-type: '@facets/service'
+    team:
+      type: string
+      title: Owning Team
+      description: Team that owns this load balancer.
+    lb_scheme:
+      type: string
+      title: Load Balancing Scheme
+      description: EXTERNAL_MANAGED (internet-facing) or INTERNAL_MANAGED (internal L7).
+      default: EXTERNAL_MANAGED
+      enum:
+      - EXTERNAL_MANAGED
+      - INTERNAL_MANAGED
+      - EXTERNAL
+    port:
+      type: integer
+      title: Frontend Port
+      description: Listen port on the global forwarding rule (443 for HTTPS).
+      default: 443
+    backend_protocol:
+      type: string
+      title: Backend Protocol
+      description: Wire protocol to the backends.
+      default: HTTP
+      enum:
+      - HTTP
+      - HTTPS
+    backend_port:
+      type: integer
+      title: Backend Port
+      description: Port the backend members listen on (the UIG named_port port).
+      default: 80
+    backend_port_name:
+      type: string
+      title: Backend Port Name
+      description: The named_port name on the instance group that the backend service targets.
+      default: ''
+    timeout_sec:
+      type: integer
+      title: Backend Timeout (sec)
+      default: 30
+    health_check:
+      type: object
+      title: Health Check
+      description: 'Backend health check: {protocol(HTTP|HTTPS|TCP), port, request_path}.'
+      default: {}
+      properties:
+        protocol:
+          type: string
+          title: Protocol
+          default: HTTP
+          enum:
+          - HTTP
+          - HTTPS
+          - TCP
+        port:
+          type: integer
+          title: Port
+          default: 80
+        request_path:
+          type: string
+          title: Request Path
+          default: /
+    redirect_http:
+      type: boolean
+      title: Redirect HTTP -> HTTPS
+      description: Create the paired :80 -> :443 redirect stack (extra url-map + http proxy + forwarding rule).
+      default: false
+    domains_json:
+      type: string
+      title: Managed Cert Domains (JSON array)
+      description: Greenfield only. Domains for a google_compute_managed_ssl_certificate, e.g. ["app.example.com"]. Empty in import.
+      default: '[]'
+      x-ui-overrides-only: true
+    routing_rules_json:
+      type: string
+      title: Routing Rules (JSON array)
+      description: 'Greenfield host/path routing into the url-map: [{"host":["a.io"],"path_rules":[{"paths":["/x"]}]}]. Empty in import.'
+      default: '[]'
+      x-ui-overrides-only: true
+    imports:
+      type: object
+      title: Import-Only Pins
+      description: Values needed ONLY to adopt an existing LB stack 0-change. Empty for greenfield.
+      default: {}
+      x-ui-overrides-only: true
+      properties:
+        ip_address:
+          type: string
+          title: Existing Global IP
+          description: Existing global IP to reference (NOT imported). Empty = greenfield creates a global address.
+          default: ''
+        ssl_certificate_names:
+          type: string
+          title: Existing SSL Cert Names (JSON array)
+          description: Existing cert names/self_links to reference (NOT imported), e.g. ["my-wildcard-cert"]. Empty = greenfield managed cert from domains_json.
+          default: '[]'
+        forwarding_rule_name:
+          type: string
+          title: Forwarding Rule Name
+          default: ''
+        https_proxy_name:
+          type: string
+          title: Target HTTPS Proxy Name
+          default: ''
+        url_map_name:
+          type: string
+          title: URL Map Name
+          default: ''
+        backend_service_name:
+          type: string
+          title: Backend Service Name
+          default: ''
+        health_check_name:
+          type: string
+          title: Health Check Name
+          default: ''
+        instance_group_name:
+          type: string
+          title: Instance Group Name
+          default: ''
+        instance_group_zone:
+          type: string
+          title: Instance Group Zone
+          description: Zone of the (zonal) unmanaged instance group. Pin when the backend service is not yet applied (its self_links unknown). Empty = derive from a member self_link.
+          default: ''
+        redirect_fr_name:
+          type: string
+          title: Redirect Forwarding Rule Name
+          default: ''
+        http_proxy_name:
+          type: string
+          title: Target HTTP Proxy Name
+          default: ''
+        redirect_url_map_name:
+          type: string
+          title: Redirect URL Map Name
+          default: ''
+  required:
+  - team
+  x-ui-order:
+  - backend_service
+  - team
+  - lb_scheme
+  - port
+  - backend_protocol
+  - backend_port
+  - backend_port_name
+  - timeout_sec
+  - health_check
+  - redirect_http
+  - domains_json
+  - routing_rules_json
+  - imports
+sample:
+  kind: service
+  flavor: load_balancer
+  version: '1.0'
+  disabled: true
+  spec:
+    backend_service: ''
+    team: ''
+    lb_scheme: EXTERNAL_MANAGED
+    port: 443
+iac:
+  validated_files:
+  - main.tf
