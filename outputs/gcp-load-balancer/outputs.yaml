@@ -1,0 +1,27 @@
+name: '@facets/gcp-load-balancer'
+title: "GCP Load Balancer"
+description: "GCP global external/internal HTTP(S) load balancer endpoint details"
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        ip_address:
+          type: string
+          description: The frontend IP address of the load balancer.
+        name:
+          type: string
+          description: The load balancer (Facets resource) name.
+        url_map_self_link:
+          type: string
+          description: Self-link of the url map.
+        forwarding_rule_self_link:
+          type: string
+          description: Self-link of the global forwarding rule.
+        backend_service_self_link:
+          type: string
+          description: Self-link of the backend service.
+    interfaces:
+      type: object
+      properties: {}
