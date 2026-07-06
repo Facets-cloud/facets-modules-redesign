@@ -15,10 +15,10 @@ variable "instance" {
         memory_size_gb = number
         tier           = string
       })
-      restore_config = object({
+      restore_config = optional(object({
         restore_from_backup = bool
         source_instance_id  = optional(string)
-      })
+      }), { restore_from_backup = false })
       security = object({
         enable_tls = bool
       })

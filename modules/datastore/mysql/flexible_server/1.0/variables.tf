@@ -18,13 +18,13 @@ variable "instance" {
         storage_tier       = string
         read_replica_count = number
       })
-      restore_config = object({
+      restore_config = optional(object({
         restore_from_backup    = optional(bool)
         source_server_id       = optional(string)
         restore_point_in_time  = optional(string)
         administrator_login    = optional(string)
         administrator_password = optional(string)
-      })
+      }), {})
       imports = optional(object({
         import_existing  = optional(bool, false)
         server_id        = optional(string)
