@@ -1,0 +1,162 @@
+intent: kubernetes_cluster
+flavor: vke
+version: "1.0"
+clouds:
+  - kubernetes
+description: Creates a Vultr Kubernetes Engine (VKE) cluster with a default node pool, exposing Kubernetes and Helm providers
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Vultr Kubernetes Engine (VKE) cluster with provider configuration
+  displayName: Kubernetes Cluster
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_cluster.svg
+spec:
+  title: Vultr Kubernetes Engine Cluster
+  description: Configure a VKE cluster and its default node pool
+  type: object
+  x-ui-order:
+    - k8s_version
+    - high_availability
+    - enable_firewall
+    - default_pool
+  properties:
+    k8s_version:
+      type: string
+      title: Kubernetes Version
+      description: "VKE Kubernetes version, including the build suffix (e.g. v1.35.0+1). Vultr version strings are volatile; list current values with the Vultr API (GET /v2/kubernetes/versions)."
+      default: "v1.35.0+1"
+      x-ui-placeholder: "v1.35.0+1"
+      pattern: ^v[0-9]+\.[0-9]+\.[0-9]+\+[0-9]+$
+    high_availability:
+      type: boolean
+      title: High Availability Control Plane
+      description: Enable the HA control plane (additional cost). Recommended for production.
+      default: false
+    enable_firewall:
+      type: boolean
+      title: Enable Managed Firewall
+      description: Provision a Vultr-managed firewall group for the cluster nodes
+      default: false
+    default_pool:
+      type: object
+      title: Default Node Pool
+      x-ui-order:
+        - node_type
+        - node_count
+        - autoscaler
+      properties:
+        node_type:
+          type: string
+          title: Node Plan
+          description: Vultr compute plan for the default node pool
+          enum:
+            - vc2-1c-2gb
+            - vc2-2c-4gb
+            - vc2-4c-8gb
+            - vc2-6c-16gb
+            - vhf-1c-2gb
+            - vhf-2c-4gb
+            - vhf-4c-8gb
+          default: vc2-2c-4gb
+        node_count:
+          type: integer
+          title: Node Count
+          description: Number of nodes in the default pool (initial count when autoscaling)
+          minimum: 1
+          maximum: 100
+          default: 3
+        autoscaler:
+          type: object
+          title: Autoscaler
+          x-ui-toggle: true
+          properties:
+            enabled:
+              type: boolean
+              title: Enable Autoscaling
+              default: false
+            min:
+              type: integer
+              title: Minimum Nodes
+              minimum: 1
+              default: 1
+            max:
+              type: integer
+              title: Maximum Nodes
+              minimum: 1
+              default: 5
+      required:
+        - node_type
+        - node_count
+  required:
+    - k8s_version
+    - default_pool
+inputs:
+  vultr_cloud_account:
+    type: "@facets/vultr_cloud_account"
+    optional: false
+    displayName: Vultr Cloud Account
+    description: Vultr provider configuration and default region
+    providers:
+      - vultr
+  network:
+    type: "@facets/vultr-vpc-details"
+    optional: true
+    displayName: Vultr VPC
+    description: Optional VPC to place the cluster nodes in. When wired, the cluster region is taken from the VPC. VKE supports the original VPC only (not VPC 2.0), and both must share a region.
+    providers: []
+outputs:
+  default:
+    type: "@facets/vke"
+    title: VKE Cluster Attributes
+    description: Vultr Kubernetes Engine cluster attributes without provider configuration
+  attributes:
+    type: "@facets/kubernetes-details"
+    title: Kubernetes Cluster Output
+    description: Generic Kubernetes cluster attributes with Kubernetes and Helm provider configuration
+    providers:
+      kubernetes:
+        source: hashicorp/kubernetes
+        version: 2.38.0
+        attributes:
+          host: cluster_endpoint
+          cluster_ca_certificate: cluster_ca_certificate
+          client_certificate: client_certificate
+          client_key: client_key
+      kubernetes-alpha:
+        source: hashicorp/kubernetes-alpha
+        version: 0.6.0
+        attributes:
+          host: cluster_endpoint
+          cluster_ca_certificate: cluster_ca_certificate
+          client_certificate: client_certificate
+          client_key: client_key
+      helm:
+        source: hashicorp/helm
+        version: 2.17.0
+        attributes:
+          kubernetes:
+            host: cluster_endpoint
+            cluster_ca_certificate: cluster_ca_certificate
+            client_certificate: client_certificate
+            client_key: client_key
+sample:
+  kind: kubernetes_cluster
+  flavor: vke
+  version: "1.0"
+  disabled: true
+  spec:
+    k8s_version: "v1.35.0+1"
+    high_availability: false
+    enable_firewall: false
+    default_pool:
+      node_type: vc2-2c-4gb
+      node_count: 3
+      autoscaler:
+        enabled: false
+        min: 1
+        max: 5
+iac:
+  validated_files:
+    - main.tf
+    - variables.tf
+    - outputs.tf
+    - versions.tf

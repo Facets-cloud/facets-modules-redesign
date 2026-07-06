@@ -94,9 +94,9 @@ module "mysql_cluster" {
                         }
                       }
                     },
-                    {
+                    var.instance.spec.storage.storage_class != "" ? {
                       storageClassName = var.instance.spec.storage.storage_class
-                    }
+                    } : {}
                   )
                 }
               ]
@@ -274,8 +274,6 @@ data "kubernetes_secret" "mysql_credentials" {
     name      = try(data.kubernetes_resources.mysql_secrets.objects[0].metadata.name, "${local.cluster_name}-mysql-account-root")
     namespace = local.namespace
   }
-
-  depends_on = [data.kubernetes_resources.mysql_secrets]
 }
 
 # Data Source: Primary Service

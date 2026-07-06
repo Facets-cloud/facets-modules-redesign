@@ -37,8 +37,10 @@ locals {
 
       taints = []
 
-      # Use the private subnets from the network input
-      subnet_ids = var.inputs.network_details.attributes.private_subnet_ids
+      # Use the explicit node_subnet_ids override if set, else the network's private subnets.
+      # node_subnet_ids is an override-only escape hatch for when the network module
+      # mis-classifies subnets (e.g. IGW-routed, no NAT egress → node group CREATE_FAILED).
+      subnet_ids = length(lookup(var.instance.spec, "node_subnet_ids", [])) > 0 ? lookup(var.instance.spec, "node_subnet_ids", []) : var.inputs.network_details.attributes.private_subnet_ids
 
       tags = merge(
         local.cluster_tags,

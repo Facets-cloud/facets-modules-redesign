@@ -1,0 +1,129 @@
+intent: kafka
+flavor: vultr
+version: "1.0"
+clouds:
+  - kubernetes
+description: Managed Kafka cluster on Vultr with SASL_SSL auth and trusted-IP allow-listing
+intentDetails:
+  type: Datastores
+  description: Vultr managed Kafka streaming service
+  displayName: Kafka
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kafka.svg
+spec:
+  title: Vultr Managed Kafka
+  description: Managed Kafka cluster on Vultr
+  type: object
+  x-ui-order:
+    - version_config
+    - sizing
+    - features
+    - network_access
+  properties:
+    version_config:
+      type: object
+      title: Version Configuration
+      x-ui-order:
+        - version
+      properties:
+        version:
+          type: string
+          title: Kafka Version
+          description: Apache Kafka version
+          enum:
+            - "3.8"
+            - "3.9"
+            - "4.0"
+            - "4.1"
+          default: "4.1"
+      required:
+        - version
+    sizing:
+      type: object
+      title: Sizing & Performance
+      x-ui-order:
+        - plan
+      properties:
+        plan:
+          type: string
+          title: Database Plan
+          description: "Vultr managed Kafka plan slug (encodes vCPU/RAM/node count). List plans via the Vultr API (GET /v2/databases/plans?engine=kafka)."
+          default: vultr-dbaas-business-3x-occ-so-2-200-4
+          x-ui-placeholder: vultr-dbaas-business-3x-occ-so-2-200-4
+      required:
+        - plan
+    features:
+      type: object
+      title: Features
+      x-ui-toggle: true
+      properties:
+        enable_kafka_rest:
+          type: boolean
+          title: Kafka REST Proxy
+          description: Enable the Kafka REST proxy interface
+          default: false
+        enable_schema_registry:
+          type: boolean
+          title: Schema Registry
+          description: Enable the Schema Registry service
+          default: false
+        enable_kafka_connect:
+          type: boolean
+          title: Kafka Connect
+          description: Enable Kafka Connect
+          default: false
+    network_access:
+      type: object
+      title: Network Access
+      properties:
+        trusted_ips:
+          type: array
+          title: Trusted IPs
+          description: List of CIDRs permitted to connect (empty denies all external access)
+          default: []
+          items:
+            type: string
+            pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$
+      required: []
+  required:
+    - version_config
+    - sizing
+inputs:
+  vultr_cloud_account:
+    type: "@facets/vultr_cloud_account"
+    optional: false
+    displayName: Vultr Cloud Account
+    description: Vultr provider configuration and default region
+    providers:
+      - vultr
+  network:
+    type: "@facets/vultr-vpc-details"
+    optional: true
+    displayName: VPC Network
+    description: Optional VPC for private connectivity; when wired the cluster is attached via vpc_id
+    providers: []
+outputs:
+  default:
+    type: "@facets/kafka"
+    title: Vultr Managed Kafka
+sample:
+  kind: kafka
+  flavor: vultr
+  version: "1.0"
+  disabled: true
+  spec:
+    version_config:
+      version: "4.1"
+    sizing:
+      plan: vultr-dbaas-business-3x-occ-so-2-200-4
+    features:
+      enable_kafka_rest: false
+      enable_schema_registry: false
+      enable_kafka_connect: false
+    network_access:
+      trusted_ips: []
+iac:
+  validated_files:
+    - main.tf
+    - variables.tf
+    - outputs.tf
+    - versions.tf

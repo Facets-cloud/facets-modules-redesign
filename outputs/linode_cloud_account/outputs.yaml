@@ -1,0 +1,27 @@
+name: '@facets/linode_cloud_account'
+title: "Linode Cloud Account"
+description: "Linode (Akamai) cloud provider configuration with API token authentication and default region"
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        token:
+          description: Linode API token (sensitive)
+          type: string
+        region:
+          description: Default Linode region
+          type: string
+        secrets:
+          description: List of secret field names
+          type: array
+          items:
+            type: string
+    interfaces:
+      type: object
+      properties: {}
+providers:
+- name: linode
+  source: linode/linode
+  version: 3.13.0

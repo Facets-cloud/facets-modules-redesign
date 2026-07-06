@@ -1,0 +1,59 @@
+intent: network
+flavor: vultr_vpc
+version: "1.0"
+clouds:
+  - kubernetes
+description: Creates a Vultr VPC 2.0 private network for Kubernetes and managed services
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Vultr VPC 2.0 network infrastructure for Kubernetes and managed services
+  displayName: Network
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/network.svg
+spec:
+  title: Vultr VPC 2.0 Network
+  description: Configure a Vultr VPC 2.0 private network and its IP block
+  type: object
+  properties:
+    region:
+      type: string
+      title: Region
+      description: Vultr region for the VPC (defaults to the cloud account region if left empty)
+      x-ui-placeholder: ewr
+      x-ui-overrides-only: true
+    subnet_cidr:
+      type: string
+      title: Subnet CIDR
+      description: CIDR block for the VPC 2.0 private network (e.g. 10.0.0.0/24)
+      default: "10.0.0.0/24"
+      x-ui-overrides-only: true
+  required:
+    - subnet_cidr
+  x-ui-order:
+    - region
+    - subnet_cidr
+inputs:
+  vultr_cloud_account:
+    type: "@facets/vultr_cloud_account"
+    optional: false
+    displayName: Vultr Cloud Account
+    description: Vultr provider configuration
+    providers:
+      - vultr
+outputs:
+  default:
+    type: "@facets/vultr-vpc-details"
+    title: Vultr VPC Network Details
+sample:
+  kind: network
+  flavor: vultr_vpc
+  version: "1.0"
+  disabled: true
+  spec:
+    region: ewr
+    subnet_cidr: "10.0.0.0/24"
+iac:
+  validated_files:
+    - main.tf
+    - variables.tf
+    - outputs.tf
+    - versions.tf

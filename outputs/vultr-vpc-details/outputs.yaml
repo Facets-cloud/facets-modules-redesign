@@ -1,0 +1,31 @@
+name: '@facets/vultr-vpc-details'
+title: "Vultr VPC Network Details"
+description: "Vultr VPC 2.0 network details for downstream Kubernetes and managed-service connectivity"
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        vpc_id:
+          type: string
+          description: "Vultr VPC 2.0 ID"
+        vpc_description:
+          type: string
+          description: "Vultr VPC description/label"
+        region:
+          type: string
+          description: "Vultr region where the VPC is created"
+        ip_block:
+          type: string
+          description: "Private network IP block (network address)"
+        prefix_length:
+          type: string
+          description: "Private network prefix length"
+        subnet_cidr:
+          type: string
+          description: "Convenience CIDR (ip_block/prefix_length)"
+    interfaces:
+      type: object
+      properties: {}
+providers: []

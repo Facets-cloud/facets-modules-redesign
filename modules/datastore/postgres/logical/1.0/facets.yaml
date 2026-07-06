@@ -1,0 +1,62 @@
+intent: postgres
+flavor: logical
+version: '1.0'
+clouds:
+- aws
+- gcp
+- azure
+description: Logical — a logical database hosted on an existing/shared postgres instance;
+  re-exposes its connection outputs (no resources created)
+intentDetails:
+  type: Datastores
+  description: A logical database hosted on an existing/shared PostgreSQL instance (no resources created)
+  displayName: PostgreSQL
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/postgres.svg
+spec:
+  title: PostgreSQL Logical
+  description: A logical database hosted on an existing/shared postgres instance.
+    Re-exposes the shared instance's connection outputs and creates no cloud
+    resources. Use for staging DB consolidation, optionally overriding the
+    target database name in the connection string.
+  type: object
+  x-ui-order:
+  - source
+  - database_name
+  properties:
+    source:
+      type: object
+      title: Source PostgreSQL Datastore
+      description: The existing/shared postgres instance hosting this logical
+        database, whose connection outputs are re-exposed. Resolves to the
+        selected resource's full outputs (interfaces and attributes).
+      x-ui-output-type: '@facets/postgres'
+    database_name:
+      type: string
+      title: Logical Database Name
+      description: Optional logical database name to target on the shared host. When
+        set, the connection string is rebuilt to point at this database instead of
+        the source's default database. Leave empty to pass the source connection
+        through unchanged.
+      x-ui-overrides-only: true
+      pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+      minLength: 1
+      maxLength: 63
+  required:
+  - source
+outputs:
+  default:
+    type: '@facets/postgres'
+    title: PostgreSQL Logical
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+sample:
+  kind: postgres
+  flavor: logical
+  version: '1.0'
+  disabled: true
+  spec:
+    source: {}
+    database_name: app_logical

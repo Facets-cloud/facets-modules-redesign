@@ -1,0 +1,232 @@
+intent: service
+flavor: vm-rs
+version: '1.0'
+clouds:
+- gcp
+description: "GCP VM-backed service (ReplicaSet). Models a workload as Deployment (stateless) or StatefulSet (stable replica identity + per-replica persistent volume), backed by raw GCE VMs. Read-only import friendly \u2014 reproduces existing hand-rolled VM sets 0-change; mirrors the k8s service spec where it maps, with raw VM params where needed."
+intentDetails:
+  type: Compute
+  description: A VM-backed service modelled with Deployment/StatefulSet semantics, for clean read-only import of existing raw GCE VM sets and singletons.
+  displayName: Service (VM ReplicaSet)
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/gce.svg
+inputs:
+  cloud_account:
+    description: The GCP project where the VMs live.
+    displayName: GCP Cloud Account
+    optional: false
+    providers:
+    - google
+    type: '@facets/gcp_cloud_account'
+  network_details:
+    description: The VPC/subnet the VMs attach to.
+    displayName: Network
+    optional: false
+    type: '@facets/gcp-network-details'
+outputs:
+  default:
+    title: Service
+    type: '@facets/service'
+spec:
+  type: object
+  title: GCP Service (VM ReplicaSet)
+  description: A VM-backed Deployment/StatefulSet; all settings driven from live for read-only import.
+  properties:
+    team:
+      type: string
+      title: Owning Team
+      description: Team that owns this service (applied as the 'team' label under write access).
+    service_name:
+      type: string
+      title: Service Name (override)
+      description: Base name of the service. Leave empty to use the Facets resource name. Import envs pin live.
+      default: ''
+    type:
+      type: string
+      title: Workload Type
+      description: Deployment (stateless/fungible) or StatefulSet (stable replica identity + per-replica volume).
+      default: StatefulSet
+      enum:
+      - Deployment
+      - StatefulSet
+    replicas_json:
+      type: string
+      title: Replicas (JSON array)
+      description: 'Operational per-replica placement: [{"zone":"us-central1-a"},{"zone":"us-central1-b"},...]. One entry per replica (ordinal = index); names derive as "{service_name}-{ordinal}".'
+      default: '[]'
+      x-ui-overrides-only: true
+    imports:
+      type: object
+      title: Import-Only Pins
+      description: Values needed ONLY to adopt existing VMs 0-change. Empty for greenfield (names derive, IPs ephemeral).
+      default: {}
+      x-ui-overrides-only: true
+      properties:
+        network_ips_json:
+          type: string
+          title: Pinned Internal IPs (JSON array)
+          description: Ordinal-indexed internal IPs to pin for adoption, e.g. ["10.0.0.14","10.0.1.20"]. Empty = ephemeral.
+          default: '[]'
+        instance_names_json:
+          type: string
+          title: Exact Instance Names (JSON array)
+          description: Ordinal-indexed exact names if they don't follow "{service}-{ordinal}". Empty = derive.
+          default: '[]'
+    machine_type:
+      type: string
+      title: Machine Type
+      description: Compute size for every replica (e.g. c3-standard-4). The VM equivalent of runtime.size.
+      default: ''
+    boot_image:
+      type: string
+      title: Boot Image
+      description: Source image for the boot disk (image is ignore_changed after import). VM equivalent of release.image.
+      default: ''
+    boot_size_gb:
+      type: integer
+      title: Boot Disk Size (GB)
+      default: 10
+      minimum: 10
+      maximum: 65536
+    boot_disk_type:
+      type: string
+      title: Boot Disk Type
+      description: pd-standard, pd-balanced, pd-ssd.
+      default: pd-balanced
+    boot_auto_delete:
+      type: boolean
+      title: Boot Disk Auto-Delete
+      default: true
+    data_volumes_json:
+      type: string
+      title: Data Volumes (JSON array, StatefulSet)
+      description: "Per-replica volume template (PVC equivalent). Each entry \u2192 one disk per replica named \"{replica}-{suffix}\": [{\"suffix\":\"1\",\"size_gb\":500,\"type\":\"pd-balanced\",\"mode\":\"READ_WRITE\"}]. Empty = stateless (Deployment)."
+      default: '[]'
+    regional_disks_json:
+      type: string
+      title: Regional Disks (JSON array)
+      description: 'Regional replicated PD, per replica (heterogeneous sizes/zones ok): [{"replica_name":"db-0","disk_name":"db-0-1","size_gb":500,"type":"pd-balanced","replica_zones":["us-central1-a","us-central1-b"],"device_name":"db-0-1"}]. Empty = none.'
+      default: '[]'
+      x-ui-overrides-only: true
+    has_external_ip:
+      type: boolean
+      title: Has External IP
+      description: Whether each replica NIC has an ephemeral external IP.
+      default: false
+    can_ip_forward:
+      type: boolean
+      title: Can IP Forward
+      description: Allow the VM to forward packets not destined for itself (VPN / router / NAT VMs need true).
+      default: false
+    public_ptr_domain_name:
+      type: string
+      title: External IP Reverse-DNS (PTR)
+      description: Reverse-DNS PTR domain on the external IP (e.g. mail.example.com.). Empty = no PTR.
+      default: ''
+      x-ui-overrides-only: true
+    service_account_email:
+      type: string
+      title: Service Account Email (override)
+      description: Override only for custom-SA VMs. Empty = project default compute SA, derived from the cloud_account input (project_number).
+      default: ''
+      x-ui-overrides-only: true
+    service_account_scopes_json:
+      type: string
+      title: SA Scopes (JSON array)
+      description: OAuth scopes. Empty = [].
+      default: '[]'
+    metadata_json:
+      type: string
+      title: Metadata (JSON map)
+      description: Instance metadata, e.g. {"startup-script":"..."}. The VM equivalent of env. ssh-keys is ignore_changed.
+      default: '{}'
+    tags_json:
+      type: string
+      title: Network Tags (JSON array)
+      description: Network tags, e.g. ["clickhouse"]. Empty = [].
+      default: '[]'
+    automatic_restart:
+      type: boolean
+      title: Automatic Restart
+      default: true
+    on_host_maintenance:
+      type: string
+      title: On Host Maintenance
+      description: MIGRATE or TERMINATE.
+      default: MIGRATE
+    preemptible:
+      type: boolean
+      title: Preemptible
+      default: false
+    provisioning_model:
+      type: string
+      title: Provisioning Model
+      description: STANDARD or SPOT.
+      default: STANDARD
+    shielded_enabled:
+      type: boolean
+      title: Shielded VM Enabled
+      description: Whether the VM has a shielded_instance_config block. false for non-UEFI boot images that don't support Shielded VM.
+      default: true
+    enable_secure_boot:
+      type: boolean
+      title: Shielded - Secure Boot
+      default: false
+    enable_vtpm:
+      type: boolean
+      title: Shielded - vTPM
+      default: true
+    enable_integrity_monitoring:
+      type: boolean
+      title: Shielded - Integrity Monitoring
+      default: true
+    deletion_protection:
+      type: boolean
+      title: Deletion Protection
+      default: false
+  required:
+  - team
+  x-ui-order:
+  - team
+  - service_name
+  - type
+  - replicas_json
+  - imports
+  - machine_type
+  - boot_image
+  - boot_size_gb
+  - boot_disk_type
+  - boot_auto_delete
+  - data_volumes_json
+  - regional_disks_json
+  - has_external_ip
+  - can_ip_forward
+  - public_ptr_domain_name
+  - service_account_email
+  - service_account_scopes_json
+  - metadata_json
+  - tags_json
+  - automatic_restart
+  - on_host_maintenance
+  - preemptible
+  - provisioning_model
+  - shielded_enabled
+  - enable_secure_boot
+  - enable_vtpm
+  - enable_integrity_monitoring
+  - deletion_protection
+sample:
+  kind: service
+  flavor: vm-rs
+  version: '1.0'
+  disabled: true
+  spec:
+    team: ''
+    type: StatefulSet
+    machine_type: e2-medium
+iac:
+  validated_files:
+  - main.tf
+artifact_inputs:
+  primary:
+    attribute_path: spec.boot_image
+    artifact_type: docker_image

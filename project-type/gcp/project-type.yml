@@ -53,6 +53,8 @@ modules:
     flavor: gcp-cloudsql
   - intent: postgres
     flavor: gcp-cloudsql
+  - intent: postgres
+    flavor: logical
   - intent: redis
     flavor: gcp-memorystore
   # - intent: kafka_topic

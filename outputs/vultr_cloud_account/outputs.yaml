@@ -1,0 +1,27 @@
+name: '@facets/vultr_cloud_account'
+title: "Vultr Cloud Account"
+description: "Vultr cloud provider configuration with API key authentication and default region"
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        api_key:
+          description: Vultr API key (sensitive)
+          type: string
+        region:
+          description: Default Vultr region
+          type: string
+        secrets:
+          description: List of secret field names
+          type: array
+          items:
+            type: string
+    interfaces:
+      type: object
+      properties: {}
+providers:
+- name: vultr
+  source: vultr/vultr
+  version: 2.31.2
