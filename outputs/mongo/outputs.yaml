@@ -61,4 +61,6 @@ properties:
                 type: string
             username:
               type: string
+      additionalProperties:
+        type: object
 providers: []
