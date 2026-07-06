@@ -8,6 +8,7 @@ variable "instance" {
       cluster_endpoint_public_access  = optional(bool, true)
       cluster_endpoint_private_access = optional(bool, true)
       customer_managed_kms            = optional(bool, true)
+      node_subnet_ids                 = optional(list(string), [])
 
       cluster_addons = optional(object({
         vpc_cni = optional(object({

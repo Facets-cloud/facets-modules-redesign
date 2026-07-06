@@ -1,0 +1,124 @@
+intent: redis
+flavor: vultr
+version: "1.0"
+clouds:
+  - kubernetes
+description: Managed Valkey (Redis-compatible) cache on Vultr with TLS and trusted-IP allow-listing
+intentDetails:
+  type: Datastores
+  description: Vultr managed Valkey (Redis-compatible) cache service
+  displayName: Redis
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/redis.svg
+spec:
+  title: Vultr Managed Valkey (Redis-compatible) Cache
+  description: Managed Valkey cache on Vultr
+  type: object
+  x-ui-order:
+    - version_config
+    - sizing
+    - advanced_config
+    - network_access
+  properties:
+    version_config:
+      type: object
+      title: Version Configuration
+      x-ui-order:
+        - version
+      properties:
+        version:
+          type: string
+          title: Valkey Version
+          description: Valkey engine version
+          enum:
+            - "8.1"
+            - "9.0"
+          default: "8.1"
+      required:
+        - version
+    sizing:
+      type: object
+      title: Sizing & Performance
+      x-ui-order:
+        - plan
+      properties:
+        plan:
+          type: string
+          title: Database Plan
+          description: "Vultr managed database plan slug (encodes vCPU/RAM/node count, e.g. vultr-dbaas-hobbyist-cc-1-25-1). List plans via the Vultr API (GET /v2/databases/plans)."
+          default: vultr-dbaas-business-cc-hp-amd-2-12-2
+          x-ui-placeholder: vultr-dbaas-business-cc-hp-amd-2-12-2
+      required:
+        - plan
+    advanced_config:
+      type: object
+      title: Advanced Configuration
+      x-ui-toggle: true
+      properties:
+        eviction_policy:
+          type: string
+          title: Eviction Policy
+          description: How Valkey selects what to remove when memory is full
+          default: noeviction
+          enum:
+            - noeviction
+            - allkeys-lru
+            - volatile-lru
+            - allkeys-random
+            - volatile-random
+            - volatile-ttl
+            - volatile-lfu
+            - allkeys-lfu
+    network_access:
+      type: object
+      title: Network Access
+      properties:
+        trusted_ips:
+          type: array
+          title: Trusted IPs
+          description: List of CIDRs permitted to connect (empty denies all external access)
+          default: []
+          items:
+            type: string
+            pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$
+      required: []
+  required:
+    - version_config
+    - sizing
+inputs:
+  vultr_cloud_account:
+    type: "@facets/vultr_cloud_account"
+    optional: false
+    displayName: Vultr Cloud Account
+    description: Vultr provider configuration and default region
+    providers:
+      - vultr
+  network:
+    type: "@facets/vultr-vpc-details"
+    optional: true
+    displayName: VPC Network
+    description: Optional VPC for private connectivity; when wired the database is attached via vpc_id
+    providers: []
+outputs:
+  default:
+    type: "@facets/redis"
+    title: Vultr Valkey (Redis-compatible) Cache
+sample:
+  kind: redis
+  flavor: vultr
+  version: "1.0"
+  disabled: true
+  spec:
+    version_config:
+      version: "8.1"
+    sizing:
+      plan: vultr-dbaas-business-cc-hp-amd-2-12-2
+    advanced_config:
+      eviction_policy: noeviction
+    network_access:
+      trusted_ips: []
+iac:
+  validated_files:
+    - main.tf
+    - variables.tf
+    - outputs.tf
+    - versions.tf

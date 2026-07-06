@@ -1,0 +1,151 @@
+intent: kubernetes_node_pool
+flavor: vke
+version: "1.0"
+clouds:
+  - kubernetes
+description: Creates and manages an additional node pool on a Vultr Kubernetes Engine (VKE) cluster
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Vultr Kubernetes Engine node pool with optional autoscaling
+  displayName: Kubernetes Node Pool
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_node_pool.svg
+spec:
+  title: Vultr Kubernetes Engine Node Pool
+  description: Configure an additional VKE node pool
+  type: object
+  x-ui-order:
+    - node_type
+    - node_count
+    - autoscaler
+    - labels
+    - taints
+  properties:
+    node_type:
+      type: string
+      title: Node Plan
+      description: Vultr compute plan for the node pool
+      enum:
+        - vc2-1c-2gb
+        - vc2-2c-4gb
+        - vc2-4c-8gb
+        - vc2-6c-16gb
+        - vhf-1c-2gb
+        - vhf-2c-4gb
+        - vhf-4c-8gb
+      default: vc2-2c-4gb
+    node_count:
+      type: integer
+      title: Node Count
+      description: Number of nodes (initial count when autoscaling is enabled)
+      minimum: 1
+      maximum: 100
+      default: 2
+    autoscaler:
+      type: object
+      title: Autoscaler
+      x-ui-toggle: true
+      properties:
+        enabled:
+          type: boolean
+          title: Enable Autoscaling
+          default: false
+        min:
+          type: integer
+          title: Minimum Nodes
+          minimum: 1
+          default: 1
+        max:
+          type: integer
+          title: Maximum Nodes
+          minimum: 1
+          default: 5
+    labels:
+      type: object
+      title: Node Labels
+      description: Labels applied to all nodes in the pool
+      default: {}
+      patternProperties:
+        ".*":
+          type: object
+          properties:
+            key:
+              type: string
+              title: Label Key
+              description: Label key
+            value:
+              type: string
+              title: Label Value
+              description: Label value
+          required:
+            - key
+            - value
+    taints:
+      type: object
+      title: Node Taints
+      description: "Map of taints keyed by taint key. Eg: my-key: {value: 'true', effect: NoSchedule}"
+      x-ui-yaml-editor: true
+      default: {}
+      patternProperties:
+        ".*":
+          type: object
+          properties:
+            value:
+              type: string
+              title: Taint Value
+              description: Taint value
+              default: ""
+            effect:
+              type: string
+              title: Taint Effect
+              description: Taint effect
+              enum:
+                - NoSchedule
+                - PreferNoSchedule
+                - NoExecute
+          required:
+            - effect
+  required:
+    - node_type
+    - node_count
+inputs:
+  vultr_cloud_account:
+    type: "@facets/vultr_cloud_account"
+    optional: false
+    displayName: Vultr Cloud Account
+    description: Vultr provider configuration
+    providers:
+      - vultr
+  kubernetes_cluster:
+    type: "@facets/vke"
+    optional: false
+    displayName: VKE Cluster
+    description: The VKE cluster to add the node pool to
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers: []
+outputs:
+  default:
+    type: "@facets/kubernetes_nodepool"
+    title: Kubernetes Node Pool
+    description: Node pool attributes including name, taints, and node selector
+sample:
+  kind: kubernetes_node_pool
+  flavor: vke
+  version: "1.0"
+  disabled: true
+  spec:
+    node_type: vc2-2c-4gb
+    node_count: 2
+    autoscaler:
+      enabled: false
+      min: 1
+      max: 5
+    labels: {}
+    taints: {}
+iac:
+  validated_files:
+    - main.tf
+    - variables.tf
+    - outputs.tf
+    - versions.tf

@@ -1,0 +1,51 @@
+name: '@facets/vke'
+title: "VKE Cluster"
+description: "Vultr Kubernetes Engine (VKE) cluster attributes"
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        cluster_id:
+          type: string
+          description: "VKE cluster ID"
+        cluster_name:
+          type: string
+          description: "VKE cluster label"
+        cluster_endpoint:
+          type: string
+          description: "Kubernetes API server endpoint"
+        region:
+          type: string
+          description: "Vultr region where the cluster is deployed"
+        k8s_version:
+          type: string
+          description: "Kubernetes version"
+        status:
+          type: string
+          description: "Cluster status"
+        cluster_subnet:
+          type: string
+          description: "Pod/cluster subnet CIDR"
+        cluster_ca_certificate:
+          type: string
+          description: "Base64-decoded cluster CA certificate (PEM)"
+        client_certificate:
+          type: string
+          description: "Base64-decoded client certificate (PEM)"
+        client_key:
+          type: string
+          description: "Base64-decoded client key (PEM)"
+        kubeconfig:
+          type: string
+          description: "Base64-encoded kubeconfig"
+        secrets:
+          type: array
+          items:
+            type: string
+          description: "List of secret field names"
+    interfaces:
+      type: object
+      properties: {}
+providers: []

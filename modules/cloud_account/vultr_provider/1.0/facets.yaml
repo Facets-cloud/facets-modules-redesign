@@ -1,0 +1,54 @@
+intent: cloud_account
+flavor: vultr_provider
+version: "1.0"
+description: Module to configure and provision resources within a Vultr cloud account
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Configure and provision resources within a Vultr cloud account
+  displayName: Cloud Account
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloud_account.svg
+clouds:
+  - kubernetes
+spec:
+  title: Vultr Provider Configuration
+  description: Configure Vultr API access credentials and the default region
+  type: object
+  properties:
+    api_key:
+      type: string
+      title: Vultr API Key
+      description: Vultr API key with access to the resources you intend to manage
+      x-ui-secret-ref: true
+    region:
+      type: string
+      title: Vultr Region
+      description: Default Vultr region for downstream resources (e.g. ewr, lax, ord, fra, sgp)
+      x-ui-placeholder: ewr
+      x-ui-overrides-only: true
+  required:
+    - api_key
+    - region
+  x-ui-order:
+    - api_key
+    - region
+outputs:
+  default:
+    type: "@facets/vultr_cloud_account"
+    providers:
+      vultr:
+        source: vultr/vultr
+        version: 2.31.2
+        attributes:
+          api_key: attributes.api_key
+sample:
+  kind: cloud_account
+  flavor: vultr_provider
+  version: "1.0"
+  disabled: true
+  spec:
+    api_key: ""
+    region: ewr
+iac:
+  validated_files:
+    - main.tf
+    - variables.tf

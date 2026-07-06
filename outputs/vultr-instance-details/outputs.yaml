@@ -1,0 +1,55 @@
+name: '@facets/vultr-instance-details'
+title: "Vultr Compute Instances"
+description: "Vultr cloud compute instance set details (count-scaled VMs)"
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        instance_ids:
+          type: array
+          items:
+            type: string
+          description: All instance IDs in the set
+        instance_id:
+          type: string
+          description: First instance ID (convenience)
+        main_ips:
+          type: array
+          items:
+            type: string
+          description: Public main IPs
+        main_ip:
+          type: string
+          description: First public main IP (convenience)
+        internal_ips:
+          type: array
+          items:
+            type: string
+          description: VPC internal IPs
+        region:
+          type: string
+        plan:
+          type: string
+        firewall_group_id:
+          type: string
+    interfaces:
+      type: object
+      properties:
+        ssh:
+          type: object
+          properties:
+            host:
+              type: string
+            port:
+              type: string
+            username:
+              type: string
+            password:
+              type: string
+            secrets:
+              type: array
+              items:
+                type: string
+providers: []

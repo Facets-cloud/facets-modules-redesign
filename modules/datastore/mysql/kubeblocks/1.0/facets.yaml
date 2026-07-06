@@ -132,6 +132,7 @@ spec:
       description: Persistent storage settings for MySQL data
       x-ui-order:
       - size
+      - storage_class
       properties:
         size:
           type: string
@@ -139,6 +140,12 @@ spec:
           description: Size of persistent volume (can be expanded later, cannot be
             reduced)
           default: 20Gi
+        storage_class:
+          type: string
+          title: Storage Class
+          description: (Optional) Kubernetes StorageClass name for the persistent
+            volume. Leave empty to use the cluster's default StorageClass.
+          default: ''
       required:
       - size
     high_availability:
