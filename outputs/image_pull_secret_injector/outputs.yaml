@@ -1,0 +1,13 @@
+name: '@facets/image_pull_secret_injector'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        release_name:
+          type: string
+        release_namespace:
+          type: string
+        chart_version:
+          type: string
