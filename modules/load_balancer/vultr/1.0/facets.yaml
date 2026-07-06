@@ -1,0 +1,175 @@
+intent: load_balancer
+flavor: vultr
+version: "1.0"
+clouds:
+  - kubernetes
+description: Vultr Load Balancer fronting a set of compute instances with health checks, forwarding rules, and SSL redirect
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Vultr managed load balancer
+  displayName: Load Balancer
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/loadbalancer.svg
+spec:
+  title: Vultr Load Balancer
+  description: Distributes traffic across attached Vultr compute instances
+  type: object
+  x-ui-order:
+    - region
+    - balancing_algorithm
+    - nodes
+    - ssl_redirect
+    - proxy_protocol
+    - forwarding_rules
+    - health_check
+  properties:
+    region:
+      type: string
+      title: Region
+      description: Vultr region; defaults to the compute/cloud-account region when empty
+      x-ui-overrides-only: true
+    balancing_algorithm:
+      type: string
+      title: Balancing Algorithm
+      enum:
+        - roundrobin
+        - leastconn
+      default: roundrobin
+    nodes:
+      type: integer
+      title: LB Nodes
+      description: Number of load balancer nodes (odd number for HA)
+      minimum: 1
+      maximum: 99
+      default: 1
+    ssl_redirect:
+      type: boolean
+      title: SSL Redirect
+      description: Redirect HTTP to HTTPS
+      default: false
+    proxy_protocol:
+      type: boolean
+      title: Proxy Protocol
+      default: false
+    forwarding_rules:
+      type: object
+      title: Forwarding Rules
+      description: Frontend-to-backend port mappings; key is a unique rule id
+      default:
+        http:
+          frontend_protocol: http
+          frontend_port: "80"
+          backend_protocol: http
+          backend_port: "80"
+      patternProperties:
+        ".*":
+          type: object
+          properties:
+            frontend_protocol:
+              type: string
+              enum:
+                - http
+                - https
+                - tcp
+              default: http
+            frontend_port:
+              type: string
+              default: "80"
+            backend_protocol:
+              type: string
+              enum:
+                - http
+                - https
+                - tcp
+              default: http
+            backend_port:
+              type: string
+              default: "80"
+          required:
+            - frontend_protocol
+            - frontend_port
+            - backend_protocol
+            - backend_port
+    health_check:
+      type: object
+      title: Health Check
+      properties:
+        protocol:
+          type: string
+          enum:
+            - http
+            - tcp
+          default: tcp
+        port:
+          type: string
+          default: "80"
+        path:
+          type: string
+          default: "/"
+        check_interval:
+          type: integer
+          default: 15
+        response_timeout:
+          type: integer
+          default: 5
+        unhealthy_threshold:
+          type: integer
+          default: 5
+        healthy_threshold:
+          type: integer
+          default: 5
+  required:
+    - forwarding_rules
+inputs:
+  vultr_cloud_account:
+    type: "@facets/vultr_cloud_account"
+    optional: false
+    displayName: Vultr Cloud Account
+    description: Vultr provider configuration and default region
+    providers:
+      - vultr
+  compute:
+    type: "@facets/vultr-instance-details"
+    optional: false
+    displayName: Compute Instances
+    description: Compute module whose instances are attached as load balancer backends
+    providers: []
+  network:
+    type: "@facets/vultr-vpc-details"
+    optional: true
+    displayName: VPC Network
+    description: Optional VPC for the load balancer
+    providers: []
+outputs:
+  default:
+    type: "@facets/vultr-load-balancer"
+    title: Vultr Load Balancer
+sample:
+  kind: load_balancer
+  flavor: vultr
+  version: "1.0"
+  disabled: true
+  spec:
+    balancing_algorithm: roundrobin
+    nodes: 1
+    ssl_redirect: false
+    proxy_protocol: false
+    forwarding_rules:
+      http:
+        frontend_protocol: http
+        frontend_port: "80"
+        backend_protocol: http
+        backend_port: "80"
+    health_check:
+      protocol: tcp
+      port: "80"
+      path: "/"
+      check_interval: 15
+      response_timeout: 5
+      unhealthy_threshold: 5
+      healthy_threshold: 5
+iac:
+  validated_files:
+    - main.tf
+    - variables.tf
+    - outputs.tf
+    - versions.tf

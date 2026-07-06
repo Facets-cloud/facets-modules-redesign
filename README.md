@@ -45,7 +45,7 @@ raptor import project-type --managed facets/aws --name "My Platform"
 `Cloud Account (aws_provider)` `Network/VPC (aws_network)` `EKS Standard (eks_standard)` `EKS Automode (eks_automode)` `Node Pool/Karpenter (karpenter)` `Node Pool/Automode (eks_automode)` `Karpenter (default)` `AWS ALB Controller (standard)` `EFS CSI Driver (standard)` `AWS EFS (standard)` `StorageClass/EBS (aws_ebs)` `StorageClass/EFS (aws_efs)` `Service (aws)` `AWS IAM Policy (standard)` `AWS IAM Role (standard)`
 
 **Managed Datastores**
-`PostgreSQL/RDS (aws-rds)` `PostgreSQL/Aurora (aws-aurora)` `MySQL/RDS (aws-rds)` `MySQL/Aurora (aws-aurora)` `MongoDB/DocumentDB (aws-documentdb)` `Redis/ElastiCache (aws-elasticache)` `Kafka/MSK (aws-msk)`
+`PostgreSQL/RDS (aws-rds)` `PostgreSQL/Aurora (aws-aurora)` `PostgreSQL/Logical (logical)` `MySQL/RDS (aws-rds)` `MySQL/Aurora (aws-aurora)` `MongoDB/DocumentDB (aws-documentdb)` `Redis/ElastiCache (aws-elasticache)` `Kafka/MSK (aws-msk)`
 
 **Self-hosted via KubeBlocks**
 `PostgreSQL` `MySQL` `MongoDB` `Redis`
@@ -91,7 +91,7 @@ raptor import project-type --managed facets/gcp --name "My Platform"
 `Cloud Account (gcp_provider)` `Network/VPC (gcp_network)` `GKE (gke)` `Node Pool (gcp)` `Node Fleet (gcp_node_fleet)` `Service (gcp)` `Workload Identity (gcp)` `Pub/Sub (gcp)` `GCP Secret Manager (gcp)`
 
 **Managed Datastores**
-`PostgreSQL/Cloud SQL (gcp-cloudsql)` `MySQL/Cloud SQL (gcp-cloudsql)` `Redis/Memorystore (gcp-memorystore)`
+`PostgreSQL/Cloud SQL (gcp-cloudsql)` `PostgreSQL/Logical (logical)` `MySQL/Cloud SQL (gcp-cloudsql)` `Redis/Memorystore (gcp-memorystore)`
 
 **Self-hosted via KubeBlocks**
 `PostgreSQL` `MySQL` `MongoDB` `Redis`
@@ -137,7 +137,7 @@ raptor import project-type --managed facets/azure --name "My Platform"
 `Cloud Account (azure_provider)` `Network/VNet (azure_network)` `AKS (aks)` `Node Pool (azure)` `Service (azure)` `Workload Identity (azure)`
 
 **Managed Datastores**
-`PostgreSQL/Flexible Server (azure-flexible-server)` `MySQL/Flexible Server (azure-flexible-server)` `MongoDB/Cosmos DB (cosmosdb)` `Redis/Azure Cache (azure_cache_custom)`
+`PostgreSQL/Flexible Server (azure-flexible-server)` `PostgreSQL/Logical (logical)` `MySQL/Flexible Server (azure-flexible-server)` `MongoDB/Cosmos DB (cosmosdb)` `Redis/Azure Cache (azure_cache_custom)`
 
 **Self-hosted via KubeBlocks**
 `PostgreSQL` `MySQL` `MongoDB` `Redis`
@@ -147,6 +147,104 @@ raptor import project-type --managed facets/azure --name "My Platform"
 
 **Operators & Monitoring**
 `KubeBlocks` `Strimzi` `ECK` `WireGuard Operator` `WireGuard VPN` `Alert Rules` `Prometheus` `Grafana` `Monitoring`
+
+</details>
+
+---
+
+### Vultr — Preview
+
+VKE (Vultr Kubernetes Engine) clusters with node pools, Vultr VPC networking, S3-compatible object storage, managed PostgreSQL, and a cloud-agnostic Kubernetes service — plus the shared K8s platform and KubeBlocks datastores.
+
+**First, create a Vultr API key** at https://my.vultr.com/settings/#settingsapi and add your control plane egress IP to the API access-control allow-list. Full walkthrough: [`project-type/vultr/ONBOARDING.md`](project-type/vultr/ONBOARDING.md).
+
+**Prompt for Praxis:**
+
+```
+Import the Vultr project type for me from the facets-modules-redesign repo
+(project-type/vultr/project-type.yml) along with its output types.
+```
+
+**Raptor CLI:** (imports the project type + modules + outputs; no base template — projects start empty)
+
+```bash
+raptor import project-type -f ./project-type/vultr/project-type.yml \
+  --modules-dir ./modules --outputs-dir ./outputs
+```
+
+With custom name:
+
+```bash
+raptor import project-type -f ./project-type/vultr/project-type.yml \
+  --modules-dir ./modules --outputs-dir ./outputs --name "Vultr Platform"
+```
+
+<details>
+<summary><strong>What's included</strong></summary>
+
+**Infrastructure**
+`Cloud Account (vultr_provider)` `Network/VPC (vultr_vpc)` `VKE Cluster (vke)` `Node Pool (vke)` `Object Storage (vultr)` `Service (k8s)`
+
+**Managed Datastores**
+`PostgreSQL (vultr)`
+
+**Self-hosted via KubeBlocks**
+`PostgreSQL` `MySQL` `MongoDB` `Redis`
+
+**K8s Platform**
+`Helm` `Ingress/NGINX` `cert-manager` `ConfigMap` `Secrets` `PVC` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `Artifactories`
+
+**Operators & Monitoring**
+`KubeBlocks` `ECK` `Prometheus` `Grafana` `Alert Rules` `Monitoring`
+
+</details>
+
+---
+
+### Linode (Akamai) — Preview
+
+LKE (Linode Kubernetes Engine) clusters with node pools, Linode VPC networking, S3-compatible object storage, managed PostgreSQL, and a cloud-agnostic Kubernetes service — plus the shared K8s platform and KubeBlocks datastores.
+
+**First, create a Linode API token** at https://cloud.linode.com/profile/tokens with read/write on Linodes, Kubernetes, VPCs, IPs, Object Storage, and Databases. Full walkthrough: [`project-type/linode/ONBOARDING.md`](project-type/linode/ONBOARDING.md).
+
+**Prompt for Praxis:**
+
+```
+Import the Linode project type for me from the facets-modules-redesign repo
+(project-type/linode/project-type.yml) along with its output types.
+```
+
+**Raptor CLI:** (imports the project type + modules + outputs; no base template — projects start empty)
+
+```bash
+raptor import project-type -f ./project-type/linode/project-type.yml \
+  --modules-dir ./modules --outputs-dir ./outputs
+```
+
+With custom name:
+
+```bash
+raptor import project-type -f ./project-type/linode/project-type.yml \
+  --modules-dir ./modules --outputs-dir ./outputs --name "Linode Platform"
+```
+
+<details>
+<summary><strong>What's included</strong></summary>
+
+**Infrastructure**
+`Cloud Account (linode_provider)` `Network/VPC (linode_vpc)` `LKE Cluster (lke)` `Node Pool (lke)` `Object Storage (linode)` `Service (k8s)`
+
+**Managed Datastores**
+`PostgreSQL (linode)`
+
+**Self-hosted via KubeBlocks**
+`PostgreSQL` `MySQL` `MongoDB` `Redis`
+
+**K8s Platform**
+`Helm` `Ingress/NGINX` `cert-manager` `ConfigMap` `Secrets` `PVC` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `Artifactories`
+
+**Operators & Monitoring**
+`KubeBlocks` `ECK` `Prometheus` `Grafana` `Alert Rules` `Monitoring`
 
 </details>
 

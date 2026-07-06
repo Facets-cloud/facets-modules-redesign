@@ -34,6 +34,8 @@ modules:
     flavor: azure-flexible-server
   - intent: postgres
     flavor: azure-flexible-server
+  - intent: postgres
+    flavor: logical
   - intent: redis
     flavor: azure_cache_custom
 

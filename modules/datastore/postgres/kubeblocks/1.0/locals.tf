@@ -17,7 +17,7 @@ locals {
   # PDB settings - maxUnavailable=1 ensures only 1 pod disrupted at a time
   enable_pdb = lookup(local.ha_config, "enable_pdb", false) && local.ha_enabled
 
-  create_read_service = true # Always create read service for replication mode
+  create_read_service = local.ha_enabled # Only create read service in replication (HA) mode
 
   # Get node pool details from input
   node_pool_input  = lookup(var.inputs, "node_pool", {})
@@ -52,13 +52,12 @@ locals {
   backup_method = "volume-snapshot"
 
   # Restore configuration - annotation-based restore from backup
-  restore_config  = lookup(var.instance.spec, "restore", {})
-  restore_enabled = lookup(local.restore_config, "enabled", false) == true
+  restore_enabled = try(var.instance.spec.restore.enabled, false) == true
 
   # Restore source details
   # Backup naming pattern from KubeBlocks:
   # - Volume-snapshot backups: {cluster-name}-backup-{timestamp}
-  restore_backup_name = lookup(local.restore_config, "backup_name", "")
+  restore_backup_name = try(var.instance.spec.restore.backup_name, "")
 
   # Component definition
   postgres_version = var.instance.spec.postgres_version

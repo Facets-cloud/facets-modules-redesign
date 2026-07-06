@@ -1,0 +1,22 @@
+name: compute
+displayName: EKS Compute Add-ons
+description: >
+  Karpenter controller + Karpenter-managed node pool on top of an existing
+  EKS cluster. Adds cost-efficient, just-in-time node provisioning to a
+  cluster the consumer's project already has.
+category: compute
+version: "1.0"
+tags: [eks, kubernetes, karpenter, autoscaling]
+maintainers:
+  - name: Facets
+resources:
+  - karpenter.json
+  - nodepool.json
+requires:
+  - cloud_account/cloud
+  - network/network
+  - kubernetes_cluster/cluster
+source:
+  gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
+  gitRef: main
+  path: templates/compute

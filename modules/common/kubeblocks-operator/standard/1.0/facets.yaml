@@ -79,6 +79,36 @@ spec:
           title: Memory Request
           description: Memory request for KubeBlocks controller
           default: 512Mi
+    database_addons:
+      type: object
+      title: Database Addons
+      description: Toggle which KubeBlocks database engine addons are installed. Disabled engines are not installed at all.
+      properties:
+        postgresql:
+          type: boolean
+          title: PostgreSQL
+          description: Install the PostgreSQL KubeBlocks addon
+          default: true
+        mysql:
+          type: boolean
+          title: MySQL
+          description: Install the MySQL KubeBlocks addon
+          default: true
+        mongodb:
+          type: boolean
+          title: MongoDB
+          description: Install the MongoDB KubeBlocks addon
+          default: true
+        redis:
+          type: boolean
+          title: Redis
+          description: Install the Redis KubeBlocks addon
+          default: true
+        kafka:
+          type: boolean
+          title: Kafka
+          description: Install the Kafka KubeBlocks addon
+          default: true
   required:
   - version
 outputs:

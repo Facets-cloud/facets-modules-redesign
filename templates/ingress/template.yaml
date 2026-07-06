@@ -1,0 +1,26 @@
+name: ingress
+displayName: NGINX Gateway Fabric Ingress (AWS)
+description: >
+  NGINX Gateway Fabric ingress on AWS / EKS. TLS-terminated Gateway API
+  based ingress on top of an existing EKS cluster with a node pool,
+  cert-manager, and Gateway API CRDs already in place. Uses the
+  AWS-specific ingress flavor (nginx_gateway_fabric_aws). Apply the
+  cert-manager and gateway-api-crd templates first if your project
+  doesn't already have them. GCP/Azure variants will follow as separate
+  templates.
+category: network
+version: "1.0"
+tags: [ingress, gateway-api, nginx, tls]
+maintainers:
+  - name: Facets
+resources:
+  - gateway-ing.json
+requires:
+  - kubernetes_cluster/cluster
+  - kubernetes_node_pool/nodepool
+  - cert_manager/cert-manager
+  - gateway_api_crd/gateway-api-crd
+source:
+  gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
+  gitRef: main
+  path: templates/ingress

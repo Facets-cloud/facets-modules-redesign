@@ -1,0 +1,21 @@
+name: cert-manager
+displayName: Cert-Manager
+description: >
+  TLS certificate management via cert-manager. Foundational template
+  consumed by observability and ingress; apply this first if either of
+  those needs cert-manager and the consumer's project doesn't already
+  have one.
+category: security
+version: "1.0"
+tags: [tls, certificates, cert-manager]
+maintainers:
+  - name: Facets
+resources:
+  - cert-manager.json
+requires:
+  - kubernetes_cluster/cluster
+  - kubernetes_node_pool/nodepool
+source:
+  gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
+  gitRef: main
+  path: templates/cert-manager
