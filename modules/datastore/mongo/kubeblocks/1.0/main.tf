@@ -228,8 +228,6 @@ data "kubernetes_secret" "mongodb_credentials" {
     name      = try(data.kubernetes_resources.mongodb_secrets.objects[0].metadata.name, "${local.cluster_name}-mongodb-account-root")
     namespace = local.namespace
   }
-
-  depends_on = [data.kubernetes_resources.mongodb_secrets]
 }
 
 # Data Source: Primary Service
