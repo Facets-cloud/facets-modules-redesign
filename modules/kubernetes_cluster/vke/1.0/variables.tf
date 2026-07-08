@@ -22,7 +22,7 @@ variable "instance" {
 
   validation {
     condition     = can(regex("^v[0-9]+\\.[0-9]+\\.[0-9]+\\+[0-9]+$", var.instance.spec.k8s_version))
-    error_message = "k8s_version must be a Vultr VKE version string like v1.35.0+1."
+    error_message = "k8s_version must be a Vultr VKE version string like v1.36.1+2."
   }
 
   validation {

@@ -114,12 +114,12 @@ resource "google_container_cluster" "primary" {
   }
 
   # Maintenance policy - only when auto-upgrade is enabled
-  # Daily maintenance window at 3 AM UTC for 4 hours
+  # Daily maintenance window (UTC, 4-hour window); start time configurable via spec.maintenance_window.start_time
   dynamic "maintenance_policy" {
     for_each = local.auto_upgrade ? [1] : []
     content {
       daily_maintenance_window {
-        start_time = "03:00"
+        start_time = local.maintenance_start_time
       }
     }
   }
