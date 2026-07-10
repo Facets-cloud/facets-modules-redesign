@@ -1,135 +1,187 @@
 # Legacy central-module migration — design
 
 **Status:** approved design, pre-implementation
-**Date:** 2026-07-09
+**Date:** 2026-07-09 (recalibrated 2026-07-10)
 **Task:** flow `legacy-module-migration`
+**Pilot:** project `capillary-cloud`, environment `facetsdemo`, on `root.console.facets.cloud`
 
 ## What
 
 A deterministic pipeline that moves a Facets project off the **old central-module
-architecture** — modules baked into `facets-iac` and identified by `module.json` — onto
-**new-style registry modules** identified by `facets.yaml`, via a **zero-change import
-into a new project**. No `terraform apply` against live infrastructure; the import plan
-must be `0 to change, 0 to destroy`, nothing `must be replaced`.
+architecture** — modules resolved from the `facets-iac` repo — onto **new-style registry
+modules** identified by `facets.yaml`, via a **zero-change import into a new project** of
+a new project type, `old-style`.
 
-Two deliverables:
+No `terraform apply` against live infrastructure. The import plan must be
+`0 to change, 0 to destroy`, nothing `must be replaced`.
 
-1. A **script** (the pipeline below), replayable and idempotent.
-2. A **mapping table** — legacy `(intent, flavor, version)` → new-style module — that
+Deliverables:
+
+1. A **script** — the pipeline below — replayable and idempotent.
+2. A **`old-style` project type** (`project-type/old-style/project-type.yml`), starting
+   from cloud account only, whose module list accretes.
+3. A **mapping table** — legacy `(intent, flavor, version)` → rewrapped module — that
    accretes one project at a time. Not built up front.
 
-## Why
+## The predicate — what makes a module legacy
 
-Legacy modules are not terraform modules. They are *fragments* the IaC engine completes
-at generate time. `generate.py::_copy_files()` injects three template files into every
-module whose `module_source == "local"`:
+**If the module resolves out of the facets-iac repo, it is old.** Full stop. The engine
+calls this `module_source == "local"`:
 
 ```python
 # capillary-cloud-tf/tfmain/scripts/generate.py:217
 if (not data["TESTING"]) and (self.module_source == "local"):
-    shutil.copy("../tfmain/templates/variables.tf",    self.module_path)
-    shutil.copy("../tfmain/templates/outputs_gen.tf",  self.module_path)
-    shutil.copy("../tfmain/templates/resources_gen.tf", self.module_path)   # unless provides == "environment"
+    shutil.copy("../tfmain/templates/variables.tf",     self.module_path)
+    shutil.copy("../tfmain/templates/outputs_gen.tf",   self.module_path)
+    shutil.copy("../tfmain/templates/resources_gen.tf", self.module_path)  # unless provides == "environment"
 ```
 
-A registry module ships those itself. That injection *is* the "old posture."
+A legacy module is not a terraform module. It is a *fragment* the engine completes at
+generate time by injecting those three files. A registry module ships them itself. That
+injection **is** the "old posture," and reproducing it is what makes the rewrap safe.
 
-## The predicate — what "old identification" means
+**System modules are legacy too.** The 29 modules under `0_input_config/` are implicit,
+one per cluster, and present in every project. They resolve `module_source == "local"`
+like everything else. Do not mistake their ubiquity for having been migrated.
 
-`is_old`, read from `module.json`, gated by the `PRE_ALPHA` env var (default on):
+### `is_old` is an addressing quirk, not a filter
+
+`is_old` does **not** decide whether a module is legacy. It decides only how the
+terraform address is composed:
 
 ```python
 # generate.py:182
-self.is_old = module_json.get("is_old", False) and data["PRE_ALPHA"]
+self.is_old = module_json.get("is_old", False) and data["PRE_ALPHA"]   # PRE_ALPHA defaults on
 
-# generate.py:305 — the terraform module address key
-if meta.is_old:  key = meta.module_name + "_" + facets_json.name   # module_name = DIRECTORY name
-else:            key = meta.provides    + "_" + facets_json.name   # provides    = intent
+# generate.py:305
+if meta.is_old:  key = meta.module_name + "_" + name   # module_name = DIRECTORY name
+else:            key = meta.provides    + "_" + name   # provides    = intent
 ```
 
-So the terraform address differs by flag:
-
 ```
-  is_old = true    module.level2.module.<directory_name>_<resource_name>
-  is_old = false   module.level2.module.<intent>_<resource_name>
+  is_old: true    module.level2.module.<directory_name>_<resource>    address MOVES on migration
+  is_old: false   module.level2.module.<intent>_<resource>            address STABLE
 ```
 
-**Migration always changes the address.** That is the definition of the migration, and
-the translation is deterministic: `directory_name → provides`, both read from
-`module.json`. Because the target is a fresh project with fresh state, import-by-
-provider-ID resolves it. Flavor and version never enter the address, so renaming the
-flavor is free.
+Both are legacy. Only the first needs an address translation, and that translation is
+deterministic: `directory_name → provides`, both read from `module.json`. Flavor and
+version never enter the address, so renaming the flavor is free.
 
 ### Scope, measured
 
+```
+all module.json in capillary-cloud-tf/modules/     238      (all module_source == "local")
+  ├─ 2_deprecated/                                  46      out of scope unless a project uses one
+  └─ in scope                                      192
+       ├─ 1_input_instance/   127   explicit, per resource
+       ├─ <top-level>          36
+       └─ 0_input_config/      29   implicit system modules — legacy, one per cluster
+
+  addressing within the 192:
+    is_old: false → <intent>_<resource>      184   address stable
+    is_old: true  → <dirname>_<resource>       8   address moves
+```
+
+The 192 is the *universe*. Nothing is authored from it up front. A module is rewrapped
+only when a project being adopted actually instantiates it.
+
+### The pilot's actual demand
+
+`capillary-cloud` has 97 blueprint resources. Classified against the module tree:
+
 | | count |
 |---|---|
-| `module.json` files in `capillary-cloud-tf/modules/` | 238 |
-| of those, `is_old: true` | **9** |
-| of those, `is_old: false` (already migrated in-repo) | 15 |
-| distinct intents in scope (`helm`, `ingress`, `kubernetes_node_pool`, `postgres`, `redis`) | **5** |
-| in-scope modules missing a `facets.yaml` | 0 |
+| resources resolving to a facets-iac module (legacy) | **74** |
+| distinct `(intent, flavor)` pairs to rewrap | **24** |
+| resources whose terraform address moves (`is_old`) | **10** — all `helm`, from `helm_simple` |
+| resources not resolving (registry, or `configuration` kind) | 23 |
 
-The nine:
-
-| module path | address key | intent | flavors | v |
-|---|---|---|---|---|
-| `helm_simple` | `helm_simple` | helm | helm_simple, default, k8s | 0.1 |
-| `aws_alb_controller` | `aws_alb_controller` | ingress | alb, aws_alb | 0.1 |
-| `gcp_alb` | `gcp_alb` | ingress | alb, gcp_alb | 0.1 |
-| `nginx_ingress_controller` | `nginx_ingress_controller` | ingress | nlb_nginx, nginx_ingress_controller | 0.1 |
-| `nginx_ingress_controller_gcp` | `nginx_ingress_controller_gcp` | ingress | nlb_nginx, nginx_ingress_controller | 0.1 |
-| `2_deprecated/nginx_ingress_controller` | `nginx_ingress_controller` | ingress | nginx_ingress_controller | 0.01 |
-| `gke_node_pool` | `gke_node_pool` | kubernetes_node_pool | default, gke_node_pool | 0.1 |
-| `cloudsql_postgres` | `cloudsql_postgres` | postgres | default, cloudsql_postgres, cloudsql | 0.1 |
-| `memorystore` | `memorystore` | redis | memorystore | 0.1 |
-
-### Why not map onto the v3 catalog
-
-Measured overlap between the legacy catalog and `facets-v3-modules` +
-`facets-modules-redesign`:
+The address moves are confined to one module directory:
 
 ```
-legacy (non-deprecated):   97 intents  /  171 (intent, flavor) pairs
-v3 + redesign union:       67 intents
-intent-level overlap:      30
-(intent, flavor) EXACT:     2     karpenter/default, service/k8s
-legacy intents with no counterpart at all:  67
+module.level2.module.helm_simple_tekton   ->  module.level2.module.helm_tekton
+module.level2.module.helm_simple_trivy    ->  module.level2.module.helm_trivy
+...  (10 resources, intent `helm`, flavors default / helm_simple / k8s)
 ```
 
-The v3 catalog is a *different* catalog, not a newer version of this one. Reuse is the
-exception, authored per project on demand — never the default.
+The 23 unresolved include `configuration` kind (7) — the implicit system modules, which
+resolve by a different code path — plus genuinely-registry modules such as
+`image_pull_secret_injector/default` and `gateway_api_crd/legacy`. The scanner must
+classify these explicitly rather than leave them in a residual bucket.
 
-### Why the in-repo precedent is not the answer
+### Can an existing redesign module be reused? — evaluated, not assumed
 
-Fifteen modules carry `is_old: false`. They were migrated by adding a sibling that bumps
-the **version** and keeps the **flavor** (`memorystore` → `memorystore_redis_alpha` @
-0.2; `gcp_alb` → `gcp_alb/0.2`). Two reasons this is only half the job:
+Zero-diff import requires the *terraform resource addresses inside the module* to match.
+So the test is not "does an `s3` module exist" but "does it declare the same
+`resource "<type>" "<name>"` and `module "<name>"` set?" Applied to the pilot's 19
+distinct legacy module directories (excluding `actions.tf`, which holds Tekton
+operational actions and is identical boilerplate everywhere):
 
-- `memorystore/main.tf` and `memorystore_redis_alpha/main.tf` **differ**. Those were
-  rewrites, not byte-identical rewraps, so they carry no zero-diff guarantee.
-- They remain `module_source == "local"`. They solved *addressing*; they never touched
-  *registration*.
+| verdict | count |
+|---|---|
+| **must be written as a rewrap** | **18 / 19** |
+| address set matches an existing module | **1** — `helm_simple` vs `common/helm/k8s_standard/1.0`, both `helm_release.external_helm_charts` |
+
+Of the 18: seven have **no new-style intent at all** (`alert_group`, `dynamodb`,
+`grafana_dashboard`, `iam_policy`, `log_collector`, `loki_alerting_rules`,
+`snapshot_schedule`, `tcp_lb`); eleven have an intent whose module declares a **different
+address set**.
+
+Even the single match is not a free reuse. The bodies differ — legacy carries
+`prevent_destroy`, redesign carries `prometheus_id`, and the `values`/`set` handling
+diverges. It is a *candidate*, resolved by the gate, not by inspection. This is exactly
+why `strategy: reuse-v3` auto-demotes to `rewrap-old-posture` on a non-clean plan.
+
+Coarser context: across the whole catalog, only 2 of 171 legacy `(intent, flavor)` pairs
+exist in `facets-v3-modules` + `facets-modules-redesign`. The v3 catalog is a *different*
+catalog, not a newer version of this one. **Reuse is the exception; assume you are
+writing a rewrap.**
+
+### Vendoring — legacy modules are not self-contained
+
+Legacy modules reach outside their own directory with relative sources:
+
+```hcl
+# 1_input_instance/aws_iam_role/main.tf
+module "aws_iam_role_name" { source = "../../3_utility/name" }
+module "iam_eks_role"      { source = "../../3_utility/aws_irsa/iam-role-for-service-accounts-eks" }
+```
+
+That works because the engine runs them *in place* inside the repo tree. A registry
+module is packaged standalone, so every `../` source breaks on upload. The pilot's 19
+directories reference 15 distinct external targets:
+
+```
+  ../../3_utility/name                                     x5     ../../3_utility/application            x1
+  ../3_utility/name                                        x4     ../../3_utility/legacy_azure_aks       x1
+  ../../3_utility/any-k8s-resource                         x2     ../../3_utility/gcp_workload-identity/…x1
+  ../../3_utility/aws_irsa/iam-role-for-service-accounts-eks  x1  ../../../3_utility/{pvc,password,…}    x5
+  ../../log_collector/0.2                                  x1  ← a legacy module depending on another
+  ../../../1_input_instance/snapshot_schedule              x1  ← and another
+```
+
+`3_utility/` holds 22 shared sub-modules. **The rewrap must vendor the transitive closure
+of `../` sources into the module directory and rewrite each `source` to a local path.**
+Vendoring changes the `source` string but not the module block's *name*, so terraform
+addresses are preserved — which is what the gate cares about. Two of the targets are
+other legacy modules (`log_collector/0.2`, `1_input_instance/snapshot_schedule`), so the
+closure is a graph walk, not a single hop.
 
 ## Design
 
 ```
                      ┌───────────── per project, on encounter ─────────────┐
+ blueprint +         │ ① SCAN    every resource resolving module_source=   │
+ module tree ────────┤           "local"  ⇒ legacy-manifest.json           │
+                     │           tag each with is_old → address translation │
                      │                                                      │
- deploymentcontext ──┤ ① SCAN    resources[].matched == false               │
- (project + env)     │           resolve → module.json, filter is_old       │
-                     │           ⇒ legacy-manifest.json                     │
-                     │                                                      │
- legacy tfstate ─────┤ ② JOIN    module.level2.module.<dirname>_<name>      │
+ legacy tfstate ─────┤ ② JOIN    module.level2.module.<key>_<name>          │
  (backend, ws=       │           → provider-native id + live attributes     │
   CLUSTER_ID)        │           cross-check state ⋈ blueprint              │
- blueprint JSONs ────┤           ⇒ FAIL LOUD on any disagreement            │
+                     │           ⇒ FAIL LOUD on any disagreement            │
                      │                                                      │
                      │ ③ MAP     mapping.yaml — accretes, checked in        │
-                     │           (intent, flavor, version) → strategy       │
-                     │             reuse-v3   | rewrap-old-posture (default)│
-                     │           reuse-v3 auto-demotes to rewrap if its     │
-                     │           plan is not 0-diff. The gate decides.      │
+                     │           (intent, flavor, version) → rewrapped id   │
                      │                                                      │
                      │ ④ REWRAP  main.tf, locals.tf → byte-identical        │
                      │           templates/{variables,outputs_gen,          │
@@ -145,98 +197,89 @@ the **version** and keeps the **flavor** (`memorystore` → `memorystore_redis_a
 ```
 
 Stages ①②④⑤ are deterministic and scripted. ③ is the only place human judgment enters,
-and its output is a checked-in file that grows monotonically across projects. ⑥ is the
-existing `praxis-zero-change-import` gate, unmodified.
+and its output is a checked-in file that grows monotonically. ⑥ is the existing
+`praxis-zero-change-import` gate, unmodified: **fix the module, never loosen the gate.**
 
-### ① SCAN — detect
+### The scripts
 
-Input: `deploymentcontext.json` for the project + env.
+```
+ bin/
+ ├── scan-legacy.py       ① blueprint + module tree  ->  legacy-manifest.json
+ │                           classifies every resource: legacy | registry | configuration
+ │                           tags is_old, computes old/new terraform address
+ │
+ ├── join-state.py        ② legacy tfstate  ⋈  manifest  ->  enriched manifest
+ │                           attaches provider-native id + live attributes
+ │                           FAILS LOUD on: state-without-doc, doc-without-state,
+ │                                          spec value contradicting live attribute
+ │
+ ├── rewrap-module.py     ④ legacy module dir  ->  publishable module dir
+ │                           copy main/locals/outputs .tf byte-identical
+ │                           materialize the 3 engine-injected templates
+ │                           vendor transitive ../ closure, rewrite source paths
+ │                           synthesize facets.yaml (flavor + _legacy, @legacy/* outputs)
+ │
+ ├── emit-docs.py         ⑤ enriched manifest  ->  resource docs
+ │                           rewrites flavor AND advanced.<flavor> in lockstep
+ │                           env-specific values -> environment override, not blueprint
+ │
+ ├── emit-imports.py      ⑤ enriched manifest  ->  imports.tf
+ │                           new address  <-  provider-native id
+ │
+ ├── carry-vars.sh        variables + secrets, source project -> target project, per env
+ │                           pipes values; never prints them; asserts key-set equality
+ │
+ └── gate.sh              ⑥ plan-only custom release -> poll status -> grep verdict
+                             clean iff: 0 to change, 0 to destroy, nothing must be replaced
+                             benign: scratch_string.release_metadata, additive outputs
 
-A resource is legacy when `resources[<path>].matched == false`, which sends `generate.py`
-down the local-scan fallback. Resolve each to a `module.json` directory by
-`(intent, flavor, version)` using the engine's own matching rule, then keep only those
-with `is_old: true`.
-
-Output `legacy-manifest.json`, one record per resource:
-
-```json
-{
-  "kind": "redis", "name": "cache", "flavor": "memorystore", "version": "0.1",
-  "legacy_module_dir": "capillary-cloud-tf/modules/memorystore",
-  "address_key_old": "memorystore_cache",
-  "address_key_new": "redis_cache"
-}
+ mapping.yaml             ③ the accreting table. The only human-authored artifact.
 ```
 
-### ② JOIN — cross-check state against blueprint
+`scan-legacy.py`, `join-state.py`, `rewrap-module.py`, `emit-docs.py` and
+`emit-imports.py` are pure functions of their inputs: same blueprint + same state ⇒ same
+output, byte for byte. They are re-runnable at any point. `gate.sh` and `carry-vars.sh`
+touch the control plane; `gate.sh` mutates nothing.
 
-State is the authority for provider IDs and live attribute values. The blueprint is the
-authority for authoring intent (`kind`, `flavor`, `version`, `spec`). **Disagreement is a
-hard failure, never a silent reconciliation.**
-
-Fail loudly on:
-
-- a resource in state with no blueprint doc,
-- a blueprint doc with no state entry,
-- a spec value that contradicts the live attribute it maps to.
-
-The third catches the `cloud_tasks` class of bug from the existing skill — a blueprint
-carrying `max_attempts=2` against a live queue at `6`.
-
-### ③ MAP — the accreting table
-
-`mapping.yaml`, checked in, one entry per legacy `(intent, flavor, version)`:
-
-```yaml
-- legacy:  { intent: redis, flavor: memorystore, version: "0.1" }
-  target:  { intent: redis, flavor: memorystore_legacy, version: "0.1" }
-  strategy: rewrap-old-posture
-  source_dir: capillary-cloud-tf/modules/memorystore
-  first_seen_project: capillarycloud
-```
-
-`strategy` is `rewrap-old-posture` by default. `reuse-v3` is opt-in per entry and
-**auto-demotes to rewrap** if its gate plan is not 0-diff. The gate decides, not the
-author.
-
-### ④ REWRAP — produce the old-posture module
+### ④ REWRAP — producing the old-posture module
 
 Mechanical, from the legacy module directory:
 
 - `main.tf`, `locals.tf`, `outputs.tf` → copied **byte-identical**. Never edited.
 - `templates/variables.tf`, `templates/outputs_gen.tf`, `templates/resources_gen.tf` →
-  materialized into the module. (`resources_gen.tf` is skipped when `provides ==
-  "environment"`, matching `generate.py`.)
+  materialized into the module (`resources_gen.tf` skipped when `provides ==
+  "environment"`, matching `generate.py`).
+- transitive `../` source closure → **vendored** into the module, each `source` rewritten
+  to a local path. Module block *names* are never changed, so addresses survive.
 - `module.json` → `facets.yaml`:
 
 | `module.json` | `facets.yaml` |
 |---|---|
-| `provides` | `intent` (when kind != configuration) |
-| `provides` | `for` (when kind == configuration) |
-| `flavors[]` | `flavor` — **one module per flavor the project actually uses** |
+| `provides` | `intent` (kind != configuration) |
+| `provides` | `for` (kind == configuration) |
+| `flavors[]` | `flavor` — one module per flavor **the project actually uses** |
 | `version` | `version` |
 | `supported_clouds` | `clouds` |
 | `inputs` | `inputs` |
-| `input_type` | instance \| config |
 | `lifecycle` | *(no equivalent — engine-side)* |
 
-Because terraform is copied verbatim, the resource addresses inside the module and every
-attribute it emits are identical by construction. The import is 0-diff by construction,
-not by verification. The gate then confirms it.
+Because terraform is copied verbatim, resource addresses inside the module and every
+attribute it emits are identical by construction. The import is 0-diff *by construction*,
+not by verification; the gate then confirms it.
 
 **Flavor rename.** A registry module cannot be published at an `(intent, flavor)` that
-collides with a system module. The rewrapped flavor is suffixed `_legacy`
-(`memorystore` → `memorystore_legacy`) and output types are namespaced `@legacy/*`
+collides with a system module. Every rewrapped flavor is suffixed `_legacy`
+(`memorystore` → `memorystore_legacy`), and output types are namespaced `@legacy/*`
 rather than `@outputs/*` or `@facets/*`.
 
-### ⑤ EMIT — docs and imports
+### ⑤ EMIT — the coordinated doc edit
 
-The resource doc gets **two** coordinated edits, not one:
+Each resource doc takes **two** edits, not one:
 
 ```yaml
-flavor:   memorystore  ->  memorystore_legacy
+flavor:   k8s          ->  k8s_legacy
 advanced:
-  memorystore: {...}   ->  memorystore_legacy: {...}
+  k8s: {...}           ->  k8s_legacy: {...}
 ```
 
 The second is mandatory. `main.tf.mustache` reads the advanced block *by flavor key*:
@@ -245,64 +288,113 @@ The second is mandatory. `main.tf.mustache` reads the advanced block *by flavor 
 advanced = lookup(lookup(local.input_{{key}}, "advanced", {}), "{{flavor}}", {})
 ```
 
-Rename the flavor without renaming the `advanced` key and the block resolves to `{}` —
-a silent config drop. The script rewrites both, and asserts that no `advanced` key
-remains that matches a pre-rename flavor.
+Rename the flavor without renaming the `advanced` key and the block silently resolves to
+`{}` — a config drop that may not even surface as a plan diff. The script rewrites both,
+then asserts no `advanced` key remains matching a pre-rename flavor.
 
-`imports.tf` maps the new address to the provider-native ID pulled from legacy state:
+## Creating the new project
 
-```hcl
-import {
-  to = module.level2.module.redis_cache.google_redis_instance.this
-  id = "projects/<p>/locations/<l>/instances/cache"
-}
+The target is a new project of type `old-style`, adopted one environment at a time.
+
+### Step 0 — publish the project type
+
+`project-type/old-style/project-type.yml` starts from cloud account only. No
+`baseTemplatePath`: a project of this type begins with nothing but a cloud account, and
+every other resource arrives via import.
+
+### Step 1 — create the project
+
+```bash
+raptor create project capillary-cloud-v2 --project-type old-style --clouds AWS
 ```
 
-### ⑥ GATE — unchanged
+### Step 2 — rewrap and publish the pilot's 24 modules
 
-Plan-only custom release. Clean means `0 to change, 0 to destroy`, nothing
-`must be replaced`. The only benign diffs are `scratch_string.release_metadata` and
-additive `Changes to Outputs`. **Fix the module, never loosen the gate.**
+Driven by `mapping.yaml`, seeded from the pilot's demand. Each module is validated
+before upload:
+
+```bash
+raptor create iac-module -f <module-path> --dry-run   # never --skip-validation
+raptor create iac-module -f <module-path>
+```
+
+### Step 3 — wire the cloud account, deploy it alone
+
+Deploy `cloud_account` via a targeted release so its outputs (account id, region,
+credentials) populate. This is a no-op deploy — data sources and outputs only, zero cloud
+infrastructure. The environment must be RUNNING; a stopped env cannot release.
+
+### Step 4 — own the first environment: `facetsdemo`
+
+`capillary-cloud` has **23 environments**, and each one is a customer's control plane
+(`moveinsync`, `vymo-facets-cp`, `treebo-cp`, `commerceiq-cp`, `fourkites-cp`, …). Three
+are `DESTROY_FAILED`, two are `STOPPED`.
+
+`facetsdemo` is the pilot: it is RUNNING, it is a demo control plane rather than a
+customer's, and a mistake there costs nothing. `root` is excluded on purpose — it is the
+control plane we are operating *from*.
+
+Per environment, in order:
+
+1. **Create the environment** in the new project, matching cloud and region.
+2. **Carry variables and secrets.** `capillary-cloud` has 68 variables/secrets, one of
+   them global. Secrets are per-environment and have no stack default.
+   `raptor get variable --show-secrets` requires `VIEW_SECRETS`. **Values must never
+   enter an agent transcript or a log.** The script pipes them directly from source to
+   destination and asserts count parity plus per-key presence — never values.
+3. **Emit resource docs** for that environment, with env-specific values placed in the
+   environment override, not the blueprint. Region, zones, names, allowlists, webhook
+   URLs are override material; the blueprint stays portable.
+4. **Emit `imports.tf`**, mapping each new address to the provider-native ID pulled from
+   that environment's legacy state.
+5. **Gate**: plan-only custom release. `0 to change, 0 to destroy`, nothing
+   `must be replaced`.
+6. **Import**: apply the import blocks only after a clean gate. This writes to terraform
+   state; it does not touch cloud infrastructure.
+7. **Re-gate**: plan again, confirm still clean.
+
+Only after `facetsdemo` completes all seven does a second environment begin. Environments
+are independent state; the blueprint is shared, so a blueprint change made for env N must
+be re-gated against every already-imported environment.
 
 ## Testing
 
 TDD, per repo convention.
 
-- **①** golden `deploymentcontext.json` fixtures → asserted `legacy-manifest.json`.
-  Includes a matched-resource fixture that must be *excluded*, and an `is_old: false`
-  fixture that must be excluded.
-- **②** a state/blueprint pair that agrees (passes) and three that disagree in each of
-  the three ways (each must fail, with the disagreement named).
-- **④** rewrap `memorystore`, assert `main.tf` is byte-identical to source, assert the
-  three templates are present, assert the generated `facets.yaml` round-trips to the
-  same `(intent, flavor, version, clouds)` as `module.json`.
-- **⑤** a doc carrying `advanced.memorystore` → assert output carries
-  `advanced.memorystore_legacy` and no `advanced.memorystore`. A doc with no `advanced`
-  block → assert no key is invented.
-- **⑥** integration, against the pilot project, plan-only.
-
-## Pilot
-
-The **capillarycloud project on the root CP**. Its `is_old` resource set drives the
-first `mapping.yaml` entries. Nothing is authored for a module the pilot does not use.
+- **①** golden blueprint + module-tree fixtures → asserted `legacy-manifest.json`. Must
+  include an `is_old: true` case (address moves), an `is_old: false` case (address
+  stable), a `configuration`-kind system module, and a genuinely-registry resource that
+  must be excluded.
+- **②** a state/blueprint pair that agrees (passes) and three that disagree — resource in
+  state with no doc, doc with no state, spec value contradicting the live attribute. Each
+  must fail, naming the disagreement.
+- **④** rewrap `helm_simple`; assert `main.tf` byte-identical to source, the three
+  templates present, and the generated `facets.yaml` round-trips to the same
+  `(intent, flavor, version, clouds)` as `module.json`.
+- **⑤** a doc carrying `advanced.k8s` → assert output carries `advanced.k8s_legacy` and
+  no `advanced.k8s`. A doc with no `advanced` block → assert no key is invented.
+- **variables/secrets** → assert count parity and key-set equality without reading values.
+- **⑥** integration, against `facetsdemo`, plan-only.
 
 ## Out of scope
 
-- The 46 modules under `2_deprecated/` — except `2_deprecated/nginx_ingress_controller`,
-  which is `is_old: true` and therefore in scope if the pilot uses it.
-- Modernizing rewrapped modules onto canonical v3 contracts. That is a separate,
-  later, per-module pass, each gated on its own 0-diff plan.
+- The 46 modules under `2_deprecated/`, unless the pilot instantiates one.
+- Modernizing rewrapped modules onto canonical v3 contracts — a separate, later,
+  per-module pass, each gated on its own 0-diff plan.
 - Any `terraform apply` against live infrastructure beyond writing imports to state.
-- Changing `PRE_ALPHA`. Flipping it would re-address every legacy resource in place.
+- Changing `PRE_ALPHA`. Flipping it would re-address every `is_old` resource in place.
 
 ## Open questions
 
 - Does the CP registry permit publishing at `version: "0.1"`, or is there a floor? The
-  rewrap keeps the legacy version verbatim; if the registry rejects it, we bump and the
-  doc's `version` field joins `flavor` and `advanced` in the rewrite set.
+  rewrap keeps the legacy version verbatim; a floor would add `version` to the doc
+  rewrite set alongside `flavor` and `advanced`.
+- The 7 `configuration`-kind resources resolve through the implicit-module path
+  (`0_input_config/`), not the explicit one. Their rewrap uses `for:` rather than
+  `intent:` in `facets.yaml`. Confirm the registry accepts a config-kind module.
 - `2_deprecated/nginx_ingress_controller` and `nginx_ingress_controller` share the
-  address key `nginx_ingress_controller` at different versions (0.01 / 0.1). If the
-  pilot uses both, the manifest must disambiguate on version, not on address key alone.
+  address key `nginx_ingress_controller` at versions 0.01 and 0.1. Not in the pilot's
+  demand, but the manifest must disambiguate on version, not address key alone.
 - Versioned legacy directories (`gcp_alb/0.2`) would yield `module_name == "0.2"` under
   `_module_name()`. None are currently `is_old: true`, so this is latent. The scanner
   should assert it never encounters one rather than silently emit `0.2_<resource>`.
