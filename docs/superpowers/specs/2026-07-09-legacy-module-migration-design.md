@@ -200,46 +200,24 @@ Stages ①②④⑤ are deterministic and scripted. ③ is the only place human 
 and its output is a checked-in file that grows monotonically. ⑥ is the existing
 `praxis-zero-change-import` gate, unmodified: **fix the module, never loosen the gate.**
 
-### The scripts
+### Execution: an SOP, not scripts
 
-```
- bin/
- ├── scan-legacy.py       ① blueprint + module tree  ->  legacy-manifest.json
- │                           classifies every resource: legacy | registry | configuration
- │                           tags is_old, computes old/new terraform address
- │
- ├── join-state.py        ② legacy tfstate  ⋈  manifest  ->  enriched manifest
- │                           attaches provider-native id + live attributes
- │                           FAILS LOUD on: state-without-doc, doc-without-state,
- │                                          spec value contradicting live attribute
- │
- ├── rewrap-module.py     ④ legacy module dir  ->  publishable module dir
- │                           copy main/locals/outputs .tf byte-identical
- │                           materialize the 3 engine-injected templates
- │                           vendor transitive ../ closure, rewrite source paths
- │                           synthesize facets.yaml (flavor + _legacy, @legacy/* outputs)
- │
- ├── emit-docs.py         ⑤ enriched manifest  ->  resource docs
- │                           rewrites flavor AND advanced.<flavor> in lockstep
- │                           env-specific values -> environment override, not blueprint
- │
- ├── emit-imports.py      ⑤ enriched manifest  ->  imports.tf
- │                           new address  <-  provider-native id
- │
- ├── carry-vars.sh        variables + secrets, source project -> target project, per env
- │                           pipes values; never prints them; asserts key-set equality
- │
- └── gate.sh              ⑥ plan-only custom release -> poll status -> grep verdict
-                             clean iff: 0 to change, 0 to destroy, nothing must be replaced
-                             benign: scratch_string.release_metadata, additive outputs
+The pipeline is executed by hand through `praxis` and `raptor`, per
+[`docs/sop-legacy-module-migration.md`](../../sop-legacy-module-migration.md). There is
+no `bin/`. The rationale: the judgment-heavy stages (③ mapping, ⑥ gate triage) dominate,
+and the mechanical stages are small enough to run by hand.
 
- mapping.yaml             ③ the accreting table. The only human-authored artifact.
-```
+The cost of that choice is that three failure modes become **silent** rather than
+impossible:
 
-`scan-legacy.py`, `join-state.py`, `rewrap-module.py`, `emit-docs.py` and
-`emit-imports.py` are pure functions of their inputs: same blueprint + same state ⇒ same
-output, byte for byte. They are re-runnable at any point. `gate.sh` and `carry-vars.sh`
-touch the control plane; `gate.sh` mutates nothing.
+| failure | how it hides | SOP guardrail |
+|---|---|---|
+| `advanced.<flavor>` not renamed with `flavor` | block resolves to `{}` — no error, maybe no plan diff | **G2** — grep asserts no pre-rename key survives |
+| `../` source closure vendored incompletely | module uploads, then fails at generate time | **G3** — `--block-remote-modules` on dry-run |
+| `main.tf` edited during rewrap | 0-diff-by-construction quietly becomes 0-diff-by-luck | **G1** — `diff` against the legacy source |
+
+`mapping.yaml` remains a checked-in, code-reviewed artifact — it is the accreting state
+that outlives any single migration, and the only file requiring judgment.
 
 ### ④ REWRAP — producing the old-posture module
 
@@ -357,24 +335,24 @@ Only after `facetsdemo` completes all seven does a second environment begin. Env
 are independent state; the blueprint is shared, so a blueprint change made for env N must
 be re-gated against every already-imported environment.
 
-## Testing
+## Verification
 
-TDD, per repo convention.
+With no scripts there are no unit tests. Verification is per-module and per-environment,
+run from the SOP, and gated:
 
-- **①** golden blueprint + module-tree fixtures → asserted `legacy-manifest.json`. Must
-  include an `is_old: true` case (address moves), an `is_old: false` case (address
-  stable), a `configuration`-kind system module, and a genuinely-registry resource that
-  must be excluded.
-- **②** a state/blueprint pair that agrees (passes) and three that disagree — resource in
-  state with no doc, doc with no state, spec value contradicting the live attribute. Each
-  must fail, naming the disagreement.
-- **④** rewrap `helm_simple`; assert `main.tf` byte-identical to source, the three
-  templates present, and the generated `facets.yaml` round-trips to the same
-  `(intent, flavor, version, clouds)` as `module.json`.
-- **⑤** a doc carrying `advanced.k8s` → assert output carries `advanced.k8s_legacy` and
-  no `advanced.k8s`. A doc with no `advanced` block → assert no key is invented.
-- **variables/secrets** → assert count parity and key-set equality without reading values.
-- **⑥** integration, against `facetsdemo`, plan-only.
+- **Per module (§6 of the SOP):** G1 `diff` proves `main.tf` byte-identical to the legacy
+  source. G3 `raptor create iac-module --dry-run --block-remote-modules` proves the `../`
+  closure is fully vendored. `facets.yaml` must round-trip to the same
+  `(intent, version, clouds)` as `module.json`, with only `flavor` suffixed.
+- **Per resource doc:** G2 greps that no `advanced.<pre-rename-flavor>` key survives, and
+  that no `advanced` key was invented where the source doc had none.
+- **Per environment:** key-set parity on variables and secrets, asserted on names and
+  counts — never on values.
+- **The gate (⑥) is the real test.** It runs against `facetsdemo`, plan-only, and it is
+  the only thing that can prove 0-diff. Everything above exists to make the gate's verdict
+  meaningful rather than lucky.
+
+Prove one resource type end to end before bulk-enabling the rest.
 
 ## Out of scope
 
