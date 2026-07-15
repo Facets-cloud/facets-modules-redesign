@@ -1,0 +1,77 @@
+# ╔═══════════════════════════════════════════════════════════╗
+# ║ MANAGED BY: raptor module — DO NOT EDIT DIRECTLY         ║
+# ║                                                          ║
+# ║ Modify via:                                              ║
+# ║   raptor module set-spec --add <field>                   ║
+# ║   raptor module add-input / remove-input                 ║
+# ║   raptor module add-output / remove-output               ║
+# ║   raptor module show | raptor module validate            ║
+# ╚═══════════════════════════════════════════════════════════╝
+intent: clickhouse_operator
+flavor: k8s
+version: "1.0"
+description: Altinity ClickHouse Operator — installs the ClickHouseInstallation/ClickHouseKeeperInstallation CRDs and the operator
+clouds:
+    - kubernetes
+    - gcp
+inputs:
+    kubernetes_details:
+        type: '@facets/kubernetes-details'
+        providers:
+            - helm
+            - kubernetes
+    node_pool:
+        type: '@facets/kubernetes_nodepool'
+        optional: true
+outputs:
+    default:
+        type: '@facets/clickhouse-operator'
+spec:
+    properties:
+        namespace:
+            default: clickhouse
+            description: Kubernetes namespace to install the operator into
+            maxLength: 63
+            minLength: 1
+            pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+            title: Namespace
+            type: string
+        operator_version:
+            default: 0.24.0
+            description: Version of the altinity-clickhouse-operator Helm chart
+            maxLength: 20
+            minLength: 1
+            title: Operator Version
+            type: string
+        resources:
+            properties:
+                cpu:
+                    default: 100m
+                    description: CPU request and limit for the operator pod (e.g. 100m)
+                    maxLength: 16
+                    minLength: 1
+                    title: CPU Request/Limit
+                    type: string
+                memory:
+                    default: 256Mi
+                    description: Memory request and limit for the operator pod (e.g. 256Mi)
+                    maxLength: 16
+                    minLength: 1
+                    title: Memory Request/Limit
+                    type: string
+            title: Resources
+            type: object
+    type: object
+    x-ui-order:
+        - operator_version
+        - namespace
+        - resources
+sample:
+    flavor: k8s
+    kind: clickhouse_operator
+    spec:
+        namespace: clickhouse
+        operator_version: 0.24.0
+        resources:
+            cpu: 100m
+    version: "1.0"
