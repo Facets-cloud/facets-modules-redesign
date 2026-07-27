@@ -1,0 +1,70 @@
+intent: postgres_database
+flavor: k8s
+version: '1.0'
+description: Create PostgreSQL databases on an existing Aurora or RDS Postgres cluster as a standalone resource, so the cluster's own blueprint never has to change.
+intentDetails:
+  type: Datastores
+  description: Create PostgreSQL databases on an existing Aurora or RDS Postgres cluster
+  displayName: PostgreSQL Database
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/postgres_database.svg
+clouds:
+- aws
+inputs:
+  postgres_cluster:
+    type: '@facets/postgres'
+    optional: false
+    displayName: PostgreSQL Cluster
+    description: The Aurora or RDS Postgres cluster where databases will be created
+    providers: []
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: The EKS cluster where the database creation job will run
+    providers:
+    - kubernetes
+    - kubernetes-alpha
+    - helm
+spec:
+  title: PostgreSQL Database Configuration
+  description: Configure databases to create on the PostgreSQL cluster
+  type: object
+  properties:
+    databases:
+      type: array
+      title: Databases
+      description: List of databases to create on the cluster
+      minItems: 1
+      items:
+        type: object
+        properties:
+          name:
+            type: string
+            title: Database Name
+            description: Name of the database to create
+            pattern: ^[a-z][a-z0-9_]*$
+            minLength: 1
+            maxLength: 63
+          owner_role:
+            type: string
+            title: Owner Role
+            description: The owner role that should own this database
+            pattern: ^[a-z][a-z0-9_]*$
+            minLength: 1
+            maxLength: 63
+        required:
+        - name
+        - owner_role
+  required:
+  - databases
+sample:
+  kind: postgres_database
+  flavor: k8s
+  version: '1.0'
+  disabled: false
+  spec:
+    databases:
+    - name: app_db
+      owner_role: app_role
+    - name: analytics_db
+      owner_role: analytics_role
