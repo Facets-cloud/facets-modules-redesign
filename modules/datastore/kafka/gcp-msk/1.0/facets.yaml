@@ -46,21 +46,21 @@ spec:
       - disk_size_gb
       properties:
         vcpu_count:
-          type: number
+          type: integer
           title: vCPU Count
           description: Number of virtual CPUs (minimum 3 required)
           minimum: 3
           maximum: 48
           default: 3
         memory_gb:
-          type: number
+          type: integer
           title: Memory (GB)
           description: Memory in gigabytes for the cluster
           minimum: 3
           maximum: 48
           default: 3
         disk_size_gb:
-          type: number
+          type: integer
           title: Disk Size (GB)
           description: Persistent disk size per broker in GB
           minimum: 100
@@ -81,7 +81,7 @@ spec:
           description: Create a Kafka Connect cluster alongside the Kafka cluster
           default: false
         vcpu_count:
-          type: number
+          type: integer
           title: vCPU Count
           description: Number of virtual CPUs for Connect cluster - Default is 12
           minimum: 3
@@ -92,7 +92,7 @@ spec:
             values:
             - true
         memory_gb:
-          type: number
+          type: integer
           title: Memory (GB)
           description: Memory in gigabytes for Connect cluster - Default is 20
           minimum: 3

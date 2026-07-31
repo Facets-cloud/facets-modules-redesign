@@ -294,7 +294,7 @@ spec:
             type: string
           default: []
         max_age:
-          type: number
+          type: integer
           title: Max Age (seconds)
           description: How long preflight response can be cached
 
@@ -374,7 +374,7 @@ spec:
           x-ui-visible-if:
             field: spec.stage_access_log_settings.create_log_group
         log_group_retention_in_days:
-          type: number
+          type: integer
           title: Log Retention (days)
           description: Number of days to retain access logs in CloudWatch
           default: 7
@@ -439,7 +439,7 @@ spec:
             - ERROR
             - INFO
         throttling_burst_limit:
-          type: number
+          type: integer
           title: Throttling Burst Limit
           description: Throttling burst limit for all routes
           default: 100
@@ -499,7 +499,7 @@ spec:
                 - '1.0'
                 - '2.0'
             authorizer_result_ttl_in_seconds:
-              type: number
+              type: integer
               title: Result TTL (seconds)
               description: TTL for caching authorizer results (0 disables caching)
               minimum: 0
@@ -627,7 +627,7 @@ spec:
                 - ERROR
                 - INFO
             throttling_burst_limit:
-              type: number
+              type: integer
               title: Throttling Burst Limit
               description: Per-route throttling burst limit
             throttling_rate_limit:
@@ -702,7 +702,7 @@ spec:
                     - '1.0'
                     - '2.0'
                 timeout_milliseconds:
-                  type: number
+                  type: integer
                   title: Timeout (ms)
                   description: Custom timeout for this integration in milliseconds (50-30000)
                 credentials_arn:

@@ -55,7 +55,7 @@ spec:
       - snapshot_retention_limit
       properties:
         num_cache_nodes:
-          type: number
+          type: integer
           title: Number of Cache Nodes
           description: Number of cache nodes in the cluster (use 2+ for high availability
             with automatic failover)
@@ -68,7 +68,7 @@ spec:
           description: Name of the parameter group to associate with this cache cluster
           default: default.redis7
         snapshot_retention_limit:
-          type: number
+          type: integer
           title: Snapshot Retention (Days)
           description: Number of days for which ElastiCache will retain automatic
             cache cluster snapshots
