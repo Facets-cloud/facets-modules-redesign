@@ -1,0 +1,17 @@
+name: '@facets/sns'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        resource_name:    
+          type: string
+          description: Name of the resource
+        resource_namespace:
+          type: string
+          description: Resource namespace
+    interfaces:
+      type: object
+      properties: {}
+providers: []
