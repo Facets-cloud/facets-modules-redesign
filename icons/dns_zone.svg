@@ -1,20 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 128 128">
-  <defs>
-    <linearGradient id="dns-zone-gradient" x2="0" y1="7.03" y2="120.79" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#4387fd"/>
-      <stop offset="1" stop-color="#4683ea"/>
-    </linearGradient>
-    <clipPath id="dns-zone-clip">
-      <use xlink:href="#dns-zone-hex"/>
-    </clipPath>
-    <path id="dns-zone-hex" d="M27.791 115.22 1.541 69.75a11.5 11.5 0 0 1 0-11.499l26.25-45.47a11.5 11.5 0 0 1 9.959-5.75h52.5c4.108 0 7.904 2.192 9.959 5.75l26.25 45.47a11.5 11.5 0 0 1 0 11.499l-26.25 45.47a11.5 11.5 0 0 1-9.959 5.749h-52.5a11.5 11.5 0 0 1-9.958-5.749"/>
-  </defs>
-  <path fill="url(#dns-zone-gradient)" d="M27.791 115.22 1.541 69.75a11.5 11.5 0 0 1 0-11.499l26.25-45.47a11.5 11.5 0 0 1 9.959-5.75h52.5c4.108 0 7.904 2.192 9.959 5.75l26.25 45.47a11.5 11.5 0 0 1 0 11.499l-26.25 45.47a11.5 11.5 0 0 1-9.959 5.749h-52.5a11.5 11.5 0 0 1-9.958-5.749"/>
-  <path d="M124.05 82.86 89.63 48.44 64 37 39.5 50.31l-1.027 29.34 42.547 42.54 16.65-.15z" clip-path="url(#dns-zone-clip)" opacity=".07"/>
-  <g fill="none" stroke="#fff" stroke-width="5.4" stroke-linecap="round">
-    <circle cx="64" cy="64" r="27"/>
-    <path d="M37 64h54"/>
-    <path d="M43.4 48.2h41.2M43.4 79.8h41.2"/>
-    <ellipse cx="64" cy="64" rx="12" ry="27"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#4A5568" stroke-width="1.8" stroke-linecap="round">
+  <circle cx="12" cy="12" r="9"/>
+  <path d="M3 12h18"/>
+  <path d="M5.05 6.75h13.9M5.05 17.25h13.9"/>
+  <ellipse cx="12" cy="12" rx="4.05" ry="9"/>
 </svg>
