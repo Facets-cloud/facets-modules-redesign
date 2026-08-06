@@ -40,6 +40,8 @@
   --color-vultr-muted: rgba(0, 123, 252, 0.12);
   --color-linode: #00A95C;
   --color-linode-muted: rgba(0, 169, 92, 0.12);
+  --color-empty: #645DF6;
+  --color-empty-muted: rgba(100, 93, 246, 0.12);
 
   --color-success: #34D399;
   --color-success-muted: rgba(52, 211, 153, 0.15);
@@ -263,6 +265,7 @@ body {
 .cloud-card[data-cloud="azure"]::before { background: rgba(0,120,212,0.08); }
 .cloud-card[data-cloud="vultr"]::before { background: rgba(0,123,252,0.08); }
 .cloud-card[data-cloud="linode"]::before { background: rgba(0,169,92,0.08); }
+.cloud-card[data-cloud="empty"]::before { background: rgba(100,93,246,0.08); }
 
 .cloud-card:hover {
   border-color: var(--border-hover);
@@ -308,6 +311,12 @@ body {
   border-color: var(--color-linode);
   box-shadow: 0 0 40px rgba(0, 169, 92, 0.12);
   border-left: 3px solid var(--color-linode);
+}
+
+.cloud-card[data-cloud="empty"].selected {
+  border-color: var(--color-empty);
+  box-shadow: 0 0 40px rgba(100, 93, 246, 0.12);
+  border-left: 3px solid var(--color-empty);
 }
 
 .cloud-card:focus-visible {
@@ -358,6 +367,7 @@ body {
 .cloud-card[data-cloud="azure"] .stat-number { color: var(--color-azure); }
 .cloud-card[data-cloud="vultr"] .stat-number { color: var(--color-vultr); }
 .cloud-card[data-cloud="linode"] .stat-number { color: var(--color-linode); }
+.cloud-card[data-cloud="empty"] .stat-number { color: var(--color-empty); }
 
 .card-stat .stat-label {
   font-size: 11px;
@@ -983,7 +993,7 @@ body {
   <div class="tab-panel active" id="panel-project-types" role="tabpanel" aria-labelledby="tab-project-types">
 
     <!-- Cloud Cards -->
-    <div class="cloud-grid" role="radiogroup" aria-label="Select a cloud provider">
+    <div class="cloud-grid" role="radiogroup" aria-label="Select a project type">
       <!-- AWS -->
       <div class="cloud-card" data-cloud="aws" role="radio" aria-checked="false" tabindex="0" aria-label="AWS - 41 modules" onclick="selectCloud('aws')" onkeydown="handleCardKey(event, 'aws')">
         <div class="card-top">
@@ -1057,6 +1067,21 @@ body {
         </div>
         <div class="card-name">Linode (Akamai)<span class="preview-badge">Preview</span></div>
         <div class="card-highlights">LKE clusters, Linode VPC, object storage, managed PostgreSQL, and more</div>
+      </div>
+
+      <!-- Empty: blank slate, no cloud committed to -->
+      <div class="cloud-card" data-cloud="empty" role="radio" aria-checked="false" tabindex="0" aria-label="Empty blank slate - 3 modules" onclick="selectCloud('empty')" onkeydown="handleCardKey(event, 'empty')">
+        <div class="card-top">
+          <div class="card-icon">
+            <img src="icons/empty-icon.svg" width="40" height="40" alt="" loading="lazy">
+          </div>
+          <div class="card-stat">
+            <div class="stat-number">3</div>
+            <div class="stat-label">MODULES</div>
+          </div>
+        </div>
+        <div class="card-name">Empty</div>
+        <div class="card-highlights">Cloud account providers only &mdash; start bare and add modules as you go</div>
       </div>
     </div>
 
@@ -1397,6 +1422,21 @@ const CLOUD_DATA = {
       ],
       "Operators & Monitoring": [
         "KubeBlocks", "ECK", "Alert Rules", "Prometheus", "Grafana", "Monitoring"
+      ]
+    }
+  },
+  // Blank slate: cloud account providers for all three major clouds and
+  // nothing else. No base template, so projects start with an empty blueprint.
+  empty: {
+    name: "Empty",
+    moduleCount: 3,
+    praxisPrompt: "Import the official Facets empty project type for me.\n\nraptor import project-type --managed facets/empty",
+    raptorImport: "raptor import project-type --managed facets/empty",
+    raptorImportNamed: 'raptor import project-type --managed facets/empty \\\n  --name "My Platform"',
+    categories: {
+      "Infrastructure": [
+        "Cloud Account (aws_provider)", "Cloud Account (azure_provider)",
+        "Cloud Account (gcp_provider)"
       ]
     }
   }
