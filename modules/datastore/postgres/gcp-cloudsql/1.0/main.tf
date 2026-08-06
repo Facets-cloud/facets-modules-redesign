@@ -4,9 +4,10 @@
 
 # Random password for PostgreSQL user (when not restoring from backup or importing)
 resource "random_password" "postgres_password" {
-  count   = var.instance.spec.restore_config.restore_from_backup ? 0 : 1
-  length  = 16
-  special = true
+  count            = var.instance.spec.restore_config.restore_from_backup ? 0 : 1
+  length           = 16
+  special          = true
+  override_special = "!#$&*-=?^_`{|}~" # Safe special characters, excludes ;+% rejected by AWS DMS
 
   lifecycle {
     ignore_changes = [
