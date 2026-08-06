@@ -1,0 +1,29 @@
+name: '@facets/snapscheduler'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        namespace:
+          description: Kubernetes namespace where SnapScheduler operator is deployed
+          type: string
+        release_name:
+          description: Helm release name
+          type: string
+        chart:
+          description: Helm chart path or name
+          type: string
+        version:
+          description: Helm chart version
+          type: string
+        status:
+          description: Helm release status
+          type: string
+        operator_name:
+          description: Name of the SnapScheduler operator
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []
