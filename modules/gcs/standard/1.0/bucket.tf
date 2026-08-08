@@ -36,7 +36,7 @@ resource "google_storage_bucket" "bucket" {
   name          = local.bucket_name
   location      = local.location
   storage_class = var.instance.spec.storage_class
-  project       = var.inputs.cloud_account.attributes.project
+  project       = var.inputs.cloud_account.attributes.project_id
 
   uniform_bucket_level_access = var.instance.spec.uniform_bucket_level_access
   requester_pays              = var.instance.spec.requester_pays
