@@ -1,0 +1,44 @@
+name: starter-project
+description: Starter AWS project type with essential infrastructure for getting started.
+
+# Git repository details
+gitUrl: https://github.com/Facets-cloud/facets-modules-redesign.git
+gitRef: main
+baseTemplatePath: project-type/starter-project/base
+
+iacTool: TERRAFORM
+iacToolVersion: "1.5.7"
+
+# IaC modules to include
+modules:
+  # === AWS-Specific Modules ===
+  - intent: cloud_account
+    flavor: aws_provider
+  - intent: kubernetes_cluster
+    flavor: eks_standard
+  - intent: kubernetes_node_pool
+    flavor: karpenter
+  - intent: karpenter
+    flavor: default
+  - intent: aws_alb_controller
+    flavor: standard
+  - intent: network
+    flavor: aws_network
+  - intent: service
+    flavor: aws
+
+  # === AWS Datastore Module ===
+  - intent: postgres
+    flavor: aws-rds
+
+  # === Common Modules ===
+  - intent: artifactories
+    flavor: standard
+  - intent: cert_manager
+    flavor: standard
+  - intent: gateway_api_crd
+    flavor: default
+  - intent: ingress
+    flavor: nginx_gateway_fabric
+  - intent: k8s_callback
+    flavor: k8s_standard

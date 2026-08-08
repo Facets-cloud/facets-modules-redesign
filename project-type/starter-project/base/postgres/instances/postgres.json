@@ -1,0 +1,34 @@
+{
+  "kind": "postgres",
+  "flavor": "aws-rds",
+  "version": "1.0",
+  "disabled": true,
+  "spec": {
+    "version_config": {
+      "engine_version": "17.8",
+      "database_name": "postgres"
+    },
+    "sizing": {
+      "instance_class": "db.t3.small",
+      "allocated_storage": 100,
+      "read_replica_count": 0
+    },
+    "security_config": {
+      "deletion_protection": false
+    },
+    "restore_config": {
+      "restore_from_backup": false
+    }
+  },
+  "inputs": {
+    "aws_provider": {
+      "resource_name": "cloud",
+      "resource_type": "cloud_account"
+    },
+    "vpc_details": {
+      "resource_name": "network",
+      "resource_type": "network"
+    }
+  },
+  "uiProps": {}
+}
