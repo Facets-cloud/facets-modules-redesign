@@ -142,7 +142,7 @@ spec:
           description: Age in days after which objects will be transitioned/deleted
           minimum: 0
           title: Age in Days
-          type: number
+          type: integer
         storage_class:
           default: NEARLINE
           description: The target storage class if action is SetStorageClass

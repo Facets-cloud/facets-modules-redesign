@@ -98,7 +98,7 @@ spec:
           description: Wait for the deployment to complete
           default: true
         timeout:
-          type: number
+          type: integer
           title: Timeout (seconds)
           description: Time to wait for deployment completion
           default: 300
