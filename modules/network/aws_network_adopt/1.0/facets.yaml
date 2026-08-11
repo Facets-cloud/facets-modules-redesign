@@ -1,0 +1,70 @@
+intent: network
+flavor: aws_network_adopt
+version: '1.0'
+description: Adopts an EXISTING AWS VPC + subnets READ-ONLY (data sources only, creates
+  nothing) so a live/legacy network is managed at zero-change. Supply the live VPC id
+  and the exact subnet ids (public/private/database) from live. Emits the same
+  @facets/aws-vpc-details contract as aws_network so consumers (EKS, etc.) are unchanged.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Read-only adoption of an existing AWS VPC for zero-change import
+  displayName: Network (Adopt Existing)
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/network.svg
+clouds:
+- aws
+spec:
+  type: object
+  properties:
+    existing_vpc_id:
+      type: string
+      title: Existing VPC ID
+      description: The id of the live VPC to adopt (e.g. vpc-0014f7b4f85d1b400)
+      x-ui-overrides-only: true
+    private_subnet_ids:
+      type: array
+      title: Private Subnet IDs
+      description: Exact private subnet ids from the live VPC
+      items:
+        type: string
+      x-ui-overrides-only: true
+    public_subnet_ids:
+      type: array
+      title: Public Subnet IDs
+      description: Exact public subnet ids from the live VPC
+      items:
+        type: string
+      x-ui-overrides-only: true
+    database_subnet_ids:
+      type: array
+      title: Database Subnet IDs
+      description: Exact database subnet ids from the live VPC (optional)
+      items:
+        type: string
+      x-ui-overrides-only: true
+  required:
+  - existing_vpc_id
+  - private_subnet_ids
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: Cloud Account
+    description: The AWS Cloud Account the VPC lives in
+    optional: false
+    providers:
+    - aws
+outputs:
+  default:
+    type: '@facets/aws-vpc-details'
+sample:
+  kind: network
+  flavor: aws_network_adopt
+  version: '1.0'
+  spec:
+    existing_vpc_id: vpc-0000000000000000
+    private_subnet_ids:
+    - subnet-000000000000000a
+    public_subnet_ids:
+    - subnet-000000000000000b
+iac:
+  validated_files:
+  - variables.tf
