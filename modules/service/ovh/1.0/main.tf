@@ -39,7 +39,7 @@ locals {
   })
 
   # Check if VPA is available and configure accordingly
-  vpa_available = try(var.inputs.vpa_details != null, false)
+  vpa_available = try(coalesce(var.inputs.vpa_details.attributes.helm_release_id, ""), "") != ""
 
   # Configure pod distribution directly from spec
   enable_host_anti_affinity = lookup(local.spec, "enable_host_anti_affinity", false)
