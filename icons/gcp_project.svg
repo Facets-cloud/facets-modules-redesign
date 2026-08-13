@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="gcp-project-gradient" x2="0" y1="7.03" y2="120.79" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4387fd"/>
+      <stop offset="1" stop-color="#4683ea"/>
+    </linearGradient>
+    <clipPath id="gcp-project-clip">
+      <use xlink:href="#gcp-project-hex"/>
+    </clipPath>
+    <path id="gcp-project-hex" d="M27.791 115.22 1.541 69.75a11.5 11.5 0 0 1 0-11.499l26.25-45.47a11.5 11.5 0 0 1 9.959-5.75h52.5c4.108 0 7.904 2.192 9.959 5.75l26.25 45.47a11.5 11.5 0 0 1 0 11.499l-26.25 45.47a11.5 11.5 0 0 1-9.959 5.749h-52.5a11.5 11.5 0 0 1-9.958-5.749"/>
+  </defs>
+  <path fill="url(#gcp-project-gradient)" d="M27.791 115.22 1.541 69.75a11.5 11.5 0 0 1 0-11.499l26.25-45.47a11.5 11.5 0 0 1 9.959-5.75h52.5c4.108 0 7.904 2.192 9.959 5.75l26.25 45.47a11.5 11.5 0 0 1 0 11.499l-26.25 45.47a11.5 11.5 0 0 1-9.959 5.749h-52.5a11.5 11.5 0 0 1-9.958-5.749"/>
+  <path d="M124.05 82.86 89.63 48.44 64 37 39.5 50.31l-1.027 29.34 42.547 42.54 16.65-.15z" clip-path="url(#gcp-project-clip)" opacity=".07"/>
+  <path fill="#fff" fill-rule="evenodd" d="M39 38h50a5 5 0 0 1 5 5v42a5 5 0 0 1-5 5H39a5 5 0 0 1-5-5V43a5 5 0 0 1 5-5zm1 7a1 1 0 0 0-1 1v36a1 1 0 0 0 1 1h48a1 1 0 0 0 1-1V46a1 1 0 0 0-1-1z"/>
+  <rect fill="#fff" x="45" y="52" width="15" height="10" rx="2"/>
+  <rect fill="#fff" x="45" y="66" width="15" height="10" rx="2"/>
+  <rect fill="#fff" x="65" y="52" width="18" height="24" rx="2"/>
+</svg>

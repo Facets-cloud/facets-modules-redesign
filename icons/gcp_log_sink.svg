@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="gcp-log-sink-gradient" x2="0" y1="7.03" y2="120.79" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4387fd"/>
+      <stop offset="1" stop-color="#4683ea"/>
+    </linearGradient>
+    <clipPath id="gcp-log-sink-clip">
+      <use xlink:href="#gcp-log-sink-hex"/>
+    </clipPath>
+    <path id="gcp-log-sink-hex" d="M27.791 115.22 1.541 69.75a11.5 11.5 0 0 1 0-11.499l26.25-45.47a11.5 11.5 0 0 1 9.959-5.75h52.5c4.108 0 7.904 2.192 9.959 5.75l26.25 45.47a11.5 11.5 0 0 1 0 11.499l-26.25 45.47a11.5 11.5 0 0 1-9.959 5.749h-52.5a11.5 11.5 0 0 1-9.958-5.749"/>
+  </defs>
+  <path fill="url(#gcp-log-sink-gradient)" d="M27.791 115.22 1.541 69.75a11.5 11.5 0 0 1 0-11.499l26.25-45.47a11.5 11.5 0 0 1 9.959-5.75h52.5c4.108 0 7.904 2.192 9.959 5.75l26.25 45.47a11.5 11.5 0 0 1 0 11.499l-26.25 45.47a11.5 11.5 0 0 1-9.959 5.749h-52.5a11.5 11.5 0 0 1-9.958-5.749"/>
+  <path d="M124.05 82.86 89.63 48.44 64 37 39.5 50.31l-1.027 29.34 42.547 42.54 16.65-.15z" clip-path="url(#gcp-log-sink-clip)" opacity=".07"/>
+  <rect fill="#fff" x="40" y="36" width="48" height="6" rx="3"/>
+  <rect fill="#fff" x="46" y="48" width="36" height="6" rx="3"/>
+  <rect fill="#fff" x="52" y="60" width="24" height="6" rx="3"/>
+  <path fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M64 72v10m-8-6 8 8 8-8"/>
+  <path fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" d="M42 92h44"/>
+</svg>
