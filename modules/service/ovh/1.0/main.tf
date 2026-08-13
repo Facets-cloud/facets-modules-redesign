@@ -17,7 +17,7 @@ locals {
   resource_type = "service"
   resource_name = var.instance_name
 
-  image_pull_secrets = try(var.inputs.artifactories.attributes.registry_secrets_list, [])
+  image_pull_secrets = try(coalesce(var.inputs.artifactories.attributes.registry_secrets_list, []), [])
 
   # Transform taints from object format to string format for utility module compatibility
   kubernetes_node_pool_details = lookup(var.inputs, "kubernetes_node_pool_details", {})
@@ -119,5 +119,5 @@ module "app-helm-chart" {
   labels         = local.labels
   environment    = var.environment
   inputs         = local.modified_inputs
-  vpa_release_id = try(var.inputs.vpa_details.attributes.helm_release_id, "")
+  vpa_release_id = try(coalesce(var.inputs.vpa_details.attributes.helm_release_id, ""), "")
 }
