@@ -17,7 +17,7 @@ locals {
   resource_type = "service"
   resource_name = var.instance_name
 
-  image_pull_secrets = try(var.inputs.artifactories.attributes.registry_secrets_list, [])
+  image_pull_secrets = try(coalesce(var.inputs.artifactories.attributes.registry_secrets_list, []), [])
 
   # Transform taints from object format to string format for utility module compatibility
   kubernetes_node_pool_details = lookup(var.inputs, "kubernetes_node_pool_details", {})
@@ -39,7 +39,7 @@ locals {
   })
 
   # Check if VPA is available and configure accordingly
-  vpa_available = try(var.inputs.vpa_details != null, false)
+  vpa_available = try(coalesce(var.inputs.vpa_details.attributes.helm_release_id, ""), "") != ""
 
   # Configure pod distribution directly from spec
   enable_host_anti_affinity = lookup(local.spec, "enable_host_anti_affinity", false)
@@ -119,5 +119,5 @@ module "app-helm-chart" {
   labels         = local.labels
   environment    = var.environment
   inputs         = local.modified_inputs
-  vpa_release_id = try(var.inputs.vpa_details.attributes.helm_release_id, "")
+  vpa_release_id = try(coalesce(var.inputs.vpa_details.attributes.helm_release_id, ""), "")
 }
