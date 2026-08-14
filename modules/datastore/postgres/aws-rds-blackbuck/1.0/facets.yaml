@@ -1,0 +1,385 @@
+intent: postgres
+flavor: aws-rds-blackbuck
+version: '1.0'
+clouds:
+- aws
+description: 'MIGRATION-ONLY flavor. Reproduces an existing AWS RDS PostgreSQL estate
+  faithfully, exposing configuration the standard aws-rds flavor deliberately hides
+  (KMS key, parameter group, backup retention, security-group ingress, subnet tier,
+  storage type). It intentionally departs from datastore_module_standards.md, which
+  forbids these ops-centric fields. Use aws-rds for greenfield databases; use this
+  only to onboard a pre-existing estate.'
+intentDetails:
+  type: Datastores
+  description: AWS RDS PostgreSQL managed database service
+  displayName: PostgreSQL
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/postgres.svg
+spec:
+  title: PostgreSQL RDS Database
+  description: Managed PostgreSQL database using Amazon RDS with secure defaults and
+    backup support
+  type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - security_config
+  - parameter_group
+  - backup_config
+  - network_config
+  - restore_config
+  - imports
+  properties:
+    version_config:
+      type: object
+      title: Version & Basic Configuration
+      x-ui-order:
+      - engine_version
+      - database_name
+      - master_username
+      properties:
+        master_username:
+          type: string
+          title: Master Username
+          description: Master username for the database. Leave blank to use the default,
+            'pgadmin'. Cannot be a PostgreSQL reserved word.
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+          minLength: 1
+          maxLength: 63
+          default: pgadmin
+        engine_version:
+          type: string
+          title: PostgreSQL Version
+          description: Version of the PostgreSQL database engine
+          enum:
+          - '14.21'
+          - '15.16'
+          - '16.12'
+          - '16.13'
+          - '17.8'
+          - '18.1'
+          - '18.3'
+          default: '18.1'
+        database_name:
+          type: string
+          title: Database Name
+          description: Name of the initial database to create
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+          minLength: 1
+          maxLength: 63
+          default: postgres
+      required:
+      - engine_version
+      - database_name
+    sizing:
+      type: object
+      title: Sizing & Performance
+      x-ui-order:
+      - instance_class
+      - allocated_storage
+      - storage_type
+      - max_allocated_storage
+      - read_replica_count
+      - multi_az
+      properties:
+        instance_class:
+          type: string
+          title: Instance Class
+          description: Database instance class
+          enum:
+          - db.t3.micro
+          - db.t3.small
+          - db.t3.medium
+          - db.t4g.micro
+          - db.t4g.small
+          - db.t4g.medium
+          - db.t4g.large
+          - db.m5.large
+          - db.m5.xlarge
+          default: db.t3.small
+        allocated_storage:
+          type: number
+          title: Allocated Storage (GB)
+          description: Initial storage allocation in GB
+          minimum: 20
+          maximum: 65536
+          default: 100
+        storage_type:
+          type: string
+          title: Storage Type
+          description: EBS volume type backing the database.
+          enum:
+          - gp2
+          - gp3
+          - io1
+          - io2
+          default: gp3
+        max_allocated_storage:
+          type: number
+          title: Max Storage (GB)
+          description: Storage-autoscaling ceiling. 0 disables autoscaling.
+          minimum: 0
+          maximum: 65536
+          default: 0
+        read_replica_count:
+          type: number
+          title: Read Replica Count
+          description: Number of read replicas to create
+          minimum: 0
+          maximum: 5
+          default: 0
+        multi_az:
+          type: boolean
+          title: Multi-AZ
+          description: Deploy a standby in a second availability zone. Roughly doubles
+            instance and storage cost. Disable to match a single-AZ source instance.
+          default: true
+      required:
+      - instance_class
+      - allocated_storage
+      - read_replica_count
+    security_config:
+      type: object
+      title: Security & Protection
+      x-ui-order:
+      - kms_key_arn
+      - deletion_protection
+      - allowed_cidrs
+      properties:
+        kms_key_arn:
+          type: string
+          title: KMS Key ARN
+          description: Customer-managed KMS key for storage encryption. Leave blank
+            and the module creates a dedicated key for this database. Supply a shared
+            key ARN to mirror a single-key estate. Encryption is always on either way.
+          pattern: ^arn:aws:kms:[a-z0-9-]+:[0-9]{12}:key/[a-zA-Z0-9-]+$
+          x-ui-placeholder: arn:aws:kms:ap-south-1:123456789012:key/mrk-abc123
+        allowed_cidrs:
+          type: array
+          title: Additional Ingress CIDRs
+          description: Extra CIDRs permitted on the database port, on top of the VPC
+            CIDR which is always allowed. Open CIDRs are rejected.
+          items:
+            type: string
+          default: []
+        deletion_protection:
+          type: boolean
+          title: Enable Deletion Protection
+          description: Protect database from accidental deletion (recommended for
+            production)
+          default: true
+      required:
+      - deletion_protection
+    parameter_group:
+      type: object
+      title: Parameter Group
+      x-ui-order:
+      - parameters
+      properties:
+        parameters:
+          type: object
+          title: Parameters
+          description: Engine parameters. Supply any and the module creates a dedicated
+            parameter group; leave empty to use the RDS engine default. Values are
+            strings, e.g. rds.force_ssl '0'.
+          x-ui-yaml-editor: true
+          patternProperties:
+            ^[a-zA-Z0-9_.]+$:
+              type: string
+          default: {}
+    backup_config:
+      type: object
+      title: Backup & Maintenance
+      x-ui-order:
+      - retention_days
+      - backup_window
+      - maintenance_window
+      properties:
+        retention_days:
+          type: number
+          title: Backup Retention (days)
+          description: Automated backup retention. 0 disables automated backups.
+          minimum: 0
+          maximum: 35
+          default: 7
+        backup_window:
+          type: string
+          title: Backup Window
+          description: Daily backup window in UTC, hh:mm-hh:mm.
+          pattern: ^[0-9]{2}:[0-9]{2}-[0-9]{2}:[0-9]{2}$
+          default: 03:00-04:00
+        maintenance_window:
+          type: string
+          title: Maintenance Window
+          description: Weekly maintenance window in UTC, ddd:hh:mm-ddd:hh:mm.
+          default: sun:04:00-sun:05:00
+    network_config:
+      type: object
+      title: Network Placement
+      x-ui-order:
+      - use_database_subnets
+      properties:
+        use_database_subnets:
+          type: boolean
+          title: Use Dedicated Database Subnets
+          description: Place the database in the network's isolated database subnets,
+            which carry no default route. Disable to use the private subnets shared
+            with cluster nodes.
+          default: true
+    restore_config:
+      type: object
+      title: Restore Operations
+      x-ui-overrides-only: true
+      x-ui-order:
+      - restore_from_backup
+      - source_db_instance_identifier
+      - master_username
+      - master_password
+      properties:
+        restore_from_backup:
+          type: boolean
+          title: Restore from Backup
+          description: Restore database from existing backup
+          default: false
+        source_db_instance_identifier:
+          type: string
+          title: Source DB Instance Identifier
+          description: Source database instance identifier for restore
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+        master_username:
+          type: string
+          title: Master Username
+          description: Required when restoring from backup
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+          minLength: 1
+          maxLength: 63
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+        master_password:
+          type: string
+          title: Master Password
+          description: Required when restoring from backup
+          minLength: 8
+          maxLength: 128
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,128}$
+          x-ui-error-message: "Password must be 8-128 chars with valid characters."
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_backup
+            values:
+            - true
+      required:
+      - restore_from_backup
+    imports:
+      type: object
+      title: Import Existing Resources
+      x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - db_instance_identifier
+      - subnet_group_name
+      properties:
+        import_existing:
+          type: boolean
+          title: Import Existing Resources
+          description: Enable to import existing RDS resources
+          default: false
+        db_instance_identifier:
+          type: string
+          title: RDS Instance Identifier
+          description: Identifier of existing RDS instance to import (main or replica)
+          pattern: ^[a-zA-Z][a-zA-Z0-9-]*$
+          minLength: 1
+          maxLength: 63
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
+        subnet_group_name:
+          type: string
+          title: DB Subnet Group Name
+          description: Name of existing DB subnet group (required when importing)
+          pattern: ^[a-zA-Z][a-zA-Z0-9-]*$
+          minLength: 1
+          maxLength: 255
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
+        security_group_id:
+          type: string
+          title: Security Group ID
+          description: ID of existing security group (required when importing)
+          pattern: ^sg-[0-9a-fA-F]{8,17}$
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
+        master_password:
+          type: string
+          title: Master Password
+          description: Master password for the imported cluster (8+ characters)
+          minLength: 8
+          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,}$
+          x-ui-error-message: "Password must be 8+ chars with valid characters."
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+              - true
+  required:
+  - version_config
+  - sizing
+  - security_config
+imports:
+- name: db_instance_identifier
+  resource_address: aws_db_instance.postgres
+  required: false
+- name: subnet_group_name
+  resource_address: aws_db_subnet_group.postgres
+  required: false
+- name: security_group_id
+  resource_address: aws_security_group.postgres
+  required: false
+- name: master_password
+  resource_address: random_password.master_password[0]
+  required: true
+inputs:
+  aws_provider:
+    type: '@facets/aws_cloud_account'
+    optional: false
+    displayName: AWS Cloud Account
+    description: AWS cloud account configuration and provider
+    providers:
+    - aws
+  vpc_details:
+    type: '@facets/aws-vpc-details'
+    optional: false
+    displayName: VPC Infrastructure
+    description: AWS VPC infrastructure for database deployment
+outputs:
+  default:
+    type: '@facets/postgres'
+    title: PostgreSQL RDS Instance
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+sample:
+  kind: postgres
+  flavor: aws-rds
+  version: '1.0'
+  disabled: true
+  spec:
+    version_config:
+      engine_version: '18.1'
+      database_name: postgres
+    sizing:
+      instance_class: db.t3.small
+      allocated_storage: 100
+      read_replica_count: 0
+    security_config:
+      deletion_protection: true
+    restore_config:
+      restore_from_backup: false
