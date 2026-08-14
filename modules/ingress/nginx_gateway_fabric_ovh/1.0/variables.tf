@@ -1,8 +1,10 @@
 variable "instance" {
   type = object({
     spec = object({
-      private             = optional(bool, false)
-      disable_base_domain = optional(bool, false)
+      private                 = optional(bool, false)
+      dns01_cluster_issuer    = optional(string)
+      cluster_issuer_override = optional(string)
+      disable_base_domain     = optional(bool, false)
       domains = optional(map(object({
         domain                = string
         alias                 = string

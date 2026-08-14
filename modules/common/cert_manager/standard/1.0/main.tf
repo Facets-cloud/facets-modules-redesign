@@ -9,7 +9,7 @@ resource "kubernetes_namespace" "namespace" {
 resource "helm_release" "cert_manager" {
   depends_on       = [kubernetes_namespace.namespace]
   name             = "cert-manager"
-  chart            = "${path.module}/cert-manager-v1.17.1.tgz"
+  chart            = "${path.module}/cert-manager-v1.20.3.tgz"
   namespace        = local.cert_mgr_namespace
   create_namespace = false
   cleanup_on_fail  = lookup(local.cert_manager, "cleanup_on_fail", true)
@@ -19,11 +19,24 @@ resource "helm_release" "cert_manager" {
   recreate_pods    = lookup(local.cert_manager, "recreate_pods", false)
 
   values = [
-    <<EOF
-prometheus_id: ${try(var.inputs.prometheus_details.attributes.helm_release_id, "")}
-EOF
-    , yamlencode({
-      installCRDs  = true
+    yamlencode({
+      # installCRDs was deprecated for crds.enabled in newer charts.
+      crds = {
+        enabled = true
+      }
+
+      # Garbage-collect the TLS secret when its Certificate is deleted (ownerReference).
+      # Prevents orphaned cert secrets surviving teardown and breaking the next release.
+      enableCertificateOwnerRef = true
+
+      # prometheus_id carried as a common label (v1.20 chart schema rejects unknown
+      # root keys; the old chart silently ignored a root prometheus_id value).
+      global = {
+        commonLabels = try(var.inputs.prometheus_details.attributes.helm_release_id, "") != "" ? {
+          prometheus_id = var.inputs.prometheus_details.attributes.helm_release_id
+        } : {}
+      }
+
       nodeSelector = local.nodeSelector
       tolerations  = local.tolerations
       replicaCount = 2
@@ -32,6 +45,11 @@ EOF
       config = {
         enableGatewayAPI = local.enable_gateway_api
       }
+
+      # The ListenerSets feature gate only makes the feature available; the
+      # --enable-gateway-api-listenerset arg actually starts the listenerset shim
+      # controller so cert-manager issues certs for ListenerSet TLS listeners.
+      extraArgs = local.enable_gateway_api ? ["--enable-gateway-api-listenerset"] : []
 
       webhook = {
         nodeSelector = local.nodeSelector
@@ -53,9 +71,10 @@ EOF
         }
       }
     }),
-    # Add featureGates for Gateway API support when enabled
+    # Gateway API + ListenerSet (gateway-shim on ListenerSet) feature gates when enabled.
+    # ListenerSets requires ExperimentalGatewayAPISupport.
     local.enable_gateway_api ? yamlencode({
-      featureGates = "ExperimentalGatewayAPISupport=true"
+      featureGates = "ExperimentalGatewayAPISupport=true,ListenerSets=true"
     }) : "",
     yamlencode(local.user_supplied_helm_values),
   ]
