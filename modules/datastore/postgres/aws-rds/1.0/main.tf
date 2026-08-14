@@ -56,7 +56,7 @@ locals {
   replica_identifier_base = local.is_importing ? substr("${local.base_cleaned}imp", 0, 47) : substr(local.db_instance_identifier, 0, 52)
 
   # Master credentials
-  master_username = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_username : "pgadmin"
+  master_username = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_username : var.instance.spec.version_config.master_username
   master_password = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_password : random_password.master_password[0].result
 
   # Database configuration
@@ -170,8 +170,8 @@ resource "aws_db_instance" "postgres" {
   maintenance_window      = local.maintenance_window
   copy_tags_to_snapshot   = true
 
-  # High availability (hardcoded for production readiness)
-  multi_az = true
+  # High availability
+  multi_az = var.instance.spec.sizing.multi_az
 
   # Monitoring (disable enhanced monitoring to avoid IAM role requirement)
   monitoring_interval          = 0
