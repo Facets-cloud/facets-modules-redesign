@@ -10,6 +10,14 @@ properties:
           items:
             type: string
           type: array
+        database_subnet_group_name:
+          description: Name of the DB subnet group spanning the database subnets
+          type: string
+        database_subnet_ids:
+          description: List of IDs of the isolated database subnets (no default route)
+          items:
+            type: string
+          type: array
         internet_gateway_id:
           description: The ID of the Internet Gateway
           type: string
