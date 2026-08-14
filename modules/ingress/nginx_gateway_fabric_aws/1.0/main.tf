@@ -1,6 +1,40 @@
+# Control-plane metadata (tenant provider + base domain) — read the same way as the
+# base module. Computed here in the wrapper so base_domain can be derived WITHOUT
+# depending on the base module's outputs (that would create a cycle: base_domain →
+# ssl-cert annotation → base module input).
+data "external" "cc_env" {
+  program = ["sh", "-c", <<-EOT
+    echo "{\"cc_tenant_provider\":\"$TF_VAR_cc_tenant_provider\",\"tenant_base_domain\":\"$TF_VAR_tenant_base_domain\"}"
+  EOT
+  ]
+}
+
+# Route53 zone for the tenant base domain (AWS only) — target zone for the base
+# domain ACM certificate's DNS validation records. Lives in the tooling account.
+data "aws_route53_zone" "base_domain_zone" {
+  count    = local.tenant_provider == "aws" ? 1 : 0
+  name     = local.tenant_base_domain
+  provider = aws3tooling
+}
+
 locals {
   # Compute name the same way as the base module (needed for ACM secret names)
   name = lower(var.environment.namespace == "default" ? var.instance_name : "${var.environment.namespace}-${var.instance_name}")
+
+  # Control-plane metadata (same derivation as the base module)
+  cc_tenant_provider    = data.external.cc_env.result.cc_tenant_provider
+  tenant_base_domain    = data.external.cc_env.result.tenant_base_domain
+  tenant_provider       = lower(local.cc_tenant_provider != "" ? local.cc_tenant_provider : "aws")
+  tenant_base_domain_id = length(data.aws_route53_zone.base_domain_zone) > 0 ? data.aws_route53_zone.base_domain_zone[0].zone_id : ""
+
+  # Base domain — MUST stay byte-for-byte in sync with the base module's
+  # computation (facets-utility-modules//nginx_gateway_fabric: instance_env_name /
+  # check_domain_prefix / base_domain). A mismatch would issue the base ACM cert
+  # for the wrong host.
+  instance_env_name   = length(var.environment.unique_name) + length(var.instance_name) + length(local.tenant_base_domain) >= 60 ? substr(md5("${var.instance_name}-${var.environment.unique_name}"), 0, 20) : "${var.instance_name}-${var.environment.unique_name}"
+  check_domain_prefix = coalesce(lookup(var.instance.spec, "domain_prefix_override", null), local.instance_env_name)
+  base_domain         = lower("${local.check_domain_prefix}.${local.tenant_base_domain}")
+  base_subdomain      = "*.${local.base_domain}"
 
   # Detect domains with ACM ARN as certificate_reference
   acm_cert_domains = {
@@ -22,10 +56,21 @@ locals {
   # TLS terminates at the NLB instead of at the Gateway pod
   acm_mode = !local.use_ack_acm && length(local.acm_cert_domains) > 0
 
-  # ACM ARNs to attach to NLB for TLS termination
-  acm_cert_arns = local.acm_mode ? distinct([
-    for domain_key, domain in local.acm_cert_domains : domain.certificate_reference
-  ]) : []
+  # Auto-issue an ACM cert for the base domain whenever TLS terminates at the NLB
+  # (acm_mode) and the base domain is active on AWS. The base domain carries no
+  # certificate_reference, so without this it would contribute no ARN to the
+  # ssl-cert annotation → base-domain HTTPS falls back to the NLB default cert and
+  # fails hostname validation. When acm_mode is false, the base domain keeps using
+  # cert-manager (unchanged), so no base ACM cert is needed.
+  base_acm_enabled = local.acm_mode && !lookup(var.instance.spec, "disable_base_domain", false) && local.tenant_provider == "aws"
+
+  # ACM ARNs to attach to NLB for TLS termination — user-supplied ARNs plus the
+  # auto-issued base-domain cert (validated ARN, so the NLB never attaches an
+  # unvalidated certificate).
+  acm_cert_arns = local.acm_mode ? distinct(concat(
+    [for domain_key, domain in local.acm_cert_domains : domain.certificate_reference],
+    local.base_acm_enabled ? [aws_acm_certificate_validation.base_acm[0].certificate_arn] : []
+  )) : []
 
   # Rewrite ACM ARN certificate_reference → K8s secret name for all ACM domains.
   # In ACM mode (no ACK), this rewrite is harmless — external_tls_termination=true
@@ -156,4 +201,58 @@ resource "kubernetes_secret_v1" "acm_cert" {
   lifecycle {
     ignore_changes = [data, metadata[0].annotations, metadata[0].labels]
   }
+}
+
+# --- Auto-issued base-domain ACM certificate ---
+# Issued when TLS terminates at the NLB (acm_mode) and the base domain is active.
+# Covers base_domain + *.base_domain; its validated ARN is appended to the NLB
+# ssl-cert annotation via local.acm_cert_arns, so the base domain always has a
+# matching certificate without relying on cert-manager.
+#
+# Provider split (cross-account): the certificate is issued in the DEFAULT aws
+# provider (workload account + region, where the NLB lives — an ACM cert attached
+# to an NLB must be in the same account/region), while its DNS validation records
+# are written to the tooling account's Route53 zone via aws3tooling.
+resource "aws_acm_certificate" "base_acm" {
+  count                     = local.base_acm_enabled ? 1 : 0
+  domain_name               = local.base_domain
+  subject_alternative_names = [local.base_subdomain]
+  validation_method         = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+    ignore_changes        = [options]
+  }
+}
+
+resource "aws_route53_record" "base_acm_validation" {
+  # Key by the domain names we requested (known at plan time). Keying off
+  # domain_validation_options fails for a brand-new cert — ACM computes the whole
+  # set at apply, so for_each can't resolve its keys. Record values are looked up
+  # per key from the computed set (may be unknown at plan — that's fine). ACM can
+  # emit the same CNAME for apex + wildcard; allow_overwrite handles the duplicate.
+  for_each = local.base_acm_enabled ? toset([local.base_domain, local.base_subdomain]) : toset([])
+
+  allow_overwrite = true
+  name = one([
+    for d in aws_acm_certificate.base_acm[0].domain_validation_options :
+    d.resource_record_name if d.domain_name == each.key
+  ])
+  records = [one([
+    for d in aws_acm_certificate.base_acm[0].domain_validation_options :
+    d.resource_record_value if d.domain_name == each.key
+  ])]
+  type = one([
+    for d in aws_acm_certificate.base_acm[0].domain_validation_options :
+    d.resource_record_type if d.domain_name == each.key
+  ])
+  ttl      = 60
+  zone_id  = local.tenant_base_domain_id
+  provider = aws3tooling
+}
+
+resource "aws_acm_certificate_validation" "base_acm" {
+  count                   = local.base_acm_enabled ? 1 : 0
+  certificate_arn         = aws_acm_certificate.base_acm[0].arn
+  validation_record_fqdns = [for r in aws_route53_record.base_acm_validation : r.fqdn]
 }
