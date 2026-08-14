@@ -10,6 +10,10 @@ variable "instance" {
       capacity_types    = optional(list(string), ["on-demand", "spot"])
       architecture      = optional(list(string), ["amd64"])
 
+      # Root volume size in GiB. Defaults to 20, the AMI default, so the volume is
+      # encrypted at no additional cost unless a larger disk is explicitly asked for.
+      disk_size_gb = optional(number, 20)
+
       # Node pool limits
       cpu_limits    = optional(string, "1000")
       memory_limits = optional(string, "1000Gi")
