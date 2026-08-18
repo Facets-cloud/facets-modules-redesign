@@ -1,0 +1,99 @@
+intent: k8ssandra-operator
+flavor: helm
+version: '1.0'
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+description: K8ssandra Operator deployed via Helm chart for managing Apache Cassandra
+  clusters on Kubernetes
+intentDetails:
+  type: Operators
+  description: K8ssandra Operator (bundles cass-operator) for managing Apache Cassandra
+    clusters on Kubernetes
+  displayName: K8ssandra Operator
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/k8ssandra-operator.svg
+inputs:
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Target Kubernetes cluster
+    providers:
+    - kubernetes
+    - helm
+  node_pool:
+    type: '@facets/kubernetes_nodepool'
+    optional: true
+    displayName: Node Pool
+    description: Node pool for operator pods
+spec:
+  title: K8ssandra Operator
+  description: Installs and manages the k8ssandra-operator (and its bundled cass-operator)
+    using Helm. The operator is installed cluster-scoped so Cassandra clusters can
+    be created in any namespace.
+  type: object
+  properties:
+    namespace:
+      type: string
+      title: Namespace
+      description: Kubernetes namespace for the operator installation
+      default: cassandra-system
+      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+      maxLength: 63
+    resources:
+      type: object
+      title: Resource Allocation
+      description: CPU and memory resources for operator pods
+      properties:
+        cpu_request:
+          type: string
+          title: CPU Request
+          description: Minimum CPU allocation
+          default: 200m
+        cpu_limit:
+          type: string
+          title: CPU Limit
+          description: Maximum CPU allocation
+          default: '1'
+        memory_request:
+          type: string
+          title: Memory Request
+          description: Minimum memory allocation
+          default: 256Mi
+        memory_limit:
+          type: string
+          title: Memory Limit
+          description: Maximum memory allocation
+          default: 1Gi
+    helm_values:
+      type: object
+      title: Helm Values
+      description: Additional Helm values to override defaults
+      x-ui-yaml-editor: true
+  required:
+  - resources
+outputs:
+  default:
+    type: '@facets/k8ssandra-operator'
+    title: K8ssandra Operator
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+  - locals.tf
+sample:
+  kind: k8ssandra-operator
+  flavor: helm
+  version: '1.0'
+  disabled: true
+  spec:
+    namespace: cassandra-system
+    resources:
+      cpu_request: 200m
+      cpu_limit: '1'
+      memory_request: 256Mi
+      memory_limit: 1Gi
+    helm_values: {}
