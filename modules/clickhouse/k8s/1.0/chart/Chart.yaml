@@ -1,0 +1,6 @@
+apiVersion: v2
+name: clickhouse-chi
+description: Renders an Altinity ClickHouseInstallation (CHI) custom resource
+type: application
+version: 1.0.0
+appVersion: "1.0"

@@ -1,0 +1,153 @@
+# ╔═══════════════════════════════════════════════════════════╗
+# ║ MANAGED BY: raptor module — DO NOT EDIT DIRECTLY         ║
+# ║                                                          ║
+# ║ Modify via:                                              ║
+# ║   raptor module set-spec --add <field>                   ║
+# ║   raptor module add-input / remove-input                 ║
+# ║   raptor module add-output / remove-output               ║
+# ║   raptor module show | raptor module validate            ║
+# ╚═══════════════════════════════════════════════════════════╝
+intent: clickhouse
+flavor: k8s
+version: "1.0"
+description: ClickHouse cluster (ClickHouseInstallation) on k8s via Altinity operator
+clouds:
+    - kubernetes
+    - gcp
+inputs:
+    clickhouse_keeper:
+        type: '@facets/clickhouse-keeper'
+    clickhouse_operator:
+        type: '@facets/clickhouse-operator'
+    kubernetes_details:
+        type: '@facets/kubernetes-details'
+        providers:
+            - helm
+            - kubernetes
+    node_pool:
+        type: '@facets/kubernetes_nodepool'
+outputs:
+    default:
+        type: '@facets/clickhouse'
+spec:
+    properties:
+        clickhouse_version:
+            default: "24.8"
+            description: ClickHouse server image tag (an LTS tag is recommended, e.g. 24.8)
+            maxLength: 30
+            minLength: 1
+            title: ClickHouse Version
+            type: string
+        cluster_domain:
+            default: cluster.local
+            description: Kubernetes cluster DNS domain. Override per-env when the cluster is not the default cluster.local (some GKE clusters use a custom domain e.g. the env name).
+            maxLength: 253
+            minLength: 1
+            title: Cluster DNS Domain
+            type: string
+        cluster_name:
+            default: default
+            description: Logical ClickHouse cluster name (used in the CHI layout)
+            maxLength: 40
+            minLength: 1
+            pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+            title: Cluster Name
+            type: string
+        namespace:
+            default: clickhouse
+            description: Kubernetes namespace to deploy the ClickHouse cluster into
+            maxLength: 63
+            minLength: 1
+            pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+            title: Namespace
+            type: string
+        replicas:
+            default: 3
+            description: Number of replicas per shard
+            maximum: 20
+            minimum: 1
+            title: Replicas
+            type: number
+        resources:
+            properties:
+                cpu:
+                    default: "1"
+                    description: CPU request and limit per ClickHouse pod (e.g. 1)
+                    maxLength: 16
+                    minLength: 1
+                    title: CPU Request/Limit
+                    type: string
+                memory:
+                    default: 2Gi
+                    description: Memory request and limit per ClickHouse pod (e.g. 2Gi)
+                    maxLength: 16
+                    minLength: 1
+                    title: Memory Request/Limit
+                    type: string
+            title: Resources
+            type: object
+        settings_json:
+            default: '{}'
+            description: JSON object of ClickHouse server settings merged into configuration.settings (e.g. {"max_concurrent_queries":"200"})
+            title: Settings (JSON)
+            type: string
+            x-ui-editor: true
+            x-ui-editor-language: json
+        shards:
+            default: 1
+            description: Number of shards in the cluster
+            maximum: 100
+            minimum: 1
+            title: Shards
+            type: number
+        storage_class:
+            default: premium-rwo
+            description: StorageClass for ClickHouse persistent volumes
+            maxLength: 63
+            minLength: 1
+            title: Storage Class
+            type: string
+        storage_size:
+            default: 100Gi
+            description: Persistent volume size per ClickHouse pod (e.g. 100Gi)
+            maxLength: 16
+            minLength: 2
+            title: Storage Size
+            type: string
+        users_json:
+            default: '[]'
+            description: 'JSON array of ClickHouse users. Each item: {name, password_secret?, networks (list of CIDRs/host regex), profile}. password_secret is the NAME of a Facets secret holding the SHA256 password; leave empty for a passwordless user. Example: [{"name":"app","password_secret":"clickhouse-app-password","networks":["::/0"],"profile":"default"}]'
+            title: Users (JSON)
+            type: string
+            x-ui-editor: true
+            x-ui-editor-language: json
+    type: object
+    x-ui-order:
+        - cluster_name
+        - namespace
+        - clickhouse_version
+        - shards
+        - replicas
+        - storage_size
+        - storage_class
+        - resources
+        - users_json
+        - settings_json
+        - cluster_domain
+sample:
+    flavor: k8s
+    kind: clickhouse
+    spec:
+        clickhouse_version: "24.8"
+        cluster_domain: cluster.local
+        cluster_name: default
+        namespace: clickhouse
+        replicas: 3
+        resources:
+            cpu: "1"
+        settings_json: '{}'
+        shards: 1
+        storage_class: premium-rwo
+        storage_size: 100Gi
+        users_json: '[]'
+    version: "1.0"

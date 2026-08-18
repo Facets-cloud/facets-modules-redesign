@@ -1,0 +1,23 @@
+name: '@facets/clickhouse-keeper'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        namespace:
+          description: Kubernetes namespace where the ClickHouse Keeper ensemble runs
+          type: string
+        service_host:
+          description: In-cluster DNS name of the ClickHouse Keeper service
+          type: string
+        port:
+          description: Client port the Keeper ensemble listens on (2181)
+          type: number
+        replicas:
+          description: Number of Keeper replicas in the ensemble
+          type: number
+    interfaces:
+      type: object
+      properties: {}
+providers: []

@@ -1,0 +1,26 @@
+# Defaults are overridden by the Terraform helm_release values block.
+clusterName: default
+namespace: clickhouse
+image: clickhouse/clickhouse-server:24.8
+shards: 1
+replicas: 3
+storageClass: premium-rwo
+storageSize: 100Gi
+# Kubernetes cluster DNS domain (overridden by the Terraform values block).
+clusterDomain: cluster.local
+resources:
+  cpu: "1"
+  memory: "2Gi"
+# zookeeper (ClickHouse Keeper) coordination endpoint
+zookeeper:
+  host: ""
+  port: 2181
+# users: list of {name, password_sha256_hex?, networks: [..], profile}
+users: []
+# settings: map of clickhouse server settings
+settings: {}
+# Dedicated node-pool placement (populated from the optional node_pool input).
+# nodeSelector: map of labels; tolerations: list of {key,value,effect,operator}.
+# Both empty by default so an unwired node_pool renders no placement.
+nodeSelector: {}
+tolerations: []
