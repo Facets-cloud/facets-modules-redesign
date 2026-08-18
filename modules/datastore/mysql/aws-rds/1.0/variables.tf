@@ -34,7 +34,7 @@ variable "instance" {
         db_subnet_group_name   = optional(string)
         security_group_id      = optional(string)
         master_password        = optional(string)
-      }))
+      }), {})
     })
   })
 
