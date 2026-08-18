@@ -36,8 +36,8 @@ locals {
   # "<cluster_name>-superuser" (keys: username, password) when no
   # superuserSecretRef is set on the K8ssandraCluster CR.
   superuser_secret_name = "${local.cluster_name}-superuser"
-  admin_username        = try(data.kubernetes_secret.superuser.data["username"], "")
-  admin_password        = try(data.kubernetes_secret.superuser.data["password"], "")
+  admin_username        = try(data.kubernetes_secret_v1.superuser.data["username"], "")
+  admin_password        = try(data.kubernetes_secret_v1.superuser.data["password"], "")
   password_is_valid     = local.admin_password != "" && length(local.admin_password) > 0
 
   # CQL contact point: cass-operator creates "<cluster>-<dc>-service"

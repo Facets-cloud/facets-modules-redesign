@@ -129,7 +129,7 @@ resource "time_sleep" "wait_for_credentials" {
 }
 
 # Superuser credentials secret: "<cluster_name>-superuser" (keys: username, password)
-data "kubernetes_secret" "superuser" {
+data "kubernetes_secret_v1" "superuser" {
   metadata {
     name      = local.superuser_secret_name
     namespace = local.namespace
