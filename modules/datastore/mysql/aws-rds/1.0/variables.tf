@@ -6,9 +6,11 @@ variable "instance" {
     version = string
     spec = object({
       version_config = object({
-        version         = string
-        database_name   = string
-        master_username = string
+        version       = string
+        database_name = string
+        # Optional: falls back to "admin", which is what locals.tf used unconditionally
+        # before this attribute was reachable from the spec.
+        master_username = optional(string, "admin")
       })
       sizing = object({
         instance_class        = string
@@ -16,6 +18,9 @@ variable "instance" {
         max_allocated_storage = number
         storage_type          = string
         read_replica_count    = number
+        # Optional: defaults to true, which is what main.tf hardcoded before this
+        # attribute existed. Set false to match a single-AZ source instance.
+        multi_az = optional(bool, true)
       })
       restore_config = optional(object({
         restore_from_backup           = bool
@@ -39,7 +44,7 @@ variable "instance" {
   }
 
   validation {
-    condition     = contains(["db.t3.micro", "db.t3.small", "db.t3.medium", "db.t3.large", "db.m5.large", "db.m5.xlarge", "db.m5.2xlarge"], var.instance.spec.sizing.instance_class)
+    condition     = contains(["db.t3.micro", "db.t3.small", "db.t3.medium", "db.t3.large", "db.t4g.micro", "db.t4g.small", "db.t4g.medium", "db.t4g.large", "db.m5.large", "db.m5.xlarge", "db.m5.2xlarge"], var.instance.spec.sizing.instance_class)
     error_message = "Instance class must be a valid RDS instance type"
   }
 
