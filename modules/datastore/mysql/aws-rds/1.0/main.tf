@@ -43,22 +43,7 @@ data "aws_db_subnet_group" "imported" {
   name  = local.subnet_group_name
 }
 
-# Data source to check if security group already exists by name
-data "aws_security_groups" "existing_sg" {
-  count = !local.is_security_group_import ? 1 : 0
-
-  filter {
-    name   = "group-name"
-    values = [local.security_group_name]
-  }
-
-  filter {
-    name   = "vpc-id"
-    values = [var.inputs.vpc_details.attributes.vpc_id]
-  }
-}
-
-# Create security group for MySQL (only if not importing AND doesn't already exist)
+# Create security group for MySQL (skipped only when an existing group is imported)
 resource "aws_security_group" "mysql" {
   count       = local.should_create_security_group ? 1 : 0
   name        = local.security_group_name
@@ -114,8 +99,7 @@ locals {
 
   # Get the actual security group ID from all sources (imported, existing by name, or created)
   actual_security_group_id = local.is_security_group_import ? data.aws_security_group.imported[0].id : (
-    local.sg_exists_by_name ? data.aws_security_groups.existing_sg[0].ids[0] :
-    (length(aws_security_group.mysql) > 0 ? aws_security_group.mysql[0].id : null)
+    length(aws_security_group.mysql) > 0 ? aws_security_group.mysql[0].id : null
   )
 
   # Always use the main mysql resource identifier for read replicas
@@ -270,14 +254,13 @@ resource "aws_db_instance" "read_replicas" {
 # The password is stored in Terraform state and accessible via output interfaces
 # For production use, consider external secret management solutions
 
-# Enhanced Security Group Handling:
-# The module now supports three security group scenarios:
-# 1. EXPLICIT IMPORT: User provides security_group_id in imports section
-# 2. EXISTING BY NAME: Security group with same name already exists in VPC 
-# 3. CREATE NEW: No existing security group found, creates new one
+# Security Group Handling:
+# Two scenarios, and the choice is made by the import flag alone:
+# 1. EXPLICIT IMPORT: user provides security_group_id in the imports section -> adopt it
+# 2. CREATE NEW: no import -> this module owns the group for the instance's lifetime
 #
-# This prevents the "security group already exists" error by:
-# - Using data source to check for existing security groups by name
-# - Only creating new security group when none exists and not explicitly importing
-# - Transparently using existing security groups when found
-# - Providing sg_source output to show which approach was used
+# There is deliberately NO "existing by name" third case. An earlier version looked the
+# group up by the same name it creates, which made the module apply-once: the second plan
+# found the module's own group, flipped count 1 -> 0, and hit prevent_destroy as a hard
+# error. If a name collision needs handling, import the group explicitly (case 1).
+# - sg_source output reports which approach was used (imported or created)
