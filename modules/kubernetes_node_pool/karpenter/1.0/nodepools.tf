@@ -30,6 +30,21 @@ module "ec2_node_class" {
         }
       ]
 
+      # Root volume. Without this block Karpenter provisions nodes on the AMI's
+      # default volume, which is UNENCRYPTED. volume size defaults to that same
+      # AMI default so enabling encryption costs nothing.
+      blockDeviceMappings = [
+        {
+          deviceName = "/dev/xvda"
+          ebs = {
+            volumeSize          = "${lookup(var.instance.spec, "disk_size_gb", 20)}Gi"
+            volumeType          = "gp3"
+            encrypted           = true
+            deleteOnTermination = true
+          }
+        }
+      ]
+
       subnetSelectorTerms = [
         {
           tags = {

@@ -28,7 +28,22 @@ locals {
       max_size     = lookup(lookup(var.instance.spec, "default_node_pool", {}), "size", 2)
       desired_size = lookup(lookup(var.instance.spec, "default_node_pool", {}), "size", 2)
 
+      # disk_size is inert on its own: upstream terraform-aws-eks honours it only when
+      # use_custom_launch_template = false, which defaults true. The launch template's
+      # block_device_mappings is what actually sizes and encrypts the root volume.
       disk_size = lookup(lookup(var.instance.spec, "default_node_pool", {}), "disk_size", 50)
+
+      block_device_mappings = {
+        root = {
+          device_name = "/dev/xvda"
+          ebs = {
+            volume_size           = lookup(lookup(var.instance.spec, "default_node_pool", {}), "disk_size", 50)
+            volume_type           = "gp3"
+            encrypted             = true
+            delete_on_termination = true
+          }
+        }
+      }
 
       labels = {
         "workload-type" = "system"
