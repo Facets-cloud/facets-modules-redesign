@@ -45,14 +45,13 @@ locals {
   # The t4g entries matter as much as the t3 ones - enabling PI on an unsupported class fails at apply.
   performance_insights_supported = !contains(["db.t3.micro", "db.t3.small", "db.t4g.micro", "db.t4g.small"], var.instance.spec.sizing.instance_class)
 
-  # Enhanced Security Group Logic
-  # Detect if security group exists by name (when not explicitly importing)
-  # This logic is evaluated after the data source runs
-  sg_exists_by_name = !local.is_security_group_import && length(try(data.aws_security_groups.existing_sg[0].ids, [])) > 0
-
-  # Determine if we should create a new security group
-  should_create_security_group = !local.is_security_group_import && !local.sg_exists_by_name
+  # Security Group creation is decided by the IMPORT FLAG ALONE, deliberately.
+  # It must NOT depend on whether a group of that name already exists: the name is
+  # the one this module itself creates, so a lookup finds the module's own group on
+  # the second plan, flips count 1 -> 0 and asks Terraform to destroy it. With
+  # prevent_destroy set that is a hard plan error, and the module becomes apply-once.
+  should_create_security_group = !local.is_security_group_import
 
   # Security group source for logging/transparency
-  sg_source = local.is_security_group_import ? "imported" : (local.sg_exists_by_name ? "existing" : "created")
+  sg_source = local.is_security_group_import ? "imported" : "created"
 }
