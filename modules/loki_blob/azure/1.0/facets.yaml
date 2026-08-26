@@ -1,0 +1,172 @@
+intent: loki_blob
+flavor: azure
+version: '1.0'
+description: |
+  Creates Azure Blob Storage infrastructure for Loki log aggregation: a storage
+  account, blob container, user-assigned managed identity with Storage Blob Data
+  Contributor role, federated identity credential for AKS workload identity, and
+  an annotated Kubernetes service account for secretless pod authentication.
+intentDetails:
+  type: Logging & Observability
+  description: Azure Blob-backed Loki storage with AKS workload identity federation
+  displayName: Loki Blob Storage
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/monitoring.svg
+clouds:
+  - azure
+inputs:
+  cloud_account:
+    type: '@facets/azure_cloud_account'
+    displayName: Azure Cloud Account
+    description: Azure subscription and credential context for provisioning storage and identity resources.
+    optional: false
+    providers:
+      - azurerm
+  aks_cluster:
+    type: '@facets/azure_aks'
+    displayName: AKS Cluster
+    description: AKS cluster supplying the OIDC issuer URL for federated credentials and the Kubernetes provider for service account creation.
+    optional: false
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+      - kubernetes
+      - kubernetes-alpha
+      - helm
+spec:
+  title: Loki Azure Blob Storage
+  description: Configure Azure Blob Storage infrastructure for Loki log aggregation
+  type: object
+  x-ui-order:
+    - storage_config
+    - workload_identity
+    - loki_config
+    - tags
+  properties:
+    storage_config:
+      type: object
+      title: Storage Configuration
+      x-ui-toggle: false
+      x-ui-order:
+        - container_name
+        - account_tier
+        - replication_type
+        - enable_versioning
+        - retention_days
+      properties:
+        container_name:
+          type: string
+          title: Blob Container Name
+          description: Name of the Azure Blob container used for Loki chunk and index storage.
+          default: loki-data
+          pattern: '^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$'
+          x-ui-placeholder: loki-data
+        account_tier:
+          type: string
+          title: Storage Account Tier
+          description: Performance tier for the Azure Storage Account.
+          enum:
+            - Standard
+            - Premium
+          default: Standard
+        replication_type:
+          type: string
+          title: Replication Type
+          description: Data replication strategy for the storage account.
+          enum:
+            - LRS
+            - GRS
+            - RAGRS
+            - ZRS
+            - GZRS
+            - RAGZRS
+          default: LRS
+        enable_versioning:
+          type: boolean
+          title: Enable Blob Versioning
+          description: Retain previous blob versions for point-in-time recovery.
+          default: false
+        retention_days:
+          type: integer
+          title: Retention Days
+          description: Number of days to retain Loki data blobs before automatic deletion. Set to 0 to disable expiry.
+          minimum: 0
+          maximum: 3650
+          default: 0
+      required:
+        - container_name
+        - account_tier
+        - replication_type
+    workload_identity:
+      type: object
+      title: Workload Identity
+      x-ui-toggle: false
+      x-ui-order:
+        - service_account_namespace
+        - service_account_name
+      properties:
+        service_account_namespace:
+          type: string
+          title: Kubernetes Namespace
+          description: Namespace in which the Loki Kubernetes service account will be created.
+          default: monitoring
+          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+          x-ui-placeholder: monitoring
+        service_account_name:
+          type: string
+          title: Kubernetes Service Account Name
+          description: Name of the Kubernetes service account used by Loki pods.
+          default: loki
+          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+          x-ui-placeholder: loki
+      required:
+        - service_account_namespace
+        - service_account_name
+    loki_config:
+      type: object
+      title: Loki Configuration
+      x-ui-toggle: true
+      x-ui-overrides-only: true
+      properties:
+        query_timeout:
+          type: integer
+          title: Query Timeout (seconds)
+          description: Maximum time in seconds Loki will wait for a query to complete.
+          minimum: 10
+          maximum: 600
+          default: 60
+      required: []
+    tags:
+      type: object
+      title: Azure Tags
+      description: Additional tags applied to all Azure resources created by this module.
+      x-ui-yaml-editor: true
+  required:
+    - storage_config
+    - workload_identity
+outputs:
+  default:
+    type: '@facets/loki_blob_storage'
+    title: Loki Azure Blob Storage Output
+    description: Storage account, container, and workload identity details for configuring the Loki Helm chart.
+sample:
+  kind: loki_blob
+  flavor: azure
+  version: '1.0'
+  disabled: true
+  spec:
+    storage_config:
+      container_name: loki-data
+      account_tier: Standard
+      replication_type: LRS
+      enable_versioning: false
+      retention_days: 0
+    workload_identity:
+      service_account_namespace: monitoring
+      service_account_name: loki
+iac:
+  validated_files:
+    - variables.tf
+    - locals.tf
+    - main.tf
+    - outputs.tf
