@@ -40,6 +40,8 @@ modules:
     flavor: standard
   - intent: aws_secret_manager
     flavor: standard
+  - intent: loki
+    flavor: s3_standard
 
   # === AWS Messaging & Storage Modules ===
   - intent: s3
