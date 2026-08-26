@@ -16,7 +16,8 @@ locals {
   oidc_provider              = var.inputs.eks_details.attributes.oidc_provider
   vpc_id                     = var.inputs.network_details.attributes.vpc_id
   aws_region                 = var.inputs.cloud_account.attributes.aws_region
-
+  spec                       = lookup(var.instance, "spec", {})
+  additional_helm_values     = lookup(lookup(local.spec, "aws_alb_controller", {}), "values", {})
   instance_tags = merge(
     var.environment.cloud_tags,
     lookup(var.instance.spec, "tags", {}),
@@ -349,7 +350,8 @@ resource "helm_release" "alb_controller" {
           memory = "512Mi"
         }
       }
-    })
+    }),
+    yamlencode(local.additional_helm_values)
   ]
 
   depends_on = [
