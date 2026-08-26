@@ -76,6 +76,11 @@ resource "google_container_cluster" "primary" {
     workload_pool = "${local.project_id}.svc.id.goog"
   }
 
+  # Enable Gateway API (standard channel) for Gateway/HTTPRoute resources
+  gateway_api_config {
+    channel = "CHANNEL_STANDARD"
+  }
+
   # Addons configuration
   addons_config {
     http_load_balancing {
