@@ -1,6 +1,6 @@
 intent: service
 flavor: aws
-version: '1.0'
+version: '1.1'
 description: Unified AWS cloud service module supporting deployment, cronjob, job,
   and statefulset workloads
 intentDetails:
@@ -435,7 +435,6 @@ spec:
           title: Health Checks
           description: Ensure service remains responsive and operational. Assess its
             status and performance.
-          x-ui-override-disable: true
           x-ui-toggle: true
           x-ui-visible-if:
             field: spec.type
@@ -641,13 +640,13 @@ spec:
               - PortCheck
               - HttpCheck
               - ExecCheck
-            startup_start_up_time:
+            startup_initial_delay_seconds:
               type: integer
-              title: Startup Start-Up Time
+              title: Startup Initial Delay Seconds
               default: 10
               minimum: 0
               maximum: 10000
-              x-ui-placeholder: Enter startup start up time for the Pod
+              x-ui-placeholder: Enter startup initial delay for the Pod
               x-ui-error-message: Value doesn't match pattern, accepted values are
                 from 0-10000
               x-ui-visible-if:
@@ -967,7 +966,6 @@ spec:
                   - name
                   - mount_path
       required:
-      - ports
       - size
     release:
       title: Release
@@ -1606,7 +1604,6 @@ spec:
                   title: Health Checks
                   description: Ensure service remains responsive and operational.
                     Assess its status and performance.
-                  x-ui-override-disable: true
                   x-ui-toggle: true
                   properties:
                     readiness_check_type:
@@ -1781,13 +1778,13 @@ spec:
                       - PortCheck
                       - HttpCheck
                       - ExecCheck
-                    startup_start_up_time:
+                    startup_initial_delay_seconds:
                       type: integer
-                      title: Startup Start-Up Time
+                      title: Startup Initial Delay Seconds
                       default: 10
                       minimum: 0
                       maximum: 10000
-                      x-ui-placeholder: Enter startup start up time for the Pod
+                      x-ui-placeholder: Enter startup initial delay for the Pod
                       x-ui-error-message: Value doesn't match pattern, accepted values
                         are from 0-10000
                       x-ui-visible-if:
@@ -1852,10 +1849,10 @@ spec:
                         - ExecCheck
                       description: Commands for startup check
                       x-ui-override-disable: true
-                    port:
+                    readiness_port:
                       type: string
-                      title: Health Check Port
-                      x-ui-placeholder: Enter health check port for the Sidecar
+                      title: Readiness Port
+                      x-ui-placeholder: Enter readiness port for the Sidecar
                       x-ui-error-message: Value doesn't match pattern, accepted values
                         are from 0-65535
                       x-ui-visible-if:
@@ -1863,17 +1860,40 @@ spec:
                         values:
                         - PortCheck
                         - HttpCheck
-                      description: Port for Health Checks
+                      description: Port for readiness health check
+                      x-ui-dynamic-enum: spec.sidecars.{{this}}.runtime.ports.*.port
                       x-ui-disable-tooltip: No Ports Added
                       x-ui-typeable: true
-                  required:
-                  - readiness_url
-                  - readiness_exec_command
-                  - liveness_url
-                  - liveness_exec_command
-                  - startup_url
-                  - startup_exec_command
-                  - port
+                    liveness_port:
+                      type: string
+                      title: Liveness Port
+                      x-ui-placeholder: Enter liveness port for the Sidecar
+                      x-ui-error-message: Value doesn't match pattern, accepted values
+                        are from 0-65535
+                      x-ui-visible-if:
+                        field: spec.sidecars.{{this}}.runtime.health_checks.liveness_check_type
+                        values:
+                        - PortCheck
+                        - HttpCheck
+                      description: Port for liveness health check
+                      x-ui-dynamic-enum: spec.sidecars.{{this}}.runtime.ports.*.port
+                      x-ui-disable-tooltip: No Ports Added
+                      x-ui-typeable: true
+                    startup_port:
+                      type: string
+                      title: Startup Port
+                      x-ui-placeholder: Enter startup port for the Sidecar
+                      x-ui-error-message: Value doesn't match pattern, accepted values
+                        are from 0-65535
+                      x-ui-visible-if:
+                        field: spec.sidecars.{{this}}.runtime.health_checks.startup_check_type
+                        values:
+                        - PortCheck
+                        - HttpCheck
+                      description: Port for startup health check
+                      x-ui-dynamic-enum: spec.sidecars.{{this}}.runtime.ports.*.port
+                      x-ui-disable-tooltip: No Ports Added
+                      x-ui-typeable: true
               required:
               - size
               x-ui-order:
@@ -1910,7 +1930,7 @@ sample:
   flavor: aws
   kind: service
   disabled: true
-  version: '1.0'
+  version: '1.1'
   spec:
     type: application
     enable_host_anti_affinity: false
