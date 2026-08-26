@@ -1,49 +1,18 @@
 locals {
-  # Compute name the same way as the base module (needed for ACM secret names)
-  name = lower(var.environment.namespace == "default" ? var.instance_name : "${var.environment.namespace}-${var.instance_name}")
-
-  # Detect domains with ACM ARN as certificate_reference
+  # Detect domains whose certificate_reference is an ACM ARN
   acm_cert_domains = {
     for domain_key, domain in lookup(var.instance.spec, "domains", {}) :
     domain_key => domain
     if can(domain.certificate_reference) && length(regexall("arn:aws:acm:", lookup(domain, "certificate_reference", ""))) > 0
   }
 
-  # K8s secret name for ACM cert domains — the ACK Certificate CRD exports cert to this secret
-  acm_cert_secret_names = {
-    for domain_key, domain in local.acm_cert_domains :
-    domain_key => "${local.name}-${domain_key}-acm-tls"
-  }
+  # ACM mode: ACM ARNs present → terminate TLS at the NLB (not the Gateway). All other
+  # domains use the base module's cert-manager HTTP-01 + ListenerSet path.
+  acm_mode = length(local.acm_cert_domains) > 0
 
-  # Detect ACK ACM controller availability
-  use_ack_acm = try(var.inputs.ack_acm_controller_details, null) != null
-
-  # ACM mode: when ACM domains exist but no ACK controller,
-  # TLS terminates at the NLB instead of at the Gateway pod
-  acm_mode = !local.use_ack_acm && length(local.acm_cert_domains) > 0
-
-  # ACM ARNs to attach to NLB for TLS termination
   acm_cert_arns = local.acm_mode ? distinct([
     for domain_key, domain in local.acm_cert_domains : domain.certificate_reference
   ]) : []
-
-  # Rewrite ACM ARN certificate_reference → K8s secret name for all ACM domains.
-  # In ACM mode (no ACK), this rewrite is harmless — external_tls_termination=true
-  # tells the base module to ignore certificate_reference entirely.
-  # Always rewriting avoids unknown map values when use_ack_acm is unresolved at plan time.
-  modified_domains = {
-    for domain_key, domain in lookup(var.instance.spec, "domains", {}) :
-    domain_key => contains(keys(local.acm_cert_secret_names), domain_key) ? merge(domain, {
-      certificate_reference = local.acm_cert_secret_names[domain_key]
-    }) : domain
-  }
-
-  # Build modified instance with rewritten domains
-  modified_instance = merge(var.instance, {
-    spec = merge(var.instance.spec, {
-      domains = local.modified_domains
-    })
-  })
 
   # ALB controller dependency label — creates implicit Terraform dependency
   alb_controller_helm_release_id = try(var.inputs.aws_alb_controller_details.attributes.helm_release_id, "")
@@ -72,36 +41,22 @@ locals {
     } : {}
   )
 
-  # ACK ACM Certificate CRD resources — creates ACM certificates via ACK controller
-  # and exports them to K8s TLS secrets for Gateway listener consumption.
-  # Only created when ACK controller is available.
-  ack_acm_resources = local.use_ack_acm ? {
-    for domain_key, domain in local.acm_cert_domains :
-    "ack-acm-cert-${domain_key}" => {
-      apiVersion = "acm.services.k8s.aws/v1alpha1"
-      kind       = "Certificate"
-      metadata = {
-        name      = "${local.name}-acm-cert-${domain_key}"
-        namespace = var.environment.namespace
-      }
-      spec = {
-        domainName = "*.${domain.domain}"
-        subjectAlternativeNames = [
-          domain.domain,
-          "*.${domain.domain}"
-        ]
-        validationMethod = "DNS"
-        options = {
-          certificateTransparencyLoggingPreference = "ENABLED"
-        }
-        exportTo = {
-          namespace = var.environment.namespace
-          name      = local.acm_cert_secret_names[domain_key]
-          key       = "tls.crt"
-        }
-      }
-    }
-  } : {}
+  # Private LB → HTTP-01 can't validate an internal LB; issue certs via the named
+  # DNS-01 ClusterIssuer instead (cnameStrategy Follow). No effect in acm_mode.
+  private                 = lookup(var.instance.spec, "private", false)
+  dns01_issuer            = lookup(var.instance.spec, "dns01_cluster_issuer", "")
+  cluster_issuer_override = local.private && !local.acm_mode && local.dns01_issuer != "" ? local.dns01_issuer : lookup(var.instance.spec, "cluster_issuer_override", null)
+
+  # Private + DNS-01 (non-ACM): one wildcard cert [domain, *.domain] per domain (single DNS-01
+  # challenge) via the listenerset-shim, instead of per-hostname HTTP-01 certs.
+  wildcard_tls = local.private && !local.acm_mode && local.dns01_issuer != ""
+
+  modified_instance = merge(var.instance, {
+    spec = merge(var.instance.spec, {
+      cluster_issuer_override = local.cluster_issuer_override
+      wildcard_tls            = local.wildcard_tls
+    })
+  })
 }
 
 # Call the base utility module
@@ -130,30 +85,5 @@ module "nginx_gateway_fabric" {
         value = "0.0.0.0/0"
       }]
     }
-  }
-
-  additional_base_resources = local.ack_acm_resources
-}
-
-# Pre-create empty TLS secrets for ACK ACM certificate export
-# ACK ACM controller requires the target secret to exist before it can export
-# Only created when ACK controller is available
-resource "kubernetes_secret_v1" "acm_cert" {
-  for_each = local.use_ack_acm ? local.acm_cert_domains : {}
-
-  metadata {
-    name      = local.acm_cert_secret_names[each.key]
-    namespace = var.environment.namespace
-  }
-
-  data = {
-    "tls.crt" = ""
-    "tls.key" = ""
-  }
-
-  type = "kubernetes.io/tls"
-
-  lifecycle {
-    ignore_changes = [data, metadata[0].annotations, metadata[0].labels]
   }
 }
