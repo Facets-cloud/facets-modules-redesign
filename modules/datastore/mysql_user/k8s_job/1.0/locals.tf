@@ -52,12 +52,12 @@ locals {
   # terraform emits a literal shell reference that bash expands at run time from the
   # environment, which is itself sourced from a Kubernetes secret.
   create_databases_sql = join("\n", [
-    for db in local.databases : "CREATE DATABASE IF NOT EXISTS `${db}`;"
+    for db in local.databases : "CREATE DATABASE IF NOT EXISTS \\`${db}\\`;"
   ])
 
   grant_sql = join("\n", [
     for g in local.grants :
-    "GRANT ${lookup(g, "privileges", "ALL PRIVILEGES")} ON `${g.database}`.* TO '$${USERNAME}'@'$${USER_HOST}';"
+    "GRANT ${lookup(g, "privileges", "ALL PRIVILEGES")} ON \\`${g.database}\\`.* TO '$${USERNAME}'@'$${USER_HOST}';"
   ])
 
   sql_script = <<-EOT
@@ -82,6 +82,6 @@ locals {
     SELECT plugin FROM mysql.user WHERE user='$${USERNAME}' AND host='$${USER_HOST}';
     SQL
 
-    echo "done"
+    echo "provisioning complete"
   EOT
 }
