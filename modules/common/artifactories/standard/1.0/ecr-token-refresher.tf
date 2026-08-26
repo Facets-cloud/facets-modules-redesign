@@ -70,7 +70,7 @@ resource "kubernetes_cron_job_v1" "ecr-token-refresher-cron" {
             priority_class_name             = kubernetes_priority_class_v1.ecr_token_refresher.metadata[0].name
             container {
               name              = "kubectl"
-              image             = "xynova/aws-kubectl"
+              image             = "facetscloud/aws-kubectl:1.31.0"
               image_pull_policy = "Always"
               command           = ["/bin/sh", "-c", file("${path.module}/ecr-token-refresher-command")]
               env {
@@ -225,7 +225,7 @@ resource "kubernetes_job_v1" "ecr-token-refresher-initial" {
         priority_class_name             = kubernetes_priority_class_v1.ecr_token_refresher.metadata[0].name
         container {
           name              = "kubectl"
-          image             = "xynova/aws-kubectl"
+          image             = "facetscloud/aws-kubectl:1.31.0"
           image_pull_policy = "Always"
           command           = ["/bin/sh", "-c", file("${path.module}/ecr-token-refresher-command")]
           env {
