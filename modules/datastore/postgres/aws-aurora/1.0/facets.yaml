@@ -88,7 +88,7 @@ spec:
           maximum: 128
           default: 4
         read_replica_count:
-          type: number
+          type: integer
           title: Read Replica Count
           description: Number of read replica instances to create
           minimum: 0

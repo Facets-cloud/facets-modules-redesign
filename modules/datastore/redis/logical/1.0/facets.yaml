@@ -33,7 +33,7 @@ spec:
         Resolves to the selected resource's full outputs.
       x-ui-output-type: '@facets/redis'
     db_index:
-      type: number
+      type: integer
       title: Logical DB Index
       description: Redis logical database index to target on the shared instance. Use
         a distinct index to separate this logical cache from others sharing the same

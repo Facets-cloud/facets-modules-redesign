@@ -49,7 +49,7 @@ spec:
       - tier
       properties:
         memory_size_gb:
-          type: number
+          type: integer
           title: Memory Size (GB)
           description: Memory allocation in GB for the Redis instance (min 5GB for
             Standard HA tier)

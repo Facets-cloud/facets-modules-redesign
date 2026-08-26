@@ -97,14 +97,14 @@ spec:
           - MO_Standard_E20ds_v4
           default: B_Standard_B1ms
         storage_gb:
-          type: number
+          type: integer
           title: Storage Size (GB)
           description: Storage capacity in GB
           minimum: 20
           maximum: 16384
           default: 100
         iops:
-          type: number
+          type: integer
           title: IOPS
           description: Provisioned IOPS (if supported by SKU)
           minimum: 360
@@ -128,7 +128,7 @@ spec:
           - P80
           default: P10
         read_replica_count:
-          type: number
+          type: integer
           title: Read Replica Count
           description: Number of read replicas to create. Not supported for Burstable
             SKUs - will be automatically set to 0
