@@ -1,0 +1,92 @@
+name: old-style
+description: >-
+  Project type for adopting projects that still run on the legacy central-module
+  architecture (modules resolved from the facets-iac repo, module_source=local).
+  Starts from cloud account only; legacy modules are rewrapped and added here
+  incrementally, one project at a time. Flavors carry a _legacy suffix so they
+  never collide with system modules, and output types are namespaced @legacy/*.
+
+iacTool: TERRAFORM
+iacToolVersion: "1.5.7"
+
+allowedClouds:
+  - AWS
+  - AZURE
+  - GCP
+
+# No baseTemplatePath. A project of this type begins with nothing but a cloud
+# account; every other resource arrives via zero-change import from the legacy
+# project it is adopting.
+
+modules:
+  # --- Entry point: the only non-legacy modules in this project type ---
+  - intent: cloud_account
+    flavor: aws_provider
+  - intent: cloud_account
+    flavor: azure_provider
+  - intent: cloud_account
+    flavor: gcp_provider
+
+  # --- Rewrapped legacy modules -------------------------------------------
+  # This list ACCRETES. A module is added only when a project being adopted
+  # actually instantiates it. Do not pre-populate from the facets-iac tree.
+  #
+  # Seeded from the capillary-cloud pilot: 74 of its 97 resources resolve to a
+  # facets-iac module, across the 24 (intent, flavor) pairs below.
+  #
+  # source dir is capillary-cloud-tf/modules/<path> in Facets-cloud/facets-iac.
+
+  # helm_simple  — is_old: true, so these 10 resources CHANGE terraform address
+  #                module.level2.module.helm_simple_<name> -> module.level2.module.helm_<name>
+  - intent: helm
+    flavor: default_legacy
+  - intent: helm
+    flavor: helm_simple_legacy
+  - intent: helm
+    flavor: k8s_legacy
+
+  # 1_input_instance/*
+  - intent: alert_group
+    flavor: default_legacy
+  - intent: artifactories
+    flavor: default_legacy
+  - intent: aws_efs
+    flavor: default_legacy
+  - intent: aws_iam_role
+    flavor: default_legacy
+  - intent: dynamodb
+    flavor: default_legacy
+  - intent: grafana_dashboard
+    flavor: default_legacy
+  - intent: k8s_resource
+    flavor: default_legacy
+  - intent: k8s_resource
+    flavor: k8s_legacy
+  - intent: kubernetes_cluster
+    flavor: default_legacy
+  - intent: log_collector
+    flavor: loki_s3_legacy
+  - intent: loki_alerting_rules
+    flavor: k8s_legacy
+  - intent: mongo
+    flavor: k8s_legacy
+  - intent: network
+    flavor: default_legacy
+  - intent: service
+    flavor: cronjob_legacy
+  - intent: service
+    flavor: default_legacy
+  - intent: service
+    flavor: deployment_legacy
+  - intent: snapshot_schedule
+    flavor: default_legacy
+  - intent: tcp_lb
+    flavor: default_legacy
+
+  # top-level modules
+  - intent: iam_policy
+    flavor: aws_iam_policy_legacy
+  - intent: redis
+    flavor: elasticache_legacy
+  - intent: s3
+    flavor: default_legacy
