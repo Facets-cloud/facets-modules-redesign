@@ -1,0 +1,22 @@
+{
+  "disabled": true,
+  "flavor": "default",
+  "kind": "gateway_api_crd",
+  "metadata": {},
+  "spec": {
+    "channel": "experimental",
+    "version": "v1.4.1"
+  },
+  "version": "1.0",
+  "inputs": {
+    "kubernetes_details": {
+      "resource_name": "kubernetes-cluster",
+      "resource_type": "kubernetes_cluster",
+      "output_name": "attributes"
+    },
+    "kubernetes_node_pool_details": {
+      "resource_name": "k8s-np",
+      "resource_type": "kubernetes_node_pool"
+    }
+  }
+}

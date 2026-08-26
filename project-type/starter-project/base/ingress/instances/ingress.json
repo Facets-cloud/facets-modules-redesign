@@ -1,0 +1,94 @@
+{
+  "kind": "ingress",
+  "flavor": "nginx_gateway_fabric",
+  "version": "1.0",
+  "disabled": true,
+  "metadata": {
+    "annotations": {}
+  },
+  "spec": {
+    "private": false,
+    "disable_base_domain": false,
+    "force_ssl_redirection": true,
+    "body_size": "150m",
+    "data_plane": {
+      "scaling": {
+        "min_replicas": 2,
+        "max_replicas": 5,
+        "target_cpu_utilization_percentage": 70,
+        "target_memory_utilization_percentage": 80
+      },
+      "resources": {
+        "requests": {
+          "cpu": "250m",
+          "memory": "256Mi"
+        },
+        "limits": {
+          "cpu": "1",
+          "memory": "512Mi"
+        }
+      }
+    },
+    "control_plane": {
+      "scaling": {
+        "min_replicas": 2,
+        "max_replicas": 3,
+        "target_cpu_utilization_percentage": 70,
+        "target_memory_utilization_percentage": 80
+      },
+      "resources": {
+        "requests": {
+          "cpu": "200m",
+          "memory": "256Mi"
+        },
+        "limits": {
+          "cpu": "500m",
+          "memory": "512Mi"
+        }
+      }
+    },
+    "rules": {
+      "routing-rules1": {
+        "disable": false,
+        "service_name": "${service.service.out.attributes.service_name}",
+        "namespace": "${service.service.out.attributes.namespace}",
+        "port": "8080",
+        "path": "/",
+        "path_type": "PathPrefix",
+        "method": "ALL",
+        "timeouts": {
+          "request": "300s",
+          "backend_request": "300s"
+        },
+        "cors": {
+          "enabled": false
+        },
+        "grpc_config": {
+          "enabled": false
+        }
+      }
+    },
+    "helm_values": {},
+    "helm_wait": true
+  },
+  "inputs": {
+    "kubernetes_details": {
+      "resource_name": "kubernetes-cluster",
+      "resource_type": "kubernetes_cluster",
+      "output_name": "attributes"
+    },
+    "cert_manager_details": {
+      "resource_name": "cert-manager",
+      "resource_type": "cert_manager"
+    },
+    "gateway_api_crd_details": {
+      "resource_name": "gateway-crd",
+      "resource_type": "gateway_api_crd"
+    },
+    "kubernetes_node_pool_details": {
+      "resource_name": "k8s-np",
+      "resource_type": "kubernetes_node_pool"
+    }
+  },
+  "uiProps": {}
+}

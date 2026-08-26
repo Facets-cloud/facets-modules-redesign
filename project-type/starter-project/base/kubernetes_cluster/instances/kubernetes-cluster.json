@@ -1,0 +1,40 @@
+{
+  "disabled": true,
+  "flavor": "eks_standard",
+  "kind": "kubernetes_cluster",
+  "spec": {
+    "cluster_addons": {
+      "coredns": {
+        "enabled": true,
+        "version": "latest"
+      },
+      "ebs_csi": {
+        "enabled": true,
+        "version": "latest"
+      },
+      "kube_proxy": {
+        "enabled": true,
+        "version": "latest"
+      },
+      "vpc_cni": {
+        "enabled": true,
+        "version": "latest"
+      }
+    },
+    "cluster_endpoint_private_access": true,
+    "cluster_endpoint_public_access": true,
+    "cluster_version": "1.34",
+    "enable_cluster_encryption": false
+  },
+  "version": "1.1",
+  "inputs": {
+    "cloud_account": {
+      "resource_name": "cloud",
+      "resource_type": "cloud_account"
+    },
+    "network_details": {
+      "resource_name": "network",
+      "resource_type": "network"
+    }
+  }
+}
