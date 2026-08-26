@@ -501,6 +501,38 @@ spec:
                 - HttpCheck
                 - ExecCheck
               description: Repeated interval for health-check (in sec)
+            readiness_failure_threshold:
+              type: integer
+              title: Readiness Failure Threshold
+              minimum: 1
+              maximum: 10000
+              x-ui-placeholder: Enter readiness failure threshold for the Pod
+              x-ui-error-message: Value doesn't match pattern, accepted values are
+                from 1-10000
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.readiness_check_type
+                values:
+                - PortCheck
+                - HttpCheck
+                - ExecCheck
+              description: Consecutive probe failures before the check is considered
+                failed
+            readiness_success_threshold:
+              type: integer
+              title: Readiness Success Threshold
+              minimum: 1
+              maximum: 10000
+              x-ui-placeholder: Enter readiness success threshold for the Pod
+              x-ui-error-message: Value doesn't match pattern, accepted values are
+                from 1-10000
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.readiness_check_type
+                values:
+                - PortCheck
+                - HttpCheck
+                - ExecCheck
+              description: Consecutive probe successes before the check is considered
+                passing
             readiness_port:
               type: string
               title: Readiness Port
@@ -595,6 +627,38 @@ spec:
                 - HttpCheck
                 - ExecCheck
               description: Interval for Liveness (in sec)
+            liveness_failure_threshold:
+              type: integer
+              title: Liveness Failure Threshold
+              minimum: 1
+              maximum: 10000
+              x-ui-placeholder: Enter liveness failure threshold for the Pod
+              x-ui-error-message: Value doesn't match pattern, accepted values are
+                from 1-10000
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.liveness_check_type
+                values:
+                - PortCheck
+                - HttpCheck
+                - ExecCheck
+              description: Consecutive probe failures before the check is considered
+                failed
+            liveness_success_threshold:
+              type: integer
+              title: Liveness Success Threshold
+              minimum: 1
+              maximum: 10000
+              x-ui-placeholder: Enter liveness success threshold for the Pod
+              x-ui-error-message: Value doesn't match pattern, accepted values are
+                from 1-10000
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.liveness_check_type
+                values:
+                - PortCheck
+                - HttpCheck
+                - ExecCheck
+              description: Consecutive probe successes before the check is considered
+                passing
             liveness_port:
               type: string
               title: Liveness Port
@@ -689,6 +753,38 @@ spec:
                 - HttpCheck
                 - ExecCheck
               description: Repeated interval for health-check (in sec)
+            startup_failure_threshold:
+              type: integer
+              title: Startup Failure Threshold
+              minimum: 1
+              maximum: 10000
+              x-ui-placeholder: Enter startup failure threshold for the Pod
+              x-ui-error-message: Value doesn't match pattern, accepted values are
+                from 1-10000
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.startup_check_type
+                values:
+                - PortCheck
+                - HttpCheck
+                - ExecCheck
+              description: Consecutive probe failures before the check is considered
+                failed
+            startup_success_threshold:
+              type: integer
+              title: Startup Success Threshold
+              minimum: 1
+              maximum: 10000
+              x-ui-placeholder: Enter startup success threshold for the Pod
+              x-ui-error-message: Value doesn't match pattern, accepted values are
+                from 1-10000
+              x-ui-visible-if:
+                field: spec.runtime.health_checks.startup_check_type
+                values:
+                - PortCheck
+                - HttpCheck
+                - ExecCheck
+              description: Consecutive probe successes before the check is considered
+                passing
             startup_port:
               type: string
               title: Startup Port
@@ -785,6 +881,17 @@ spec:
                 field: spec.runtime.autoscaling.scaling_on
                 values:
                 - RAM
+        instance_count:
+          type: integer
+          title: Instance Count
+          description: Fixed number of replicas when autoscaling is not configured
+          minimum: 1
+          maximum: 200
+          x-ui-visible-if:
+            field: spec.type
+            values:
+            - application
+            - statefulset
         metrics:
           type: object
           title: Metrics
@@ -1926,11 +2033,7 @@ sample:
     runtime:
       args: []
       command: []
-      autoscaling:
-        scaling_on: CPU
-        min: 1
-        max: 1
-        cpu_threshold: '50'
+      instance_count: 1
       ports: {}
       size:
         cpu: 300m
