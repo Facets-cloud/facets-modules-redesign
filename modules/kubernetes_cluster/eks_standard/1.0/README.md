@@ -39,6 +39,7 @@ This module requires the following inputs:
 - **Provides:** AWS provider configuration
 - **Required Fields:**
   - `aws_region`
+  - `aws_account_id`
   - `aws_iam_role`
 
 ### 2. VPC Network
