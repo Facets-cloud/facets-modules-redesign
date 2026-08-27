@@ -8,11 +8,13 @@ locals {
   artifactory_names = jsonencode([for key, value in local.artifactories : value["name"]])
 }
 
-# Fetch artifactories from deployment context via external script
+# Fetch artifactories via the bundled script. It reads the legacy deployment
+# context when present and falls back to the Release CRD at /config/release.yaml
+# on the CRD-driven framework, so this module works on both.
 data "external" "artifactory_fetcher" {
   program = [
     "python3",
-    "/sources/primary/capillary-cloud-tf/tfmain/scripts/artifactory-fetch-secret/artifactory-fetcher.py",
+    "${path.module}/artifactory-fetcher.py",
     local.include_all,
     local.artifactory_names
   ]
