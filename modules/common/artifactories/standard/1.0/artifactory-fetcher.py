@@ -213,6 +213,33 @@ def load_artifactories(path=None):
         return _parse_release_yaml(f.read())
 
 
+# Keys the module indexes directly, so a missing or null one is fatal downstream.
+# ECR: ecr-token-refresher.tf reads awsKey/awsSecret/awsAccountId/awsRegion/uri
+# into the refresher's config secret, and locals.tf keys the map by name.
+# DockerHub: locals.tf reads uri/username/password as *attributes*, so a missing
+# key is a terraform error rather than a null.
+_REQUIRED_FIELDS = {
+    "ECR": ("name", "uri", "awsKey", "awsSecret", "awsAccountId", "awsRegion"),
+    "OTHER": ("name", "uri", "username", "password"),
+}
+
+
+def _check_required(artifactory, artifactory_type):
+    """Fail with a legible message instead of an opaque Terraform error.
+
+    Only missing/null is rejected. An empty string is left alone: Kubernetes
+    accepts it as a Secret value, so rejecting it would turn a plan that works
+    today into a failure.
+    """
+    required = _REQUIRED_FIELDS["ECR" if artifactory_type == "ECR" else "OTHER"]
+    missing = [k for k in required if artifactory.get(k) is None]
+    if missing:
+        raise ValueError(
+            "artifactory %r (%s) is missing required field(s): %s"
+            % (artifactory.get("name"), artifactory_type, ", ".join(missing))
+        )
+
+
 class ArtifactoryFetcher:
     def __init__(self, include_all, artifactory_names):
         self.include_all = include_all.lower() == "true"
@@ -244,6 +271,8 @@ class ArtifactoryFetcher:
 
             if not self.should_include(name):
                 continue
+
+            _check_required(artifactory, artifactory_type)
 
             if artifactory_type == "ECR":
                 artifactories_ecr[name] = artifactory
