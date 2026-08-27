@@ -1,18 +1,18 @@
 """Resolve the environment's container-registry (artifactory) list for Terraform.
 
-Works on both IaC frameworks:
+Works on both IaC frameworks, without reimplementing either one:
 
-  * Legacy framework — the backend writes the whole deployment context to
-    /sources/deployment_context/deploymentcontext.json and the registries live
-    under its "artifactoryDetails" key.
+  * Legacy framework — the framework's own fetcher is on disk at a known path and
+    already owns this contract, so we hand off to it and let it answer. Its
+    behavior stays owned by the legacy repo; nothing is duplicated here.
 
-  * CRD-driven framework — there is no deployment context file. The release pod
-    runs in /workspace and the operator inflates the Release CRD to
-    /config/release.yaml, whose spec.artifactories carries the same records.
+  * CRD-driven framework — that script is not present. The release pod runs in
+    /workspace and the operator inflates the Release CRD to /config/release.yaml,
+    whose spec.artifactories carries the registry records. That is the only case
+    this file implements.
 
-The legacy file is tried first; when it is absent or unreadable we fall back to
-the Release CRD. Output shape is identical either way, so the module's
-data.external contract does not change.
+Output shape is identical either way, so the module's data.external contract does
+not change.
 """
 
 import json
@@ -20,29 +20,40 @@ import os
 import sys
 import traceback
 
-DEPLOYMENT_CONTEXT_PATH = "/sources/deployment_context/deploymentcontext.json"
+LEGACY_SCRIPT = (
+    "/sources/primary/capillary-cloud-tf/tfmain/scripts"
+    "/artifactory-fetch-secret/artifactory-fetcher.py"
+)
 RELEASE_YAML_PATH = os.getenv("RELEASE_YAML_PATH", "/config/release.yaml")
+
+
+def delegate_to_legacy():
+    """Hand off to the legacy framework's fetcher when it is present.
+
+    Uses exec rather than a subprocess so the legacy script inherits this
+    process outright: its stdout becomes our stdout verbatim and its exit status
+    becomes ours, which is what data.external reads. On success this call does
+    not return.
+    """
+    if not os.path.isfile(LEGACY_SCRIPT):
+        return False
+    python = sys.executable or "python3"
+    os.execv(python, [python, LEGACY_SCRIPT] + sys.argv[1:])
 
 
 def _normalize(artifactory):
     """Reconcile the two spellings of the ECR account-id field.
 
-    The legacy deployment context serializes ECRArtifactory.awsAccountId, while
-    ReleaseCrdMapper emits awsAccountID. The module indexes awsAccountId, so
-    populate that key from whichever spelling is present.
+    ReleaseCrdMapper emits awsAccountID; the module indexes awsAccountId (see
+    ecr-token-refresher.tf), which is the spelling the legacy deployment context
+    used. Membership is not enough — a key present but explicitly null must not
+    shadow the populated spelling, or the module writes a null aws_account into
+    the refresher's config secret and the apply fails.
     """
     normalized = dict(artifactory)
-    # Membership is not enough: a key present but explicitly null must not
-    # shadow the populated spelling, or the module writes a null aws_account
-    # into the refresher's config secret and the apply fails.
     if not normalized.get("awsAccountId") and normalized.get("awsAccountID"):
         normalized["awsAccountId"] = normalized["awsAccountID"]
     return normalized
-
-
-def _load_from_deployment_context(path=None):
-    with open(path or DEPLOYMENT_CONTEXT_PATH, "r", encoding="utf-8") as f:
-        return json.load(f).get("artifactoryDetails", []) or []
 
 
 def _parse_release_yaml(text):
@@ -197,37 +208,9 @@ def _parse_artifactories_block(text):
     return entries
 
 
-def _load_from_release_crd(path=None):
+def load_artifactories(path=None):
     with open(path or RELEASE_YAML_PATH, "r", encoding="utf-8") as f:
         return _parse_release_yaml(f.read())
-
-
-def load_artifactories():
-    """Prefer the legacy deployment context; fall back to the Release CRD.
-
-    The legacy source counts as usable only when it actually yields records. A
-    file that is present but carries no "artifactoryDetails" (or is not even a
-    JSON object) must not shadow the CRD, or the module resolves zero registries
-    and destroys every secret it manages. OSError covers the mounted-but-
-    unreadable cases the narrower FileNotFoundError missed.
-    """
-    legacy_readable = False
-    try:
-        legacy = _load_from_deployment_context()
-        legacy_readable = True
-        if legacy:
-            return legacy
-    except (OSError, ValueError, AttributeError):
-        pass
-
-    try:
-        return _load_from_release_crd()
-    except (OSError, ValueError):
-        # A readable legacy context that genuinely lists no registries is a
-        # valid answer; only re-raise when neither source could be read.
-        if legacy_readable:
-            return []
-        raise
 
 
 class ArtifactoryFetcher:
@@ -277,6 +260,7 @@ class ArtifactoryFetcher:
 
 if __name__ == "__main__":
     try:
+        delegate_to_legacy()  # does not return when the legacy script is present
         include_all = sys.argv[1] if len(sys.argv) > 1 else "true"
         artifactory_names = sys.argv[2] if len(sys.argv) > 2 else "[]"
         ArtifactoryFetcher(include_all, artifactory_names).run()

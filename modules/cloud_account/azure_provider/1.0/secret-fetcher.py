@@ -8,6 +8,32 @@ from abc import ABC, abstractmethod
 from google.cloud import secretmanager, secretmanager_v1
 
 # -----------------------------
+# legacy delegation
+# -----------------------------
+LEGACY_SCRIPT = (
+    "/sources/primary/capillary-cloud-tf/tfmain/scripts"
+    "/cloudaccount-fetch-secret/secret-fetcher.py"
+)
+
+
+def delegate_to_legacy():
+    """Hand off to the legacy framework's fetcher when it is present.
+
+    On the legacy framework that script already owns this contract, so we let it
+    answer rather than reimplementing it here. Uses exec so it inherits this
+    process outright: its stdout becomes our stdout verbatim and its exit status
+    becomes ours, which is what data.external reads. Does not return on success.
+
+    When it is absent we are on the CRD-driven framework, and everything below
+    resolves the same values from the pod environment instead.
+    """
+    if not os.path.isfile(LEGACY_SCRIPT):
+        return False
+    python = sys.executable or "python3"
+    os.execv(python, [python, LEGACY_SCRIPT] + sys.argv[1:])
+
+
+# -----------------------------
 # config.py
 # -----------------------------
 def get_env(var, default=None, required=False):
@@ -138,6 +164,7 @@ class CredentialFetcher:
 
 if __name__ == "__main__":
     try:
+        delegate_to_legacy()  # does not return when the legacy script is present
         cloud_account_id = sys.argv[1]
         cloud  = sys.argv[2]
         CredentialFetcher(cloud_account_id, cloud).run()
