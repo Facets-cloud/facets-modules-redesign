@@ -34,7 +34,6 @@ variable "inputs" {
     cloud_account = object({
       attributes = object({
         aws_region     = string
-        aws_account_id = string
         aws_iam_role   = string
         external_id    = optional(string)
         session_name   = optional(string)
