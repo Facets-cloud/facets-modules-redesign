@@ -6,6 +6,9 @@ locals {
   auto_upgrade    = lookup(local.spec, "auto_upgrade", true)
   release_channel = local.auto_upgrade ? "STABLE" : "UNSPECIFIED" # Hardcoded to STABLE
 
+  # Daily maintenance window start time (UTC), configurable; defaults to 03:00
+  maintenance_start_time = lookup(lookup(local.spec, "maintenance_window", {}), "start_time", "03:00")
+
   # Network configuration from VPC module
   network_attributes = lookup(var.inputs.network_details, "attributes", {})
   project_id         = lookup(var.inputs.cloud_account, "attributes", {}).project_id

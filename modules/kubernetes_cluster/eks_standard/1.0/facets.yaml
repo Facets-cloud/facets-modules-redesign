@@ -247,7 +247,6 @@ spec:
                 - "1.34"
                 - "1.35"
                 - "1.36"
-                - "1.37"
             title: Kubernetes Version
             type: string
             x-ui-overrides-only: true

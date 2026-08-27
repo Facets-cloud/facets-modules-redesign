@@ -183,6 +183,32 @@ raptor import project-type \
 
 ## Importing Project Types
 
+### Managed Import (Recommended)
+
+Every subdirectory of `project-type/` that contains a `project-type.yml` is
+importable straight from this repository by name — raptor clones it for you, so
+there is no local checkout and no `-f` path to get right, and modules are
+uploaded with validation skipped (these are trusted official modules):
+
+```bash
+raptor import project-type --list-managed          # what this repo currently ships
+raptor import project-type --managed facets/aws
+raptor import project-type --managed facets/aws --name "Production AWS"
+```
+
+There is no hardcoded allowlist on the raptor side — adding a directory here is
+all it takes to make a new project type importable. Always run `--list-managed`
+rather than assuming a name exists.
+
+> **`raptor create project-type` no longer exists.** It built a project type by
+> copying the built-in `empty` one, which control planes started with
+> `BUILTIN_MODULES_DISABLED=true` delete at startup. To create a *blank* project
+> type, import a YAML with only `name` and `description`: with no `modules:` key
+> it gets no resource-type mappings, which the control plane reads as "all
+> resource types allowed". Note that `--managed facets/empty` is **not** that —
+> it maps exactly the three `cloud_account` provider flavors, so a module you
+> author later stays invisible until you map it.
+
 ### Using Raptor CLI
 
 **Basic Import (No Modules):**
@@ -215,7 +241,10 @@ raptor import project-type \
 
 | Flag | Description | Required |
 |------|-------------|----------|
-| `-f, --file` | Path to project-type.yml | Yes |
+| `-f, --file` | Path to project-type.yml | Yes (unless `--managed`) |
+| `--managed` | Import from this repo by name as `facets/<name>` | No (mutually exclusive with `-f`) |
+| `--list-managed` | List the importable managed project types, then exit | No |
+| `--name` | Override the project type name from the metadata | No |
 | `--vcs-account-id` | VCS account ID for private repos | No |
 | `--modules-dir` | Directory containing modules to upload | No |
 | `--outputs-dir` | Directory containing output type definitions | No |

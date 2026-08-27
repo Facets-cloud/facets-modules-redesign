@@ -2437,7 +2437,10 @@ raptor delete iac-module type/flavor/version
 
 # Project types
 raptor get project-types
-raptor create project-type NAME --description "Description"
+# Project types are IMPORTED, never created: `create project-type` is gone (it
+# copied the built-in `empty` type, which recent control planes delete at startup)
+raptor import project-type --managed facets/aws     # official bundle + its modules
+raptor import project-type -f project-type/aws/project-type.yml   # from this repo
 raptor get resource-type-mappings PROJECT_TYPE
 raptor create resource-type-mapping PROJECT_TYPE --resource-type type/flavor
 

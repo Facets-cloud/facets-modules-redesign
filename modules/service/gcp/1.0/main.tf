@@ -27,8 +27,8 @@ locals {
     length(local.iam_arns) > 0 ? { "iam.gke.io/gcp-service-account" = module.gcp-workload-identity.0.gcp_service_account_email } : {},
     local.enable_alb_backend_config ? { "cloud.google.com/backend-config" = "{\"default\": \"${lower(var.instance_name)}\"}" } : {}
   )
-  roles  = { for key, val in local.iam_arns : val.role => { role = val.role, condition = lookup(val, "condition", {}) } }
-  labels = {}
+  roles                     = { for key, val in local.iam_arns : val.role => { role = val.role, condition = lookup(val, "condition", {}) } }
+  labels                    = {}
   backend_config            = lookup(local.gcp_advanced_config, "backend_config", {})
   enable_alb_backend_config = lookup(local.backend_config, "enabled", false)
   runtime                   = lookup(local.spec, "runtime", {})
@@ -50,7 +50,7 @@ locals {
   resource_name = var.instance_name
 
   # Check if VPA is available and configure accordingly
-  vpa_available = lookup(var.inputs, "vpa_details", null) != null
+  vpa_available = try(coalesce(var.inputs.vpa_details.attributes.helm_release_id, ""), "") != ""
 
   # KEDA configuration
   autoscaling_config  = lookup(local.runtime, "autoscaling", {})
@@ -107,7 +107,7 @@ locals {
                   local.enable_keda ? { keda = local.keda_config } : {},
 
                   {
-                    image_pull_secrets = lookup(lookup(lookup(var.inputs, "artifactories", {}), "attributes", {}), "registry_secrets_list", [])
+                    image_pull_secrets = try(coalesce(var.inputs.artifactories.attributes.registry_secrets_list, []), [])
                   }
                 )
               }
@@ -155,7 +155,7 @@ module "app-helm-chart" {
   labels         = local.labels
   environment    = var.environment
   inputs         = var.inputs
-  vpa_release_id = lookup(lookup(lookup(var.inputs, "vpa_details", {}), "attributes", {}), "helm_release_id", "")
+  vpa_release_id = try(coalesce(var.inputs.vpa_details.attributes.helm_release_id, ""), "")
 }
 
 module "backend_config" {
