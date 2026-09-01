@@ -27,9 +27,14 @@ locals {
   is_importing = local.import_enabled ? lookup(var.instance.spec.imports, "db_instance_identifier", null) != null : false
 
   # Resource naming with length constraints
-  db_instance_identifier = substr("${var.instance_name}-${var.environment.unique_name}", 0, 63)
-  subnet_group_name      = substr("${var.instance_name}-${var.environment.unique_name}-subnet-group", 0, 63)
-  security_group_name    = substr("${var.instance_name}-${var.environment.unique_name}-sg", 0, 63)
+  # Brownfield: `identifier` is ForceNew on aws_db_instance. Adopting a live database while
+  # emitting a generated identifier plans destroy+create — i.e. data loss. local.is_importing
+  # already asserts the field is present, so the greenfield arm is exactly what the catalogue had.
+  db_instance_identifier = (local.is_importing
+    ? var.instance.spec.imports.db_instance_identifier
+  : substr("${var.instance_name}-${var.environment.unique_name}", 0, 63))
+  subnet_group_name   = substr("${var.instance_name}-${var.environment.unique_name}-subnet-group", 0, 63)
+  security_group_name = substr("${var.instance_name}-${var.environment.unique_name}-sg", 0, 63)
 
   # Use imported or created subnet group
   actual_subnet_group_name = local.import_enabled ? (lookup(var.instance.spec.imports, "subnet_group_name", null) != null ? var.instance.spec.imports.subnet_group_name : (length(aws_db_subnet_group.postgres) > 0 ? aws_db_subnet_group.postgres[0].name : null)) : (length(aws_db_subnet_group.postgres) > 0 ? aws_db_subnet_group.postgres[0].name : null)

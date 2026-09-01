@@ -162,6 +162,8 @@ spec:
             field: spec.imports.import_existing
             values:
               - true
+      required:
+      - import_existing
   required:
   - version_config
   - sizing
@@ -182,19 +184,6 @@ outputs:
   default:
     type: '@facets/mongo'
     title: MongoDB DocumentDB Cluster
-imports:
-- name: cluster_identifier
-  resource_address: aws_docdb_cluster.main
-  required: true
-- name: security_group_id
-  resource_address: aws_security_group.documentdb
-  required: true
-- name: subnet_group_name
-  resource_address: aws_docdb_subnet_group.main
-  required: true
-- name: master_password
-  resource_address: random_password.master[0]
-  required: true
 iac:
   validated_files:
   - main.tf

@@ -204,23 +204,12 @@ spec:
             field: spec.imports.import_existing
             values:
               - true
+      required:
+      - import_existing
   required:
   - version_config
   - sizing
   - security_config
-imports:
-- name: db_instance_identifier
-  resource_address: aws_db_instance.postgres
-  required: false
-- name: subnet_group_name
-  resource_address: aws_db_subnet_group.postgres
-  required: false
-- name: security_group_id
-  resource_address: aws_security_group.postgres
-  required: false
-- name: master_password
-  resource_address: random_password.master_password[0]
-  required: true
 inputs:
   aws_provider:
     type: '@facets/aws_cloud_account'

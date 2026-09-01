@@ -16,6 +16,8 @@ variable "instance" {
         max_allocated_storage = number
         storage_type          = string
         read_replica_count    = number
+        iops                  = optional(number)
+        storage_throughput    = optional(number)
       })
       restore_config = optional(object({
         restore_from_backup           = bool
@@ -23,12 +25,34 @@ variable "instance" {
         restore_master_username       = optional(string)
         restore_master_password       = optional(string)
       }), { restore_from_backup = false })
+      operations = optional(object({
+        multi_az                            = optional(bool)
+        deletion_protection                 = optional(bool)
+        backup_retention_period             = optional(number)
+        backup_window                       = optional(string)
+        maintenance_window                  = optional(string)
+        monitoring_interval                 = optional(number)
+        monitoring_role_arn                 = optional(string)
+        performance_insights_enabled        = optional(bool)
+        cloudwatch_logs_exports             = optional(list(string))
+        auto_minor_version_upgrade          = optional(bool)
+        apply_immediately                   = optional(bool)
+        copy_tags_to_snapshot               = optional(bool)
+        iam_database_authentication_enabled = optional(bool)
+        ca_cert_identifier                  = optional(string)
+      }), {})
+      replication = optional(object({
+        source_db_identifier = optional(string)
+      }), {})
+      tags = optional(map(string), {})
+      credentials = optional(object({
+        master_password = optional(string)
+      }), {})
       imports = optional(object({
         import_existing        = optional(bool, false)
         db_instance_identifier = optional(string)
         db_subnet_group_name   = optional(string)
         security_group_id      = optional(string)
-        master_password        = optional(string)
       }))
     })
   })
@@ -39,8 +63,8 @@ variable "instance" {
   }
 
   validation {
-    condition     = contains(["db.t3.micro", "db.t3.small", "db.t3.medium", "db.t3.large", "db.m5.large", "db.m5.xlarge", "db.m5.2xlarge"], var.instance.spec.sizing.instance_class)
-    error_message = "Instance class must be a valid RDS instance type"
+    condition     = can(regex("^db\\.[a-z][a-z0-9]*\\.[a-z0-9]+$", var.instance.spec.sizing.instance_class))
+    error_message = "Instance class must look like db.<family>.<size>, e.g. db.m6g.large or db.r5.2xlarge"
   }
 
   validation {

@@ -102,6 +102,15 @@ spec:
           title: Import Existing Resources
           description: Enable to import existing MSK cluster resources
           default: false
+        cluster_name:
+          type: string
+          title: Cluster Name (verbatim)
+          description: The live MSK cluster name, used verbatim. ForceNew — emitting a generated
+            name on an adopted cluster plans destroy+create.
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+            - true
         cluster_arn:
           type: string
           title: MSK Cluster ARN
@@ -118,16 +127,11 @@ spec:
             field: spec.imports.import_existing
             values:
             - true
+      required:
+      - import_existing
   required:
   - version_config
   - sizing
-imports:
-- name: cluster_arn
-  resource_address: aws_msk_cluster.main
-  required: false
-- name: security_group_id
-  resource_address: aws_security_group.msk_cluster
-  required: true
 inputs:
   aws_cloud_account:
     type: '@facets/aws_cloud_account'

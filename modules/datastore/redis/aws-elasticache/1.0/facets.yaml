@@ -156,6 +156,8 @@ spec:
             field: spec.imports.import_existing
             values:
               - true
+      required:
+      - import_existing
   required:
   - version_config
 inputs:
@@ -175,19 +177,6 @@ outputs:
   default:
     type: '@facets/redis'
     title: Redis AWS ElastiCache Cluster
-imports:
-- name: cluster_id
-  resource_address: aws_elasticache_replication_group.redis
-  required: true
-- name: subnet_group_name
-  resource_address: aws_elasticache_subnet_group.redis
-  required: false
-- name: security_group_id
-  resource_address: aws_security_group.redis
-  required: false
-- name: auth_token
-  resource_address: random_password.redis_auth_token[0]
-  required: true
 iac:
   validated_files:
   - main.tf

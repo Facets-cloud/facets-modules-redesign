@@ -195,6 +195,8 @@ spec:
             field: spec.imports.import_existing
             values:
               - true
+      required:
+      - import_existing
   required:
   - version_config
   - sizing
@@ -216,19 +218,6 @@ outputs:
   default:
     type: '@facets/mysql'
     title: MySQL Aurora Cluster
-imports:
-- name: cluster_identifier
-  resource_address: aws_rds_cluster.aurora
-  required: true
-- name: writer_instance_identifier
-  resource_address: aws_rds_cluster_instance.aurora_writer[0]
-  required: false
-- name: reader_instance_identifiers
-  resource_address: aws_rds_cluster_instance.aurora_readers[0]
-  required: false
-- name: master_password
-  resource_address: random_password.master_password[0]
-  required: true
 iac:
   validated_files:
   - main.tf

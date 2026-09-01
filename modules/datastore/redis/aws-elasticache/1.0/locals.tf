@@ -2,11 +2,16 @@
 locals {
   # Cluster identifier - must be <= 40 characters for AWS ElastiCache
   # Use a hash-based approach to ensure uniqueness while staying within limits
-  cluster_id = substr(
-    "${var.instance_name}-${substr(md5("${var.instance_name}-${var.environment.unique_name}"), 0, 8)}",
-    0,
-    40
-  )
+  # Brownfield: replication_group_id is ForceNew. The schema advertised imports.cluster_id but
+  # nothing consumed it, so adoption relied on ignore_changes alone and the live id could not be
+  # expressed. Gate it here; greenfield keeps the catalogue's hash-suffixed name unchanged.
+  cluster_id = (local.is_cluster_import
+    ? var.instance.spec.imports.cluster_id
+    : substr(
+      "${var.instance_name}-${substr(md5("${var.instance_name}-${var.environment.unique_name}"), 0, 8)}",
+      0,
+      40
+  ))
 
   # Primary endpoint for connecting to Redis
   # For single node: use primary_endpoint_address

@@ -2,7 +2,11 @@
 # Output locals are handled in outputs.tf by the Facets framework
 
 locals {
-  cluster_name = "${var.instance_name}-${var.environment.unique_name}"
+  # Brownfield: the live cluster name is ForceNew, so an adopted cluster must reproduce it exactly
+  # — a generated name here plans destroy+create. Greenfield is unchanged from the catalogue default.
+  cluster_name = (local.import_enabled && lookup(var.instance.spec.imports, "cluster_name", "") != ""
+    ? var.instance.spec.imports.cluster_name
+  : "${var.instance_name}-${var.environment.unique_name}")
 
   # Import flag
   import_enabled = lookup(var.instance.spec, "imports", null) != null ? lookup(var.instance.spec.imports, "import_existing", false) : false

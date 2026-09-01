@@ -1,4 +1,6 @@
-# Generate random password for master user (only if not restoring and not importing)
+# Generate random password for master user. Kept even when adopting: it is the fallback
+# when no live password is supplied, and it is never applied to an adopted database
+# because `password` sits in ignore_changes.
 resource "random_password" "master_password" {
   count            = local.is_restore_operation ? 0 : 1
   length           = 16
@@ -113,9 +115,7 @@ locals {
   actual_subnet_group_name = local.is_subnet_group_import ? data.aws_db_subnet_group.imported[0].name : (length(aws_db_subnet_group.mysql) > 0 ? aws_db_subnet_group.mysql[0].name : null)
 
   # Get the actual security group ID from all sources (imported, existing by name, or created)
-  actual_security_group_id = local.is_security_group_import ? data.aws_security_group.imported[0].id : (
-    local.sg_exists_by_name ? data.aws_security_groups.existing_sg[0].ids[0] :
-    (length(aws_security_group.mysql) > 0 ? aws_security_group.mysql[0].id : null)
+  actual_security_group_id = local.is_security_group_import ? data.aws_security_group.imported[0].id : ((length(aws_security_group.mysql) > 0 ? aws_security_group.mysql[0].id : null)
   )
 
   # Always use the main mysql resource identifier for read replicas
@@ -131,6 +131,10 @@ resource "aws_db_instance" "mysql" {
   engine         = "mysql"
   engine_version = var.instance.spec.version_config.version
 
+  # Set only on a read replica. Its presence makes AWS treat this as a replica of
+  # the named instance; its absence on an adopted replica would promote it.
+  replicate_source_db = local.is_read_replica ? local.replica_source : null
+
   # Instance configuration
   instance_class        = var.instance.spec.sizing.instance_class
   allocated_storage     = var.instance.spec.sizing.allocated_storage
@@ -139,9 +143,9 @@ resource "aws_db_instance" "mysql" {
   storage_encrypted     = true # Always enabled for security
 
   # Database configuration - use conditional values for importing
-  db_name  = local.database_name
-  username = local.master_username
-  password = local.master_password
+  db_name  = local.is_read_replica ? null : local.database_name
+  username = local.is_read_replica ? null : local.master_username
+  password = local.is_read_replica ? null : local.master_password
   port     = local.mysql_port
 
   # Network configuration
@@ -149,19 +153,28 @@ resource "aws_db_instance" "mysql" {
   vpc_security_group_ids = [local.actual_security_group_id]
   publicly_accessible    = false # Always private for security
 
-  # High availability and backup configuration (hardcoded for security)
-  multi_az                = true                  # Enable HA by default
-  backup_retention_period = 7                     # 7 days retention
-  backup_window           = "03:00-04:00"         # 3-4 AM UTC
-  maintenance_window      = "sun:04:00-sun:05:00" # Sunday 4-5 AM UTC
+  # Availability and backup - spec-driven, defaulting to the previously hardcoded
+  # values so a new database behaves exactly as before.
+  multi_az                = local.multi_az
+  backup_retention_period = local.backup_retention_period
+  backup_window           = local.backup_window
+  maintenance_window      = local.maintenance_window
 
-  # Performance and monitoring (hardcoded for production readiness)
-  performance_insights_enabled    = local.performance_insights_supported
-  monitoring_interval             = 0 # Disabled to avoid IAM role requirement
-  enabled_cloudwatch_logs_exports = ["error", "general", "slowquery"]
+  # Performance and monitoring
+  performance_insights_enabled        = local.performance_insights_supported
+  monitoring_interval                 = local.monitoring_interval
+  monitoring_role_arn                 = local.monitoring_interval > 0 && local.monitoring_role_arn != "" ? local.monitoring_role_arn : null
+  enabled_cloudwatch_logs_exports     = local.logs_exports
+  auto_minor_version_upgrade          = local.auto_minor_upgrade
+  apply_immediately                   = local.apply_immediately
+  copy_tags_to_snapshot               = local.copy_tags_to_snapshot
+  iam_database_authentication_enabled = local.iam_database_auth
+  ca_cert_identifier                  = local.ca_cert_identifier != "" ? local.ca_cert_identifier : null
+  iops                                = local.storage_iops > 0 ? local.storage_iops : null
+  storage_throughput                  = local.storage_throughput > 0 ? local.storage_throughput : null
 
-  # Deletion protection disabled for testing
-  deletion_protection       = false
+  # Deletion protection - NEVER force this off on an adopted database
+  deletion_protection       = local.deletion_protection
   skip_final_snapshot       = true
   final_snapshot_identifier = "${local.db_identifier}-final-snapshot-${formatdate("YYYY-MM-DD-hhmm", timestamp())}"
 
@@ -178,7 +191,10 @@ resource "aws_db_instance" "mysql" {
   lifecycle {
     prevent_destroy = true
     ignore_changes = [
-      identifier,                # Ignore identifier changes for imported resources
+      identifier,        # Ignore identifier changes for imported resources
+      apply_immediately, # Input-only: the API never returns it, so import cannot
+      # populate it and ANY value reads as an add on the plan.
+      # Still honoured on create, so greenfield is unaffected.
       password,                  # Password might be managed externally when importing
       username,                  # Username might be different when importing
       db_name,                   # Database name might be different when importing
@@ -192,11 +208,7 @@ resource "aws_db_instance" "mysql" {
     ]
   }
 
-  tags = merge(var.environment.cloud_tags, {
-    Name   = local.db_identifier
-    Module = "mysql"
-    Flavor = "aws-rds"
-  })
+  tags = local.db_tags
 }
 
 

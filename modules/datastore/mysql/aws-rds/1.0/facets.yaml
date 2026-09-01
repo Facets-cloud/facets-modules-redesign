@@ -1,10 +1,10 @@
 intent: mysql
 flavor: aws-rds
-version: '1.1'
+version: '1.0'
 clouds:
 - aws
-description: Managed MySQL database instance on AWS RDS with high availability, automated
-  backups, and read replicas
+description: Managed MySQL database instance on AWS RDS with high availability, automated backups, and
+  read replicas
 intentDetails:
   type: Datastores
   description: AWS RDS MySQL managed database service
@@ -12,13 +12,17 @@ intentDetails:
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mysql.svg
 spec:
   title: MySQL RDS Database
-  description: Managed MySQL database instance on AWS RDS with high availability,
-    automated backups, and read replicas
+  description: Managed MySQL database instance on AWS RDS with high availability, automated backups, and
+    read replicas
   type: object
   x-ui-order:
   - version_config
   - sizing
   - restore_config
+  - operations
+  - replication
+  - tags
+  - credentials
   - imports
   properties:
     version_config:
@@ -45,6 +49,12 @@ spec:
           minLength: 1
           maxLength: 64
           default: myapp
+        master_username:
+          type: string
+          title: Master Username
+          default: admin
+          description: Master user. Required by the module's variable type. On an adopted database this
+            is not applied - the live username is kept.
     sizing:
       type: object
       title: Sizing & Performance
@@ -58,16 +68,11 @@ spec:
         instance_class:
           type: string
           title: Instance Class
-          description: RDS instance class for performance and capacity
-          enum:
-          - db.t3.micro
-          - db.t3.small
-          - db.t3.medium
-          - db.t3.large
-          - db.m5.large
-          - db.m5.xlarge
-          - db.m5.2xlarge
+          description: RDS instance class. Any valid class is accepted - an adopted database must state
+            the class it already runs.
           default: db.t3.small
+          pattern: ^db\.[a-z][a-z0-9]*\.[a-z0-9]+$
+          x-ui-error-message: Must be a valid RDS instance class, e.g. db.m6g.large, db.r5.2xlarge
         allocated_storage:
           type: number
           title: Allocated Storage (GB)
@@ -99,6 +104,16 @@ spec:
           minimum: 0
           maximum: 5
           default: 0
+        iops:
+          type: integer
+          title: Provisioned IOPS
+          minimum: 0
+          description: gp3/io1/io2 only. 0 means let AWS use the default for the storage size.
+        storage_throughput:
+          type: integer
+          title: Storage Throughput (MB/s)
+          minimum: 0
+          description: gp3 only. 0 means the AWS default.
     restore_config:
       type: object
       title: Restore Operations
@@ -125,8 +140,7 @@ spec:
         restore_master_username:
           type: string
           title: Restore Master Username
-          description: Master username for restored database (required for restore
-            operations)
+          description: Master username for restored database (required for restore operations)
           pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
           minLength: 1
           maxLength: 16
@@ -137,19 +151,18 @@ spec:
         restore_master_password:
           type: string
           title: Restore Master Password
-          description: Master password for restored database (required for restore
-            operations)
+          description: Master password for restored database (required for restore operations)
           minLength: 8
           maxLength: 128
           pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,128}$
-          x-ui-error-message: "Password must be 8-128 chars with valid characters."
+          x-ui-error-message: Password must be 8-128 chars with valid characters.
           x-ui-visible-if:
             field: spec.restore_config.restore_from_backup
             values:
             - true
     imports:
       type: object
-      title: Import Existing Resources
+      title: Existing Database
       x-ui-overrides-only: true
       x-ui-order:
       - import_existing
@@ -158,8 +171,9 @@ spec:
       properties:
         import_existing:
           type: boolean
-          title: Import Existing Resources
-          description: Enable to import existing AWS RDS resources
+          title: Adopt an existing database
+          description: On, this resource takes over a live database at its current identifier and leaves
+            every setting as it is.
           default: false
         db_instance_identifier:
           type: string
@@ -168,7 +182,7 @@ spec:
           x-ui-visible-if:
             field: spec.imports.import_existing
             values:
-              - true
+            - true
         db_subnet_group_name:
           type: string
           title: DB Subnet Group Name
@@ -176,7 +190,7 @@ spec:
           x-ui-visible-if:
             field: spec.imports.import_existing
             values:
-              - true
+            - true
         security_group_id:
           type: string
           title: Security Group ID
@@ -184,33 +198,139 @@ spec:
           x-ui-visible-if:
             field: spec.imports.import_existing
             values:
-              - true
+            - true
+      description: Adopt a database that already exists instead of creating one. Turning this on reveals
+        the identifiers that say which one, and the shared objects it references rather than owns.
+      required:
+      - import_existing
+    operations:
+      type: object
+      title: Availability, Backup & Monitoring
+      description: Operational policy. Defaults match what this module previously hardcoded, so a new
+        database is unchanged. An adopted database must state its live values here or the apply will change
+        them.
+      properties:
+        multi_az:
+          type: boolean
+          title: Multi-AZ
+          default: true
+          description: Standby replica in a second AZ. Enabling this on a live single-AZ database causes
+            a failover and roughly doubles cost.
+        deletion_protection:
+          type: boolean
+          title: Deletion Protection
+          default: false
+          description: Blocks deletion until turned off. Never set this false on an adopted database that
+            has it on.
+        backup_retention_period:
+          type: integer
+          title: Backup Retention (days)
+          default: 7
+          minimum: 0
+          maximum: 35
+        backup_window:
+          type: string
+          title: Backup Window
+          default: 03:00-04:00
+          pattern: ^[0-2][0-9]:[0-5][0-9]-[0-2][0-9]:[0-5][0-9]$
+          x-ui-error-message: Format hh:mm-hh:mm in UTC, e.g. 03:00-04:00
+        maintenance_window:
+          type: string
+          title: Maintenance Window
+          default: sun:04:00-sun:05:00
+          pattern: ^[a-z]{3}:[0-2][0-9]:[0-5][0-9]-[a-z]{3}:[0-2][0-9]:[0-5][0-9]$
+          x-ui-error-message: Format ddd:hh:mm-ddd:hh:mm in UTC, e.g. sun:04:00-sun:05:00
+        monitoring_interval:
+          type: integer
+          title: Enhanced Monitoring Interval (s)
+          default: 0
+          enum:
+          - 0
+          - 1
+          - 5
+          - 10
+          - 15
+          - 30
+          - 60
+          description: 0 disables enhanced monitoring. Any other value needs a monitoring role ARN.
+        monitoring_role_arn:
+          type: string
+          title: Enhanced Monitoring Role ARN
+          description: Required when the interval is not 0. Referenced, never created - this role is usually
+            shared.
+        performance_insights_enabled:
+          type: boolean
+          title: Performance Insights
+          default: true
+          description: Ignored on classes that do not support it (db.t3.micro, db.t3.small).
+        cloudwatch_logs_exports:
+          type: array
+          title: CloudWatch Log Exports
+          items:
+            type: string
+          default:
+          - error
+          - general
+          - slowquery
+          description: Log types shipped to CloudWatch. An adopted database must list exactly what it
+            already exports.
+        auto_minor_version_upgrade:
+          type: boolean
+          title: Auto Minor Version Upgrade
+          default: true
+        apply_immediately:
+          type: boolean
+          title: Apply Immediately
+          default: false
+          description: Off means changes wait for the maintenance window.
+        copy_tags_to_snapshot:
+          type: boolean
+          title: Copy Tags to Snapshot
+          default: false
+        iam_database_authentication_enabled:
+          type: boolean
+          title: IAM Database Authentication
+          default: false
+          description: Allows IAM principals to authenticate to the database. Turning this off on a live
+            database breaks any client relying on it.
+        ca_cert_identifier:
+          type: string
+          title: CA Certificate Identifier
+          description: Leave empty to let AWS choose. An adopted database should state the certificate
+            it already uses, e.g. rds-ca-rsa2048-g1.
+    tags:
+      type: object
+      title: Tags (verbatim while adopting)
+      description: Tags on the database. When adopting, these are written exactly as given and nothing
+        is added - not even a Name. When building new, they are merged with the environment's tags.
+      default: {}
+      x-ui-yaml-editor: true
+    replication:
+      type: object
+      title: Replication
+      description: Makes this database a read replica of another. Leave empty for a primary.
+      properties:
+        source_db_identifier:
+          type: string
+          title: Source DB ARN
+          description: ARN of the database this one replicates. The provider requires an ARN rather than
+            a bare identifier whenever a subnet group is set, which it always is here. Setting it makes
+            this a read replica; clearing it on a live replica would promote it to standalone, which recreates
+            it.
+    credentials:
+      type: object
+      title: Credentials
+      x-ui-overrides-only: true
+      description: Credentials of an adopted database. Never applied to AWS - the live database keeps
+        its own - but this is what the module hands downstream in the password output and connection strings.
+      properties:
         master_password:
           type: string
           title: Master Password
-          description: Master password for the imported resource (8+ characters)
-          minLength: 8
-          pattern: ^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,}$
-          x-ui-error-message: "Password must be 8+ chars with valid characters."
-          x-ui-visible-if:
-            field: spec.imports.import_existing
-            values:
-              - true
+          description: "Set from a secret variable, never inline. Leave empty and anything wired with\
+            \ ${\u2026out.interfaces.writer.connection_string} receives a generated password."
   required:
   - version_config
-imports:
-- name: db_instance_identifier
-  resource_address: aws_db_instance.mysql
-  required: true
-- name: db_subnet_group_name
-  resource_address: aws_db_subnet_group.mysql
-  required: false
-- name: security_group_id
-  resource_address: aws_security_group.mysql
-  required: false
-- name: master_password
-  resource_address: random_password.master_password[0]
-  required: true
 inputs:
   aws_provider:
     type: '@facets/aws_cloud_account'
@@ -236,7 +356,7 @@ iac:
 sample:
   kind: mysql
   flavor: aws-rds
-  version: '1.1'
+  version: '1.0'
   disabled: true
   spec:
     version_config:
