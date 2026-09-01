@@ -1,10 +1,13 @@
 intent: aws_efs
 flavor: standard
 version: '1.0'
-description: |
-  Creates an AWS EFS (Elastic File System) with mount targets in all private subnets
+description: 'Creates an AWS EFS (Elastic File System) with mount targets in all private subnets
+
   and a dedicated security group allowing NFS access from within the VPC. Provides
+
   generic shared file storage usable by Kubernetes, Lambda, ECS, or any service.
+
+  '
 intentDetails:
   type: Cloud & Infrastructure
   description: AWS Elastic File System for shared persistent storage across compute services
@@ -42,7 +45,8 @@ spec:
     performance_mode:
       type: string
       title: Performance Mode
-      description: The file system performance mode. generalPurpose is suitable for most workloads; maxIO is optimized for highly parallelized workloads
+      description: The file system performance mode. generalPurpose is suitable for most workloads; maxIO
+        is optimized for highly parallelized workloads
       enum:
       - generalPurpose
       - maxIO
@@ -69,7 +73,8 @@ spec:
     kms_key_id:
       type: string
       title: KMS Key ID
-      description: The ARN of the KMS key to use for encryption. Defaults to the AWS-managed key if not specified
+      description: The ARN of the KMS key to use for encryption. Defaults to the AWS-managed key if not
+        specified
       x-ui-visible-if:
         field: spec.encrypted
         values:
@@ -77,7 +82,8 @@ spec:
     availability_zone_name:
       type: string
       title: Availability Zone
-      description: The Availability Zone in which to create the EFS file system (for One Zone storage class). Leave empty for regional (multi-AZ) deployment
+      description: The Availability Zone in which to create the EFS file system (for One Zone storage
+        class). Leave empty for regional (multi-AZ) deployment
     lifecycle_policy:
       type: object
       title: Lifecycle Policy
@@ -109,15 +115,151 @@ spec:
       title: Additional Tags
       description: Optional additional tags to apply to all EFS resources
       x-ui-yaml-editor: true
+    mount_targets:
+      type: object
+      title: Mount Targets
+      description: 'One entry per mount target — a pod can only reach the filesystem through a mount target
+        in its own AZ. Left empty for a NEW filesystem, one is created per private subnet of the wired
+        network. Adopting requires them explicitly: Hiver''s live mount targets sit in 8 subnets, and
+        3 of those are not among the network''s private subnets, so a derived set would be wrong.'
+      patternProperties:
+        ^[a-z0-9][a-z0-9-]*$:
+          type: object
+          properties:
+            subnet_id:
+              type: string
+              title: Subnet ID
+            security_group_ids:
+              type: array
+              title: Security Group IDs
+              items:
+                type: string
+              description: Referenced, never owned — the live groups are shared across filesystems.
+            ip_address:
+              type: string
+              title: IP Address
+              description: Leave unset to let AWS assign one. Set only when adopting a specific address.
+            import_id:
+              type: string
+              title: Mount Target ID
+              description: The live fsmt-… id. Per-object identity belongs on the entry, not in imports.
+    access_points:
+      type: object
+      title: Access Points
+      description: Application-specific entry points into the filesystem, each with its own root directory
+        and POSIX identity. 3 of Hiver's 6 filesystems have one; unmodelled, an adopted access point is
+        simply unmanaged.
+      patternProperties:
+        ^[a-z0-9][a-z0-9-]*$:
+          type: object
+          properties:
+            root_directory_path:
+              type: string
+              title: Root Directory Path
+            creation_info:
+              type: object
+              title: Creation Info
+              properties:
+                owner_uid:
+                  type: integer
+                  title: Owner UID
+                owner_gid:
+                  type: integer
+                  title: Owner GID
+                permissions:
+                  type: string
+                  title: Permissions
+            posix_user:
+              type: object
+              title: POSIX User
+              properties:
+                uid:
+                  type: integer
+                  title: UID
+                gid:
+                  type: integer
+                  title: GID
+                secondary_gids:
+                  type: array
+                  title: Secondary GIDs
+                  items:
+                    type: integer
+            tags:
+              type: object
+              title: Tags
+              x-ui-yaml-editor: true
+            import_id:
+              type: string
+              title: Access Point ID
+              description: The live fsap-… id.
+    creation_token:
+      type: string
+      title: Creation Token
+      description: Idempotency token AWS assigns at creation. ForceNew, and for Hiver's filesystems it
+        is a UUID or the filesystem id itself — so it must be reproduced verbatim when adopting or terraform
+        plans a replacement.
+    backup_policy_enabled:
+      type: boolean
+      title: Automatic Backups
+      description: AWS enables backups by default on a new filesystem, so this is ENABLED on 5 of Hiver's
+        6 and DISABLED on one. Unmodelled, the plan would leave a live backup policy unmanaged.
+    file_system_policy_json:
+      type: string
+      title: File System Policy
+      description: Resource policy JSON. None of Hiver's filesystems has one; modelled so staging can.
+      x-ui-editor: true
+      x-ui-editor-language: json
+    inject_env_tags:
+      type: boolean
+      title: Inject Environment Tags
+      description: 'Add the platform''s tags on top of yours. Off when adopting: on a live filesystem
+        they are a diff on every one.'
+      default: false
+    imports:
+      type: object
+      title: Existing File System
+      description: Adopt a file system that already exists instead of creating one. Turning this on reveals
+        the identifiers that say which one, and the objects it references rather than owns. Set per environment
+        — production adopts, a new environment builds.
+      x-ui-overrides-only: true
+      properties:
+        import_existing:
+          type: boolean
+          title: Adopt an existing file system
+          description: Enable to adopt a file system that already exists in this environment.
+          default: false
+        file_system_id:
+          type: string
+          title: File System ID
+          description: The live fs-… id — the id terraform imports a filesystem by.
+          x-ui-visible-if: &id001
+            field: spec.imports.import_existing
+            values:
+            - true
+        name:
+          type: string
+          title: Name (verbatim)
+          description: The live Name tag, reproduced exactly. The module otherwise generates one, which
+            on an adopted filesystem is a tag change on a live resource.
+          x-ui-visible-if: *id001
+      required:
+      - import_existing
   x-ui-order:
   - encrypted
+  - kms_key_id
   - performance_mode
   - throughput_mode
   - provisioned_throughput_in_mibps
-  - kms_key_id
   - availability_zone_name
+  - creation_token
   - lifecycle_policy
+  - backup_policy_enabled
+  - file_system_policy_json
+  - mount_targets
+  - access_points
   - tags
+  - inject_env_tags
+  - imports
 sample:
   kind: aws_efs
   flavor: standard
@@ -127,3 +269,5 @@ sample:
     encrypted: true
     performance_mode: generalPurpose
     throughput_mode: bursting
+    imports:
+      import_existing: false

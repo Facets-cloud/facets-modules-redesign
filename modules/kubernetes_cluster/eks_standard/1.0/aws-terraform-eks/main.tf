@@ -160,8 +160,10 @@ resource "aws_eks_cluster" "this" {
     }
   }
 
+  # The module's own marker tag is skipped when adopting: adding a tag to a running
+  # cluster is a change, and adoption reproduces the live tag set exactly.
   tags = merge(
-    { terraform-aws-modules = "eks" },
+    var.adopt_existing ? {} : { terraform-aws-modules = "eks" },
     var.tags,
     var.cluster_tags,
   )
@@ -423,7 +425,7 @@ resource "aws_iam_openid_connect_provider" "oidc_provider" {
   url             = aws_eks_cluster.this[0].identity[0].oidc[0].issuer
 
   tags = merge(
-    { Name = "${var.cluster_name}-eks-irsa" },
+    var.adopt_existing ? var.oidc_tags : { Name = "${var.cluster_name}-eks-irsa" },
     var.tags
   )
 }
@@ -772,6 +774,13 @@ resource "aws_eks_addon" "this" {
   ]
 
   tags = merge(var.tags, try(each.value.tags, {}))
+
+  lifecycle {
+    # Input-only fields: the EKS API never returns preserve or the resolve_conflicts_*
+    # settings, so an imported add-on reports them as additions forever regardless of
+    # the value chosen. They are Terraform-side behaviour, not cluster state.
+    ignore_changes = [preserve, resolve_conflicts_on_create, resolve_conflicts_on_update]
+  }
 }
 
 

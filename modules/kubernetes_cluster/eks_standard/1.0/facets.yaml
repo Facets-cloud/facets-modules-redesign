@@ -1,8 +1,13 @@
 clouds:
-    - aws
-description: |
-    Creates an AWS EKS cluster with managed node groups using the official terraform-aws-eks module.
-    This flavor does NOT support EKS Auto Mode - for Auto Mode support, use the eks_auto flavor.
+- aws
+description: 'Creates an AWS EKS cluster with managed node groups using the official terraform-aws-eks
+  module.
+
+  This flavor does NOT support EKS Auto Mode - for Auto Mode support, use the eks_auto flavor.
+
+  . Version 1.2 adds an adoption posture: the same module can take over an existing EKS cluster at zero
+  change. Greenfield behaviour is unchanged from 1.1 - adoption only turns things off, and objects shared
+  between clusters are referenced by arn rather than created.'
 intentDetails:
   type: Cloud & Infrastructure
   description: AWS EKS cluster with standard configuration and all necessary settings preset
@@ -10,346 +15,470 @@ intentDetails:
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_cluster.svg
 flavor: eks_standard
 alias-flavors:
-  - default
+- default
 inputs:
-    cloud_account:
-        description: The AWS Cloud Account where the EKS cluster will be created
-        displayName: Cloud Account
-        optional: false
-        providers:
-            - aws
-        type: '@facets/aws_cloud_account'
-    network_details:
-        default:
-            resource_name: default
-            resource_type: network
-        displayName: Network
-        type: '@facets/aws-vpc-details'
+  cloud_account:
+    description: The AWS Cloud Account where the EKS cluster will be created
+    displayName: Cloud Account
+    optional: false
+    providers:
+    - aws
+    type: '@facets/aws_cloud_account'
+  network_details:
+    default:
+      resource_name: default
+      resource_type: network
+    displayName: Network
+    type: '@facets/aws-vpc-details'
 intent: kubernetes_cluster
 outputs:
-    attributes:
-        providers:
-            helm:
-                attributes:
-                    kubernetes:
-                        cluster_ca_certificate: cluster_ca_certificate
-                        exec:
-                            api_version: kubernetes_provider_exec.api_version
-                            args: kubernetes_provider_exec.args
-                            command: kubernetes_provider_exec.command
-                        host: cluster_endpoint
-                source: hashicorp/helm
-                version: 2.17.0
-            kubernetes:
-                attributes:
-                    cluster_ca_certificate: cluster_ca_certificate
-                    exec:
-                        api_version: kubernetes_provider_exec.api_version
-                        args: kubernetes_provider_exec.args
-                        command: kubernetes_provider_exec.command
-                    host: cluster_endpoint
-                source: hashicorp/kubernetes
-                version: 2.38.0
-            kubernetes-alpha:
-                attributes:
-                    cluster_ca_certificate: cluster_ca_certificate
-                    exec:
-                        api_version: kubernetes_provider_exec.api_version
-                        args: kubernetes_provider_exec.args
-                        command: kubernetes_provider_exec.command
-                    host: cluster_endpoint
-                source: hashicorp/kubernetes-alpha
-                version: 0.6.0
-        title: Kubernetes Cluster Output
-        type: '@facets/kubernetes-details'
-    default:
-        description: Additional EKS cluster attributes without provider configuration
-        title: EKS Cluster Attributes
-        type: '@facets/eks'
+  attributes:
+    providers:
+      helm:
+        attributes:
+          kubernetes:
+            cluster_ca_certificate: cluster_ca_certificate
+            exec:
+              api_version: kubernetes_provider_exec.api_version
+              args: kubernetes_provider_exec.args
+              command: kubernetes_provider_exec.command
+            host: cluster_endpoint
+        source: hashicorp/helm
+        version: 2.17.0
+      kubernetes:
+        attributes:
+          cluster_ca_certificate: cluster_ca_certificate
+          exec:
+            api_version: kubernetes_provider_exec.api_version
+            args: kubernetes_provider_exec.args
+            command: kubernetes_provider_exec.command
+          host: cluster_endpoint
+        source: hashicorp/kubernetes
+        version: 2.38.0
+      kubernetes-alpha:
+        attributes:
+          cluster_ca_certificate: cluster_ca_certificate
+          exec:
+            api_version: kubernetes_provider_exec.api_version
+            args: kubernetes_provider_exec.args
+            command: kubernetes_provider_exec.command
+          host: cluster_endpoint
+        source: hashicorp/kubernetes-alpha
+        version: 0.6.0
+    title: Kubernetes Cluster Output
+    type: '@facets/kubernetes-details'
+  default:
+    description: Additional EKS cluster attributes without provider configuration
+    title: EKS Cluster Attributes
+    type: '@facets/eks'
 sample:
-    disabled: false
-    flavor: eks_standard
-    kind: kubernetes_cluster
-    spec:
-        cluster_addons:
-            coredns:
-                enabled: true
-                version: latest
-            ebs_csi:
-                enabled: true
-                version: latest
-            kube_proxy:
-                enabled: true
-                version: latest
-            metrics_server:
-                enabled: true
-                version: latest
-            vpc_cni:
-                enabled: true
-                version: latest
-        cluster_endpoint_private_access: true
-        cluster_endpoint_public_access: true
-        cluster_version: "1.36"
-        customer_managed_kms: true
-    version: "1.1"
+  disabled: false
+  flavor: eks_standard
+  kind: kubernetes_cluster
+  spec:
+    cluster_addons:
+      coredns:
+        enabled: true
+        version: latest
+      ebs_csi:
+        enabled: true
+        version: latest
+      kube_proxy:
+        enabled: true
+        version: latest
+      metrics_server:
+        enabled: true
+        version: latest
+      vpc_cni:
+        enabled: true
+        version: latest
+    cluster_endpoint_private_access: true
+    cluster_endpoint_public_access: true
+    cluster_version: '1.36'
+    customer_managed_kms: true
+    imports:
+      import_existing: false
+  version: '1.0'
 spec:
-    description: Configure your Amazon EKS cluster with managed node groups
-    properties:
-        node_subnet_ids:
-            description: Override subnet IDs for the managed node group (defaults to the network's private subnets). Use to pin nodes to specific NAT-egress private subnets.
-            title: Node Group Subnet IDs
-            type: array
-            items:
-                type: string
-            x-ui-overrides-only: true
-        cluster_addons:
-            description: Managed EKS add-ons configuration
-            properties:
-                additional_addons:
-                    description: Additional custom EKS add-ons (e.g., aws-ebs-csi-driver, aws-efs-csi-driver, snapshot-controller)
-                    patternProperties:
-                        ^[a-zA-Z0-9_-]+$:
-                            properties:
-                                configuration_values:
-                                    description: Optional JSON configuration values for the add-on
-                                    title: Configuration Values (JSON)
-                                    type: string
-                                    x-ui-yaml-editor: true
-                                enabled:
-                                    default: true
-                                    description: Enable this add-on
-                                    title: Enabled
-                                    type: boolean
-                                service_account_role_arn:
-                                    description: Optional IAM role ARN for the add-on's service account (IRSA)
-                                    title: Service Account Role ARN
-                                    type: string
-                                    x-ui-placeholder: arn:aws:iam::123456789012:role/addon-role
-                                version:
-                                    description: Version of the add-on (use 'latest' for latest version)
-                                    title: Version
-                                    type: string
-                                    x-ui-placeholder: latest
-                            type: object
-                    title: Additional Add-ons
-                    type: object
-                    x-ui-yaml-editor: true
-                coredns:
-                    properties:
-                        enabled:
-                            default: true
-                            title: Enable CoreDNS
-                            type: boolean
-                        version:
-                            default: latest
-                            title: Version
-                            type: string
-                            x-ui-visible-if:
-                                field: spec.cluster_addons.coredns.enabled
-                                values:
-                                    - true
-                    title: CoreDNS
-                    type: object
-                ebs_csi:
-                    properties:
-                        enabled:
-                            default: true
-                            title: Enable EBS CSI Driver
-                            type: boolean
-                        version:
-                            default: latest
-                            title: Version
-                            type: string
-                            x-ui-visible-if:
-                                field: spec.cluster_addons.ebs_csi.enabled
-                                values:
-                                    - true
-                    title: EBS CSI Driver
-                    type: object
-                kube_proxy:
-                    properties:
-                        enabled:
-                            default: true
-                            title: Enable Kube Proxy
-                            type: boolean
-                        version:
-                            default: latest
-                            title: Version
-                            type: string
-                            x-ui-visible-if:
-                                field: spec.cluster_addons.kube_proxy.enabled
-                                values:
-                                    - true
-                    title: Kube Proxy
-                    type: object
-                metrics_server:
-                    properties:
-                        enabled:
-                            default: true
-                            title: Enable Metrics Server
-                            type: boolean
-                        version:
-                            default: latest
-                            title: Version
-                            type: string
-                            x-ui-visible-if:
-                                field: spec.cluster_addons.metrics_server.enabled
-                                values:
-                                    - true
-                    title: Metrics Server
-                    type: object
-                vpc_cni:
-                    properties:
-                        enabled:
-                            default: true
-                            title: Enable VPC CNI
-                            type: boolean
-                        version:
-                            default: latest
-                            title: Version
-                            type: string
-                            x-ui-visible-if:
-                                field: spec.cluster_addons.vpc_cni.enabled
-                                values:
-                                    - true
-                    title: VPC CNI
-                    type: object
-            title: EKS Add-ons
-            type: object
-            x-ui-toggle: true
-        cluster_endpoint_private_access:
-            default: true
-            description: Whether the cluster API server endpoint is accessible from within the VPC
-            title: Enable Private Endpoint Access
-            type: boolean
-            x-ui-overrides-only: true
-        cluster_endpoint_public_access:
-            default: true
-            description: Whether the cluster API server endpoint is accessible from the internet
-            title: Enable Public Endpoint Access
-            type: boolean
-            x-ui-overrides-only: true
-        cluster_tags:
-            description: Additional tags for the EKS cluster
-            title: Cluster Tags
-            type: object
-            x-ui-yaml-editor: true
-        cluster_version:
-            default: "1.36"
-            description: EKS Kubernetes version
-            enum:
-                - "1.28"
-                - "1.29"
-                - "1.30"
-                - "1.31"
-                - "1.32"
-                - "1.33"
-                - "1.34"
-                - "1.35"
-                - "1.36"
-            title: Kubernetes Version
-            type: string
-            x-ui-overrides-only: true
-        default_node_pool:
-            description: Default system node pool configuration for running system workloads (CoreDNS, Karpenter, etc.)
-            properties:
-                capacity_type:
-                    default: ON_DEMAND
-                    description: Type of capacity for the default system node pool
-                    enum:
-                        - ON_DEMAND
-                        - SPOT
-                    title: Capacity Type
-                    type: string
-                disk_size:
-                    default: 50
-                    description: Disk size in GB for default system nodes
-                    maximum: 1000
-                    minimum: 20
-                    title: Disk Size (GB)
-                    type: integer
-                instance_types:
-                    default:
-                        - t3.medium
-                    description: List of EC2 instance types for the default system node pool
-                    items:
-                        type: string
-                    title: Instance Types
-                    type: array
-                size:
-                    default: 2
-                    description: Number of nodes in the default system pool
-                    minimum: 1
-                    title: Node Count
-                    type: integer
-            title: Default System Node Pool
-            type: object
-            x-ui-toggle: true
-        container_insights_enabled:
-            default: false
-            description: Enable CloudWatch Container Insights for cluster monitoring.
-            title: Container Insights
-            type: boolean
-        cloudwatch_agent_policies:
-            type: object
-            title: CloudWatch Agent IAM Policies
-            description: Additional IAM policy ARNs to attach to the CloudWatch Agent IRSA role (e.g., for X-Ray, custom metrics)
-            x-ui-visible-if:
-                field: spec.container_insights_enabled
+  description: Configure your Amazon EKS cluster with managed node groups
+  properties:
+    node_subnet_ids:
+      description: Override subnet IDs for the managed node group (defaults to the network's private subnets).
+        Use to pin nodes to specific NAT-egress private subnets.
+      title: Node Group Subnet IDs
+      type: array
+      items:
+        type: string
+      x-ui-overrides-only: true
+    cluster_addons:
+      description: Managed EKS add-ons configuration
+      properties:
+        additional_addons:
+          description: Additional custom EKS add-ons (e.g., aws-ebs-csi-driver, aws-efs-csi-driver, snapshot-controller)
+          patternProperties:
+            ^[a-zA-Z0-9_-]+$:
+              properties:
+                configuration_values:
+                  description: Optional JSON configuration values for the add-on
+                  title: Configuration Values (JSON)
+                  type: string
+                  x-ui-yaml-editor: true
+                enabled:
+                  default: true
+                  description: Enable this add-on
+                  title: Enabled
+                  type: boolean
+                service_account_role_arn:
+                  description: Optional IAM role ARN for the add-on's service account (IRSA)
+                  title: Service Account Role ARN
+                  type: string
+                  x-ui-placeholder: arn:aws:iam::123456789012:role/addon-role
+                version:
+                  description: Version of the add-on (use 'latest' for latest version)
+                  title: Version
+                  type: string
+                  x-ui-placeholder: latest
+              type: object
+          title: Additional Add-ons
+          type: object
+          x-ui-yaml-editor: true
+        coredns:
+          properties:
+            enabled:
+              default: true
+              title: Enable CoreDNS
+              type: boolean
+            version:
+              default: latest
+              title: Version
+              type: string
+              x-ui-visible-if:
+                field: spec.cluster_addons.coredns.enabled
                 values:
-                    - true
-            patternProperties:
-                ^[a-zA-Z0-9_.-]*$:
-                    title: Policy Name
-                    type: object
-                    properties:
-                        arn:
-                            title: ARN
-                            type: string
-                            pattern: ^(arn:aws:iam::(\d{12}|aws):policy\/[A-Za-z0-9+=,.@\-_]+|\$\{[A-Za-z0-9._-]+\})$
-                            x-ui-placeholder: 'IAM policy ARN. Eg: arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess'
-                            x-ui-error-message: 'Value doesn''t match pattern, accepted value pattern Eg: arn:aws:iam::123456789012:policy/policy1'
-                            x-ui-output-type: iam_policy_arn
-                            x-ui-typeable: true
-                    required:
-                        - arn
-        customer_managed_kms:
-            default: true
-            description: Use a customer-managed KMS key for Kubernetes secrets encryption. Required for compliance (PCI-DSS, HIPAA). EKS always encrypts secrets with AWS-owned keys by default.
-            title: Customer-Managed KMS Key
-            type: boolean
-        enabled_log_types:
-            default:
-                - api
-                - audit
-                - authenticator
-                - controllerManager
-                - scheduler
-            description: List of EKS control plane log types to enable. All types enabled by default for security and compliance.
-            items:
-                enum:
-                    - api
-                    - audit
-                    - authenticator
-                    - controllerManager
-                    - scheduler
-                type: string
-            title: Enabled Control Plane Log Types
-            type: array
-            x-ui-overrides-only: true
-    required:
-        - cluster_version
-    title: EKS Cluster Configuration
-    type: object
-    x-ui-order:
-        - cluster_version
-        - cluster_endpoint_public_access
-        - cluster_endpoint_private_access
-        - customer_managed_kms
-        - enabled_log_types
-        - container_insights_enabled
-        - cloudwatch_agent_policies
-        - cluster_addons
-        - default_node_pool
-        - cluster_tags
-version: "1.1"
+                - true
+          title: CoreDNS
+          type: object
+        ebs_csi:
+          properties:
+            enabled:
+              default: true
+              title: Enable EBS CSI Driver
+              type: boolean
+            version:
+              default: latest
+              title: Version
+              type: string
+              x-ui-visible-if:
+                field: spec.cluster_addons.ebs_csi.enabled
+                values:
+                - true
+          title: EBS CSI Driver
+          type: object
+        kube_proxy:
+          properties:
+            enabled:
+              default: true
+              title: Enable Kube Proxy
+              type: boolean
+            version:
+              default: latest
+              title: Version
+              type: string
+              x-ui-visible-if:
+                field: spec.cluster_addons.kube_proxy.enabled
+                values:
+                - true
+          title: Kube Proxy
+          type: object
+        metrics_server:
+          properties:
+            enabled:
+              default: true
+              title: Enable Metrics Server
+              type: boolean
+            version:
+              default: latest
+              title: Version
+              type: string
+              x-ui-visible-if:
+                field: spec.cluster_addons.metrics_server.enabled
+                values:
+                - true
+          title: Metrics Server
+          type: object
+        vpc_cni:
+          properties:
+            enabled:
+              default: true
+              title: Enable VPC CNI
+              type: boolean
+            version:
+              default: latest
+              title: Version
+              type: string
+              x-ui-visible-if:
+                field: spec.cluster_addons.vpc_cni.enabled
+                values:
+                - true
+          title: VPC CNI
+          type: object
+      title: EKS Add-ons
+      type: object
+      x-ui-toggle: true
+    cluster_endpoint_private_access:
+      default: true
+      description: Whether the cluster API server endpoint is accessible from within the VPC
+      title: Enable Private Endpoint Access
+      type: boolean
+      x-ui-overrides-only: true
+    cluster_endpoint_public_access:
+      default: true
+      description: Whether the cluster API server endpoint is accessible from the internet
+      title: Enable Public Endpoint Access
+      type: boolean
+      x-ui-overrides-only: true
+    cluster_tags:
+      description: Additional tags for the EKS cluster
+      title: Cluster Tags
+      type: object
+      x-ui-yaml-editor: true
+    cluster_version:
+      default: '1.36'
+      description: EKS Kubernetes version
+      enum:
+      - '1.28'
+      - '1.29'
+      - '1.30'
+      - '1.31'
+      - '1.32'
+      - '1.33'
+      - '1.34'
+      - '1.35'
+      - '1.36'
+      title: Kubernetes Version
+      type: string
+      x-ui-overrides-only: true
+    default_node_pool:
+      description: Default system node pool configuration for running system workloads (CoreDNS, Karpenter,
+        etc.) Applies only when building. An adopted cluster's node groups already exist and are modelled
+        as their own resources, so no system pool is built.
+      properties:
+        capacity_type:
+          default: ON_DEMAND
+          description: Type of capacity for the default system node pool
+          enum:
+          - ON_DEMAND
+          - SPOT
+          title: Capacity Type
+          type: string
+        disk_size:
+          default: 50
+          description: Disk size in GB for default system nodes
+          maximum: 1000
+          minimum: 20
+          title: Disk Size (GB)
+          type: integer
+        instance_types:
+          default:
+          - t3.medium
+          description: List of EC2 instance types for the default system node pool
+          items:
+            type: string
+          title: Instance Types
+          type: array
+        size:
+          default: 2
+          description: Number of nodes in the default system pool
+          minimum: 1
+          title: Node Count
+          type: integer
+      title: Default System Node Pool
+      type: object
+      x-ui-toggle: true
+    container_insights_enabled:
+      default: false
+      description: Enable CloudWatch Container Insights for cluster monitoring.
+      title: Container Insights
+      type: boolean
+    cloudwatch_agent_policies:
+      type: object
+      title: CloudWatch Agent IAM Policies
+      description: Additional IAM policy ARNs to attach to the CloudWatch Agent IRSA role (e.g., for X-Ray,
+        custom metrics)
+      x-ui-visible-if:
+        field: spec.container_insights_enabled
+        values:
+        - true
+      patternProperties:
+        ^[a-zA-Z0-9_.-]*$:
+          title: Policy Name
+          type: object
+          properties:
+            arn:
+              title: ARN
+              type: string
+              pattern: ^(arn:aws:iam::(\d{12}|aws):policy\/[A-Za-z0-9+=,.@\-_]+|\$\{[A-Za-z0-9._-]+\})$
+              x-ui-placeholder: 'IAM policy ARN. Eg: arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess'
+              x-ui-error-message: 'Value doesn''t match pattern, accepted value pattern Eg: arn:aws:iam::123456789012:policy/policy1'
+              x-ui-output-type: iam_policy_arn
+              x-ui-typeable: true
+          required:
+          - arn
+    customer_managed_kms:
+      default: true
+      description: Use a customer-managed KMS key for Kubernetes secrets encryption. Required for compliance
+        (PCI-DSS, HIPAA). EKS always encrypts secrets with AWS-owned keys by default. Applies only when
+        building. An adopted cluster keeps whatever key it already encrypts secrets with; supply it as
+        Secrets KMS Key ARN.
+      title: Customer-Managed KMS Key
+      type: boolean
+    enabled_log_types:
+      default:
+      - api
+      - audit
+      - authenticator
+      - controllerManager
+      - scheduler
+      description: List of EKS control plane log types to enable. All types enabled by default for security
+        and compliance.
+      items:
+        enum:
+        - api
+        - audit
+        - authenticator
+        - controllerManager
+        - scheduler
+        type: string
+      title: Enabled Control Plane Log Types
+      type: array
+      x-ui-overrides-only: true
+    authentication_mode:
+      type: string
+      title: Authentication Mode
+      enum:
+      - API
+      - API_AND_CONFIG_MAP
+      - CONFIG_MAP
+      default: API_AND_CONFIG_MAP
+    imports:
+      type: object
+      title: Existing Cluster
+      description: Adopt a cluster that already exists instead of creating one. Turning this on reveals
+        the identifiers that say which one, and the values that must be reproduced exactly so nothing
+        about the live cluster is rebuilt.
+      x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - cluster_name
+      - subnet_keys
+      - service_ipv4_cidr
+      - cluster_role_arn
+      - kms_key_arn
+      - additional_security_group_ids
+      - bootstrap_self_managed_addons
+      - public_access_cidrs
+      - oidc_thumbprints
+      - oidc_tags
+      properties:
+        import_existing:
+          type: boolean
+          title: Adopt an existing cluster
+          default: false
+        cluster_name:
+          type: string
+          title: Existing Cluster Name
+          x-ui-visible-if: &id001
+            field: spec.imports.import_existing
+            values:
+            - true
+          description: The live name. It is also the import id, so adoption requires it.
+        subnet_keys:
+          type: array
+          title: Subnets
+          items:
+            type: string
+          x-ui-visible-if: *id001
+          description: Network layout keys for the exact subnets the control plane already uses.
+        service_ipv4_cidr:
+          type: string
+          title: Service CIDR
+          x-ui-visible-if: *id001
+          pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$
+          description: Create-only in AWS, so it must match the live cluster exactly.
+        cluster_role_arn:
+          type: string
+          title: Cluster Service Role ARN
+          x-ui-visible-if: *id001
+          pattern: ^arn:aws:iam::[0-9]{12}:role/.+$
+          description: Reference an existing role rather than creating one. Required when clusters share
+            a role.
+        kms_key_arn:
+          type: string
+          title: Secrets KMS Key ARN
+          x-ui-visible-if: *id001
+          pattern: ^arn:aws:kms:.+$
+          description: Reference the key the live cluster already encrypts secrets with.
+        additional_security_group_ids:
+          type: array
+          title: Additional Security Group IDs
+          items:
+            type: string
+            pattern: ^sg-[0-9a-f]{8,17}$
+          x-ui-visible-if: *id001
+          description: Security groups already attached to the control plane ENIs.
+        bootstrap_self_managed_addons:
+          type: boolean
+          title: Bootstrap Self-Managed Add-ons
+          default: false
+          description: 'Must match the live cluster: AWS cannot change it, so a mismatch destroys and
+            recreates the control plane. Clusters created before EKS add-ons existed, or with this switched
+            off, need it false.'
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+            - true
+        public_access_cidrs:
+          type: array
+          title: Public Access CIDRs
+          items:
+            type: string
+          x-ui-visible-if: &id002
+            field: spec.imports.import_existing
+            values:
+            - true
+          description: The live list. Empty is normal when the public endpoint is disabled.
+        oidc_thumbprints:
+          type: array
+          title: OIDC Thumbprints
+          items:
+            type: string
+          x-ui-visible-if: *id002
+          description: The thumbprints already on the live OIDC provider, stated so the plan is deterministic.
+        oidc_tags:
+          type: object
+          title: OIDC Provider Tags (verbatim)
+          description: The live tag set on the OIDC provider. Dropping a tag is as much a change as adding
+            one.
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+            - true
+      required:
+      - import_existing
+  required:
+  - cluster_version
+  title: EKS Cluster Configuration
+  type: object
+  x-ui-order:
+  - cluster_version
+  - cluster_endpoint_public_access
+  - cluster_endpoint_private_access
+  - customer_managed_kms
+  - enabled_log_types
+  - container_insights_enabled
+  - cloudwatch_agent_policies
+  - cluster_addons
+  - default_node_pool
+  - cluster_tags
+  - imports
+version: '1.0'

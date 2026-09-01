@@ -685,3 +685,15 @@ variable "putin_khuylo" {
   type        = bool
   default     = true
 }
+
+variable "adopt_existing" {
+  description = "Set when this cluster already exists and is being adopted. Suppresses the module's own marker tag, which would otherwise be written to a live cluster."
+  type        = bool
+  default     = false
+}
+
+variable "oidc_tags" {
+  description = "Verbatim tags for an adopted OIDC provider. A live provider may carry tags of its own, and dropping them is as much a change as adding one."
+  type        = map(string)
+  default     = {}
+}

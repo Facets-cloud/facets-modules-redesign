@@ -1,18 +1,44 @@
 intent: network
 flavor: aws_network
 version: '1.0'
-description: Creates a Kubernetes-optimized AWS VPC with auto-calculated subnets across
-  availability zones. Fixed allocation - Private (8K IPs/AZ), Public (256 IPs/AZ),
-  Database (256 IPs/AZ)
+description: Kubernetes-optimized AWS VPC. Subnet topology is auto-calculated by default, can be declared
+  explicitly for replication, and can adopt an existing VPC at zero change. Produces the same @facets/aws-vpc-details
+  contract in all modes.
 intentDetails:
   type: Cloud & Infrastructure
-  description: Kubernetes-optimized AWS VPC with auto-calculated subnets across availability zones
+  description: Kubernetes-optimized AWS VPC with auto-calculated or declared subnet topology
   displayName: Network
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/network.svg
 clouds:
 - aws
 spec:
   type: object
+  title: AWS Network
+  description: 'Field naming is a contract, read it once and the rest of this schema is obvious:
+
+    *_key / *_keys always reference another Layout entry by its map key - never a name, never an AWS id.
+    *_id / *_ids are live AWS identifiers and appear only under Import. additional_tags is the ONLY tag
+    field that merges; every field titled "(verbatim)" replaces the computed value outright, and an empty
+    map there means "genuinely no tags".
+
+    Three layers, in order: DESIGN (how to derive a network), LAYOUT (state the topology explicitly instead
+    of deriving it), ADOPTION (take over an existing VPC). LAYOUT and ADOPTION are environment overrides
+    - except network_acl, which is env-agnostic enough to live on the blueprint. ADOPTION fields appear
+    only once "Adopt an existing VPC" is on.'
+  x-ui-order:
+  - vpc_cidr
+  - auto_select_azs
+  - availability_zones
+  - nat_strategy
+  - vpc_endpoints
+  - additional_tags
+  - subnets
+  - route_tables
+  - nat_gateways
+  - network_acl
+  - vpc_tags
+  - internet_gateway_tags
+  - imports
   properties:
     vpc_cidr:
       type: string
@@ -25,130 +51,591 @@ spec:
     auto_select_azs:
       type: boolean
       title: Auto Select Availability Zones
-      description: Automatically select 3 availability zones from the region
+      description: Automatically select 3 availability zones from the region. Ignored when a Subnet Layout
+        is declared (the plan carries its own AZs).
       default: true
     availability_zones:
       type: array
       title: Availability Zones
-      description: List of availability zones to use (2-5 AZs supported). Only used
-        when auto_select_azs is false
+      description: Explicit AZ list (2-5). Used only when Auto Select is off and no Subnet Layout is declared.
+      items:
+        type: string
+      minItems: 2
+      maxItems: 5
       x-ui-overrides-only: true
       x-ui-visible-if:
         field: spec.auto_select_azs
         values:
         - false
-      minItems: 2
-      maxItems: 5
-    nat_gateway:
+    nat_strategy:
+      type: string
+      title: NAT Gateway Strategy
+      description: One NAT Gateway for the whole VPC, or one per availability zone. DESIGN field - it
+        shapes the derived plan only, and is ignored once a NAT Gateway Layout is declared. Applies only
+        when building. An adopted VPC declares its NAT Gateways explicitly, so this value is not consulted.
+      enum:
+      - single
+      - per_az
+      default: single
+    additional_tags:
       type: object
-      title: NAT Gateway Configuration
-      properties:
-        strategy:
-          type: string
-          title: NAT Gateway Strategy
-          description: Choose whether to create one NAT Gateway or one per availability
-            zone
-          enum:
-          - single
-          - per_az
-          default: single
-      required:
-      - strategy
+      title: Additional Tags (merged)
+      description: The ONLY tag field that merges. These are added to the environment tags on every object
+        this module generates a tag set for. Any object that declares "(verbatim)" tags ignores this entirely.
+      x-ui-yaml-editor: true
     vpc_endpoints:
       type: object
-      title: VPC Endpoints Configuration
-      description: Configure VPC endpoints for AWS services to reduce data transfer
-        costs and improve security
+      title: VPC Endpoints
+      x-ui-order:
+      - custom
+      - pins
+      description: Toggle AWS service endpoints. Each toggle is enable_<key>, and <key> is the name used
+        everywhere else this endpoint appears - imports.vpc_endpoint_ids.<key>, pins.<key>, and the Terraform
+        address. NOTE - when Import Existing Resources is on, every toggle defaults to FALSE regardless
+        of the defaults shown here, so adoption never creates an endpoint. Set one explicitly to adopt
+        or add it.
       x-ui-toggle: true
       properties:
         enable_s3:
           type: boolean
-          title: Enable S3 VPC Endpoint
-          description: Create a Gateway endpoint for Amazon S3 (no additional charges)
+          title: S3 (Gateway)
           default: true
         enable_dynamodb:
           type: boolean
-          title: Enable DynamoDB VPC Endpoint
-          description: Create a Gateway endpoint for Amazon DynamoDB (no additional
-            charges)
+          title: DynamoDB (Gateway)
           default: true
         enable_ecr_api:
           type: boolean
-          title: Enable ECR API VPC Endpoint
-          description: Create an Interface endpoint for Amazon ECR API (charges apply)
+          title: ECR API
           default: true
         enable_ecr_dkr:
           type: boolean
-          title: Enable ECR Docker VPC Endpoint
-          description: Create an Interface endpoint for Amazon ECR Docker registry
-            (charges apply)
+          title: ECR Docker
           default: true
-        enable_eks:
-          type: boolean
-          title: Enable EKS VPC Endpoint
-          description: Create an Interface endpoint for Amazon EKS (charges apply)
-          default: false
-        enable_ec2:
-          type: boolean
-          title: Enable EC2 VPC Endpoint
-          description: Create an Interface endpoint for Amazon EC2 (charges apply)
-          default: false
         enable_ssm:
           type: boolean
-          title: Enable SSM VPC Endpoint
-          description: Create an Interface endpoint for AWS Systems Manager (charges
-            apply)
+          title: SSM
           default: true
         enable_ssm_messages:
           type: boolean
-          title: Enable SSM Messages VPC Endpoint
-          description: Create an Interface endpoint for SSM Messages (charges apply)
+          title: SSM Messages
           default: true
         enable_ec2_messages:
           type: boolean
-          title: Enable EC2 Messages VPC Endpoint
-          description: Create an Interface endpoint for EC2 Messages (charges apply)
+          title: EC2 Messages
           default: true
+        enable_eks:
+          type: boolean
+          title: EKS
+          default: false
+        enable_ec2:
+          type: boolean
+          title: EC2
+          default: false
         enable_kms:
           type: boolean
-          title: Enable KMS VPC Endpoint
-          description: Create an Interface endpoint for AWS KMS (charges apply)
+          title: KMS
           default: false
         enable_logs:
           type: boolean
-          title: Enable CloudWatch Logs VPC Endpoint
-          description: Create an Interface endpoint for CloudWatch Logs (charges apply)
+          title: CloudWatch Logs
           default: false
         enable_monitoring:
           type: boolean
-          title: Enable CloudWatch Monitoring VPC Endpoint
-          description: Create an Interface endpoint for CloudWatch Monitoring (charges
-            apply)
+          title: CloudWatch Metrics
           default: false
         enable_sts:
           type: boolean
-          title: Enable STS VPC Endpoint
-          description: Create an Interface endpoint for AWS STS (charges apply)
+          title: STS
           default: false
         enable_lambda:
           type: boolean
-          title: Enable Lambda VPC Endpoint
-          description: Create an Interface endpoint for AWS Lambda (charges apply)
+          title: Lambda
           default: false
-    tags:
+        enable_secretsmanager:
+          type: boolean
+          title: Secrets Manager
+          description: New in 2.0
+          default: false
+        enable_sqs:
+          type: boolean
+          title: SQS
+          description: New in 2.0
+          default: false
+        pins:
+          type: object
+          title: Endpoint Settings
+          description: 'Per-endpoint settings for the AWS service endpoints above, keyed exactly as the
+            toggles (s3, sqs, secretsmanager, ...). Anything left unset is derived: every private subnet,
+            the module''s own security group, private DNS on. Pin what you want to differ. Under adoption
+            this is also where an endpoint''s existing id goes - and an AWS service endpoint is adopted
+            ONLY if its id is set here, so a toggle left on cannot create an endpoint on a live VPC.'
+          x-ui-overrides-only: true
+          patternProperties:
+            ^[a-z0-9][a-z0-9_-]*$:
+              type: object
+              properties:
+                subnet_keys:
+                  type: array
+                  title: Subnets
+                  description: Which Subnet Layout entries to place this endpoint in (Interface endpoints)
+                  items:
+                    type: string
+                route_table_keys:
+                  type: array
+                  title: Route Tables
+                  description: Which Route Table Layout entries to attach this endpoint to (Gateway endpoints)
+                  items:
+                    type: string
+                security_group_ids:
+                  type: array
+                  title: Security Group IDs
+                  items:
+                    type: string
+                    pattern: ^sg-[0-9a-f]{8,17}$
+                private_dns_enabled:
+                  type: boolean
+                  title: Private DNS Enabled
+                tags:
+                  type: object
+                  title: Tags (verbatim) - adoption
+                  x-ui-visible-if:
+                    field: spec.imports.import_existing
+                    values:
+                    - true
+                import_id:
+                  type: string
+                  title: Existing VPC Endpoint ID - adoption
+                  description: The live endpoint this key adopts. Setting it is what brings the endpoint
+                    under management; without it the toggle above is inert while Import Existing Resources
+                    is on.
+                  pattern: ^vpce-[0-9a-f]{8,17}$
+                  x-ui-visible-if:
+                    field: spec.imports.import_existing
+                    values:
+                    - true
+        custom:
+          type: object
+          title: Custom / PrivateLink Endpoints
+          description: Endpoints to services the AWS toggles cannot name - partner or self-hosted PrivateLink
+            services. Key is the Terraform address key.
+          x-ui-overrides-only: true
+          patternProperties:
+            ^[a-z0-9][a-z0-9-]*$:
+              type: object
+              properties:
+                service_name:
+                  type: string
+                  title: Service Name
+                  x-ui-placeholder: com.amazonaws.vpce.us-west-2.vpce-svc-0123456789abcdef0
+                endpoint_type:
+                  type: string
+                  title: Endpoint Type
+                  enum:
+                  - Interface
+                  - Gateway
+                  default: Interface
+                subnet_keys:
+                  type: array
+                  title: Subnets
+                  description: Which Subnet Layout entries to place this endpoint in (Interface endpoints)
+                  items:
+                    type: string
+                security_group_ids:
+                  type: array
+                  title: Security Group IDs
+                  description: Existing SGs to attach. Omit to use the module-created endpoint SG.
+                  items:
+                    type: string
+                    pattern: ^sg-[0-9a-f]{8,17}$
+                route_table_keys:
+                  type: array
+                  title: Route Tables
+                  description: Which Route Table Layout entries to attach this endpoint to (Gateway endpoints)
+                  items:
+                    type: string
+                private_dns_enabled:
+                  type: boolean
+                  default: false
+                tags:
+                  type: object
+                  title: Tags (verbatim) - adoption
+                  x-ui-visible-if:
+                    field: spec.imports.import_existing
+                    values:
+                    - true
+                import_id:
+                  type: string
+                  title: Existing VPC Endpoint ID - adoption
+                  description: The live PrivateLink endpoint this entry adopts. Setting it is what brings
+                    it under management while Import Existing Resources is on.
+                  pattern: ^vpce-[0-9a-f]{8,17}$
+                  x-ui-visible-if:
+                    field: spec.imports.import_existing
+                    values:
+                    - true
+              required:
+              - service_name
+              - endpoint_type
+    subnets:
       type: object
-      title: Additional Tags
-      description: Optional additional tags to apply to all VPC resources. These will
-        be merged with the standard environment tags.
-      x-ui-yaml-editor: true
+      title: Subnet Layout
+      description: Leave this empty and subnets are calculated from the VPC CIDR - a private /19, a public
+        /24 and a database /24 per availability zone. Add entries to state the layout yourself instead,
+        which turns that calculation off. One entry per subnet; the map key is the Terraform address,
+        so keep it stable - it is not a name.
+      x-ui-overrides-only: true
+      patternProperties:
+        ^[a-z0-9][a-z0-9-]*$:
+          type: object
+          properties:
+            availability_zone:
+              type: string
+              title: Availability Zone
+              x-ui-placeholder: us-west-2a
+            cidr_block:
+              type: string
+              title: CIDR Block
+              pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$
+              x-ui-error-message: Must be a CIDR block, e.g. 172.30.12.0/24
+            tier:
+              type: string
+              title: Tier
+              enum:
+              - public
+              - private
+              - database
+            map_public_ip_on_launch:
+              type: boolean
+              title: Auto-assign Public IP
+              default: false
+            route_table_key:
+              type: string
+              title: Route Table
+              description: Which Route Table Layout entry this subnet associates with. Names a map key
+                from that section - not a route table name, not an rtb- id.
+            associate_route_table:
+              type: boolean
+              title: Create Route Table Association
+              description: false means this subnet inherits the VPC main route table with no association
+                resource. Required for zero-change adoption of subnets that were never explicitly associated.
+              default: true
+            name:
+              type: string
+              title: Name (verbatim) - adoption
+              description: The live Name tag, reproduced exactly. Greenfield leaves this unset and the
+                module generates from environment unique_name.
+              x-ui-visible-if:
+                field: spec.imports.import_existing
+                values:
+                - true
+            tags:
+              type: object
+              title: Tags (verbatim) - adoption
+              description: Used as-is with NO merge. An empty map means the subnet genuinely has no tags.
+                Omit the field entirely to generate and merge.
+              x-ui-visible-if:
+                field: spec.imports.import_existing
+                values:
+                - true
+            import_id:
+              type: string
+              title: Existing Subnet ID - adoption
+              description: The live subnet this plan entry adopts.
+              pattern: ^subnet-[0-9a-f]{8,17}$
+              x-ui-visible-if:
+                field: spec.imports.import_existing
+                values:
+                - true
+          required:
+          - availability_zone
+          - cidr_block
+          - tier
+    route_tables:
+      type: object
+      title: Route Table Layout
+      description: One entry per route table, including orphans with no subnets. Routes here cover only
+        gateways this module owns - peering routes belong to the vpc_peering module, and gateway-endpoint
+        prefix-list routes belong to the endpoint itself.
+      x-ui-overrides-only: true
+      patternProperties:
+        ^[a-z0-9][a-z0-9-]*$:
+          type: object
+          properties:
+            is_main:
+              type: boolean
+              title: Is VPC Main Route Table
+              default: false
+            routes:
+              type: object
+              title: Routes
+              description: 'Keyed by destination CIDR, which is what makes a route unique inside a table.
+                A map, not a list, for two reasons: an environment override can add or change one route
+                without restating the others, and a duplicate destination becomes impossible to express
+                instead of failing at apply.'
+              patternProperties:
+                ^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$:
+                  type: object
+                  properties:
+                    target_type:
+                      type: string
+                      title: Target Type
+                      enum:
+                      - internet_gateway
+                      - nat_gateway
+                    nat_gateway_key:
+                      type: string
+                      title: NAT Gateway
+                      description: Which NAT Gateway Layout entry this route sends traffic to. Required
+                        when target_type is nat_gateway, unused otherwise - this module owns exactly one
+                        IGW, so an internet_gateway route needs no target.
+                  required:
+                  - target_type
+            name:
+              type: string
+              title: Name (verbatim) - adoption
+              x-ui-visible-if:
+                field: spec.imports.import_existing
+                values:
+                - true
+            tags:
+              type: object
+              title: Tags (verbatim) - adoption
+              x-ui-visible-if:
+                field: spec.imports.import_existing
+                values:
+                - true
+            import_id:
+              type: string
+              title: Existing Route Table ID - adoption
+              description: The live route table this plan entry adopts.
+              pattern: ^rtb-[0-9a-f]{8,17}$
+              x-ui-visible-if:
+                field: spec.imports.import_existing
+                values:
+                - true
+    nat_gateways:
+      type: object
+      title: NAT Gateway Layout
+      description: One entry per NAT gateway. Overrides the NAT strategy when present.
+      x-ui-overrides-only: true
+      patternProperties:
+        ^[a-z0-9][a-z0-9-]*$:
+          type: object
+          properties:
+            subnet_key:
+              type: string
+              title: Subnet
+              description: Which Subnet Layout entry this NAT gateway sits in; it must be a public-tier
+                subnet. Names a map key from that section - not a subnet name, not a subnet- id.
+            name:
+              type: string
+              title: Name (verbatim) - adoption
+              x-ui-visible-if:
+                field: spec.imports.import_existing
+                values:
+                - true
+            tags:
+              type: object
+              title: Tags (verbatim) - adoption
+              x-ui-visible-if:
+                field: spec.imports.import_existing
+                values:
+                - true
+            eip_tags:
+              type: object
+              title: EIP Tags (verbatim) - adoption
+              x-ui-visible-if:
+                field: spec.imports.import_existing
+                values:
+                - true
+            import_id:
+              type: string
+              title: Existing NAT Gateway ID - adoption
+              pattern: ^nat-[0-9a-f]{8,17}$
+              x-ui-visible-if:
+                field: spec.imports.import_existing
+                values:
+                - true
+            eip_import_id:
+              type: string
+              title: Existing EIP Allocation ID - adoption
+              description: The Elastic IP already attached to that NAT gateway.
+              pattern: ^eipalloc-[0-9a-f]{8,17}$
+              x-ui-visible-if:
+                field: spec.imports.import_existing
+                values:
+                - true
+          required:
+          - subnet_key
+    network_acl:
+      type: object
+      title: Default Network ACL
+      description: Rules for the VPC default network ACL. Declaring this makes Terraform the owner of
+        those rules - a rule that exists in AWS but not here is removed on apply. Omit the whole section
+        to leave the default ACL untouched (1.0 behaviour). Settable on the BLUEPRINT so one hardening
+        baseline can be written once and inherited by every environment; because inbound and outbound
+        are maps keyed by rule number, an environment override can add or change a single rule without
+        restating the baseline.
+      properties:
+        manage_default:
+          type: boolean
+          title: Manage the VPC default Network ACL
+          default: false
+        ingress:
+          type: object
+          title: Inbound Rules
+          description: Keyed by AWS rule number, which is unique per direction and already decides evaluation
+            order. A map, not a list, so an environment can add or change one rule without restating the
+            whole set.
+          patternProperties:
+            ^[0-9]{1,5}$:
+              type: object
+              properties:
+                action:
+                  type: string
+                  title: Action
+                  enum:
+                  - allow
+                  - deny
+                protocol:
+                  type: string
+                  title: Protocol
+                  description: AWS protocol number as a string; -1 means all protocols
+                cidr_block:
+                  type: string
+                  title: CIDR Block
+                  pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$
+                from_port:
+                  type: integer
+                  title: From Port
+                  description: Omit for protocol -1; defaults to 0
+                to_port:
+                  type: integer
+                  title: To Port
+                  description: Omit for protocol -1; defaults to 0
+              required:
+              - action
+              - protocol
+              - cidr_block
+        egress:
+          type: object
+          title: Outbound Rules
+          description: Keyed by AWS rule number. See Inbound Rules.
+          patternProperties:
+            ^[0-9]{1,5}$:
+              type: object
+              properties:
+                action:
+                  type: string
+                  title: Action
+                  enum:
+                  - allow
+                  - deny
+                protocol:
+                  type: string
+                  title: Protocol
+                  description: AWS protocol number as a string; -1 means all protocols
+                cidr_block:
+                  type: string
+                  title: CIDR Block
+                  pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$
+                from_port:
+                  type: integer
+                  title: From Port
+                  description: Omit for protocol -1; defaults to 0
+                to_port:
+                  type: integer
+                  title: To Port
+                  description: Omit for protocol -1; defaults to 0
+              required:
+              - action
+              - protocol
+              - cidr_block
+        tags:
+          type: object
+          title: Tags (verbatim) - adoption
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+            - true
+    vpc_tags:
+      type: object
+      title: VPC Tags (verbatim) - adoption
+      description: Full tag map for the VPC, used as-is with no merge. Greenfield leaves this unset and
+        the module generates from environment tags plus a Name; use additional_tags to add to that set
+        rather than replace it.
+      x-ui-overrides-only: true
+      x-ui-visible-if:
+        field: spec.imports.import_existing
+        values:
+        - true
+    internet_gateway_tags:
+      type: object
+      title: Internet Gateway Tags (verbatim) - adoption
+      description: Full tag map for the IGW, used as-is with no merge. Greenfield leaves this unset and
+        the module generates.
+      x-ui-overrides-only: true
+      x-ui-visible-if:
+        field: spec.imports.import_existing
+        values:
+        - true
+    imports:
+      type: object
+      title: Existing VPC
+      description: Adopt a VPC that already exists instead of creating one. Turning this on reveals the
+        adoption fields throughout this form - each plan entry gains an Existing ... ID, and the verbatim
+        Name/Tags fields appear so live identity can be reproduced exactly. The three ids here are the
+        ones with no plan entry to live on.
+      x-ui-overrides-only: true
+      x-ui-order:
+      - import_existing
+      - vpc_id
+      - internet_gateway_id
+      - network_acl_id
+      properties:
+        import_existing:
+          type: boolean
+          title: Adopt an existing VPC
+          description: Leave off for a new VPC. Once on and applied, LEAVE IT ON - it also holds back
+            greenfield-only behaviour (endpoint creation, the module's endpoint security group, main-route-table
+            association). Turning it off after an import would let the next apply create those.
+          default: false
+        vpc_id:
+          type: string
+          title: VPC ID
+          pattern: ^vpc-[0-9a-f]{8,17}$
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+            - true
+        internet_gateway_id:
+          type: string
+          title: Internet Gateway ID
+          pattern: ^igw-[0-9a-f]{8,17}$
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+            - true
+        network_acl_id:
+          type: string
+          title: Default Network ACL ID
+          description: Required only when the default ACL is managed.
+          pattern: ^acl-[0-9a-f]{8,17}$
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+            - true
+      required:
+      - import_existing
   required:
   - vpc_cidr
-  - nat_gateway
+  - nat_strategy
 inputs:
   cloud_account:
     type: '@facets/aws_cloud_account'
     displayName: Cloud Account
-    description: The AWS Cloud Account where the VPC will be created
+    description: The AWS Cloud Account where the VPC lives
     optional: false
     providers:
     - aws
@@ -162,23 +649,27 @@ sample:
   spec:
     vpc_cidr: 10.0.0.0/16
     auto_select_azs: true
-    nat_gateway:
-      strategy: single
+    nat_strategy: single
     vpc_endpoints:
       enable_s3: true
       enable_dynamodb: true
       enable_ecr_api: true
       enable_ecr_dkr: true
-      enable_eks: false
-      enable_ec2: false
       enable_ssm: true
       enable_ssm_messages: true
       enable_ec2_messages: true
+      enable_eks: false
+      enable_ec2: false
       enable_kms: false
       enable_logs: false
       enable_monitoring: false
       enable_sts: false
       enable_lambda: false
+      enable_secretsmanager: false
+      enable_sqs: false
+    additional_tags: {}
+    network_acl:
+      manage_default: false
 iac:
   validated_files:
   - variables.tf

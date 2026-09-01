@@ -1,12 +1,27 @@
 locals {
+  # ── adoption posture (new in 1.2) ─────────────────────────────────────────
+  # One module, two postures. Every default below leaves the greenfield path
+  # byte-identical to 1.1; adoption only ever turns things OFF, so nothing is
+  # created on a cluster that already exists. Objects shared between clusters
+  # are REFERENCED by arn - a role or key three clusters use belongs to none of them.
+  adopt   = try(var.instance.spec.imports.import_existing, false)
+  imports = lookup(var.instance.spec, "imports", {})
+
+  given_role_arn = lookup(local.imports, "cluster_role_arn", "")
+  given_kms_arn  = lookup(local.imports, "kms_key_arn", "")
+
   # Construct cluster name and ensure it doesn't exceed AWS limits
   # IAM role name_prefix in terraform-aws-eks appends "-cluster-" (9 chars) to cluster_name
   # Total limit is 38 chars, so cluster_name should be max 29 chars
-  full_cluster_name = "${var.instance_name}-${var.environment.unique_name}"
-  cluster_name      = length(local.full_cluster_name) > 29 ? substr(local.full_cluster_name, 0, 29) : local.full_cluster_name
+  full_cluster_name = "${var.instance_name}-${var.environment.name}"
+  generated_name    = length(local.full_cluster_name) > 29 ? substr(local.full_cluster_name, 0, 29) : local.full_cluster_name
+  cluster_name      = lookup(local.imports, "cluster_name", "") != "" ? local.imports.cluster_name : local.generated_name
 
   # Merge environment cloud tags with cluster-specific tags
-  cluster_tags = merge(
+  # Greenfield merges environment tags and Facets markers onto everything it creates.
+  # Adoption uses the live tag set verbatim: adding a tag to a running cluster is a
+  # change, and zero-change means reproducing what is there rather than improving it.
+  cluster_tags = local.adopt ? lookup(var.instance.spec, "cluster_tags", {}) : merge(
     var.environment.cloud_tags,
     lookup(var.instance.spec, "cluster_tags", {}),
     {
@@ -51,8 +66,9 @@ locals {
     }
   }
 
-  # Only the default system node group
-  eks_managed_node_groups = local.default_system_node_group
+  # Only the default system node group - and none when adopting, because a live
+  # cluster's node groups already exist and are modelled as their own resources.
+  eks_managed_node_groups = local.adopt ? {} : local.default_system_node_group
 
   # cluster_addons is an OPTIONAL spec field (only cluster_version is required). Default to {}
   # so an omitted block doesn't crash on direct attribute access — RULE-015. The per-addon
@@ -142,10 +158,52 @@ module "eks" {
 
   # Network configuration
   vpc_id = var.inputs.network_details.attributes.vpc_id
-  subnet_ids = concat(
+
+  # Greenfield spreads the control plane across every subnet the network exposes.
+  # An adopted cluster uses the exact subset it already has, named by network layout
+  # key so the config stays portable - more or fewer subnets is a change.
+  subnet_ids = length(lookup(local.imports, "subnet_keys", [])) > 0 ? [
+    for k in local.imports.subnet_keys : var.inputs.network_details.attributes.subnet_ids[k]
+    ] : concat(
     var.inputs.network_details.attributes.private_subnet_ids,
     lookup(var.inputs.network_details.attributes, "public_subnet_ids", [])
   )
+
+  # Shared objects: referenced when named, created when not (1.1 behaviour).
+  create_iam_role = local.given_role_arn == ""
+  iam_role_arn    = local.given_role_arn != "" ? local.given_role_arn : null
+
+  cluster_additional_security_group_ids = lookup(local.imports, "additional_security_group_ids", [])
+
+  # Adoption creates none of the surrounding infrastructure a live cluster already has.
+  create_cluster_security_group = !local.adopt
+  create_node_security_group    = !local.adopt
+  create_cloudwatch_log_group   = !local.adopt
+
+  # EKS creates and owns the cluster's primary security group. Greenfield copies the
+  # cluster tags onto it; on an adopted cluster that is a live change (one aws_ec2_tag
+  # resource per tag), so adoption leaves the group's tags exactly as they are.
+  create_cluster_primary_security_group_tags = !local.adopt
+
+  # ForceNew, and the provider defaults it to true. Hiver's live clusters were created
+  # with it false, so leaving it unset asks Terraform to DESTROY AND RECREATE a running
+  # control plane. Adoption states the live value; greenfield keeps the module default.
+  bootstrap_self_managed_addons = local.adopt ? lookup(local.imports, "bootstrap_self_managed_addons", false) : null
+
+  # With public access off, a live cluster stores an empty CIDR list; the module default
+  # of 0.0.0.0/0 would be written back as a change even though it grants nothing.
+  cluster_endpoint_public_access_cidrs = local.adopt ? lookup(local.imports, "public_access_cidrs", []) : ["0.0.0.0/0"]
+
+  # The root-CA thumbprint is read from the live certificate chain, so it is unknown at
+  # plan time and shows as a removal. Adoption states the thumbprints the provider
+  # already has, which makes the plan deterministic instead of "known after apply".
+  include_oidc_root_ca_thumbprint = !local.adopt
+  custom_oidc_thumbprints         = local.adopt ? lookup(local.imports, "oidc_thumbprints", []) : []
+
+  # Create-only in AWS, so an adopted cluster must state it.
+  cluster_service_ipv4_cidr = lookup(local.imports, "service_ipv4_cidr", null)
+
+  authentication_mode = lookup(var.instance.spec, "authentication_mode", "API_AND_CONFIG_MAP")
 
   # Cluster endpoint access
   cluster_endpoint_public_access  = lookup(var.instance.spec, "cluster_endpoint_public_access", true)
@@ -155,16 +213,21 @@ module "eks" {
   cluster_enabled_log_types = lookup(var.instance.spec, "enabled_log_types", ["api", "audit", "authenticator", "controllerManager", "scheduler"])
 
   # Secrets encryption - let the submodule manage its own KMS key
-  create_kms_key = local.enable_kms_key
+  # customer_managed_kms is greenfield-only and hidden while adopting, so it must be
+  # provably unreachable rather than merely unset: an adopted cluster never creates a
+  # key, it uses the one named in imports.kms_key_arn (or none).
+  create_kms_key = local.adopt ? false : (local.given_kms_arn == "" ? local.enable_kms_key : false)
   cluster_encryption_config = jsondecode(
-    local.enable_kms_key ? jsonencode({ resources = ["secrets"] }) : jsonencode({})
+    local.given_kms_arn != ""
+    ? jsonencode({ resources = ["secrets"], provider_key_arn = local.given_kms_arn })
+    : (local.enable_kms_key ? jsonencode({ resources = ["secrets"] }) : jsonencode({}))
   )
 
   # Managed node groups
   eks_managed_node_groups = local.eks_managed_node_groups
 
   # Allow control plane to reach metrics-server on port 10251 (API aggregation)
-  node_security_group_additional_rules = {
+  node_security_group_additional_rules = local.adopt ? {} : {
     ingress_cluster_10251_metrics_server = {
       description                   = "Cluster API to metrics-server"
       protocol                      = "tcp"
@@ -181,9 +244,17 @@ module "eks" {
   # IMPORTANT: Explicitly disable EKS Auto Mode since this is eks_standard flavor
   # EKS Auto Mode is NOT supported in this module variant
   # For Auto Mode support, use the eks_auto flavor instead
-  enable_cluster_creator_admin_permissions = true
+  # A live cluster's access entries already exist; asserting this would add one.
+  enable_cluster_creator_admin_permissions = !local.adopt
 
-  tags = local.cluster_tags
+  # Greenfield tags everything the module makes. Adoption puts the live tag set on the
+  # cluster ONLY - the add-ons and the OIDC provider carry no tags in Hiver's account,
+  # and inheriting the cluster's would be a change to each of them.
+  tags         = local.adopt ? {} : local.cluster_tags
+  cluster_tags = local.adopt ? local.cluster_tags : {}
+
+  adopt_existing = local.adopt
+  oidc_tags      = local.adopt ? lookup(local.imports, "oidc_tags", {}) : {}
 }
 
 # Data source to get cluster authentication token

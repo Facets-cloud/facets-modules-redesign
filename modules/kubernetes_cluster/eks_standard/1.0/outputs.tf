@@ -4,6 +4,7 @@ locals {
     cluster_ca_certificate            = base64decode(module.eks.cluster_certificate_authority_data)
     cluster_name                      = module.eks.cluster_name
     cluster_version                   = module.eks.cluster_version
+    cluster_service_cidr              = try(module.eks.cluster_service_cidr, "")
     cluster_arn                       = module.eks.cluster_arn
     cluster_id                        = module.eks.cluster_id
     oidc_issuer_url                   = module.eks.cluster_oidc_issuer_url
