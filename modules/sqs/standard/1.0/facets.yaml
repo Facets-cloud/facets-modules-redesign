@@ -1,7 +1,8 @@
 intent: sqs
 flavor: standard
 version: '1.0'
-description: AWS SQS queue with optional FIFO support, dead letter queue, and encryption
+description: AWS SQS queue with FIFO support, redrive to a sibling queue, resource policy, and SSE-SQS
+  or SSE-KMS encryption
 intentDetails:
   type: Messaging
   description: AWS Simple Queue Service for reliable message queuing
@@ -22,60 +23,33 @@ outputs:
     type: '@facets/sqs'
     title: SQS Queue Details
 spec:
-  description: Configure SQS queue with encryption, dead letter queue, and access policies
+  description: Configure an SQS queue — naming, delivery, encryption, redrive and access policy
   type: object
   title: SQS Queue Configuration
   x-ui-order:
-  - import_existing
-  - imports
   - queue_config
-  - dlq_config
+  - redrive
   - encryption_config
+  - queue_policy_json
+  - create_iam_policies
   - tags
+  - inject_env_tags
+  - imports
   properties:
-    import_existing:
-      type: boolean
-      title: Import Existing SQS Queue
-      description: Set to true to import an existing SQS queue
-      default: false
-    imports:
-      type: object
-      title: Import Existing Queue
-      description: Provide queue name and ARN of existing SQS queue to import
-      x-ui-visible-if:
-        field: spec.import_existing
-        values:
-        - true
-      properties:
-        queue_name:
-          type: string
-          title: Existing Queue Name
-          description: Name of the existing SQS queue (must match the queue to import)
-          x-ui-placeholder: my-existing-queue
-        queue_arn:
-          type: string
-          title: Queue ARN
-          description: ARN of the existing SQS queue
-          pattern: ^arn:aws:sqs:[a-z0-9-]+:[0-9]+:.+$
-          x-ui-placeholder: arn:aws:sqs:us-east-1:123456789012:my-queue
-        dlq_queue_name:
-          type: string
-          title: Existing DLQ Name (Optional)
-          description: Name of the existing dead letter queue if DLQ is enabled
-          x-ui-placeholder: my-existing-queue-dlq
-        dlq_queue_arn:
-          type: string
-          title: DLQ ARN (Optional)
-          description: ARN of the existing dead letter queue
-          pattern: ^arn:aws:sqs:[a-z0-9-]+:[0-9]+:.+$
-          x-ui-placeholder: arn:aws:sqs:us-east-1:123456789012:my-queue-dlq
-      required:
-      - queue_name
-      - queue_arn
     queue_config:
       type: object
       title: Queue Configuration
       description: Core queue settings
+      x-ui-order:
+      - fifo_queue
+      - content_based_deduplication
+      - deduplication_scope
+      - fifo_throughput_limit
+      - visibility_timeout_seconds
+      - message_retention_seconds
+      - max_message_size
+      - delay_seconds
+      - receive_wait_time_seconds
       properties:
         fifo_queue:
           type: boolean
@@ -87,6 +61,30 @@ spec:
           title: Content-Based Deduplication
           description: Enable content-based deduplication (FIFO queues only)
           default: false
+          x-ui-visible-if:
+            field: spec.queue_config.fifo_queue
+            values:
+            - true
+        deduplication_scope:
+          type: string
+          title: Deduplication Scope
+          description: Whether deduplication applies per message group or across the whole queue (FIFO
+            queues only)
+          enum:
+          - messageGroup
+          - queue
+          x-ui-visible-if:
+            field: spec.queue_config.fifo_queue
+            values:
+            - true
+        fifo_throughput_limit:
+          type: string
+          title: FIFO Throughput Limit
+          description: Whether the throughput quota applies to the whole queue or per message group (FIFO
+            queues only)
+          enum:
+          - perQueue
+          - perMessageGroupId
           x-ui-visible-if:
             field: spec.queue_config.fifo_queue
             values:
@@ -108,10 +106,11 @@ spec:
         max_message_size:
           type: integer
           title: Max Message Size (bytes)
-          description: Maximum size of a message in bytes
+          description: Maximum size of a message in bytes. AWS raised the ceiling to 1 MiB; 118 of the
+            queues in this estate are already above the old 256 KiB limit.
           default: 262144
           minimum: 1024
-          maximum: 262144
+          maximum: 1048576
         delay_seconds:
           type: integer
           title: Delivery Delay (seconds)
@@ -126,70 +125,108 @@ spec:
           default: 0
           minimum: 0
           maximum: 20
-    dlq_config:
+    redrive:
       type: object
-      title: Dead Letter Queue Configuration
-      description: Configure dead letter queue for failed message processing
+      title: Redrive (Dead Letter Queue)
+      description: Send messages that repeatedly fail processing to ANOTHER queue. The dead letter queue
+        is its own sqs resource, referenced by ARN — this module never creates a child queue.
       properties:
-        enable_dlq:
-          type: boolean
-          title: Enable Dead Letter Queue
-          description: Create a separate DLQ for messages that fail processing
-          default: false
+        dead_letter_queue_arn:
+          type: string
+          title: Dead Letter Queue ARN
+          description: ARN of the queue that failed messages go to. Reference the sibling resource rather
+            than hardcoding, so the blueprint stays portable.
+          x-ui-placeholder: ${sqs.my-queue-dlq.out.attributes.queue_arn}
         max_receive_count:
           type: integer
           title: Max Receive Count
-          description: Number of times a message can be received before moving to DLQ
+          description: Number of times a message can be received before moving to the dead letter queue
           default: 3
           minimum: 1
           maximum: 1000
-          x-ui-visible-if:
-            field: spec.dlq_config.enable_dlq
-            values:
-            - true
     encryption_config:
       type: object
-      title: Encryption Configuration
-      description: Server-side encryption settings
+      title: Encryption
+      description: Server-side encryption. SSE-SQS (AWS-owned keys) is the default and needs no key; supply
+        a KMS key only for SSE-KMS. The two are mutually exclusive.
       properties:
-        enable_encryption:
+        sqs_managed_sse_enabled:
           type: boolean
-          title: Enable Encryption
-          description: Enable server-side encryption (recommended)
+          title: SSE-SQS Encryption
+          description: Encrypt with AWS-owned keys managed by SQS. Ignored when a KMS key is given.
           default: true
         kms_key_id:
           type: string
-          title: KMS Key ID (Optional)
-          description: Custom KMS key ARN for encryption (uses AWS managed key if not provided)
-          x-ui-visible-if:
-            field: spec.encryption_config.enable_encryption
-            values:
-            - true
+          title: KMS Key ID or Alias
+          description: Custom KMS key ARN or alias for SSE-KMS. Setting this switches off SSE-SQS.
           x-ui-placeholder: arn:aws:kms:region:account:key/key-id
         kms_data_key_reuse_period_seconds:
           type: integer
           title: KMS Data Key Reuse Period (seconds)
-          description: How long to reuse data keys for encryption
+          description: How long to reuse data keys. Only applies with SSE-KMS.
           default: 300
           minimum: 60
           maximum: 86400
-          x-ui-visible-if:
-            field: spec.encryption_config.enable_encryption
-            values:
-            - true
+    queue_policy_json:
+      type: string
+      title: Queue Access Policy (JSON)
+      description: The queue's resource policy, as JSON. Use __QUEUE_ARN__ where the queue's own ARN belongs
+        — a resource cannot reference its own output, so the module substitutes it. Leave empty for no
+        policy.
+      x-ui-editor: true
+      x-ui-editor-language: json
+    create_iam_policies:
+      type: boolean
+      title: Create Producer/Consumer IAM Policies
+      description: Create two managed IAM policies granting send and receive on this queue. Off by default
+        — across an adopted estate this is two brand-new IAM policies per queue.
+      default: false
+    inject_env_tags:
+      type: boolean
+      title: Add Environment Tags
+      description: Merge the environment's cloud tags and the Facets identity tags into this queue's tags.
+        Turn OFF when adopting, so the tag set below is the complete, authoritative one and an empty map
+        means the live queue genuinely has no tags.
+      default: true
     tags:
       type: object
-      title: Additional Tags
-      description: Additional tags to apply to the queue (key-value pairs)
+      title: Tags
+      description: Tags to apply to the queue
       x-ui-yaml-editor: true
+    imports:
+      type: object
+      title: Existing Queue
+      description: Adopt a queue that already exists instead of creating one. Turning this on reveals
+        the identifiers that say which one. Set per environment — production adopts, a new environment
+        builds.
+      x-ui-overrides-only: true
+      properties:
+        import_existing:
+          type: boolean
+          title: Adopt an existing queue
+          description: Enable to adopt a queue that already exists in this environment.
+          default: false
+        queue_name:
+          type: string
+          title: Queue Name
+          description: The live queue name, used verbatim. ForceNew — a generated name on an adopted queue
+            plans destroy+create. A FIFO queue name already ends in .fifo.
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+            - true
+        queue_url:
+          type: string
+          title: Queue URL
+          description: The queue URL. This is the id Terraform imports an SQS queue by; recorded here
+            so the adopted object is identifiable from the blueprint.
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+            - true
+      required:
+      - import_existing
   required: []
-imports:
-- name: main_queue
-  required: false
-  resource_address: aws_sqs_queue.main
-- name: dlq_queue
-  required: false
-  resource_address: aws_sqs_queue.dlq[0]
 iac:
   validated_files:
   - main.tf
@@ -201,13 +238,16 @@ sample:
   kind: sqs
   disabled: true
   spec:
-    import_existing: false
     queue_config:
       fifo_queue: false
       visibility_timeout_seconds: 30
       message_retention_seconds: 345600
       receive_wait_time_seconds: 0
-    dlq_config:
-      enable_dlq: false
+    redrive: {}
     encryption_config:
-      enable_encryption: true
+      sqs_managed_sse_enabled: true
+    create_iam_policies: false
+    inject_env_tags: true
+    tags: {}
+    imports:
+      import_existing: false

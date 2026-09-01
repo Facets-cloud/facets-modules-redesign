@@ -1,7 +1,7 @@
 intent: s3
 flavor: standard
 version: '1.0'
-description: AWS S3 bucket with encryption, versioning, and lifecycle management
+description: AWS S3 bucket with encryption, versioning, and full lifecycle management (adoption-capable)
 intentDetails:
   type: Storage
   description: AWS S3 Object Storage for scalable data storage
@@ -26,21 +26,27 @@ spec:
   type: object
   title: S3 Bucket
   x-ui-order:
-  - import_existing
-  - imports
   - encryption_enabled
   - kms_key_id
   - bucket_key_enabled
+  - manage_versioning
   - versioning_enabled
+  - manage_public_access_block
   - block_public_acls
   - block_public_policy
   - ignore_public_acls
   - restrict_public_buckets
-  - lifecycle_rules
-  - cors_rules
+  - object_ownership
   - bucket_policy_json
+  - create_iam_policies
+  - lifecycle_rules
+  - transition_default_minimum_object_size
+  - cors_rules
+  - logging
   - tags
+  - inject_env_tags
   - force_destroy
+  - imports
   properties:
     block_public_acls:
       type: boolean
@@ -57,57 +63,94 @@ spec:
       title: Enable S3 Bucket Key
       description: Reduce KMS costs by using bucket keys (only applies with KMS encryption)
       default: true
+    logging:
+      type: object
+      title: Server Access Logging
+      description: Deliver S3 access logs to another bucket. Omit target bucket to leave logging unmanaged.
+      properties:
+        target_bucket:
+          type: string
+          title: Target Bucket
+          description: Bucket that receives the access logs.
+        target_prefix:
+          type: string
+          title: Target Prefix
+          description: Key prefix for delivered log objects.
+        key_format:
+          type: object
+          title: Log Object Key Format
+          description: How delivered log object keys are laid out. Omit to leave unmanaged.
+          properties:
+            partition_date_source:
+              type: string
+              title: Partition Date Source
+              enum:
+              - EventTime
+              - DeliveryTime
+            simple:
+              type: boolean
+              title: Simple Prefix
+              description: Use the simple (unpartitioned) prefix.
+    object_ownership:
+      type: string
+      title: Object Ownership
+      description: ACL posture for objects written to this bucket. BucketOwnerEnforced disables ACLs entirely
+        and is the recommended setting. Omit to leave ownership controls unmanaged.
+      enum:
+      - BucketOwnerEnforced
+      - BucketOwnerPreferred
+      - ObjectWriter
     bucket_policy_json:
       type: string
       title: Bucket Policy JSON
-      description: Custom bucket policy in JSON format (optional)
+      description: Bucket policy document. The literal __BUCKET_ARN__ is replaced with this bucket's ARN
+        and __ACCOUNT_ID__-style values should use a Facets reference, so the policy stays portable across
+        environments.
       x-ui-yaml-editor: true
     cors_rules:
-      type: array
+      type: object
       title: CORS Rules
-      description: Cross-Origin Resource Sharing configuration
-      x-ui-overrides-only: true
-      items:
-        type: object
-        properties:
-          allowed_headers:
-            type: array
-            title: Allowed Headers
-            description: Headers allowed in preflight requests
-            x-ui-overrides-only: true
-            items:
-              type: string
-          allowed_methods:
-            type: array
-            title: Allowed HTTP Methods
-            x-ui-overrides-only: true
-            items:
-              type: string
-              enum:
-              - GET
-              - PUT
-              - POST
-              - DELETE
-              - HEAD
-          allowed_origins:
-            type: array
-            title: Allowed Origins
-            description: List of origins allowed to make requests
-            x-ui-overrides-only: true
-            items:
-              type: string
-          expose_headers:
-            type: array
-            title: Expose Headers
-            description: Headers exposed to the browser
-            x-ui-overrides-only: true
-            items:
-              type: string
-          max_age_seconds:
-            type: integer
-            title: Max Age (seconds)
-            description: Time browser caches preflight response
-            default: 3600
+      description: Cross-Origin Resource Sharing rules, keyed by a name you choose.
+      x-ui-allow-title-edit: true
+      patternProperties:
+        ^[a-zA-Z0-9_. -]+$:
+          type: object
+          title: Rule
+          properties:
+            allowed_headers:
+              type: array
+              title: Allowed Headers
+              description: Headers allowed in preflight requests
+              items:
+                type: string
+            allowed_methods:
+              type: array
+              title: Allowed HTTP Methods
+              items:
+                type: string
+                enum:
+                - GET
+                - PUT
+                - POST
+                - DELETE
+                - HEAD
+            allowed_origins:
+              type: array
+              title: Allowed Origins
+              description: List of origins allowed to make requests
+              items:
+                type: string
+            expose_headers:
+              type: array
+              title: Expose Headers
+              description: Headers exposed to the browser
+              items:
+                type: string
+            max_age_seconds:
+              type: integer
+              title: Max Age (seconds)
+              description: Time browser caches preflight response
+              default: 3600
     encryption_enabled:
       type: boolean
       title: Enable Server-Side Encryption
@@ -123,34 +166,32 @@ spec:
       title: Ignore Public ACLs
       description: Ignore all public ACLs on this bucket and objects
       default: true
-    import_existing:
+    create_iam_policies:
       type: boolean
-      title: Import Existing S3 Bucket
-      description: Set to true to import an existing S3 bucket and its configurations
-      default: false
-    imports:
-      type: object
-      title: Import Existing Bucket
-      description: Provide bucket name and ARN of existing S3 bucket to import
-      x-ui-visible-if:
-        field: spec.import_existing
-        values:
-        - true
-      properties:
-        bucket_name:
-          type: string
-          title: Existing Bucket Name
-          description: Name of the existing S3 bucket (must match the bucket to import)
-          pattern: ^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$
-          x-ui-placeholder: my-existing-bucket
-        bucket_arn:
-          type: string
-          title: Bucket ARN
-          description: ARN of the existing S3 bucket
-          pattern: ^arn:aws:s3:::[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$
-          x-ui-placeholder: arn:aws:s3:::my-existing-bucket
-      required:
-      - bucket_name
+      title: Create Convenience IAM Policies
+      description: Create the read-only and read-write IAM policies for this bucket. Set false when adopting
+        an existing bucket - creating them would be a real IAM write and would not be a zero-change plan.
+      default: true
+    inject_env_tags:
+      type: boolean
+      title: Inject Environment Tags
+      description: Merge the environment cloud_tags and Facets identity tags into the bucket's tags. Set
+        false when adopting, so that spec.tags is the complete authoritative tag set and a live bucket
+        with no tags stays untagged.
+      default: true
+    manage_public_access_block:
+      type: boolean
+      title: Manage Public Access Block
+      description: Manage the bucket's public access block. Set false when the live bucket has none, so
+        the module does not create one during an adoption.
+      default: true
+    manage_versioning:
+      type: boolean
+      title: Manage Versioning Configuration
+      description: Manage the bucket's versioning configuration. A bucket that has never had versioning
+        has no versioning configuration at all - set false to leave it that way rather than creating one
+        with status Suspended.
+      default: true
     kms_key_id:
       type: string
       title: KMS Key ID
@@ -160,63 +201,108 @@ spec:
         values:
         - true
     lifecycle_rules:
-      type: array
+      type: object
       title: Lifecycle Rules
-      description: Configure lifecycle rules for object transitions and expiration
-      x-ui-overrides-only: true
-      items:
-        type: object
-        properties:
-          id:
-            type: string
-            title: Rule ID
-            description: Unique identifier for this rule
-          enabled:
-            type: boolean
-            title: Enable Rule
-            default: true
-          prefix:
-            type: string
-            title: Object Key Prefix
-            description: Prefix filter for objects (optional, applies to all if not specified)
-          transitions:
-            type: array
-            title: Storage Class Transitions
-            description: Transition objects to different storage classes
-            x-ui-overrides-only: true
-            items:
+      description: Object transitions and expiration, keyed by rule id.
+      x-ui-allow-title-edit: true
+      patternProperties:
+        ^[a-zA-Z0-9_. -]+$:
+          type: object
+          title: Rule
+          properties:
+            enabled:
+              type: boolean
+              title: Enable Rule
+              default: true
+            prefix:
+              type: string
+              title: Object Key Prefix
+              description: Prefix filter for objects (optional, applies to all if not specified)
+            transitions:
               type: object
-              properties:
-                days:
-                  type: integer
-                  title: Days After Creation
-                  description: Number of days after object creation
-                  minimum: 0
-                storage_class:
-                  type: string
-                  title: Target Storage Class
-                  enum:
-                  - STANDARD_IA
-                  - INTELLIGENT_TIERING
-                  - GLACIER_IR
-                  - GLACIER
-                  - DEEP_ARCHIVE
-          expiration_days:
-            type: integer
-            title: Expiration Days
-            description: Delete objects after this many days (optional)
-            minimum: 1
-          noncurrent_version_expiration_days:
-            type: integer
-            title: Noncurrent Version Expiration
-            description: Delete noncurrent versions after this many days (for versioned buckets)
-            minimum: 1
-          abort_incomplete_multipart_days:
-            type: integer
-            title: Abort Incomplete Multipart Upload
-            description: Abort incomplete multipart uploads after this many days
-            default: 7
-            minimum: 1
+              title: Storage Class Transitions
+              description: Storage-class transitions for current versions, keyed by a name you choose.
+              x-ui-allow-title-edit: true
+              patternProperties:
+                ^[a-zA-Z0-9_. -]+$:
+                  type: object
+                  title: Transition
+                  properties:
+                    days:
+                      type: integer
+                      title: Days After Creation
+                      description: Number of days after object creation
+                      minimum: 0
+                    storage_class:
+                      type: string
+                      title: Target Storage Class
+                      enum:
+                      - STANDARD_IA
+                      - INTELLIGENT_TIERING
+                      - GLACIER_IR
+                      - GLACIER
+                      - DEEP_ARCHIVE
+            expiration_days:
+              type: integer
+              title: Expiration Days
+              description: Delete objects after this many days (optional)
+              minimum: 1
+            noncurrent_version_expiration_days:
+              type: integer
+              title: Noncurrent Version Expiration
+              description: Delete noncurrent versions after this many days (for versioned buckets)
+              minimum: 1
+            abort_incomplete_multipart_days:
+              type: integer
+              title: Abort Incomplete Multipart Upload
+              description: Abort incomplete multipart uploads after this many days
+              default: 7
+              minimum: 1
+            emit_filter:
+              type: boolean
+              title: Emit an Empty Filter Block
+              description: Only applies when this rule has no prefix. A live rule whose filter is empty
+                imports as having NO filter, so set false when adopting such a rule; leave true for a
+                new rule, which generally needs a filter.
+              default: true
+            expired_object_delete_marker:
+              type: boolean
+              title: Remove Expired Object Delete Markers
+              description: The delete-marker cleanup form of expiration, used instead of an age in days.
+                Mutually exclusive with Expiration Days in practice.
+            noncurrent_version_transitions:
+              type: object
+              title: Noncurrent Version Transitions
+              description: Storage-class transitions for noncurrent versions, keyed by a name you choose.
+              x-ui-allow-title-edit: true
+              patternProperties:
+                ^[a-zA-Z0-9_. -]+$:
+                  type: object
+                  title: Transition
+                  properties:
+                    noncurrent_days:
+                      type: integer
+                      title: Days After Becoming Noncurrent
+                      minimum: 0
+                    storage_class:
+                      type: string
+                      title: Target Storage Class
+                      enum:
+                      - STANDARD_IA
+                      - INTELLIGENT_TIERING
+                      - GLACIER_IR
+                      - GLACIER
+                      - DEEP_ARCHIVE
+                  required:
+                  - noncurrent_days
+                  - storage_class
+            order:
+              type: integer
+              title: Order
+              minimum: 0
+              description: Position of this rule in the bucket lifecycle configuration. Terraform stores
+                rules as an ordered list, so adopting an existing multi-rule bucket must reproduce the
+                live order or every rule diffs.
     restrict_public_buckets:
       type: boolean
       title: Restrict Public Bucket Policies
@@ -227,34 +313,49 @@ spec:
       title: Additional Tags
       description: Additional tags to apply to the bucket (key-value pairs)
       x-ui-yaml-editor: true
+    transition_default_minimum_object_size:
+      type: string
+      title: Lifecycle Transition Minimum Object Size
+      description: Bucket-level lifecycle setting (not per-rule). Leave empty for a new bucket to take
+        the AWS provider default of all_storage_classes_128K. Buckets whose lifecycle configuration predates
+        that default read back varies_by_storage_class and MUST set it explicitly, or the adoption plan
+        drifts.
+      enum:
+      - varies_by_storage_class
+      - all_storage_classes_128K
+      x-ui-visible-if:
+        field: spec.lifecycle_rules
     versioning_enabled:
       type: boolean
       title: Enable Versioning
       description: Enable versioning to preserve all versions of objects
       default: false
+    imports:
+      type: object
+      title: Existing Bucket
+      description: Adopt a bucket that already exists instead of creating one. Turning this on reveals
+        the identifiers that say which one. Set per environment — production adopts, a new environment
+        builds.
+      x-ui-overrides-only: true
+      properties:
+        import_existing:
+          type: boolean
+          title: Adopt an existing bucket
+          description: Enable to adopt a bucket that already exists in this environment.
+          default: false
+        bucket_name:
+          type: string
+          title: Bucket Name
+          description: The live bucket name, used verbatim. ForceNew — a generated name on an adopted
+            bucket plans destroy+create.
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+            - true
+          pattern: ^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$
+      required:
+      - import_existing
   required: []
-imports:
-- name: s3_bucket
-  required: false
-  resource_address: aws_s3_bucket.main
-- name: bucket_versioning
-  required: false
-  resource_address: aws_s3_bucket_versioning.main
-- name: bucket_encryption
-  required: false
-  resource_address: aws_s3_bucket_server_side_encryption_configuration.main[0]
-- name: bucket_public_access_block
-  required: false
-  resource_address: aws_s3_bucket_public_access_block.main
-- name: bucket_lifecycle
-  required: false
-  resource_address: aws_s3_bucket_lifecycle_configuration.main[0]
-- name: bucket_cors
-  required: false
-  resource_address: aws_s3_bucket_cors_configuration.main[0]
-- name: bucket_policy
-  required: false
-  resource_address: aws_s3_bucket_policy.main[0]
 iac:
   validated_files:
   - main.tf
@@ -270,6 +371,7 @@ sample:
     block_public_policy: true
     encryption_enabled: true
     ignore_public_acls: true
-    import_existing: false
     restrict_public_buckets: true
     versioning_enabled: false
+    imports:
+      import_existing: false

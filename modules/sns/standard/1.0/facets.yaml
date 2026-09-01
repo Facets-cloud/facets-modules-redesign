@@ -1,19 +1,19 @@
 intent: sns
 flavor: standard
 version: '1.0'
-description: AWS SNS topic with optional FIFO support, dead letter queue, and encryption
+description: 'AWS SNS topic — adoption-capable: policy, subscriptions and delivery-status logging modelled'
+clouds:
+- aws
 intentDetails:
   type: Messaging
   description: AWS Simple Notification Service for pub/sub messaging
   displayName: SNS Topic
   iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/sns.svg
-clouds:
-- aws
 inputs:
   cloud_account:
     type: '@facets/aws_cloud_account'
     displayName: Cloud Account
-    description: The AWS Cloud Account for SNS topic deployment
+    description: The AWS Cloud Account for the topic
     optional: false
     providers:
     - aws
@@ -22,138 +22,248 @@ outputs:
     type: '@facets/sns'
     title: SNS Topic Details
 spec:
-  description: Configure SNS topic with encryption, dead letter queue for failed deliveries, and access policies
   type: object
-  title: SNS Topic Configuration
+  title: SNS Topic
+  description: An SNS topic, its access policy and its subscriptions
   x-ui-order:
-  - import_existing
-  - imports
-  - topic_config
-  - dlq_config
-  - encryption_config
+  - display_name
+  - fifo_topic
+  - content_based_deduplication
+  - kms_master_key_id
+  - tracing_config
+  - subscriptions
+  - topic_policy_json
+  - delivery_status_logging
+  - create_iam_policies
   - tags
+  - inject_env_tags
+  - imports
   properties:
-    import_existing:
+    display_name:
+      type: string
+      title: Display Name
+      description: Shown as the sender name for SMS/email. 60 of the 80 live topics have none — leave
+        empty to mean genuinely absent, since setting one is a real change.
+    fifo_topic:
       type: boolean
-      title: Import Existing SNS Topic
-      description: Set to true to import an existing SNS topic
+      title: FIFO Topic
       default: false
-    imports:
-      type: object
-      title: Import Existing Topic
-      description: Provide topic name and ARN of existing SNS topic to import
+      x-ui-immutable: true
+    content_based_deduplication:
+      type: boolean
+      title: Content-Based Deduplication
+      default: false
       x-ui-visible-if:
-        field: spec.import_existing
+        field: spec.fifo_topic
         values:
         - true
+    kms_master_key_id:
+      type: string
+      title: KMS Key or Alias
+      x-ui-placeholder: alias/aws/sns
+      description: Leave EMPTY for an unencrypted topic — 5 of the 80 live topics are unencrypted, and
+        forcing alias/aws/sns on them is a real change.
+    tracing_config:
+      type: string
+      title: X-Ray Tracing
+      enum:
+      - PassThrough
+      - Active
+    subscriptions:
+      type: object
+      title: Subscriptions
+      x-ui-allow-title-edit: true
+      description: One entry per subscriber, keyed by a name you choose. Importing a topic without its
+        subscriptions leaves every subscriber unmanaged and a new environment with nothing wired to the
+        topic.
+      patternProperties:
+        ^[a-zA-Z0-9_.-]+$:
+          type: object
+          properties:
+            protocol:
+              type: string
+              title: Protocol
+              enum:
+              - lambda
+              - sqs
+              - https
+              - http
+              - email
+              - email-json
+              - sms
+              - firehose
+              - application
+            endpoint:
+              type: string
+              title: Endpoint
+              description: 'The subscriber. Reference rather than hardcode where possible: an SQS target
+                as ${sqs.<name>.out.attributes.queue_arn}; a lambda ARN parameterised on ${cloud_account.aws.out.attributes.aws_region}
+                and .account_id. An https endpoint whose path carries an API key belongs in a project
+                variable, not here.'
+            raw_message_delivery:
+              type: boolean
+              title: Raw Message Delivery
+              default: false
+            filter_policy:
+              type: string
+              title: Filter Policy (JSON)
+              x-ui-editor: true
+              x-ui-editor-language: json
+              description: Unmodelled on an adopted subscription this reads as REMOVING the filter, so
+                every message starts reaching a consumer that was deliberately filtered from it.
+            filter_policy_scope:
+              type: string
+              title: Filter Policy Scope
+              enum:
+              - MessageAttributes
+              - MessageBody
+            redrive_policy:
+              type: string
+              title: Redrive Policy (JSON)
+              x-ui-editor: true
+              x-ui-editor-language: json
+            subscription_role_arn:
+              type: string
+              title: Subscription Role ARN
+              description: Required for firehose subscriptions.
+          required:
+          - protocol
+          - endpoint
+    topic_policy_json:
+      type: string
+      title: Topic Access Policy (JSON)
+      x-ui-editor: true
+      x-ui-editor-language: json
+      description: The topic resource policy. Use __TOPIC_ARN__ where the topic’s own ARN belongs — a
+        resource cannot reference its own output. All 80 live topics have a policy; leaving this empty
+        on an adopted topic removes it.
+    delivery_status_logging:
+      type: object
+      title: Delivery Status Logging
       properties:
+        application_success_feedback_sample_rate:
+          type: number
+          title: Application Success Feedback Sample Rate
+          minimum: 0
+          maximum: 100
+        firehose_success_feedback_role_arn:
+          type: string
+          title: Firehose Success Feedback Role Arn
+          description: IAM role SNS assumes to write delivery status to CloudWatch Logs.
+        firehose_success_feedback_sample_rate:
+          type: number
+          title: Firehose Success Feedback Sample Rate
+          minimum: 0
+          maximum: 100
+        firehose_failure_feedback_role_arn:
+          type: string
+          title: Firehose Failure Feedback Role Arn
+          description: IAM role SNS assumes to write delivery status to CloudWatch Logs.
+        http_success_feedback_role_arn:
+          type: string
+          title: Http Success Feedback Role Arn
+          description: IAM role SNS assumes to write delivery status to CloudWatch Logs.
+        http_success_feedback_sample_rate:
+          type: number
+          title: Http Success Feedback Sample Rate
+          minimum: 0
+          maximum: 100
+        http_failure_feedback_role_arn:
+          type: string
+          title: Http Failure Feedback Role Arn
+          description: IAM role SNS assumes to write delivery status to CloudWatch Logs.
+        lambda_success_feedback_role_arn:
+          type: string
+          title: Lambda Success Feedback Role Arn
+          description: IAM role SNS assumes to write delivery status to CloudWatch Logs.
+        lambda_success_feedback_sample_rate:
+          type: number
+          title: Lambda Success Feedback Sample Rate
+          minimum: 0
+          maximum: 100
+        lambda_failure_feedback_role_arn:
+          type: string
+          title: Lambda Failure Feedback Role Arn
+          description: IAM role SNS assumes to write delivery status to CloudWatch Logs.
+        sqs_success_feedback_role_arn:
+          type: string
+          title: Sqs Success Feedback Role Arn
+          description: IAM role SNS assumes to write delivery status to CloudWatch Logs.
+        sqs_success_feedback_sample_rate:
+          type: number
+          title: Sqs Success Feedback Sample Rate
+          minimum: 0
+          maximum: 100
+        sqs_failure_feedback_role_arn:
+          type: string
+          title: Sqs Failure Feedback Role Arn
+          description: IAM role SNS assumes to write delivery status to CloudWatch Logs.
+      description: Roles and sample rates SNS uses to log delivery success/failure to CloudWatch. Three
+        live topics carry these; unmodelled they are stripped.
+    create_iam_policies:
+      type: boolean
+      title: Create Publisher IAM Policy
+      default: false
+      description: Off by default — across 80 adopted topics this is 80 brand-new IAM policies.
+    inject_env_tags:
+      type: boolean
+      title: Add Environment Tags
+      default: true
+      description: 'Turn OFF when adopting: 67 of the 80 live topics are untagged, so merged identity
+        tags are a change to someone else’s resource.'
+    tags:
+      type: object
+      title: Tags
+      x-ui-yaml-editor: true
+    imports:
+      type: object
+      title: Existing Topic
+      description: Adopt a topic that already exists instead of creating one. Turning this on reveals
+        the identifiers that say which one. Set per environment — production adopts, a new environment
+        builds.
+      x-ui-overrides-only: true
+      properties:
+        import_existing:
+          type: boolean
+          title: Adopt an existing topic
+          description: Enable to adopt a topic that already exists in this environment.
+          default: false
         topic_name:
           type: string
-          title: Existing Topic Name
-          description: Name of the existing SNS topic (must match the topic to import)
-          x-ui-placeholder: my-existing-topic
+          title: Topic Name
+          description: The live topic name, used verbatim. ForceNew — a generated name on an adopted topic
+            plans destroy+create.
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+            - true
         topic_arn:
           type: string
           title: Topic ARN
-          description: ARN of the existing SNS topic
-          pattern: ^arn:aws:sns:[a-z0-9-]+:[0-9]+:.+$
-          x-ui-placeholder: arn:aws:sns:us-east-1:123456789012:my-topic
-        dlq_queue_name:
-          type: string
-          title: Existing DLQ Name (Optional)
-          description: Name of the existing dead letter queue if DLQ is enabled
-          x-ui-placeholder: my-existing-topic-dlq
-        dlq_queue_arn:
-          type: string
-          title: DLQ ARN (Optional)
-          description: ARN of the existing dead letter queue
-          pattern: ^arn:aws:sqs:[a-z0-9-]+:[0-9]+:.+$
-          x-ui-placeholder: arn:aws:sqs:us-east-1:123456789012:my-topic-dlq
+          description: The topic ARN. This is the id Terraform imports an SNS topic by; recorded here
+            so the adopted object is identifiable from the blueprint.
+          x-ui-visible-if:
+            field: spec.imports.import_existing
+            values:
+            - true
       required:
-      - topic_name
-      - topic_arn
-    topic_config:
-      type: object
-      title: Topic Configuration
-      description: Core topic settings
-      properties:
-        fifo_topic:
-          type: boolean
-          title: FIFO Topic
-          description: Enable FIFO (First-In-First-Out) topic for strict ordering
-          default: false
-        content_based_deduplication:
-          type: boolean
-          title: Content-Based Deduplication
-          description: Enable content-based deduplication (FIFO topics only)
-          default: false
-          x-ui-visible-if:
-            field: spec.topic_config.fifo_topic
-            values:
-            - true
-        display_name:
-          type: string
-          title: Display Name
-          description: Human-readable display name for the topic (optional)
-          maxLength: 100
-          x-ui-placeholder: My SNS Topic
-    dlq_config:
-      type: object
-      title: Dead Letter Queue Configuration
-      description: Configure dead letter queue for failed message deliveries
-      properties:
-        enable_dlq:
-          type: boolean
-          title: Enable Dead Letter Queue
-          description: Create an SQS DLQ for messages that fail delivery to subscriptions
-          default: false
-    encryption_config:
-      type: object
-      title: Encryption Configuration
-      description: Server-side encryption settings
-      properties:
-        enable_encryption:
-          type: boolean
-          title: Enable Encryption
-          description: Enable server-side encryption (recommended)
-          default: true
-        kms_key_id:
-          type: string
-          title: KMS Key ID (Optional)
-          description: Custom KMS key ARN for encryption (uses AWS managed key if not provided)
-          x-ui-visible-if:
-            field: spec.encryption_config.enable_encryption
-            values:
-            - true
-          x-ui-placeholder: arn:aws:kms:region:account:key/key-id
-    tags:
-      type: object
-      title: Additional Tags
-      description: Additional tags to apply to the topic (key-value pairs)
-      x-ui-yaml-editor: true
+      - import_existing
   required: []
-imports:
-- name: sns_topic
-  required: false
-  resource_address: aws_sns_topic.main
-- name: dlq_queue
-  required: false
-  resource_address: aws_sqs_queue.dlq[0]
 iac:
   validated_files:
   - main.tf
   - variables.tf
   - outputs.tf
 sample:
-  version: '1.0'
-  flavor: standard
   kind: sns
+  flavor: standard
+  version: '1.0'
   disabled: true
   spec:
-    import_existing: false
-    topic_config:
-      fifo_topic: false
-    dlq_config:
-      enable_dlq: false
-    encryption_config:
-      enable_encryption: true
+    fifo_topic: false
+    subscriptions: {}
+    create_iam_policies: false
+    inject_env_tags: true
+    tags: {}
+    imports:
+      import_existing: false
