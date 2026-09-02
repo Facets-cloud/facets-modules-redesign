@@ -38,7 +38,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          modules=$(gh pr diff --name-only | while read f; do
+          modules=$(gh pr diff "${{ github.event.pull_request.number }}" --name-only | while read f; do
             dir=$(dirname "$f")
             while [ "$dir" != "." ]; do
               [ -f "$dir/facets.yaml" ] && echo "$dir" && break
