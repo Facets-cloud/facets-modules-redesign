@@ -61,7 +61,7 @@ spec:
   cloud_account: ""                       # select a linked GCP cloud account
   region: asia-south1
   org_id: "123456789012"                  # numeric org ID, 10–14 digits
-  billing_account: 01ABA1-B262B1-85AD27   # BILLING-ACCOUNT-ID format
+  billing_account: 000000-000000-000000   # BILLING-ACCOUNT-ID format
   quota_project: my-project               # optional; defaults to the SA's project
 ```
 
