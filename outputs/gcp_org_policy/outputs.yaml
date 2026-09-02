@@ -1,0 +1,19 @@
+name: '@facets/gcp_org_policy'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        applied_constraints:
+          description: List of org-policy constraints applied by this resource
+          type: array
+          items:
+            type: string
+        parent:
+          description: Parent resource the policies are attached to (folders/<id>)
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

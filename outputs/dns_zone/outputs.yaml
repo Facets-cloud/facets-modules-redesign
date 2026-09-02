@@ -1,0 +1,22 @@
+name: '@facets/dns_zone'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        zone_name:
+          description: Cloud DNS managed-zone name
+          type: string
+        dns_name:
+          description: DNS name of the zone (trailing dot)
+          type: string
+        name_servers:
+          description: Authoritative name servers for the zone
+          type: array
+          items:
+            type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

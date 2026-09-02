@@ -1,0 +1,41 @@
+name: '@facets/gcp_org_account'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        credentials:
+          description: Service-account key JSON (sensitive)
+          type: string
+        project_id:
+          description: Quota/billing project id backing the provider
+          type: string
+        org_id:
+          description: GCP organization numeric id
+          type: string
+        org_name:
+          description: Full org resource name (organizations/<id>)
+          type: string
+        billing_account:
+          description: Billing account id to attach to created projects
+          type: string
+        quota_project:
+          description: Project used for quota/billing of org-scoped API calls
+          type: string
+        user_project_override:
+          description: Whether user_project_override is set on the provider (always true)
+          type: boolean
+        region:
+          description: Default GCP region
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers:
+- name: google
+  source: hashicorp/google
+  version: 6.43.0
+- name: google-beta
+  source: hashicorp/google-beta
+  version: 6.43.0

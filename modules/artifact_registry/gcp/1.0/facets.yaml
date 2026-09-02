@@ -1,0 +1,128 @@
+intent: artifact_registry
+flavor: gcp
+version: '1.0'
+description: Creates a per-project Google Artifact Registry repository for container images
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Creates a per-project Google Artifact Registry repository for environment-specific container images
+  displayName: Artifact Registry
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/artifactories.svg
+clouds:
+- gcp
+spec:
+  type: object
+  title: Artifact Registry
+  description: Creates one Google Artifact Registry repository in the selected project.
+  required:
+  - repository_id
+  properties:
+    repository_id:
+      type: string
+      title: Repository ID
+      description: Immutable Artifact Registry repository ID.
+      pattern: ^[a-z][a-z0-9_-]{1,61}[a-z0-9]$
+    location:
+      type: string
+      title: Location
+      description: Artifact Registry location.
+      default: asia-south1
+    format:
+      type: string
+      title: Format
+      description: Immutable repository format.
+      enum:
+      - DOCKER
+      default: DOCKER
+    description:
+      type: string
+      title: Description
+      description: Human-readable repository description.
+      default: ""
+    kms_key_name:
+      type: string
+      title: KMS Key Name
+      description: Name of the crypto key from the optional KMS input to use for repository CMEK encryption.
+      default: artifacts
+    immutable_tags:
+      type: boolean
+      title: Immutable Tags
+      description: DOCKER only. When true, an existing tag can never be re-pointed at
+        different content. Recommended for production repositories. Incompatible with
+        promotion schemes that move a floating tag between digests.
+      default: false
+    cleanup_policies:
+      type: array
+      title: Cleanup Policies
+      description: Optional cleanup policies. DELETE policies can set older_than; KEEP policies can set keep_count.
+      x-ui-yaml-editor: true
+      items:
+        type: object
+        required:
+        - id
+        - action
+        properties:
+          id:
+            type: string
+            title: ID
+            description: Cleanup policy identifier.
+            minLength: 1
+          action:
+            type: string
+            title: Action
+            description: Cleanup action.
+            enum:
+            - KEEP
+            - DELETE
+          older_than:
+            type: string
+            title: Older Than
+            description: Duration for DELETE policies, for example 2592000s for 30 days.
+            default: ""
+          keep_count:
+            type: number
+            title: Keep Count
+            description: Minimum number of versions to keep for KEEP policies. Use 0 to omit.
+            default: 0
+      default: []
+  x-ui-order:
+  - repository_id
+  - location
+  - format
+  - description
+  - kms_key_name
+  - immutable_tags
+  - cleanup_policies
+inputs:
+  cloud_account:
+    type: '@facets/gcp_org_account'
+    providers:
+    - google
+    optional: false
+  project:
+    type: '@facets/gcp_project'
+    optional: false
+  kms:
+    type: '@facets/gcp_kms'
+    optional: true
+outputs:
+  default:
+    type: '@facets/artifact_registry'
+sample:
+  version: '1.0'
+  flavor: gcp
+  kind: artifact_registry
+  disabled: false
+  spec:
+    repository_id: my-app
+    location: asia-south1
+    format: DOCKER
+    description: My application container images
+    kms_key_name: artifacts
+    immutable_tags: false
+    cleanup_policies: []
+iac:
+  validated_files:
+  - main.tf
+  - locals.tf
+  - outputs.tf
+  - variables.tf

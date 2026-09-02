@@ -1,0 +1,28 @@
+name: '@facets/gcp_project'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        project_id:
+          description: The GCP project id (globally unique, immutable)
+          type: string
+        project_number:
+          description: GCP-assigned numeric project number
+          type: string
+        project_name:
+          description: Full resource name (projects/<project_id>)
+          type: string
+        folder_id:
+          description: Parent folder id the project lives under
+          type: string
+        enabled_apis:
+          description: List of enabled service APIs on the project
+          type: array
+          items:
+            type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

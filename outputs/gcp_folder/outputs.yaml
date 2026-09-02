@@ -1,0 +1,20 @@
+name: '@facets/gcp_folder'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        folder_id:
+          description: The folder id (folders/<id>)
+          type: string
+        folder_name:
+          description: Full resource name of the folder
+          type: string
+        parent:
+          description: Parent resource (organizations/<id> or folders/<id>)
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

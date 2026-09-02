@@ -1,0 +1,137 @@
+intent: gcp_org_policy
+flavor: standard
+version: '1.0'
+description: Applies Google Cloud Organization Policy v2 constraints at folder scope
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Applies folder-scoped GCP Organization Policy v2 constraints
+  displayName: GCP Organization Policy
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/gcp_org_policy.svg
+clouds:
+- gcp
+spec:
+  type: object
+  title: GCP Organization Policy
+  description: Applies one or more Organization Policy v2 constraints to the selected folder.
+  required:
+  - constraints
+  properties:
+    constraints:
+      type: array
+      title: Constraints
+      description: Folder-scoped Organization Policy constraints to manage.
+      x-ui-yaml-editor: true
+      items:
+        type: object
+        required:
+        - constraint
+        - rule_type
+        properties:
+          constraint:
+            type: string
+            title: Constraint
+            description: Constraint name, for example gcp.resourceLocations.
+          rule_type:
+            type: string
+            title: Rule Type
+            description: Whether this is a boolean or list constraint.
+            enum:
+            - boolean
+            - list
+          enforce:
+            type: boolean
+            title: Enforce
+            description: Boolean constraint enforcement value.
+          deny_all:
+            type: boolean
+            title: Deny All
+            description: LIST constraints only. Deny every value. This is the ONLY correct
+              way to deny everything — there is no magic "all" string, and denied_values
+              ["all"] creates a policy that matches nothing and silently enforces nothing.
+              Mutually exclusive with allow_all and with allowed_values/denied_values.
+            default: false
+          allow_all:
+            type: boolean
+            title: Allow All
+            description: LIST constraints only. Allow every value. Mutually exclusive with
+              deny_all and with allowed_values/denied_values.
+            default: false
+          allowed_values:
+            type: array
+            title: Allowed Values
+            description: Allowed values for list constraints.
+            items:
+              type: string
+          denied_values:
+            type: array
+            title: Denied Values
+            description: Denied values for list constraints.
+            items:
+              type: string
+          inherit_from_parent:
+            type: boolean
+            title: Inherit From Parent
+            description: Whether this folder policy inherits rules from its parent.
+  x-ui-order:
+  - constraints
+inputs:
+  cloud_account:
+    type: '@facets/gcp_org_account'
+    providers:
+    - google
+    optional: false
+  parent_folder:
+    type: '@facets/gcp_folder'
+    optional: false
+outputs:
+  default:
+    type: '@facets/gcp_org_policy'
+sample:
+  version: '1.0'
+  flavor: standard
+  kind: gcp_org_policy
+  disabled: false
+  spec:
+    constraints:
+    - constraint: gcp.resourceLocations
+      rule_type: list
+      allowed_values:
+      - in:asia-south1-locations
+      denied_values: []
+      inherit_from_parent: true
+    - constraint: compute.vmExternalIpAccess
+      rule_type: list
+      deny_all: true
+      inherit_from_parent: true
+    - constraint: sql.restrictPublicIp
+      rule_type: boolean
+      enforce: true
+      allowed_values: []
+      denied_values: []
+      inherit_from_parent: true
+    - constraint: sql.restrictAuthorizedNetworks
+      rule_type: boolean
+      enforce: true
+      allowed_values: []
+      denied_values: []
+      inherit_from_parent: true
+    - constraint: compute.skipDefaultNetworkCreation
+      rule_type: boolean
+      enforce: true
+      allowed_values: []
+      denied_values: []
+      inherit_from_parent: true
+    - constraint: gcp.restrictNonCmekServices
+      rule_type: list
+      allowed_values: []
+      denied_values:
+      - sqladmin.googleapis.com
+      - storage.googleapis.com
+      - pubsub.googleapis.com
+      inherit_from_parent: true
+iac:
+  validated_files:
+  - main.tf
+  - locals.tf
+  - outputs.tf
+  - variables.tf

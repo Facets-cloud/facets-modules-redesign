@@ -1,0 +1,100 @@
+intent: gcp_project
+flavor: standard
+version: '1.0'
+description: Creates a Google Cloud project under a folder with billing, APIs, and default service account hardening
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Creates and manages Google Cloud projects for landing-zone environments
+  displayName: GCP Project
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/gcp_project.svg
+clouds:
+- gcp
+spec:
+  type: object
+  title: GCP Project
+  description: Creates one GCP project, attaches billing, enables APIs, and deprivileges default service accounts.
+  required:
+  - project_id
+  - display_name
+  properties:
+    project_id:
+      type: string
+      title: Project ID
+      description: Globally unique, immutable Google Cloud project ID.
+      pattern: ^[a-z][a-z0-9-]{4,28}[a-z0-9]$
+    display_name:
+      type: string
+      title: Display Name
+      description: Human-readable Google Cloud project display name.
+      minLength: 1
+    labels:
+      type: object
+      title: Labels
+      description: Labels to merge with environment cloud tags.
+      x-ui-yaml-editor: true
+      default: {}
+    activate_apis:
+      type: array
+      title: Activate APIs
+      description: Google APIs to enable on the project.
+      items:
+        type: string
+      default: []
+    default_sa_action:
+      type: string
+      title: Default Service Account Action
+      description: Action for Google-managed default service accounts.
+      enum:
+      - DEPRIVILEGE
+      - DISABLE
+      - DELETE
+      - NONE
+      default: DEPRIVILEGE
+    deletion_policy:
+      type: string
+      title: Deletion Policy
+      description: Project deletion behavior.
+      enum:
+      - PREVENT
+      - DELETE
+      - ABANDON
+      default: PREVENT
+  x-ui-order:
+  - project_id
+  - display_name
+  - labels
+  - activate_apis
+  - default_sa_action
+  - deletion_policy
+inputs:
+  cloud_account:
+    type: '@facets/gcp_org_account'
+    providers:
+    - google
+    optional: false
+  parent_folder:
+    type: '@facets/gcp_folder'
+    optional: false
+outputs:
+  default:
+    type: '@facets/gcp_project'
+sample:
+  version: '1.0'
+  flavor: standard
+  kind: gcp_project
+  disabled: false
+  spec:
+    project_id: my-app-stage
+    display_name: My App Stage
+    labels: {}
+    activate_apis:
+    - serviceusage.googleapis.com
+    - cloudresourcemanager.googleapis.com
+    default_sa_action: DEPRIVILEGE
+    deletion_policy: PREVENT
+iac:
+  validated_files:
+  - main.tf
+  - locals.tf
+  - outputs.tf
+  - variables.tf
