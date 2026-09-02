@@ -1,0 +1,183 @@
+# ╔═══════════════════════════════════════════════════════════╗
+# ║ MANAGED BY: raptor module — DO NOT EDIT DIRECTLY         ║
+# ║                                                          ║
+# ║ Modify via:                                              ║
+# ║   raptor module set-spec --add <field>                   ║
+# ║   raptor module add-input / remove-input                 ║
+# ║   raptor module add-output / remove-output               ║
+# ║   raptor module show | raptor module validate            ║
+# ╚═══════════════════════════════════════════════════════════╝
+intent: cloud_scheduler
+flavor: gcp
+version: "1.0"
+description: Cloud Scheduler HTTP job — triggers a Cloud Run job (:run API, OAuth) or any HTTPS endpoint / Cloud Run service (OIDC) on a cron schedule.
+clouds:
+    - gcp
+intentDetails:
+    type: Cloud & Infrastructure
+    description: Cloud Scheduler HTTP jobs that trigger Cloud Run jobs, Cloud Run services, or any HTTPS endpoint on a cron schedule.
+    displayName: Cloud Scheduler
+    iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloudrun.svg
+inputs:
+    gcp_provider:
+        type: '@facets/gcp_cloud_account'
+        providers:
+            - google
+outputs:
+    default:
+        type: '@facets/cloud_scheduler_job'
+spec:
+    properties:
+        attempt_deadline:
+            default: 180s
+            description: Deadline for job attempts (e.g. 180s)
+            maxLength: 20
+            minLength: 1
+            title: Attempt Deadline
+            type: string
+        auth:
+            properties:
+                oauth_scope:
+                    description: OAuth scope
+                    maxLength: 500
+                    minLength: 0
+                    title: OAuth Scope
+                    type: string
+                oauth_service_account_email:
+                    description: Service account email for OAuth (Google APIs, e.g. Cloud Run job :run)
+                    maxLength: 320
+                    minLength: 0
+                    title: OAuth Service Account Email
+                    type: string
+                oidc_audience:
+                    description: OIDC token audience
+                    maxLength: 2000
+                    minLength: 0
+                    title: OIDC Audience
+                    type: string
+                oidc_service_account_email:
+                    description: Service account email for OIDC (Cloud Run services / generic HTTPS)
+                    maxLength: 320
+                    minLength: 0
+                    title: OIDC Service Account Email
+                    type: string
+            title: Auth
+            type: object
+        description:
+            description: Human-readable description of the job
+            maxLength: 500
+            minLength: 0
+            title: Description
+            type: string
+        paused:
+            default: false
+            description: Whether the job is paused
+            title: Paused
+            type: boolean
+        retry_config:
+            properties:
+                max_backoff_duration:
+                    description: Maximum backoff between retries (e.g. 3600s)
+                    maxLength: 20
+                    minLength: 0
+                    title: Max Backoff Duration
+                    type: string
+                max_doublings:
+                    description: Max number of backoff doublings
+                    maximum: 20
+                    minimum: 0
+                    title: Max Doublings
+                    type: number
+                max_retry_duration:
+                    description: Max duration for retries (e.g. 3600s)
+                    maxLength: 20
+                    minLength: 0
+                    title: Max Retry Duration
+                    type: string
+                min_backoff_duration:
+                    description: Minimum backoff between retries (e.g. 5s)
+                    maxLength: 20
+                    minLength: 0
+                    title: Min Backoff Duration
+                    type: string
+                retry_count:
+                    description: Number of retry attempts
+                    maximum: 5
+                    minimum: 0
+                    title: Retry Count
+                    type: number
+            title: Retry Config
+            type: object
+        schedule:
+            description: Cron expression for the schedule
+            maxLength: 200
+            minLength: 1
+            title: Schedule
+            type: string
+        target:
+            properties:
+                body:
+                    description: Request body (plain text; base64-encoded automatically)
+                    maxLength: 10000
+                    minLength: 0
+                    title: Body
+                    type: string
+                headers:
+                    description: HTTP headers to send with the request (map of string)
+                    title: Headers
+                    type: object
+                    x-ui-yaml-editor: true
+                http_method:
+                    default: POST
+                    description: HTTP method to use
+                    enum:
+                        - GET
+                        - POST
+                        - PUT
+                        - PATCH
+                        - DELETE
+                        - HEAD
+                        - OPTIONS
+                    title: HTTP Method
+                    type: string
+                uri:
+                    description: Full URL (a Cloud Run job :run API URI, or a service/HTTPS URL)
+                    maxLength: 2000
+                    minLength: 1
+                    title: Target URI
+                    type: string
+            required:
+                - uri
+            title: Target
+            type: object
+        time_zone:
+            default: Etc/UTC
+            description: IANA time zone for the schedule
+            maxLength: 100
+            minLength: 1
+            title: Time Zone
+            type: string
+    required:
+        - schedule
+        - target
+    type: object
+    x-ui-order:
+        - schedule
+        - time_zone
+        - paused
+        - attempt_deadline
+        - description
+        - target
+        - auth
+        - retry_config
+sample:
+    flavor: gcp
+    kind: cloud_scheduler
+    spec:
+        attempt_deadline: 180s
+        paused: false
+        schedule: '*/5 * * * *'
+        target:
+            uri: https://example.com/hook
+        time_zone: Etc/UTC
+    version: "1.0"

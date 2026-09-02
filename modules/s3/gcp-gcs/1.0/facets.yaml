@@ -1,0 +1,196 @@
+# ╔═══════════════════════════════════════════════════════════╗
+# ║ MANAGED BY: raptor module — DO NOT EDIT DIRECTLY         ║
+# ║                                                          ║
+# ║ Modify via:                                              ║
+# ║   raptor module set-spec --add <field>                   ║
+# ║   raptor module add-input / remove-input                 ║
+# ║   raptor module add-output / remove-output               ║
+# ║   raptor module show | raptor module validate            ║
+# ╚═══════════════════════════════════════════════════════════╝
+intent: s3
+flavor: gcp-gcs
+version: "1.0"
+description: Google Cloud Storage bucket with CMEK, versioning, lifecycle, CORS, labels, and retention controls
+clouds:
+    - gcp
+inputs:
+    cloud_account:
+        type: '@facets/gcp_cloud_account'
+        providers:
+            - google
+outputs:
+    default:
+        type: '@facets/bucket'
+spec:
+    description: Creates a Google Cloud Storage bucket for the generic Facets object-storage intent.
+    properties:
+        cors_rules:
+            default: []
+            description: Optional Cross-Origin Resource Sharing rules.
+            items:
+                properties:
+                    max_age_seconds:
+                        default: 3600
+                        title: Max Age Seconds
+                        type: number
+                    method:
+                        items:
+                            enum:
+                                - GET
+                                - HEAD
+                                - POST
+                                - PUT
+                                - DELETE
+                                - OPTIONS
+                            type: string
+                        title: Methods
+                        type: array
+                    origin:
+                        items:
+                            type: string
+                        title: Origins
+                        type: array
+                    response_header:
+                        items:
+                            type: string
+                        title: Response Headers
+                        type: array
+                type: object
+            title: CORS Rules
+            type: array
+            x-ui-yaml-editor: true
+        force_destroy:
+            default: false
+            description: Allow Terraform to delete a non-empty bucket. Keep false for production unless object loss is intended.
+            title: Force Destroy
+            type: boolean
+        kms_key_name:
+            description: Full customer-managed key resource path used as the bucket default encryption key, for example projects/P/locations/L/keyRings/K/cryptoKeys/C. Required where an org policy enforces CMEK for GCS.
+            pattern: ^projects/[^/]+/locations/[^/]+/keyRings/[^/]+/cryptoKeys/[^/]+$
+            title: KMS Key Name
+            type: string
+        labels:
+            default: {}
+            description: Additional labels to apply to the bucket.
+            title: Labels
+            type: object
+            x-ui-yaml-editor: true
+        lifecycle_rules:
+            default: []
+            description: Optional lifecycle rules. Each rule uses age, created_before, or num_newer_versions conditions and either deletes objects or changes storage class.
+            items:
+                properties:
+                    action:
+                        properties:
+                            storage_class:
+                                enum:
+                                    - STANDARD
+                                    - NEARLINE
+                                    - COLDLINE
+                                    - ARCHIVE
+                                title: Target Storage Class
+                                type: string
+                            type:
+                                enum:
+                                    - Delete
+                                    - SetStorageClass
+                                title: Action Type
+                                type: string
+                        required:
+                            - type
+                        title: Action
+                        type: object
+                    condition:
+                        properties:
+                            age:
+                                minimum: 0
+                                title: Object Age Days
+                                type: number
+                            created_before:
+                                description: Date in YYYY-MM-DD format.
+                                pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}$
+                                title: Created Before
+                                type: string
+                            num_newer_versions:
+                                minimum: 0
+                                title: Newer Versions
+                                type: number
+                        title: Condition
+                        type: object
+                required:
+                    - action
+                type: object
+            title: Lifecycle Rules
+            type: array
+            x-ui-yaml-editor: true
+        location:
+            description: Bucket location. Defaults to the cloud account region when omitted.
+            title: Location
+            type: string
+        public_access_prevention:
+            default: enforced
+            description: Public access prevention mode. Keep enforced unless public buckets are explicitly required.
+            enum:
+                - inherited
+                - enforced
+            title: Public Access Prevention
+            type: string
+        retention_policy:
+            description: Optional bucket retention policy. Locking is irreversible, so is_locked defaults to false.
+            properties:
+                is_locked:
+                    description: Irreversibly lock the retention policy. Defaults to false.
+                    title: Lock Retention
+                    type: boolean
+                retention_period_seconds:
+                    minimum: 1
+                    title: Retention Period Seconds
+                    type: number
+            required:
+                - retention_period_seconds
+            title: Retention Policy
+            type: object
+        storage_class:
+            default: STANDARD
+            description: Default storage class for new objects.
+            enum:
+                - STANDARD
+                - NEARLINE
+                - COLDLINE
+                - ARCHIVE
+            title: Storage Class
+            type: string
+        versioning_enabled:
+            default: false
+            description: Preserve object versions in the bucket.
+            title: Enable Versioning
+            type: boolean
+    required:
+        - kms_key_name
+    title: GCS Bucket
+    type: object
+    x-ui-order:
+        - kms_key_name
+        - location
+        - storage_class
+        - versioning_enabled
+        - public_access_prevention
+        - lifecycle_rules
+        - cors_rules
+        - labels
+        - force_destroy
+        - retention_policy
+sample:
+    flavor: gcp-gcs
+    kind: s3
+    spec:
+        cors_rules: []
+        force_destroy: false
+        kms_key_name: projects/my-security/locations/asia-south1/keyRings/my-prod-cmek/cryptoKeys/storage
+        labels: {}
+        lifecycle_rules: []
+        location: asia-south1
+        public_access_prevention: enforced
+        storage_class: STANDARD
+        versioning_enabled: false
+    version: "1.0"
