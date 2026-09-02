@@ -1,0 +1,151 @@
+intent: gcp_kms
+flavor: standard
+version: '1.0'
+description: Creates a Google Cloud KMS key ring and CMEK crypto keys with service-agent grants
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Creates centralized CMEK keys for data encryption across Google Cloud projects
+  displayName: GCP KMS
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/gcp_kms.svg
+clouds:
+- gcp
+spec:
+  type: object
+  title: GCP KMS
+  description: Creates a KMS key ring and one or more CMEK crypto keys, then grants selected Google service agents encrypt/decrypt access.
+  required:
+  - keyring_name
+  - keys
+  properties:
+    keyring_name:
+      type: string
+      title: Key Ring Name
+      description: Immutable KMS key ring name.
+      minLength: 1
+    location:
+      type: string
+      title: Location
+      description: KMS location. Must match the data location for CMEK use.
+      default: asia-south1
+    keys:
+      type: array
+      title: Crypto Keys
+      description: CMEK crypto keys to create in the key ring.
+      x-ui-yaml-editor: true
+      items:
+        type: object
+        required:
+        - name
+        properties:
+          name:
+            type: string
+            title: Name
+            description: Immutable crypto key name.
+            minLength: 1
+          purpose:
+            type: string
+            title: Purpose
+            description: Crypto key purpose.
+            default: ENCRYPT_DECRYPT
+          rotation_period:
+            type: string
+            title: Rotation Period
+            description: Rotation period for ENCRYPT_DECRYPT keys, for example 7776000s for 90 days.
+            default: 7776000s
+          protection_level:
+            type: string
+            title: Protection Level
+            description: Protection level for generated key versions.
+            default: SOFTWARE
+          service_agents:
+            type: array
+            title: Service Agents
+            description: Short service-agent names to grant on this key, for example sqladmin, redis, storage, or pubsub.
+            items:
+              type: string
+            default: []
+          grant_project_numbers:
+            type: array
+            title: Grant Project Numbers
+            description: Project numbers whose service agents should receive this key grant. Defaults to the key ring project's project number when omitted or empty.
+            items:
+              type: string
+            default: []
+  x-ui-order:
+  - keyring_name
+  - location
+  - keys
+inputs:
+  cloud_account:
+    type: '@facets/gcp_org_account'
+    providers:
+    - google
+    - google-beta
+    optional: false
+  project:
+    type: '@facets/gcp_project'
+    optional: false
+  grantee_project:
+    type: '@facets/gcp_project'
+    optional: true
+outputs:
+  default:
+    type: '@facets/gcp_kms'
+sample:
+  version: '1.0'
+  flavor: standard
+  kind: gcp_kms
+  disabled: false
+  spec:
+    keyring_name: my-prod-cmek
+    location: asia-south1
+    keys:
+    - name: cloudsql
+      purpose: ENCRYPT_DECRYPT
+      rotation_period: 7776000s
+      protection_level: SOFTWARE
+      service_agents:
+      - sqladmin
+      grant_project_numbers: []
+    - name: storage
+      purpose: ENCRYPT_DECRYPT
+      rotation_period: 7776000s
+      protection_level: SOFTWARE
+      service_agents:
+      - storage
+      grant_project_numbers: []
+    - name: secretmanager
+      purpose: ENCRYPT_DECRYPT
+      rotation_period: 7776000s
+      protection_level: SOFTWARE
+      service_agents:
+      - secretmanager
+      grant_project_numbers: []
+    - name: gke
+      purpose: ENCRYPT_DECRYPT
+      rotation_period: 7776000s
+      protection_level: SOFTWARE
+      service_agents:
+      - compute
+      - container
+      grant_project_numbers: []
+    - name: pubsub
+      purpose: ENCRYPT_DECRYPT
+      rotation_period: 7776000s
+      protection_level: SOFTWARE
+      service_agents:
+      - pubsub
+      grant_project_numbers: []
+    - name: redis
+      purpose: ENCRYPT_DECRYPT
+      rotation_period: 7776000s
+      protection_level: SOFTWARE
+      service_agents:
+      - redis
+      grant_project_numbers: []
+iac:
+  validated_files:
+  - main.tf
+  - locals.tf
+  - outputs.tf
+  - variables.tf

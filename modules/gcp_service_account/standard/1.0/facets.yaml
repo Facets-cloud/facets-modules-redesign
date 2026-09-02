@@ -1,0 +1,85 @@
+intent: gcp_service_account
+flavor: standard
+version: '1.0'
+description: Creates a least-privilege Google Cloud service account for workload impersonation
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Creates project-scoped Google Cloud service accounts and impersonation grants for workload blueprints
+  displayName: GCP Service Account
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/gcp_service_account.svg
+clouds:
+- gcp
+spec:
+  type: object
+  title: GCP Service Account
+  description: Creates one service account in an explicit Google Cloud project, with optional project role grants and service-account token creator grants for impersonation.
+  required:
+  - account_id
+  properties:
+    account_id:
+      type: string
+      title: Account ID
+      description: Immutable service account ID. Changing it destroys and recreates the service account.
+      pattern: ^[a-z][a-z0-9-]{4,28}[a-z0-9]$
+    display_name:
+      type: string
+      title: Display Name
+      description: Human-readable display name for the service account.
+      default: Facets Terraform
+    description:
+      type: string
+      title: Description
+      description: Description stored on the service account.
+      default: Managed by Facets
+    project_roles:
+      type: array
+      title: Project Roles
+      description: IAM roles granted to this service account on its own project.
+      items:
+        type: string
+      default: []
+    token_creators:
+      type: array
+      title: Token Creators
+      description: Fully-qualified IAM members allowed to impersonate this service account.
+      items:
+        type: string
+      default: []
+  x-ui-order:
+  - account_id
+  - display_name
+  - description
+  - project_roles
+  - token_creators
+inputs:
+  cloud_account:
+    type: '@facets/gcp_org_account'
+    providers:
+    - google
+    optional: false
+  project:
+    type: '@facets/gcp_project'
+    optional: false
+outputs:
+  default:
+    type: '@facets/gcp_service_account'
+sample:
+  version: '1.0'
+  flavor: standard
+  kind: gcp_service_account
+  disabled: false
+  spec:
+    account_id: facets-terraform
+    display_name: Facets Terraform
+    description: Managed by Facets
+    project_roles:
+    - roles/container.admin
+    - roles/cloudsql.admin
+    token_creators:
+    - serviceAccount:facets-foundation@my-tooling.iam.gserviceaccount.com
+iac:
+  validated_files:
+  - main.tf
+  - locals.tf
+  - outputs.tf
+  - variables.tf

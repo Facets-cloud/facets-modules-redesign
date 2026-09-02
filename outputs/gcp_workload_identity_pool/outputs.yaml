@@ -1,0 +1,23 @@
+name: '@facets/gcp_workload_identity_pool'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        pool_name:
+          description: Full resource name of the workload identity pool
+          type: string
+        pool_id:
+          description: Workload identity pool id
+          type: string
+        provider_id:
+          description: Workload identity pool provider id
+          type: string
+        provider_resource_name:
+          description: Full resource name of the pool provider
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

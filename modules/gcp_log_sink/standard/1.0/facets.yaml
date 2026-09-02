@@ -1,0 +1,100 @@
+intent: gcp_log_sink
+flavor: standard
+version: '1.0'
+description: Creates a folder-scoped aggregated Cloud Logging sink into a retained GCS audit bucket
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Creates a folder-scoped aggregated Cloud Logging sink into a retained GCS bucket in a separate project
+  displayName: GCP Log Sink
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/gcp_log_sink.svg
+clouds:
+- gcp
+spec:
+  type: object
+  title: GCP Log Sink
+  description: Creates a folder-scoped aggregated log sink into a versioned GCS bucket with retention policy support.
+  required:
+  - bucket_name
+  - sink_name
+  properties:
+    bucket_name:
+      type: string
+      title: Bucket Name
+      description: Globally unique GCS bucket name for immutable audit evidence.
+      pattern: ^[a-z0-9][a-z0-9._-]{1,61}[a-z0-9]$
+    sink_name:
+      type: string
+      title: Sink Name
+      description: Cloud Logging folder sink name.
+      minLength: 1
+    location:
+      type: string
+      title: Location
+      description: GCS bucket location.
+      default: asia-south1
+    retention_days:
+      type: number
+      title: Retention Days
+      description: Number of days to retain audit log objects.
+      minimum: 1
+      default: 400
+    lock_retention:
+      type: boolean
+      title: Lock Retention
+      description: Irreversibly lock the bucket retention policy.
+      default: false
+    filter:
+      type: string
+      title: Filter
+      description: Cloud Logging filter. Leave empty to capture all matching folder and descendant project logs.
+      default: ""
+    kms_key_name:
+      type: string
+      title: KMS Key Name
+      description: Name of the crypto key from the optional KMS input to use for bucket CMEK encryption.
+      default: audit
+  x-ui-order:
+  - bucket_name
+  - sink_name
+  - location
+  - retention_days
+  - lock_retention
+  - filter
+  - kms_key_name
+inputs:
+  cloud_account:
+    type: '@facets/gcp_org_account'
+    providers:
+    - google
+    optional: false
+  folder:
+    type: '@facets/gcp_folder'
+    optional: false
+  project:
+    type: '@facets/gcp_project'
+    optional: false
+  kms:
+    type: '@facets/gcp_kms'
+    optional: true
+outputs:
+  default:
+    type: '@facets/gcp_log_sink'
+sample:
+  version: '1.0'
+  flavor: standard
+  kind: gcp_log_sink
+  disabled: false
+  spec:
+    bucket_name: my-dpdp-audit-log-evidence
+    sink_name: my-platform-dpdp-evidence
+    location: asia-south1
+    retention_days: 400
+    lock_retention: false
+    filter: ""
+    kms_key_name: audit
+iac:
+  validated_files:
+  - main.tf
+  - locals.tf
+  - outputs.tf
+  - variables.tf

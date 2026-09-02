@@ -1,0 +1,158 @@
+intent: dns_zone
+flavor: gcp
+version: '1.1'
+description: Creates or manages a Google Cloud DNS managed zone and record sets
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Creates and manages Google Cloud DNS managed zones for public or private DNS.
+  displayName: DNS Zone
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/dns_zone.svg
+clouds:
+- gcp
+spec:
+  type: object
+  title: DNS Zone
+  description: Creates or manages one Google Cloud DNS managed zone in the selected project.
+  required:
+  - zone_name
+  - dns_name
+  properties:
+    zone_name:
+      type: string
+      title: Zone Name
+      description: Cloud DNS managed zone resource name. Must be unique within the project.
+      pattern: ^[a-z][a-z0-9-]{0,61}[a-z0-9]$
+    dns_name:
+      type: string
+      title: DNS Name
+      description: Domain name for this managed zone. Cloud DNS requires a trailing dot, for example example.com.; Terraform normalizes a missing trailing dot defensively.
+      minLength: 2
+    description:
+      type: string
+      title: Description
+      description: Human-readable managed zone description.
+      default: ""
+    project_id_override:
+      type: string
+      title: Project ID Override
+      description: Optional GCP project ID override. Leave empty to use the selected network's project.
+      default: ""
+    existing_zone_id:
+      type: string
+      title: Existing Zone ID
+      description: Existing Cloud DNS managed zone name to attach records to instead of creating a new zone. Leave empty to create the zone.
+      default: ""
+    visibility:
+      type: string
+      title: Visibility
+      description: Whether the zone is public on the internet or private to the listed VPC networks.
+      enum:
+      - public
+      - private
+      default: public
+    dnssec:
+      type: string
+      title: DNSSEC
+      description: DNSSEC state for the managed zone.
+      enum:
+      - 'off'
+      - 'on'
+      default: 'off'
+    network_self_links:
+      type: array
+      title: Private Network Self Links
+      description: Optional VPC network IDs or fully-qualified network URLs for a private zone. Leave empty to bind the selected network's VPC.
+      items:
+        type: string
+      default: []
+    records:
+      type: object
+      title: Records
+      description: DNS records to manage in this zone.
+      patternProperties:
+        .*:
+          type: object
+          required:
+          - name
+          - type
+          properties:
+            name:
+              type: string
+              title: Record Name
+              description: Record name relative to the zone. Use "" or "@" for apex.
+              maxLength: 253
+            type:
+              type: string
+              title: Record Type
+              description: DNS record type.
+              enum:
+              - A
+              - AAAA
+              - CNAME
+              - TXT
+              - NS
+              - MX
+            ttl:
+              type: number
+              title: TTL
+              description: Record TTL in seconds.
+              minimum: 30
+              maximum: 86400
+              default: 300
+            value:
+              type: string
+              title: Value
+              description: Single record value.
+              default: ""
+            values:
+              type: array
+              title: Values
+              description: Record values. Use this for multi-value record sets.
+              items:
+                type: string
+              default: []
+      default: {}
+  x-ui-order:
+  - zone_name
+  - dns_name
+  - description
+  - project_id_override
+  - existing_zone_id
+  - visibility
+  - dnssec
+  - network_self_links
+  - records
+inputs:
+  cloud_account:
+    type: '@facets/gcp_cloud_account'
+    providers:
+    - google
+    optional: false
+  network:
+    type: '@facets/gcp-network-details'
+    displayName: GCP Network
+    optional: false
+outputs:
+  default:
+    type: '@facets/dns_zone'
+sample:
+  version: '1.1'
+  flavor: gcp
+  kind: dns_zone
+  disabled: false
+  spec:
+    zone_name: my-com
+    dns_name: example.com.
+    description: My public DNS zone
+    project_id_override: ""
+    existing_zone_id: ""
+    visibility: public
+    dnssec: 'off'
+    network_self_links: []
+    records: {}
+iac:
+  validated_files:
+  - main.tf
+  - locals.tf
+  - outputs.tf
+  - variables.tf

@@ -1,0 +1,29 @@
+name: '@facets/gcp_log_sink'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        bucket_name:
+          description: Name of the destination storage bucket
+          type: string
+        bucket_url:
+          description: URL of the destination storage bucket
+          type: string
+        sink_name:
+          description: Name of the log sink
+          type: string
+        writer_identity:
+          description: Service-account identity the sink writes as (grant it access on the destination)
+          type: string
+        retention_days:
+          description: Bucket retention period in days
+          type: number
+        retention_locked:
+          description: Whether the retention policy is locked (irreversible)
+          type: boolean
+    interfaces:
+      type: object
+      properties: {}
+providers: []

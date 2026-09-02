@@ -1,0 +1,106 @@
+intent: cloud_account
+flavor: gcp_org_provider
+version: '1.0'
+description: Module to configure org-scoped GCP provider access for foundation resources
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Configure org-scoped GCP access for folders, projects, and policies
+  displayName: GCP Org Cloud Account
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloud_account.svg
+clouds:
+- gcp
+spec:
+  type: object
+  title: GCP Organization Cloud Account
+  description: Org-scoped GCP provider configuration with quota/billing project support
+  required:
+  - cloud_account
+  - region
+  - org_id
+  - billing_account
+  properties:
+    cloud_account:
+      description: Select the cloud account to use (must be previously linked)
+      title: Cloud Account
+      type: string
+      x-ui-typeable: true
+      x-ui-overrides-only: true
+      x-ui-show-label-selected: true
+      x-ui-api-source:
+        endpoint: /cc-ui/v1/accounts/
+        method: GET
+        labelKey: name
+        valueKey: id
+        filterConditions:
+        - field: accountType
+          value: CLOUD
+        - field: provider
+          value: GCP
+        params:
+          includeContent: false
+    region:
+      type: string
+      title: GCP Region
+      description: GCP region where regional resources will be created
+      x-ui-overrides-only: true
+      x-ui-api-source:
+        endpoint: /cc-ui/v1/dropdown/gcp/regions-v2
+        method: GET
+        labelKey: region
+        valueKey: region
+        path: regions
+    org_id:
+      type: string
+      title: Organization ID
+      description: Numeric GCP organization ID
+      pattern: ^[0-9]{10,14}$
+    billing_account:
+      type: string
+      title: Billing Account ID
+      description: Billing account used by projects created in this organization
+      pattern: ^[A-F0-9]{6}-[A-F0-9]{6}-[A-F0-9]{6}$
+    quota_project:
+      type: string
+      title: Quota Project
+      description: Existing project used for API quota and billing_project on org-scoped provider calls
+  x-ui-order:
+  - cloud_account
+  - region
+  - org_id
+  - billing_account
+  - quota_project
+outputs:
+  default:
+    type: '@facets/gcp_org_account'
+    providers:
+      google:
+        source: hashicorp/google
+        version: '>= 6.43.0'
+        attributes:
+          credentials: attributes.credentials
+          billing_project: attributes.quota_project
+          user_project_override: attributes.user_project_override
+      google-beta:
+        source: hashicorp/google-beta
+        version: '>= 6.43.0'
+        attributes:
+          credentials: attributes.credentials
+          billing_project: attributes.quota_project
+          user_project_override: attributes.user_project_override
+sample:
+  version: '1.0'
+  flavor: gcp_org_provider
+  kind: cloud_account
+  disabled: false
+  spec:
+    cloud_account: ""
+    region: asia-south1
+    org_id: "1026617294597"
+    billing_account: 01ABA1-B262B1-85AD27
+    quota_project: my-tooling
+iac:
+  validated_files:
+  - main.tf
+  - locals.tf
+  - outputs.tf
+  - variables.tf

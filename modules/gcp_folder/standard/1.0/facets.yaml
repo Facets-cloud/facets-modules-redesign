@@ -1,0 +1,57 @@
+intent: gcp_folder
+flavor: standard
+version: '1.0'
+description: Creates a Google Cloud folder under an organization or parent folder
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Creates and manages Google Cloud resource hierarchy folders
+  displayName: GCP Folder
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/gcp_folder.svg
+clouds:
+- gcp
+spec:
+  type: object
+  title: GCP Folder
+  description: Creates one GCP folder. Compose this module multiple times for nested folder hierarchies.
+  required:
+  - display_name
+  properties:
+    display_name:
+      type: string
+      title: Display Name
+      description: Folder display name. Must be unique among sibling folders.
+      minLength: 1
+    deletion_protection:
+      type: boolean
+      title: Deletion Protection
+      description: Prevent accidental folder deletion.
+      default: true
+  x-ui-order:
+  - display_name
+  - deletion_protection
+inputs:
+  cloud_account:
+    type: '@facets/gcp_org_account'
+    providers:
+    - google
+    optional: false
+  parent_folder:
+    type: '@facets/gcp_folder'
+    optional: true
+outputs:
+  default:
+    type: '@facets/gcp_folder'
+sample:
+  version: '1.0'
+  flavor: standard
+  kind: gcp_folder
+  disabled: false
+  spec:
+    display_name: my-platform
+    deletion_protection: true
+iac:
+  validated_files:
+  - main.tf
+  - locals.tf
+  - outputs.tf
+  - variables.tf

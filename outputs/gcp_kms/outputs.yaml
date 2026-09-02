@@ -1,0 +1,23 @@
+name: '@facets/gcp_kms'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        keyring_id:
+          description: Full resource id of the KMS key ring
+          type: string
+        keyring_name:
+          description: Key ring name
+          type: string
+        location:
+          description: KMS location of the key ring
+          type: string
+        key_ids:
+          description: Map of crypto-key name to full crypto-key id
+          type: object
+    interfaces:
+      type: object
+      properties: {}
+providers: []

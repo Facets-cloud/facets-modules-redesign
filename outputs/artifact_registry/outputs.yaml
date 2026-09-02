@@ -1,0 +1,20 @@
+name: '@facets/artifact_registry'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        repository_id:
+          description: Artifact Registry repository id
+          type: string
+        location:
+          description: Repository location/region
+          type: string
+        registry_url:
+          description: Fully qualified registry URL for docker login / image refs
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

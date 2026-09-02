@@ -1,0 +1,124 @@
+intent: gcp_project_iam
+flavor: standard
+version: '1.0'
+description: Grants additive IAM role/member bindings on a Google Cloud project
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Grants additive IAM role/member bindings on a Google Cloud project without taking ownership of unrelated IAM bindings
+  displayName: GCP Project IAM
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/gcp_project_iam.svg
+clouds:
+- gcp
+spec:
+  type: object
+  title: GCP Project IAM
+  description: Grants one or more IAM roles to fully-qualified members on the selected Google Cloud project.
+  required:
+  - bindings
+  properties:
+    bindings:
+      type: array
+      title: Bindings
+      description: IAM role/member grants to apply additively to the project.
+      x-ui-yaml-editor: true
+      items:
+        type: object
+        required:
+        - role
+        - members
+        properties:
+          role:
+            type: string
+            title: Role
+            description: IAM role to grant, for example roles/viewer.
+            minLength: 1
+          members:
+            type: array
+            title: Members
+            description: Fully-qualified IAM members, for example group:sre@example.com, serviceAccount:name@project.iam.gserviceaccount.com, or user:name@example.com.
+            items:
+              type: string
+            minItems: 1
+    audit_configs:
+      type: array
+      title: Data Access Audit Log Configs
+      description: Optional project Data Access audit log configuration by service. DATA_READ and DATA_WRITE logs are billed on ingestion volume and can be very large for busy services such as Cloud Storage; enable only for targeted services that need audit evidence. Each service is authoritative and replaces that service's audit config.
+      x-ui-yaml-editor: true
+      default: []
+      items:
+        type: object
+        required:
+        - service
+        - audit_log_types
+        properties:
+          service:
+            type: string
+            title: Service
+            description: Google Cloud audit logging service name, for example storage.googleapis.com. The special allServices value is supported by Google Cloud but is authoritative for every service and should be used only deliberately.
+            minLength: 1
+          audit_log_types:
+            type: array
+            title: Audit Log Types
+            description: Permission log types to enable for this service.
+            items:
+              type: string
+              enum:
+              - ADMIN_READ
+              - DATA_READ
+              - DATA_WRITE
+            minItems: 1
+          exempted_members:
+            type: array
+            title: Exempted Members
+            description: Fully-qualified IAM members to exempt from audit logging for the configured log types.
+            items:
+              type: string
+  x-ui-order:
+  - bindings
+  - audit_configs
+inputs:
+  cloud_account:
+    type: '@facets/gcp_org_account'
+    providers:
+    - google
+    optional: false
+  project:
+    type: '@facets/gcp_project'
+    optional: false
+outputs:
+  default:
+    type: '@facets/gcp_project_iam'
+sample:
+  version: '1.0'
+  flavor: standard
+  kind: gcp_project_iam
+  disabled: false
+  spec:
+    bindings:
+    - role: roles/viewer
+      members:
+      - group:sre@example.com
+    - role: roles/browser
+      members:
+      - group:sre@example.com
+    audit_configs:
+    - service: storage.googleapis.com
+      audit_log_types:
+      - DATA_READ
+      - DATA_WRITE
+      exempted_members: []
+    - service: cloudsql.googleapis.com
+      audit_log_types:
+      - DATA_READ
+      - DATA_WRITE
+      exempted_members: []
+    - service: secretmanager.googleapis.com
+      audit_log_types:
+      - DATA_READ
+      exempted_members: []
+iac:
+  validated_files:
+  - main.tf
+  - locals.tf
+  - outputs.tf
+  - variables.tf

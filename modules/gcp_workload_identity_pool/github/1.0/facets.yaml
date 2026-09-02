@@ -1,0 +1,94 @@
+intent: gcp_workload_identity_pool
+flavor: github
+version: '1.0'
+description: Creates a Google Cloud Workload Identity Federation pool and GitHub OIDC provider
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Creates a Google Cloud Workload Identity Federation pool for GitHub Actions and grants selected repositories access to a service account
+  displayName: GCP Workload Identity Pool
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/iam_policy.svg
+clouds:
+- gcp
+spec:
+  type: object
+  title: GCP Workload Identity Pool
+  description: Creates a GitHub Actions OIDC provider and grants repositories workloadIdentityUser on a service account.
+  required:
+  - github_org
+  - service_account_email
+  - repositories
+  properties:
+    workload_identity_pool_id:
+      type: string
+      title: Pool ID
+      description: Immutable workload identity pool ID.
+      pattern: ^[a-z][a-z0-9-]{2,30}[a-z0-9]$
+      default: github
+    provider_id:
+      type: string
+      title: Provider ID
+      description: Immutable workload identity pool provider ID.
+      pattern: ^[a-z][a-z0-9-]{2,30}[a-z0-9]$
+      default: github-oidc
+    github_org:
+      type: string
+      title: GitHub Organization
+      description: GitHub organization or owner allowed by the default provider attribute condition.
+      minLength: 1
+      maxLength: 100
+    attribute_condition:
+      type: string
+      title: Attribute Condition
+      description: Optional CEL condition for GitHub OIDC tokens. Leave empty to restrict to github_org with assertion.repository_owner.
+      default: ""
+    service_account_email:
+      type: string
+      title: Service Account Email
+      description: Service account email that the selected repositories may impersonate through Workload Identity Federation.
+      pattern: ^[a-z][a-z0-9-]{4,28}[a-z0-9]@[a-z][a-z0-9-]{4,28}[a-z0-9]\.iam\.gserviceaccount\.com$
+    repositories:
+      type: array
+      title: Repositories
+      description: GitHub repositories allowed to impersonate the service account, in owner/repo form.
+      items:
+        type: string
+        pattern: ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$
+      minItems: 1
+  x-ui-order:
+  - workload_identity_pool_id
+  - provider_id
+  - github_org
+  - attribute_condition
+  - service_account_email
+  - repositories
+inputs:
+  cloud_account:
+    type: '@facets/gcp_org_account'
+    providers:
+    - google
+    optional: false
+  project:
+    type: '@facets/gcp_project'
+    optional: false
+outputs:
+  default:
+    type: '@facets/gcp_workload_identity_pool'
+sample:
+  version: '1.0'
+  flavor: github
+  kind: gcp_workload_identity_pool
+  disabled: false
+  spec:
+    workload_identity_pool_id: github
+    provider_id: github-oidc
+    github_org: my-tech
+    attribute_condition: ""
+    service_account_email: gar-pusher@my-integration.iam.gserviceaccount.com
+    repositories:
+    - my-tech/scapegoat-go
+iac:
+  validated_files:
+  - main.tf
+  - locals.tf
+  - outputs.tf
+  - variables.tf
