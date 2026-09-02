@@ -1,0 +1,49 @@
+name: gcp-foundation
+description: >-
+  GCP landing-zone / org foundation. Build and govern the organization tree —
+  folders, projects, org policies, project IAM, service accounts, GitHub
+  workload-identity, KMS keyrings, log sinks, Artifact Registry and Cloud DNS.
+  Uses an org-scoped provider and provisions no workload cluster; it is the
+  layer that stands up the projects other project types then deploy into.
+
+iacTool: TERRAFORM
+iacToolVersion: "1.5.7"
+
+allowedClouds:
+  - GCP
+
+# IaC modules to include
+modules:
+  # Cloud account providers
+  - intent: cloud_account
+    flavor: gcp_org_provider
+  - intent: cloud_account
+    flavor: gcp_provider
+
+  # Org tree
+  - intent: gcp_folder
+    flavor: standard
+  - intent: gcp_project
+    flavor: standard
+  - intent: gcp_org_policy
+    flavor: standard
+
+  # Identity & access
+  - intent: gcp_project_iam
+    flavor: standard
+  - intent: gcp_service_account
+    flavor: standard
+  - intent: gcp_workload_identity_pool
+    flavor: github
+
+  # Security, logging & registry
+  - intent: gcp_kms
+    flavor: standard
+  - intent: gcp_log_sink
+    flavor: standard
+  - intent: artifact_registry
+    flavor: gcp
+
+  # DNS
+  - intent: dns_zone
+    flavor: gcp
