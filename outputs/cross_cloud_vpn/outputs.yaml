@@ -1,0 +1,57 @@
+name: '@facets/cross_cloud_vpn'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        gcp_ha_vpn_gateway_name:
+          type: string
+          description: Name of the GCP HA VPN gateway.
+        gcp_router_name:
+          type: string
+          description: Name of the GCP Cloud Router.
+        gcp_router_asn:
+          type: number
+          description: BGP ASN configured on the GCP Cloud Router.
+        aws_vpn_gateway_id:
+          type: string
+          description: AWS Virtual Private Gateway ID used by the VPN.
+        aws_vpn_gateway_asn:
+          type: number
+          description: BGP ASN configured for the AWS Virtual Private Gateway side.
+        aws_customer_gateway_ids:
+          type: array
+          description: AWS Customer Gateway IDs, one per GCP HA VPN gateway interface.
+          items:
+            type: string
+        aws_vpn_connection_ids:
+          type: array
+          description: AWS VPN connection IDs, two connections for HA VPN.
+          items:
+            type: string
+        gcp_vpn_tunnel_names:
+          type: array
+          description: GCP VPN tunnel names, four tunnels total.
+          items:
+            type: string
+        aws_route_table_ids:
+          type: array
+          description: AWS route table IDs serving the RDS subnets with VGW propagation enabled.
+          items:
+            type: string
+        aws_cidrs:
+          type: array
+          description: AWS VPC CIDRs advertised over BGP.
+          items:
+            type: string
+        gcp_cidr:
+          type: string
+          description: GCP VPC CIDR advertised to AWS.
+        mtu:
+          type: number
+          description: Effective tunnel MTU to plan for application transfers.
+    interfaces:
+      type: object
+      properties: {}
+providers: []

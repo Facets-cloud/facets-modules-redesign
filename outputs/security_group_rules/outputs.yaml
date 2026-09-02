@@ -1,0 +1,14 @@
+name: '@facets/security_group_rules'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        rule_ids:
+          type: object
+          description: Map of rule key to the created AWS security-group ingress rule id.
+    interfaces:
+      type: object
+      properties: {}
+providers: []

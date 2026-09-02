@@ -1,0 +1,92 @@
+# ╔═══════════════════════════════════════════════════════════╗
+# ║ MANAGED BY: raptor module — DO NOT EDIT DIRECTLY         ║
+# ║                                                          ║
+# ║ Modify via:                                              ║
+# ║   raptor module set-spec --add <field>                   ║
+# ║   raptor module add-input / remove-input                 ║
+# ║   raptor module add-output / remove-output               ║
+# ║   raptor module show | raptor module validate            ║
+# ╚═══════════════════════════════════════════════════════════╝
+intent: security_group_rules
+flavor: aws
+version: "1.0"
+description: Additive ingress rules on EXISTING security groups. Never creates or owns a security group. Scoped to the transfer project so the rules are removed when the migration environment is torn down.
+intentDetails:
+    type: Cloud & Infrastructure
+    description: Additive ingress rules on existing AWS security groups for temporary migration connectivity.
+    displayName: Security Group Rules
+    iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/network.svg
+clouds:
+    - aws
+inputs:
+    cloud_account:
+        type: '@facets/aws_cloud_account'
+        providers:
+            - aws
+outputs:
+    default:
+        type: '@facets/security_group_rules'
+spec:
+    required:
+        - rules
+    properties:
+        rules:
+            patternProperties:
+                ^[a-zA-Z0-9_-]+$:
+                    properties:
+                        cidr:
+                            description: Optional IPv4 source CIDR override for this rule.
+                            maxLength: 18
+                            minLength: 0
+                            pattern: ^(|([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2})$
+                            title: Rule Source CIDR
+                            type: string
+                        description:
+                            description: Optional free-text description stamped on the AWS ingress rule.
+                            maxLength: 255
+                            minLength: 0
+                            title: Rule Description
+                            type: string
+                        port:
+                            description: TCP port to allow from the source CIDR.
+                            maximum: 65535
+                            minimum: 1
+                            title: TCP Port
+                            type: integer
+                        security_group_id:
+                            description: Existing AWS security group ID to receive this additive ingress rule.
+                            maxLength: 20
+                            minLength: 11
+                            pattern: ^sg-[0-9a-f]{8,17}$
+                            title: Security Group ID
+                            type: string
+                    required:
+                        - security_group_id
+                        - port
+                    type: object
+            title: Rules
+            type: object
+        source_cidr:
+            default: 10.60.0.0/16
+            description: Default IPv4 source CIDR applied to rules that do not set their own CIDR.
+            maxLength: 18
+            minLength: 9
+            pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$
+            title: Default Source CIDR
+            type: string
+    type: object
+    x-ui-order:
+        - source_cidr
+        - rules
+sample:
+    disabled: false
+    flavor: aws
+    kind: security_group_rules
+    spec:
+        rules:
+            stage-common-pg:
+                security_group_id: sg-0e983fbb3e47073b6
+                port: 5432
+                description: GCP stage VPN
+        source_cidr: 10.60.0.0/16
+    version: "1.0"

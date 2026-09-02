@@ -1,0 +1,302 @@
+intent: object_storage_transfer
+flavor: gcp_s3_to_gcs
+version: "1.0"
+description: Transfer objects from AWS S3 to Google Cloud Storage using Storage Transfer Service.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Creates a Google Storage Transfer Service job and the AWS IAM role/policy required for S3 to GCS migration.
+  displayName: Object Storage Transfer
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/storage.svg
+clouds:
+  - aws
+  - gcp
+inputs:
+  aws_provider:
+    type: '@facets/aws_cloud_account'
+    displayName: AWS Cloud Account
+    description: AWS account containing the source S3 bucket.
+    providers:
+      - aws
+  gcp_provider:
+    type: '@facets/gcp_cloud_account'
+    displayName: GCP Cloud Account
+    description: GCP project containing the destination bucket and Storage Transfer job.
+    providers:
+      - google
+outputs:
+  default:
+    type: '@facets/object_storage_transfer'
+spec:
+  title: Object Storage Transfer
+  description: S3 to GCS transfer specification.
+  type: object
+  x-ui-order:
+    - source
+    - target
+    - schedule
+    - options
+    - naming
+  required:
+    - source
+    - target
+  properties:
+    source:
+      type: object
+      title: Source S3
+      description: Source AWS S3 bucket and optional prefix.
+      required:
+        - bucket
+      x-ui-order:
+        - bucket
+        - prefix
+        - include_versions
+        - kms_key_arns
+      properties:
+        bucket:
+          type: string
+          title: Source Bucket
+          description: Existing S3 bucket name to read from.
+          minLength: 3
+          maxLength: 63
+          pattern: ^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$
+        prefix:
+          type: string
+          title: Source Prefix
+          description: Optional prefix inside the source bucket.
+          minLength: 0
+          maxLength: 1024
+          default: ""
+        include_versions:
+          type: boolean
+          title: Include Versions
+          description: Allow reads from versioned objects.
+          default: false
+        kms_key_arns:
+          type: array
+          title: Source KMS Key ARNs
+          description: Optional AWS KMS key ARNs required to decrypt SSE-KMS encrypted objects in the source bucket.
+          items:
+            type: string
+            minLength: 20
+            maxLength: 2048
+            pattern: ^arn:aws[a-zA-Z-]*:kms:[a-z0-9-]+:[0-9]{12}:key/[A-Za-z0-9-]+$
+          default: []
+    target:
+      type: object
+      title: Target GCS
+      description: Destination Google Cloud Storage bucket and optional prefix.
+      required:
+        - project_id
+        - bucket
+      x-ui-order:
+        - project_id
+        - bucket
+        - prefix
+      properties:
+        project_id:
+          type: string
+          title: Target Project ID
+          description: GCP project where the Storage Transfer Service job runs.
+          minLength: 6
+          maxLength: 63
+          pattern: ^[a-z][a-z0-9-]{4,61}[a-z0-9]$
+        bucket:
+          type: string
+          title: Target Bucket
+          description: Existing GCS bucket name to write into.
+          minLength: 3
+          maxLength: 222
+        prefix:
+          type: string
+          title: Target Prefix
+          description: Optional destination prefix inside the GCS bucket.
+          minLength: 0
+          maxLength: 1024
+          default: ""
+    schedule:
+      type: object
+      title: Schedule
+      description: When Storage Transfer Service should run.
+      x-ui-order:
+        - status
+        - mode
+        - start_date
+        - start_hour
+        - start_minute
+        - repeat_interval
+        - end_date
+      properties:
+        status:
+          type: string
+          title: Job Status
+          description: Whether the transfer job is enabled.
+          enum:
+            - ENABLED
+            - DISABLED
+          default: ENABLED
+        mode:
+          type: string
+          title: Schedule Mode
+          description: Run once or keep syncing on a recurring schedule.
+          enum:
+            - one_time
+            - recurring
+          default: one_time
+        start_date:
+          type: string
+          title: Start Date
+          description: Date in YYYY-MM-DD format.
+          minLength: 10
+          maxLength: 10
+          pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}$
+          default: "2026-08-27"
+        end_date:
+          type: string
+          title: End Date
+          description: Optional end date in YYYY-MM-DD format for recurring jobs. Empty means no explicit end.
+          minLength: 0
+          maxLength: 10
+          pattern: ^$|^[0-9]{4}-[0-9]{2}-[0-9]{2}$
+          default: ""
+        start_hour:
+          type: integer
+          title: Start Hour UTC
+          description: Hour of day in UTC.
+          minimum: 0
+          maximum: 23
+          default: 0
+        start_minute:
+          type: integer
+          title: Start Minute UTC
+          description: Minute of the hour in UTC.
+          minimum: 0
+          maximum: 59
+          default: 0
+        repeat_interval:
+          type: string
+          title: Repeat Interval
+          description: Terraform duration such as 3600s or 86400s. Used only for recurring jobs.
+          minLength: 2
+          maxLength: 32
+          pattern: ^[0-9]+s$
+          default: "86400s"
+    options:
+      type: object
+      title: Transfer Options
+      description: Object filtering and overwrite behavior.
+      x-ui-order:
+        - overwrite_existing
+        - delete_extra_in_target
+        - include_prefixes
+        - exclude_prefixes
+        - min_age_seconds
+        - api_propagation_wait_seconds
+      properties:
+        overwrite_existing:
+          type: boolean
+          title: Overwrite Existing
+          description: Replace target objects when source objects differ.
+          default: true
+        delete_extra_in_target:
+          type: boolean
+          title: Delete Extra Target Objects
+          description: Mirror-delete objects that exist only in the target prefix.
+          default: false
+        include_prefixes:
+          type: array
+          title: Include Prefixes
+          description: Optional object prefixes to include, relative to the source bucket.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 1024
+          default: []
+        exclude_prefixes:
+          type: array
+          title: Exclude Prefixes
+          description: Optional object prefixes to exclude, relative to the source bucket.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 1024
+          default: []
+        min_age_seconds:
+          type: integer
+          title: Minimum Object Age
+          description: Skip objects modified more recently than this many seconds.
+          minimum: 0
+          maximum: 604800
+          default: 0
+        api_propagation_wait_seconds:
+          type: integer
+          title: API Propagation Wait
+          description: Seconds to wait after enabling Storage Transfer API before reading the service agent.
+          minimum: 0
+          maximum: 600
+          default: 90
+    naming:
+      type: object
+      title: Naming
+      description: Optional cloud resource name overrides.
+      x-ui-order:
+        - transfer_job_description
+        - aws_role_name
+        - aws_policy_name
+      properties:
+        transfer_job_description:
+          type: string
+          title: Transfer Job Description
+          description: Optional Storage Transfer job description. Empty derives from the resource name.
+          minLength: 0
+          maxLength: 1024
+          default: ""
+        aws_role_name:
+          type: string
+          title: AWS Role Name
+          description: Optional IAM role name override. Empty derives from the resource name.
+          minLength: 0
+          maxLength: 64
+          pattern: ^$|^[A-Za-z0-9+=,.@_-]{1,64}$
+          x-ui-overrides-only: true
+          default: ""
+        aws_policy_name:
+          type: string
+          title: AWS Policy Name
+          description: Optional IAM policy name override. Empty derives from the resource name.
+          minLength: 0
+          maxLength: 128
+          pattern: ^$|^[A-Za-z0-9+=,.@_-]{1,128}$
+          x-ui-overrides-only: true
+          default: ""
+sample:
+  kind: object_storage_transfer
+  flavor: gcp_s3_to_gcs
+  version: "1.0"
+  disabled: true
+  spec:
+    source:
+      bucket: my-source-assets
+      prefix: exports/
+      include_versions: false
+    target:
+      project_id: my-production
+      bucket: my-target-assets
+      prefix: imports/
+    schedule:
+      status: ENABLED
+      mode: one_time
+      start_date: "2026-08-27"
+      start_hour: 0
+      start_minute: 0
+      repeat_interval: 86400s
+    options:
+      overwrite_existing: true
+      delete_extra_in_target: false
+      include_prefixes: []
+      exclude_prefixes: []
+      min_age_seconds: 0
+      api_propagation_wait_seconds: 90
+    naming:
+      transfer_job_description: ""
+      aws_role_name: ""
+      aws_policy_name: ""

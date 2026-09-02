@@ -1,0 +1,176 @@
+intent: cross_cloud_vpn
+flavor: gcp-aws
+version: "1.0"
+description: HA IPsec VPN between GCP HA VPN and AWS Virtual Private Gateway
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Cross-cloud HA VPN connectivity between a GCP VPC and an AWS VPC.
+  displayName: Cross Cloud VPN
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/network.svg
+clouds:
+  - gcp
+  - aws
+inputs:
+  gcp_cloud_account:
+    type: "@facets/gcp_cloud_account"
+    providers:
+      - google
+  aws_cloud_account:
+    type: "@facets/aws_cloud_account"
+    providers:
+      - aws
+outputs:
+  default:
+    type: "@facets/cross_cloud_vpn"
+spec:
+  title: GCP to AWS HA VPN
+  description: Creates a four-tunnel HA VPN between one GCP VPC and one AWS VPC.
+  type: object
+  required:
+    - gcp_vpc_self_link
+    - aws_vpc_id
+  properties:
+    gcp_project_id:
+      type: string
+      title: GCP Project ID
+      description: GCP project that owns the HA VPN gateway and Cloud Router. Leave empty to use the GCP cloud account project.
+      default: ""
+      minLength: 0
+      maxLength: 64
+    gcp_region:
+      type: string
+      title: GCP Region
+      description: GCP region for the HA VPN gateway and Cloud Router. Leave empty to use the GCP cloud account region.
+      default: ""
+      minLength: 0
+      maxLength: 64
+    gcp_vpc_self_link:
+      type: string
+      title: GCP VPC Self Link
+      description: Self link of the GCP VPC to connect.
+      minLength: 1
+      maxLength: 512
+    gcp_cidr:
+      type: string
+      title: GCP CIDR
+      description: GCP VPC CIDR advertised to AWS over BGP.
+      default: 10.60.0.0/16
+      minLength: 9
+      maxLength: 18
+      pattern: "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
+    aws_vpc_id:
+      type: string
+      title: AWS VPC ID
+      description: AWS VPC ID to attach or reuse a Virtual Private Gateway for.
+      minLength: 5
+      maxLength: 32
+      pattern: "^vpc-[a-z0-9]+$"
+    aws_cidrs:
+      type: array
+      title: AWS CIDRs
+      description: AWS VPC CIDRs allowed through the GCP firewall and learned over BGP.
+      default:
+        - 10.0.0.0/16
+        - 10.1.0.0/16
+      items:
+        type: string
+        pattern: "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
+    db_subnet_ids:
+      type: array
+      title: Database Subnet IDs
+      description: Every subnet in every DB subnet group whose databases must be reachable; the module enables VGW route propagation on their route tables.
+      default: []
+      items:
+        type: string
+        pattern: "^subnet-[a-z0-9]+$"
+    existing_vgw_id:
+      type: string
+      title: Existing AWS VGW ID
+      description: Existing AWS Virtual Private Gateway ID. Leave empty to create and attach a new VGW.
+      default: ""
+      minLength: 0
+      maxLength: 32
+      pattern: "^(|vgw-[a-z0-9]+)$"
+    gcp_router_asn:
+      type: integer
+      title: GCP Cloud Router ASN
+      description: Private BGP ASN for the GCP Cloud Router.
+      default: 65001
+      minimum: 64512
+      maximum: 65534
+    aws_vgw_asn:
+      type: integer
+      title: AWS VGW ASN
+      description: Private BGP ASN for the AWS Virtual Private Gateway side.
+      default: 64512
+      minimum: 64512
+      maximum: 65534
+    allowed_tcp_ports:
+      type: array
+      title: Allowed TCP Ports
+      description: TCP ports allowed from AWS CIDRs into the GCP VPC.
+      default:
+        - 5432
+        - 3306
+      items:
+        type: integer
+        minimum: 1
+        maximum: 65535
+    mtu:
+      type: integer
+      title: Effective MTU
+      description: Effective tunnel MTU to plan for cross-cloud data transfer.
+      default: 1436
+      minimum: 1280
+      maximum: 1460
+    name_prefix:
+      type: string
+      title: Name Prefix
+      description: Optional cloud resource name prefix. Leave empty to derive from Facets environment and resource name.
+      default: ""
+      minLength: 0
+      maxLength: 32
+  x-ui-order:
+    - gcp_project_id
+    - gcp_region
+    - gcp_vpc_self_link
+    - gcp_cidr
+    - aws_vpc_id
+    - aws_cidrs
+    - db_subnet_ids
+    - existing_vgw_id
+    - gcp_router_asn
+    - aws_vgw_asn
+    - allowed_tcp_ports
+    - mtu
+    - name_prefix
+sample:
+  kind: cross_cloud_vpn
+  flavor: gcp-aws
+  version: "1.0"
+  disabled: false
+  spec:
+    gcp_project_id: my-staging
+    gcp_region: asia-south1
+    gcp_vpc_self_link: https://www.googleapis.com/compute/v1/projects/my-staging/global/networks/vpc-rxnjqfinch-default
+    gcp_cidr: 10.60.0.0/16
+    aws_vpc_id: vpc-054dd131744592ac2
+    aws_cidrs:
+      - 10.0.0.0/16
+      - 10.1.0.0/16
+    db_subnet_ids:
+      - subnet-0123456789abcdef0
+      - subnet-0123456789abcdef1
+    existing_vgw_id: ""
+    gcp_router_asn: 65001
+    aws_vgw_asn: 64512
+    allowed_tcp_ports:
+      - 5432
+      - 3306
+    mtu: 1436
+    name_prefix: ""
+iac:
+  validated_files:
+    - main.tf
+    - outputs.tf
+    - variables.tf
