@@ -1,0 +1,387 @@
+# ╔═══════════════════════════════════════════════════════════╗
+# ║ MANAGED BY: raptor module — DO NOT EDIT DIRECTLY         ║
+# ║                                                          ║
+# ║ Modify via:                                              ║
+# ║   raptor module set-spec --add <field>                   ║
+# ║   raptor module add-input / remove-input                 ║
+# ║   raptor module add-output / remove-output               ║
+# ║   raptor module show | raptor module validate            ║
+# ╚═══════════════════════════════════════════════════════════╝
+intent: postgres_replication
+flavor: logical
+version: "1.1"
+description: PostgreSQL logical replication driver for AWS RDS to GCP Cloud SQL migrations
+intentDetails:
+    type: Data Migration
+    description: Drive phase-based PostgreSQL logical replication with checkpointing and verification.
+    displayName: PostgreSQL Replication
+    iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/postgres.svg
+clouds:
+    - gcp
+controlPlaneUISettings:
+    enableKubernetesExplorer: true
+inputs:
+    kubernetes_details:
+        type: '@facets/kubernetes-details'
+        providers:
+            - kubernetes
+            - helm
+outputs:
+    default:
+        type: '@facets/k8s_resource'
+spec:
+    properties:
+        databases:
+            patternProperties:
+                ^[a-zA-Z0-9_-]+$:
+                    properties:
+                        publication:
+                            description: PostgreSQL publication name for this database.
+                            maxLength: 63
+                            minLength: 1
+                            title: Publication
+                            type: string
+                        source_db:
+                            description: Database name on the source instance.
+                            maxLength: 63
+                            minLength: 1
+                            title: Source Database
+                            type: string
+                        subscription:
+                            description: PostgreSQL subscription and replication slot name for this database.
+                            maxLength: 63
+                            minLength: 1
+                            title: Subscription
+                            type: string
+                        target_db:
+                            description: Database name on the target instance.
+                            maxLength: 63
+                            minLength: 1
+                            title: Target Database
+                            type: string
+                        exclude_schemas:
+                            description: Source schemas to exclude from the publication, such as extension or migration-tool metadata schemas.
+                            items:
+                                maxLength: 63
+                                minLength: 1
+                                type: string
+                            title: Exclude Schemas
+                            type: array
+                        exclude_tables:
+                            description: Fully qualified source tables to exclude from the publication, for example public.old_backup_table.
+                            items:
+                                maxLength: 255
+                                minLength: 3
+                                pattern: '^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$'
+                                type: string
+                            title: Exclude Tables
+                            type: array
+                        exclude_extensions:
+                            description: Source PostgreSQL extensions to skip during target schema replay after explicit operator review, for example aws_commons.
+                            items:
+                                maxLength: 63
+                                minLength: 1
+                                pattern: '^[A-Za-z_][A-Za-z0-9_]*$'
+                                type: string
+                            title: Exclude Extensions
+                            type: array
+                        exclude_foreign_keys:
+                            description: Fully qualified foreign key constraints to skip during target schema replay after explicit operator review, formatted as schema.table.constraint_name.
+                            items:
+                                maxLength: 511
+                                minLength: 5
+                                pattern: '^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$'
+                                type: string
+                            title: Exclude Foreign Keys
+                            type: array
+                    required:
+                        - source_db
+                        - target_db
+                        - publication
+                        - subscription
+                    type: object
+            title: Databases
+            type: object
+        image:
+            default: postgres:17-alpine
+            description: Container image containing psql and pg_dump.
+            maxLength: 255
+            minLength: 1
+            title: Runner Image
+            type: string
+        namespace:
+            description: Kubernetes namespace for replication jobs; blank uses the environment namespace.
+            maxLength: 63
+            minLength: 0
+            title: Namespace
+            type: string
+        options:
+            properties:
+                allow_mutation:
+                    default: true
+                    description: Allow mutating replication actions such as run, stop, rebaseline, cutover-hold, resume, and finalize-cutover. Set false to pre-stage a resource while keeping preflight/status/verify actions read-only.
+                    title: Allow Mutation
+                    type: boolean
+                allow_schema_reset:
+                    default: false
+                    description: Allow SCHEMA to drop and recreate a non-empty target public schema.
+                    title: Allow Schema Reset
+                    type: boolean
+                defer_secondary_indexes:
+                    default: true
+                    description: Create PK and unique constraints before load, then defer secondary indexes, FKs, and triggers.
+                    title: Defer Secondary Indexes
+                    type: boolean
+                fail_on_missing_replica_identity:
+                    default: true
+                    description: Block preflight when a published table lacks primary key or explicit replica identity.
+                    title: Fail On Missing Replica Identity
+                    type: boolean
+                foreign_key_validation_mode:
+                    default: strict
+                    description: How foreign keys are replayed during INDEX. strict validates copied rows immediately; not_valid creates FKs as NOT VALID so existing source violations can be cleaned and validated later.
+                    enum:
+                        - strict
+                        - not_valid
+                    title: Foreign Key Validation Mode
+                    type: string
+                load_ready_timeout_seconds:
+                    default: 7200
+                    description: Maximum seconds LOAD waits for PostgreSQL subscription table copy to finish before failing orchestration.
+                    maximum: 86400
+                    minimum: 60
+                    title: Load Ready Timeout Seconds
+                    type: number
+                require_target_login_roles:
+                    default: true
+                    description: Block preflight when target.login_roles is empty. Set false only when migrated databases need no application login roles.
+                    title: Require Target Login Roles
+                    type: boolean
+                target_login_role_mode:
+                    default: manage
+                    description: Controls target login role password management. manage creates missing roles and rotates existing role passwords, create_missing creates only absent roles without changing existing passwords, skip disables target login role creation and password writes.
+                    enum:
+                        - manage
+                        - create_missing
+                        - skip
+                    title: Target Login Role Mode
+                    type: string
+                max_concurrent_databases:
+                    default: 2
+                    description: Maximum databases processed by the driver in one run.
+                    maximum: 10
+                    minimum: 1
+                    title: Max Concurrent Databases
+                    type: number
+                target_autoresize_limit_gb:
+                    default: 0
+                    description: Optional target autoresize limit used by preflight headroom checks.
+                    maximum: 65536
+                    minimum: 0
+                    title: Target Autoresize Limit GB
+                    type: number
+                target_disk_gb:
+                    default: 0
+                    description: Optional target disk size used by preflight headroom checks.
+                    maximum: 65536
+                    minimum: 0
+                    title: Target Disk GB
+                    type: number
+            title: Options
+            type: object
+        slack:
+            properties:
+                channel_id:
+                    description: Optional Slack channel id for the tracker. Leave blank to disable Slack updates.
+                    maxLength: 32
+                    minLength: 0
+                    title: Slack Channel ID
+                    type: string
+                token_secret:
+                    description: Optional Facets secret reference containing a Slack bot token.
+                    maxLength: 512
+                    minLength: 0
+                    title: Slack Token Secret
+                    type: string
+                    x-ui-secret-ref: true
+            title: Slack
+            type: object
+        source:
+            properties:
+                admin_password:
+                    description: Facets secret reference for the source admin password.
+                    maxLength: 512
+                    minLength: 1
+                    title: Source Admin Password
+                    type: string
+                    x-ui-secret-ref: true
+                admin_user:
+                    description: Source admin user used only for publication and replication-role setup.
+                    maxLength: 63
+                    minLength: 1
+                    title: Source Admin User
+                    type: string
+                auth_db:
+                    description: Optional source database used for source admin authentication/control-plane checks. Leave blank to use each configured source_db.
+                    maxLength: 63
+                    minLength: 0
+                    title: Source Auth Database
+                    type: string
+                host:
+                    description: Source PostgreSQL host name or IP address.
+                    maxLength: 255
+                    minLength: 1
+                    title: Source Host
+                    type: string
+                port:
+                    default: 5432
+                    description: Source PostgreSQL TCP port.
+                    maximum: 65535
+                    minimum: 1
+                    title: Source Port
+                    type: number
+                repl_password:
+                    description: Facets secret reference for the source replication password.
+                    maxLength: 512
+                    minLength: 1
+                    title: Source Replication Password
+                    type: string
+                    x-ui-secret-ref: true
+                repl_user:
+                    description: Replication role to create or reuse on the source.
+                    maxLength: 63
+                    minLength: 1
+                    title: Source Replication User
+                    type: string
+            required:
+                - host
+                - admin_user
+                - admin_password
+                - repl_user
+                - repl_password
+            title: Source
+            type: object
+        target:
+            properties:
+                admin_password:
+                    description: Facets secret reference for the target admin password.
+                    maxLength: 512
+                    minLength: 1
+                    title: Target Admin Password
+                    type: string
+                    x-ui-secret-ref: true
+                admin_user:
+                    description: Target admin user used for schema, subscription, and verification operations.
+                    maxLength: 63
+                    minLength: 1
+                    title: Target Admin User
+                    type: string
+                host:
+                    description: Target PostgreSQL host name or IP address.
+                    maxLength: 255
+                    minLength: 1
+                    title: Target Host
+                    type: string
+                login_roles:
+                    description: Static list of target login roles. Terraform generates passwords for these roles, exposes them as sensitive outputs, and the migration job creates or updates the roles on the target.
+                    items:
+                        maxLength: 63
+                        minLength: 1
+                        pattern: ^[a-zA-Z_][a-zA-Z0-9_$]*$
+                        type: string
+                    title: Target Login Roles
+                    type: array
+                port:
+                    default: 5432
+                    description: Target PostgreSQL TCP port.
+                    maximum: 65535
+                    minimum: 1
+                    title: Target Port
+                    type: number
+                repl_password:
+                    description: Facets secret reference for the target replication password.
+                    maxLength: 512
+                    minLength: 1
+                    title: Target Replication Password
+                    type: string
+                    x-ui-secret-ref: true
+                repl_user:
+                    description: Target replication user reserved for future reverse-replication resources.
+                    maxLength: 63
+                    minLength: 1
+                    title: Target Replication User
+                    type: string
+            required:
+                - host
+                - admin_user
+                - admin_password
+                - repl_user
+                - repl_password
+            title: Target
+            type: object
+        tolerations:
+            description: Map of pod tolerations for driver, preflight, poller, and verification jobs.
+            patternProperties:
+                ^[a-zA-Z0-9_-]+$:
+                    type: object
+            title: Tolerations
+            type: object
+            x-ui-yaml-editor: true
+    type: object
+    x-ui-order:
+        - source
+        - target
+        - image
+        - namespace
+        - databases
+        - slack
+        - options
+        - tolerations
+sample:
+    disabled: false
+    flavor: logical
+    kind: postgres_replication
+    spec:
+        databases:
+            my-service_db:
+                source_db: my-service_db
+                target_db: my-service_db
+                publication: my-service_pub
+                subscription: my-service_sub
+        image: "postgres:17-alpine"
+        namespace: default
+        options:
+            allow_mutation: true
+            allow_schema_reset: false
+            defer_secondary_indexes: true
+            fail_on_missing_replica_identity: true
+            foreign_key_validation_mode: strict
+            load_ready_timeout_seconds: 7200
+            max_concurrent_databases: 2
+            target_login_role_mode: manage
+            target_autoresize_limit_gb: 100
+            target_disk_gb: 10
+        slack:
+            channel_id: ""
+            token_secret: ""
+        source:
+            admin_password: "<wire-a-secret>"
+            admin_user: postgres
+            host: source.example.com
+            port: 5432
+            repl_password: "<wire-a-secret>"
+            repl_user: migration_repl
+        target:
+            admin_password: "<wire-a-secret>"
+            admin_user: postgres
+            host: 10.60.0.15
+            port: 5432
+            repl_password: "<wire-a-secret>"
+            repl_user: migration_repl
+        tolerations:
+            my-amd64:
+                key: dedicated
+                operator: Equal
+                value: my-amd64
+                effect: NoSchedule
+    version: "1.1"

@@ -1,0 +1,274 @@
+intent: mongo_dump_restore
+flavor: dump_restore
+version: "1.0"
+description: Dump-only MongoDB/DocumentDB migration runner. Installs Kubernetes actions for preflight, target reset, dump/restore, verify, and status.
+clouds:
+  - aws
+  - gcp
+intentDetails:
+  type: Datastores
+  displayName: Mongo Dump Restore
+  description: Dump-only MongoDB/DocumentDB migration orchestration. Terraform installs Kubernetes jobs/actions; database work runs only when actions are triggered.
+controlPlaneUISettings:
+  enableKubernetesExplorer: true
+outputs:
+  default:
+    type: "@facets/k8s_resource"
+inputs:
+  kubernetes_details:
+    type: "@facets/kubernetes-details"
+    providers:
+      - kubernetes
+      - helm
+spec:
+  title: Mongo Dump Restore
+  description: Dump-only MongoDB/DocumentDB migration runner with read-only source preflight and target-only reset/restore actions.
+  type: object
+  x-ui-order:
+    - source
+    - target
+    - databases
+    - image
+    - namespace
+    - options
+    - slack
+    - tolerations
+  properties:
+    source:
+      type: object
+      title: Source MongoDB/DocumentDB
+      description: Source connection. The module only reads from this connection.
+      properties:
+        host:
+          type: string
+          title: Source Host
+          minLength: 1
+          maxLength: 255
+        port:
+          type: number
+          title: Source Port
+          default: 27017
+          minimum: 1
+          maximum: 65535
+        admin_user:
+          type: string
+          title: Source User
+          minLength: 1
+          maxLength: 128
+        admin_password:
+          type: string
+          title: Source Password
+          x-ui-secret-ref: true
+        auth_database:
+          type: string
+          title: Source Auth Database
+          default: admin
+          minLength: 1
+          maxLength: 63
+        tls:
+          type: boolean
+          title: Source TLS
+          default: true
+        tls_allow_invalid_certificates:
+          type: boolean
+          title: Source Allow Invalid Certificates
+          default: true
+        replica_set:
+          type: string
+          title: Source Replica Set
+          minLength: 0
+          maxLength: 128
+        extra_uri_options:
+          type: string
+          title: Source Extra URI Options
+          description: Additional URI query options without leading question mark.
+          minLength: 0
+          maxLength: 512
+      required:
+        - host
+        - admin_user
+        - admin_password
+    target:
+      type: object
+      title: Target MongoDB
+      description: Target connection. Destructive operations are allowed only for configured target databases and only when explicitly enabled.
+      properties:
+        host:
+          type: string
+          title: Target Host
+          minLength: 1
+          maxLength: 255
+        port:
+          type: number
+          title: Target Port
+          default: 27017
+          minimum: 1
+          maximum: 65535
+        admin_user:
+          type: string
+          title: Target User
+          minLength: 1
+          maxLength: 128
+        admin_password:
+          type: string
+          title: Target Password
+          x-ui-secret-ref: true
+        auth_database:
+          type: string
+          title: Target Auth Database
+          default: admin
+          minLength: 1
+          maxLength: 63
+        tls:
+          type: boolean
+          title: Target TLS
+          default: false
+        tls_allow_invalid_certificates:
+          type: boolean
+          title: Target Allow Invalid Certificates
+          default: false
+        replica_set:
+          type: string
+          title: Target Replica Set
+          minLength: 0
+          maxLength: 128
+        extra_uri_options:
+          type: string
+          title: Target Extra URI Options
+          description: Additional URI query options without leading question mark.
+          minLength: 0
+          maxLength: 512
+      required:
+        - host
+        - admin_user
+        - admin_password
+    databases:
+      type: object
+      title: Databases
+      description: Map of dump/restore database jobs.
+      patternProperties:
+        "^[a-zA-Z0-9_-]+$":
+          type: object
+          properties:
+            source_db:
+              type: string
+              title: Source Database
+              minLength: 1
+              maxLength: 63
+              pattern: "^[A-Za-z0-9_$-]+$"
+            target_db:
+              type: string
+              title: Target Database
+              minLength: 1
+              maxLength: 63
+              pattern: "^[A-Za-z0-9_$-]+$"
+            exclude_collections:
+              type: array
+              title: Exclude Collections
+              items:
+                type: string
+                pattern: "^[A-Za-z0-9_$.-]+$"
+            preserve_uuids:
+              type: boolean
+              title: Preserve UUIDs
+              default: false
+          required:
+            - source_db
+            - target_db
+    image:
+      type: string
+      title: Runner Image
+      description: Container image containing mongosh, mongodump, mongorestore, jq, curl, and bash.
+      default: alpine/mongosh:latest
+      minLength: 1
+      maxLength: 255
+    namespace:
+      type: string
+      title: Namespace
+      description: Kubernetes namespace for jobs and state.
+      default: default
+      minLength: 1
+      maxLength: 63
+    options:
+      type: object
+      title: Options
+      properties:
+        allow_target_reset:
+          type: boolean
+          title: Allow Target Reset
+          description: Allow run/reset-target to drop only configured target databases.
+          default: false
+        require_empty_target:
+          type: boolean
+          title: Require Empty Target
+          description: Refuse restore if target has existing collections and target reset is not enabled.
+          default: true
+        gzip:
+          type: boolean
+          title: Gzip Dump Stream
+          default: true
+        num_parallel_collections:
+          type: number
+          title: Parallel Collections
+          default: 4
+          minimum: 1
+          maximum: 32
+        existing_service_account_name:
+          type: string
+          title: Existing Service Account
+          description: Optional existing Kubernetes ServiceAccount to run jobs under. When set, this module does not create ServiceAccount, Role, or RoleBinding.
+          minLength: 0
+          maxLength: 63
+    slack:
+      type: object
+      title: Slack
+      properties:
+        channel_id:
+          type: string
+          title: Slack Channel ID
+          minLength: 0
+          maxLength: 32
+        token_secret:
+          type: string
+          title: Slack Token
+          x-ui-secret-ref: true
+    tolerations:
+      type: object
+      title: Tolerations
+      patternProperties:
+        "^[a-zA-Z0-9_-]+$":
+          type: object
+sample:
+  kind: mongo_dump_restore
+  flavor: dump_restore
+  version: "1.0"
+  disabled: true
+  spec:
+    source:
+      host: docdb-source.example.internal
+      port: 27017
+      admin_user: app_user
+      admin_password: "${blueprint.self.secrets.SRC_MONGO_PASSWORD}"
+      auth_database: admin
+      tls: true
+      tls_allow_invalid_certificates: true
+    target:
+      host: mongo-target.default.svc.cluster.local
+      port: 27017
+      admin_user: root
+      admin_password: "${blueprint.self.secrets.TGT_MONGO_PASSWORD}"
+      auth_database: admin
+      tls: false
+    databases:
+      app:
+        source_db: app
+        target_db: app
+        exclude_collections: []
+        preserve_uuids: false
+    options:
+      allow_target_reset: false
+      require_empty_target: true
+      existing_service_account_name: ""
+    slack:
+      channel_id: ""
+      token_secret: ""

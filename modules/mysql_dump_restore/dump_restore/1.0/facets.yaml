@@ -1,0 +1,262 @@
+intent: mysql_dump_restore
+flavor: dump_restore
+version: "1.0"
+description: Dump-only MySQL migration runner. Installs Kubernetes actions for preflight, target reset, dump/restore, verify, and status.
+clouds:
+  - aws
+  - gcp
+intentDetails:
+  type: Datastores
+  displayName: MySQL Dump Restore
+  description: Dump-only MySQL migration orchestration. Terraform installs Kubernetes jobs/actions; database work runs only when actions are triggered.
+controlPlaneUISettings:
+  enableKubernetesExplorer: true
+outputs:
+  default:
+    type: "@facets/k8s_resource"
+inputs:
+  kubernetes_details:
+    type: "@facets/kubernetes-details"
+    providers:
+      - kubernetes
+      - helm
+spec:
+  title: MySQL Dump Restore
+  description: Dump-only MySQL migration runner with read-only source preflight and target-only reset/restore actions.
+  type: object
+  x-ui-order:
+    - source
+    - target
+    - databases
+    - image
+    - namespace
+    - options
+    - slack
+    - tolerations
+  properties:
+    source:
+      type: object
+      title: Source MySQL
+      description: Source database connection. The module only reads from this connection.
+      properties:
+        host:
+          type: string
+          title: Source Host
+          minLength: 1
+          maxLength: 255
+        port:
+          type: number
+          title: Source Port
+          default: 3306
+          minimum: 1
+          maximum: 65535
+        admin_user:
+          type: string
+          title: Source User
+          minLength: 1
+          maxLength: 128
+        admin_password:
+          type: string
+          title: Source Password
+          x-ui-secret-ref: true
+      required:
+        - host
+        - admin_user
+        - admin_password
+    target:
+      type: object
+      title: Target MySQL
+      description: Target database connection. Destructive operations are allowed only for configured target databases and only when explicitly enabled.
+      properties:
+        host:
+          type: string
+          title: Target Host
+          minLength: 1
+          maxLength: 255
+        port:
+          type: number
+          title: Target Port
+          default: 3306
+          minimum: 1
+          maximum: 65535
+        admin_user:
+          type: string
+          title: Target User
+          minLength: 1
+          maxLength: 128
+        admin_password:
+          type: string
+          title: Target Password
+          x-ui-secret-ref: true
+      required:
+        - host
+        - admin_user
+        - admin_password
+    databases:
+      type: object
+      title: Databases
+      description: Map of dump/restore database jobs.
+      patternProperties:
+        "^[a-zA-Z0-9_-]+$":
+          type: object
+          properties:
+            source_db:
+              type: string
+              title: Source Database
+              minLength: 1
+              maxLength: 64
+              pattern: "^[A-Za-z0-9_$-]+$"
+            target_db:
+              type: string
+              title: Target Database
+              minLength: 1
+              maxLength: 64
+              pattern: "^[A-Za-z0-9_$-]+$"
+            exclude_tables:
+              type: array
+              title: Exclude Tables
+              items:
+                type: string
+                pattern: "^[A-Za-z0-9_$-]+\\.[A-Za-z0-9_$-]+$"
+            include_routines:
+              type: boolean
+              title: Include Routines
+              default: true
+            include_triggers:
+              type: boolean
+              title: Include Triggers
+              default: true
+            include_events:
+              type: boolean
+              title: Include Events
+              default: false
+          required:
+            - source_db
+            - target_db
+    image:
+      type: string
+      title: Runner Image
+      description: Container image containing mysql, mysqldump, sed, and bash.
+      default: mysql:8.4
+      minLength: 1
+      maxLength: 255
+    namespace:
+      type: string
+      title: Namespace
+      description: Kubernetes namespace for jobs and state.
+      default: default
+      minLength: 1
+      maxLength: 63
+    options:
+      type: object
+      title: Options
+      properties:
+        allow_target_reset:
+          type: boolean
+          title: Allow Target Reset
+          description: Allow run/reset-target to drop only configured target databases.
+          default: false
+        require_empty_target:
+          type: boolean
+          title: Require Empty Target
+          description: Refuse restore if target has existing tables and target reset is not enabled.
+          default: true
+        force_utc:
+          type: boolean
+          title: Force UTC Sessions
+          description: Set source and target session time_zone to +00:00 during dump/restore.
+          default: true
+        default_character_set:
+          type: string
+          title: Default Character Set
+          default: utf8mb4
+          enum:
+            - utf8mb4
+            - utf8
+            - latin1
+        allow_charset_mismatch:
+          type: boolean
+          title: Allow Charset Mismatch
+          default: false
+        allow_collation_mismatch:
+          type: boolean
+          title: Allow Collation Mismatch
+          default: false
+        allow_non_innodb:
+          type: boolean
+          title: Allow Non-InnoDB
+          description: Non-InnoDB tables are not protected by --single-transaction consistency.
+          default: false
+        strip_definers:
+          type: boolean
+          title: Strip Definers
+          description: Remove DEFINER clauses from dumped SQL.
+          default: true
+        min_max_allowed_packet_bytes:
+          type: number
+          title: Minimum max_allowed_packet
+          default: 67108864
+          minimum: 1048576
+          maximum: 1073741824
+        lock_timeout_seconds:
+          type: number
+          title: Target Lock Timeout
+          default: 60
+          minimum: 1
+          maximum: 3600
+        existing_service_account_name:
+          type: string
+          title: Existing Service Account
+          description: Optional existing Kubernetes ServiceAccount to run jobs under. When set, this module does not create ServiceAccount, Role, or RoleBinding.
+          minLength: 0
+          maxLength: 63
+    slack:
+      type: object
+      title: Slack
+      properties:
+        channel_id:
+          type: string
+          title: Slack Channel ID
+          minLength: 0
+          maxLength: 32
+        token_secret:
+          type: string
+          title: Slack Token
+          x-ui-secret-ref: true
+    tolerations:
+      type: object
+      title: Tolerations
+      patternProperties:
+        "^[a-zA-Z0-9_-]+$":
+          type: object
+sample:
+  kind: mysql_dump_restore
+  flavor: dump_restore
+  version: "1.0"
+  disabled: true
+  spec:
+    source:
+      host: mysql-source.example.internal
+      port: 3306
+      admin_user: app_user
+      admin_password: "${blueprint.self.secrets.SRC_MYSQL_PASSWORD}"
+    target:
+      host: 10.80.0.10
+      port: 3306
+      admin_user: root
+      admin_password: "${blueprint.self.secrets.TGT_MYSQL_PASSWORD}"
+    databases:
+      app:
+        source_db: app
+        target_db: app
+        exclude_tables: []
+        include_routines: true
+        include_triggers: true
+        include_events: false
+    options:
+      allow_target_reset: false
+      require_empty_target: true
+      existing_service_account_name: ""
+    slack:
+      channel_id: ""
+      token_secret: ""

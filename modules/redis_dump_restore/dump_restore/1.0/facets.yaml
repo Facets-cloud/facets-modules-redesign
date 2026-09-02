@@ -1,0 +1,281 @@
+intent: redis_dump_restore
+flavor: dump_restore
+version: "1.0"
+description: Dump-only Redis/Valkey cache warmup runner. Installs Kubernetes actions for debug, preflight, target reset, dump/restore, verify, and status.
+clouds:
+  - aws
+  - gcp
+intentDetails:
+  type: Datastores
+  displayName: Redis Dump Restore
+  description: Dump-only Redis/Valkey warm-copy orchestration. Terraform installs Kubernetes jobs/actions; Redis work runs only when actions are triggered.
+  iconUrl: https://cdn.worldvectorlogo.com/logos/redis.svg
+controlPlaneUISettings:
+  enableKubernetesExplorer: true
+outputs:
+  default:
+    type: "@facets/k8s_resource"
+inputs:
+  kubernetes_details:
+    type: "@facets/kubernetes-details"
+    providers:
+      - kubernetes
+      - helm
+spec:
+  title: Redis Dump Restore
+  description: Dump-only Redis/Valkey warm-copy runner using SCAN/DUMP/PTTL from source and RESTORE on target.
+  type: object
+  x-ui-order:
+    - source
+    - target
+    - datasets
+    - image
+    - namespace
+    - options
+    - slack
+    - tolerations
+  properties:
+    source:
+      type: object
+      title: Source Redis
+      description: Source Redis/Valkey connection. The module only reads from this connection.
+      properties:
+        host:
+          type: string
+          title: Source Host
+          minLength: 1
+          maxLength: 255
+        port:
+          type: number
+          title: Source Port
+          default: 6379
+          minimum: 1
+          maximum: 65535
+        auth_token:
+          type: string
+          title: Source Auth Token
+          x-ui-secret-ref: true
+        tls:
+          type: boolean
+          title: Source TLS
+          default: false
+      required:
+        - host
+    target:
+      type: object
+      title: Target Redis
+      description: Target Redis/Valkey connection. Destructive operations require allow_target_reset.
+      properties:
+        host:
+          type: string
+          title: Target Host
+          minLength: 1
+          maxLength: 255
+        port:
+          type: number
+          title: Target Port
+          default: 6379
+          minimum: 1
+          maximum: 65535
+        auth_token:
+          type: string
+          title: Target Auth Token
+          x-ui-secret-ref: true
+        tls:
+          type: boolean
+          title: Target TLS
+          default: false
+      required:
+        - host
+    datasets:
+      type: object
+      title: Datasets
+      description: Map of Redis DB/key-pattern copy jobs.
+      patternProperties:
+        "^[a-zA-Z0-9_-]+$":
+          type: object
+          properties:
+            source_db:
+              type: number
+              title: Source DB
+              default: 0
+              minimum: 0
+              maximum: 255
+            target_db:
+              type: number
+              title: Target DB
+              default: 0
+              minimum: 0
+              maximum: 255
+            key_pattern:
+              type: string
+              title: Key Pattern
+              default: "*"
+              minLength: 1
+              maxLength: 255
+          required:
+            - source_db
+            - target_db
+            - key_pattern
+    image:
+      type: string
+      title: Runner Image
+      description: Container image containing redis-cli or valkey-cli plus sh. redis:7.2-alpine is sufficient.
+      default: redis:7.2-alpine
+      minLength: 1
+      maxLength: 255
+    namespace:
+      type: string
+      title: Namespace
+      description: Kubernetes namespace for jobs and state.
+      default: default
+      minLength: 1
+      maxLength: 63
+    options:
+      type: object
+      title: Options
+      properties:
+        allow_target_reset:
+          type: boolean
+          title: Allow Target Reset
+          description: Allow reset-target to FLUSHDB only configured target DB indexes.
+          default: false
+        require_empty_target:
+          type: boolean
+          title: Require Empty Target
+          description: Refuse restore if target DB has keys and target reset is not enabled.
+          default: true
+        restore_replace:
+          type: boolean
+          title: Restore Replace
+          description: Use RESTORE REPLACE for existing target keys.
+          default: false
+        copy_ttl:
+          type: boolean
+          title: Copy TTL
+          description: Preserve source PTTL. Persistent keys are restored with TTL 0.
+          default: true
+        scan_count:
+          type: number
+          title: Scan Count
+          default: 1000
+          minimum: 10
+          maximum: 100000
+        sample_limit:
+          type: number
+          title: Verify Sample Limit
+          default: 25
+          minimum: 0
+          maximum: 1000
+        command_timeout_seconds:
+          type: number
+          title: Redis Command Timeout Seconds
+          description: Timeout for bounded Redis commands such as PING, INFO, DBSIZE, DUMP, RESTORE, and sampled EXISTS.
+          default: 15
+          minimum: 1
+          maximum: 300
+        restore_engine:
+          type: string
+          title: Restore Engine
+          description: Copy engine. shell uses redis-cli DUMP/RESTORE per key. redis-shake uses RedisShake scan_reader for large cloud Redis sources that block SYNC/PSYNC.
+          enum:
+            - shell
+            - redis-shake
+          default: shell
+        redis_shake_bin:
+          type: string
+          title: RedisShake Binary
+          description: Binary name or path used when restore_engine is redis-shake.
+          default: redis-shake
+          minLength: 1
+          maxLength: 255
+        redis_shake_download_url:
+          type: string
+          title: RedisShake Download URL
+          description: Optional release tarball URL. When empty, the runner resolves the latest Linux RedisShake archive for the pod architecture.
+          default: ""
+          minLength: 0
+          maxLength: 512
+        redis_shake_pipeline_count_limit:
+          type: number
+          title: RedisShake Pipeline Count Limit
+          default: 1024
+          minimum: 1
+          maximum: 100000
+        redis_shake_target_max_qps:
+          type: number
+          title: RedisShake Target Max QPS
+          default: 100000
+          minimum: 0
+          maximum: 1000000
+        redis_shake_log_level:
+          type: string
+          title: RedisShake Log Level
+          enum:
+            - debug
+            - info
+            - warn
+          default: info
+        redis_shake_ncpu:
+          type: number
+          title: RedisShake CPU Count
+          description: RedisShake ncpu setting. Use 0 for runtime default.
+          default: 0
+          minimum: 0
+          maximum: 128
+        existing_service_account_name:
+          type: string
+          title: Existing Service Account
+          description: Optional existing Kubernetes ServiceAccount to run jobs under. When set, this module does not create ServiceAccount, Role, or RoleBinding.
+          minLength: 0
+          maxLength: 63
+    slack:
+      type: object
+      title: Slack
+      properties:
+        channel_id:
+          type: string
+          title: Slack Channel ID
+          minLength: 0
+          maxLength: 32
+        token_secret:
+          type: string
+          title: Slack Token
+          x-ui-secret-ref: true
+    tolerations:
+      type: object
+      title: Tolerations
+      patternProperties:
+        "^[a-zA-Z0-9_-]+$":
+          type: object
+sample:
+  kind: redis_dump_restore
+  flavor: dump_restore
+  version: "1.0"
+  disabled: true
+  spec:
+    source:
+      host: source.redis.internal
+      port: 6379
+      auth_token: ""
+      tls: false
+    target:
+      host: 10.80.0.33
+      port: 6379
+      auth_token: ""
+      tls: false
+    datasets:
+      default:
+        source_db: 0
+        target_db: 0
+        key_pattern: "*"
+    image: redis:7.2-alpine
+    namespace: default
+    options:
+      allow_target_reset: false
+      require_empty_target: true
+      restore_replace: false
+      copy_ttl: true
+      scan_count: 1000
+      sample_limit: 25
+      restore_engine: shell

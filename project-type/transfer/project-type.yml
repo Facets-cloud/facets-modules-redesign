@@ -1,0 +1,49 @@
+name: transfer
+description: >-
+  Cross-cloud transfer / migration project type. Stands up connectivity and the
+  data-movement tooling for an AWS→GCP migration: an HA VPN between the two
+  clouds, database dump/restore and logical-replication runners (mongo, mysql,
+  redis, postgres), object-storage transfer (S3→GCS), and supporting security
+  group rules. The data-movement modules run as Kubernetes Jobs/CronJobs in an
+  existing cluster; source access is read-only and destructive operations are
+  guarded.
+
+iacTool: TERRAFORM
+iacToolVersion: "1.5.7"
+
+allowedClouds:
+  - AWS
+  - GCP
+
+# IaC modules to include
+modules:
+  # Cloud account providers
+  - intent: cloud_account
+    flavor: aws_provider
+  - intent: cloud_account
+    flavor: gcp_provider
+
+  # Cross-cloud connectivity
+  - intent: cross_cloud_vpn
+    flavor: gcp-aws
+  - intent: security_group_rules
+    flavor: aws
+
+  # Database migration (dump/restore + logical replication)
+  - intent: mongo_dump_restore
+    flavor: dump_restore
+  - intent: mysql_dump_restore
+    flavor: dump_restore
+  - intent: redis_dump_restore
+    flavor: dump_restore
+  - intent: postgres_replication
+    flavor: logical
+
+  # Object storage transfer
+  - intent: object_storage_transfer
+    flavor: gcp_s3_to_gcs
+
+  # NOTE: a live transfer project also references an existing cluster and k8s
+  # primitives (kubernetes_cluster/external, k8s_resource/k8s_standard,
+  # k8s_callback/k8s_standard). Those are generic modules not part of this
+  # contribution; add them here once they land in the reference library.
