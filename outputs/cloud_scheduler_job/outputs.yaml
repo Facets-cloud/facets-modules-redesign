@@ -1,0 +1,32 @@
+name: '@facets/cloud_scheduler_job'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Full resource id of the Cloud Scheduler job.
+        name:
+          type: string
+          description: Job name.
+        project_id:
+          type: string
+          description: GCP project id.
+        region:
+          type: string
+          description: Region the job runs in.
+        resource_name:
+          type: string
+          description: Full resource name of the job.
+        schedule:
+          type: string
+          description: Cron schedule.
+        state:
+          type: string
+          description: Job state (ENABLED / PAUSED / DISABLED).
+    interfaces:
+      type: object
+      properties: {}
+providers: []

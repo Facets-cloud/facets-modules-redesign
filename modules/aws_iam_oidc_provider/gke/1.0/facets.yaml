@@ -1,0 +1,80 @@
+intent: aws_iam_oidc_provider
+flavor: gke
+version: "1.0"
+description: Registers a GKE cluster issuer as an AWS IAM OIDC provider for AssumeRoleWithWebIdentity.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Create an AWS IAM OIDC provider for GKE service account tokens.
+  displayName: AWS IAM OIDC Provider for GKE
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/aws_iam_role.svg
+clouds:
+  - aws
+inputs:
+  cloud_account:
+    description: AWS account where the OIDC provider will be created.
+    displayName: AWS Cloud Account
+    optional: false
+    type: '@facets/aws_cloud_account'
+    providers:
+      - aws
+  kubernetes_details:
+    description: GKE cluster output that provides oidc_issuer_url.
+    displayName: GKE Cluster
+    optional: false
+    type: '@facets/kubernetes-details'
+outputs:
+  default:
+    type: '@facets/aws_iam_oidc_provider'
+spec:
+  title: AWS IAM OIDC Provider for GKE
+  description: Registers a GKE issuer URL in AWS IAM so pods can call STS AssumeRoleWithWebIdentity.
+  type: object
+  properties:
+    issuer_url:
+      type: string
+      title: Issuer URL Override
+      description: Optional issuer URL. Leave empty to use kubernetes_details.attributes.oidc_issuer_url from the GKE cluster.
+      default: ""
+      minLength: 0
+      maxLength: 512
+      pattern: "^(|https://.+)$"
+    client_id_list:
+      type: array
+      title: Audiences
+      description: OIDC audiences allowed by AWS STS.
+      default:
+        - sts.amazonaws.com
+      items:
+        type: string
+        minLength: 1
+    thumbprint_list:
+      type: array
+      title: Thumbprints
+      description: Optional SHA1 certificate thumbprints. Leave empty to derive the issuer TLS certificate thumbprint.
+      default: []
+      items:
+        type: string
+        pattern: "^[A-Fa-f0-9]{40}$"
+    tags:
+      type: object
+      title: Tags
+      description: Additional tags for the IAM OIDC provider.
+      default: {}
+      x-ui-yaml-editor: true
+  required: []
+sample:
+  kind: aws_iam_oidc_provider
+  flavor: gke
+  version: "1.0"
+  disabled: true
+  spec:
+    issuer_url: ""
+    client_id_list:
+      - sts.amazonaws.com
+    thumbprint_list: []
+    tags: {}
+iac:
+  validated_files:
+    - main.tf
+    - outputs.tf
+    - variables.tf
