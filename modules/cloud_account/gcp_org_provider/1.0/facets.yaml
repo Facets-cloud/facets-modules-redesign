@@ -95,8 +95,8 @@ sample:
   spec:
     cloud_account: ""
     region: asia-south1
-    org_id: "1026617294597"
-    billing_account: 01ABA1-B262B1-85AD27
+    org_id: "123456789012"
+    billing_account: 000000-000000-000000
     quota_project: my-tooling
 iac:
   validated_files:
