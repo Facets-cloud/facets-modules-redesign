@@ -25,28 +25,37 @@ variable "instance_name" {
 variable "inputs" {
   type = object({
     kubernetes_details = object({
-      attributes = object({
-        cluster_endpoint       = string
-        cluster_ca_certificate = string
-        token                  = optional(string)
-      })
+      cluster_endpoint       = string
+      cluster_ca_certificate = string
+      token                  = optional(string)
     })
-    kubernetes_node_pool_details = optional(object({
-      node_selector = optional(map(string))
-      taints = optional(map(object({
-        key    = string
-        value  = string
-        effect = string
-      })))
-    }), {})
+    # facets.yaml declares this input optional: false, so the object is required.
+    # node_selector and taints live under attributes -- this is the whole module
+    # output, not its attributes map. Every other consumer (keda,
+    # ack_acm_controller, gateway_api_crd, image_pull_secret_injector) reads
+    # them there; this module read them at the top level, so the conversion
+    # dropped attributes and left both null. Shape mirrors cert_manager and
+    # gateway_api_crd, except attributes carries a {} default so it can never
+    # arrive null.
+    kubernetes_node_pool_details = object({
+      attributes = optional(object({
+        node_class_name = optional(string)
+        node_pool_name  = optional(string)
+        taints = optional(list(object({
+          key    = string
+          value  = string
+          effect = string
+        })), [])
+        node_selector = optional(map(string), {})
+      }), {})
+      interfaces = optional(object({}), {})
+    })
   })
   default = {
     kubernetes_details = {
-      attributes = {
-        cluster_endpoint       = ""
-        cluster_ca_certificate = ""
-        token                  = ""
-      }
+      cluster_endpoint       = ""
+      cluster_ca_certificate = ""
+      token                  = ""
     }
     kubernetes_node_pool_details = {}
   }

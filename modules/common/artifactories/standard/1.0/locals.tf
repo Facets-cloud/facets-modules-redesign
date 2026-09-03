@@ -26,8 +26,9 @@ locals {
 
   # Node pool configuration
   kubernetes_node_pool_details = lookup(var.inputs, "kubernetes_node_pool_details", {})
-  node_pool_labels             = lookup(local.kubernetes_node_pool_details, "node_selector", {})
-  node_pool_taints_raw         = lookup(local.kubernetes_node_pool_details, "taints", {})
+  node_pool_attributes         = lookup(local.kubernetes_node_pool_details, "attributes", {})
+  node_pool_labels             = lookup(local.node_pool_attributes, "node_selector", {})
+  node_pool_taints_raw         = lookup(local.node_pool_attributes, "taints", [])
 
   # Transform taints from object format to Kubernetes toleration format
   node_pool_tolerations = [
