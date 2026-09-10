@@ -160,6 +160,7 @@
               { flavor: "aws", clouds: ["aws"] },
               { flavor: "gcp", clouds: ["gcp"] },
               { flavor: "azure", clouds: ["azure"] },
+              { flavor: "argo", clouds: ["gcp"] },
             ]
           },
           {
@@ -234,6 +235,18 @@
       "Kubernetes Resources": {
         cssClass: "k8s",
         intents: [
+          {
+            intent: "argo", displayName: "Argo Stack", type: "Kubernetes Resources", icon: "argo.svg",
+            flavors: [
+              { flavor: "gcp", clouds: ["gcp"] },
+            ]
+          },
+          {
+            intent: "argo_service", displayName: "Argo Service", type: "Kubernetes Resources", icon: "argo_service.svg",
+            flavors: [
+              { flavor: "gcp", clouds: ["gcp"] },
+            ]
+          },
           {
             intent: "helm", displayName: "Helm", type: "Kubernetes Resources", icon: "helm.svg",
             flavors: [

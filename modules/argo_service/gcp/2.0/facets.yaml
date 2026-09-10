@@ -1,0 +1,245 @@
+intent: argo_service
+flavor: gcp
+version: "2.0"
+description: >-
+  Deploys a service to GKE through ArgoCD as an ApplicationSet, with the
+  facets-argo-shim identity annotations injected so ${facets:...} references
+  inside the deployed chart resolve against this project/environment. Reads the
+  shim's consumed-references callback back from spec.facets_references and folds
+  a digest into the Application, so a Facets release that changes any referenced
+  value re-renders the app in Argo. Deployment (CD) only - image builds are out
+  of scope.
+clouds:
+  - gcp
+
+intentDetails:
+  type: Kubernetes
+  displayName: Argo Service
+  description: Deploy a service to Kubernetes via an ArgoCD ApplicationSet
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/argo_service.svg
+
+inputs:
+  kubernetes_details:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: GKE cluster the ApplicationSet and its Applications are created in.
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+      - kubernetes
+      - helm
+  argo_stack:
+    type: '@facets/argo-stack'
+    optional: false
+    displayName: Argo Stack
+    description: >-
+      The Argo stack (ArgoCD / Workflows / Events / Rollouts) this service is
+      deployed through. Supplies the ArgoCD namespace and establishes the
+      dependency so this module applies only after Argo is running.
+    default:
+      resource_type: argo
+      resource_name: default
+
+outputs:
+  default:
+    type: '@facets/argo_service'
+    title: Argo Service Attributes
+    description: ApplicationSet coordinates and the chart source it deploys.
+    mock:
+      attributes:
+        applicationset_name: mock-string-value
+        application_name: mock-string-value
+        argocd_project: mock-string-value
+        argocd_namespace: mock-string-value
+        resource_namespace: mock-string-value
+        resource_name: mock-string-value
+        service_name: mock-string-value
+        release_name: mock-string-value
+        chart_repo_url: mock-string-value
+        chart_path: mock-string-value
+        target_revision: mock-string-value
+        values_path: mock-string-value
+      interfaces: {}
+
+spec:
+  type: object
+  title: Argo Service
+  description: >-
+    Deploys a Helm chart from a charts repository to this environment's GKE
+    cluster through an ArgoCD ApplicationSet.
+  properties:
+    argocd_project:
+      title: ArgoCD Project
+      description: ArgoCD project (AppProject) to assign the generated Application to.
+      type: string
+      default: default
+      pattern: '^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$'
+
+    namespace:
+      title: Target Namespace
+      description: >-
+        Kubernetes namespace the chart is deployed into. Created automatically
+        (CreateNamespace=true is always set).
+      type: string
+      pattern: '^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$'
+
+    chart:
+      title: Chart Source
+      description: Where the Helm chart and its values file live.
+      type: object
+      properties:
+        repo_url:
+          title: Charts Repo URL
+          description: Git URL of the Helm charts repository (SSH or HTTPS).
+          type: string
+        revision:
+          title: Target Revision
+          description: Branch, tag, or commit of the charts repo to track.
+          type: string
+          default: develop
+        path:
+          title: Chart Path
+          description: >-
+            Path to the Helm chart within the charts repo, e.g.
+            coinswitch/bc/rms-aeron-cluster.
+          type: string
+        values_path:
+          title: Values Path
+          description: >-
+            Values file path, relative to the chart directory, e.g.
+            ../../../environments/uat/bc/rms-aeron-cluster/values.yaml.
+            Supports ${blueprint.self.variables.*} expressions.
+          type: string
+        release_name:
+          title: Helm Release Name
+          description: >-
+            Helm release name for the generated Application. Defaults to the
+            blueprint resource name. This is also the key the facets-argo-shim
+            matches on, together with the target namespace.
+          type: string
+      required:
+        - repo_url
+        - path
+        - values_path
+
+    sync_policy:
+      title: Sync Policy
+      description: How Argo reconciles this Application.
+      type: object
+      properties:
+        automated:
+          title: Automated Sync
+          description: Let Argo sync automatically instead of requiring a manual sync.
+          type: boolean
+          default: true
+        auto_prune:
+          title: Auto Prune
+          description: >-
+            Delete resources that no longer exist in the chart. Adds
+            PrunePropagationPolicy=foreground.
+          type: boolean
+          default: false
+        self_heal:
+          title: Self Heal
+          description: >-
+            Reconcile the live state back to the rendered manifests. REQUIRED for
+            Facets-side value changes to reach the workload: a changed
+            ${facets:...} value alters the render, which Argo sees as drift
+            rather than a source change, and Argo's automated block alone will
+            not reconcile drift. With this off the app sits OutOfSync
+            indefinitely (verified). Also reverts genuine manual kubectl edits.
+          type: boolean
+          default: true
+        preserve_on_delete:
+          title: Preserve Resources on Deletion
+          description: >-
+            Keep the deployed workloads when the ApplicationSet itself is
+            deleted. Safe default - turn off deliberately.
+          type: boolean
+          default: true
+        retry:
+          title: Retry
+          description: Retry behaviour for failed syncs.
+          type: object
+          properties:
+            limit:
+              title: Retry Limit
+              description: Number of sync retries. 0 disables retrying.
+              type: integer
+              default: 5
+              minimum: 0
+              maximum: 100
+      x-ui-toggle: true
+
+    helm_values:
+      title: Inline Helm Values
+      description: >-
+        Extra Helm values merged into the generated Application as
+        spec.source.helm.valuesObject, on top of the values file. Supports
+        ${...} blueprint expressions.
+      type: object
+      x-ui-yaml-editor: true
+
+    annotations:
+      title: Additional Annotations
+      description: >-
+        Extra annotations for the generated Application. The five
+        facets.cloud/* shim annotations are always injected and cannot be
+        overridden here.
+      type: object
+      patternProperties:
+        '^[a-zA-Z0-9]([-a-zA-Z0-9_./]*[a-zA-Z0-9])?$':
+          type: string
+      x-ui-toggle: true
+
+    facets_references:
+      title: Facets References (shim-maintained)
+      description: >-
+        Written by the facets-argo-shim consumed-references callback: a
+        per-environment list of ${...} expressions the last render consumed, at
+        spec.facets_references.<env>.expressions. The Control Plane resolves
+        them at release time and this module folds a digest of the resolved
+        values into the Application, so a release that changes any referenced
+        value re-renders the app and surfaces OutOfSync. Not normally
+        hand-edited.
+      type: object
+      x-ui-yaml-editor: true
+
+  required:
+    - namespace
+    - chart
+
+  x-ui-order:
+    - namespace
+    - argocd_project
+    - chart
+    - sync_policy
+    - helm_values
+    - annotations
+    - facets_references
+
+sample:
+  kind: argo_service
+  flavor: gcp
+  version: "2.0"
+  spec:
+    argocd_project: bc
+    namespace: rms-aeron-cluster
+    chart:
+      repo_url: git@bitbucket.org:coinswitch/charts.git
+      revision: develop
+      path: coinswitch/bc/rms-aeron-cluster
+      values_path: ../../../environments/uat/bc/rms-aeron-cluster/values.yaml
+      release_name: ""
+    sync_policy:
+      automated: true
+      auto_prune: false
+      self_heal: true
+      preserve_on_delete: true
+      retry:
+        limit: 5
+    helm_values: {}
+    annotations: {}
+    facets_references: {}

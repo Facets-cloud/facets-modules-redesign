@@ -56,6 +56,89 @@
       "outputInterfaces": {}
     },
     {
+      "id": "argo/gcp/1.1",
+      "intent": "argo",
+      "flavor": "gcp",
+      "version": "1.1",
+      "clouds": [
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/argo-stack",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": {
+            "resource_type": "kubernetes_cluster",
+            "resource_name": "default"
+          },
+          "providers": [
+            "kubernetes",
+            "helm"
+          ]
+        },
+        "cloud_account": {
+          "type": "@facets/gcp_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "google"
+          ]
+        },
+        "node_pool": {
+          "type": "@facets/gke_node_pool_details",
+          "optional": true,
+          "default": null,
+          "providers": []
+        }
+      }
+    },
+    {
+      "id": "argo_service/gcp/2.0",
+      "intent": "argo_service",
+      "flavor": "gcp",
+      "version": "2.0",
+      "clouds": [
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/argo_service",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": {
+            "resource_type": "kubernetes_cluster",
+            "resource_name": "default"
+          },
+          "providers": [
+            "kubernetes",
+            "helm"
+          ]
+        },
+        "argo_stack": {
+          "type": "@facets/argo-stack",
+          "optional": false,
+          "default": {
+            "resource_type": "argo",
+            "resource_name": "default"
+          },
+          "providers": []
+        }
+      }
+    },
+    {
       "id": "artifactories/standard/1.0",
       "intent": "artifactories",
       "flavor": "standard",
@@ -102,6 +185,128 @@
       "outputAttributes": {
         "registry_secrets_list": "local.output_registry_secrets_list",
         "registry_secret_objects": "local.output_registry_secret_objects"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "aws_alb_controller/standard/1.0",
+      "intent": "aws_alb_controller",
+      "flavor": "standard",
+      "version": "1.0",
+      "clouds": [
+        "aws"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/aws-alb-controller",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/aws_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "aws"
+          ],
+          "attributesUsed": [
+            "aws_account_id",
+            "aws_iam_role",
+            "aws_region",
+            "external_id",
+            "session_name"
+          ],
+          "interfacesUsed": []
+        },
+        "eks_details": {
+          "type": "@facets/eks",
+          "optional": false,
+          "default": null,
+          "providers": [],
+          "attributesUsed": [
+            "cluster_arn",
+            "cluster_ca_certificate",
+            "cluster_endpoint",
+            "cluster_id",
+            "cluster_name",
+            "cluster_version",
+            "kubernetes_provider_exec",
+            "node_security_group_id",
+            "oidc_issuer_url",
+            "oidc_provider",
+            "oidc_provider_arn"
+          ],
+          "interfacesUsed": []
+        },
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "helm",
+            "kubernetes",
+            "kubernetes-alpha"
+          ],
+          "attributesUsed": [],
+          "interfacesUsed": []
+        },
+        "network_details": {
+          "type": "@facets/aws-vpc-details",
+          "optional": false,
+          "default": {
+            "resource_name": "default",
+            "resource_type": "network"
+          },
+          "providers": [],
+          "attributesUsed": [
+            "vpc_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "controller_namespace": "local.controller_namespace",
+        "controller_service_account": "local.controller_service_account",
+        "controller_version": "var.instance.spec.controller_version",
+        "controller_role_arn": "aws_iam_role.alb_controller.arn",
+        "helm_release_id": "helm_release.alb_controller.id",
+        "secrets": "[]"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "aws_iam_policy/standard/1.0",
+      "intent": "aws_iam_policy",
+      "flavor": "standard",
+      "version": "1.0",
+      "clouds": [
+        "aws"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/iam_policy",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/aws_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "aws"
+          ],
+          "attributesUsed": [],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "policy": "aws_iam_policy.iam_policy.policy",
+        "name": "aws_iam_policy.iam_policy.name",
+        "arn": "aws_iam_policy.iam_policy.arn"
       },
       "outputInterfaces": {}
     },
@@ -1341,94 +1546,6 @@
         "node_instance_profile_name": "aws_iam_instance_profile.karpenter_node.name",
         "interruption_queue_name": "var.instance.spec.interruption_handling ? aws_sqs_queue.karpenter_interruption[0].name : \"\"",
         "helm_release_id": "helm_release.karpenter.id",
-        "secrets": "[]"
-      },
-      "outputInterfaces": {}
-    },
-    {
-      "id": "aws_alb_controller/standard/1.0",
-      "intent": "aws_alb_controller",
-      "flavor": "standard",
-      "version": "1.0",
-      "clouds": [
-        "aws"
-      ],
-      "outputs": {
-        "default": {
-          "type": "@facets/aws-alb-controller",
-          "hasProviders": false,
-          "providers": []
-        }
-      },
-      "inputs": {
-        "cloud_account": {
-          "type": "@facets/aws_cloud_account",
-          "optional": false,
-          "default": null,
-          "providers": [
-            "aws"
-          ],
-          "attributesUsed": [
-            "aws_account_id",
-            "aws_iam_role",
-            "aws_region",
-            "external_id",
-            "session_name"
-          ],
-          "interfacesUsed": []
-        },
-        "eks_details": {
-          "type": "@facets/eks",
-          "optional": false,
-          "default": null,
-          "providers": [],
-          "attributesUsed": [
-            "cluster_arn",
-            "cluster_ca_certificate",
-            "cluster_endpoint",
-            "cluster_id",
-            "cluster_name",
-            "cluster_version",
-            "kubernetes_provider_exec",
-            "node_security_group_id",
-            "oidc_issuer_url",
-            "oidc_provider",
-            "oidc_provider_arn"
-          ],
-          "interfacesUsed": []
-        },
-        "kubernetes_details": {
-          "type": "@facets/kubernetes-details",
-          "optional": false,
-          "default": null,
-          "providers": [
-            "helm",
-            "kubernetes",
-            "kubernetes-alpha"
-          ],
-          "attributesUsed": [],
-          "interfacesUsed": []
-        },
-        "network_details": {
-          "type": "@facets/aws-vpc-details",
-          "optional": false,
-          "default": {
-            "resource_name": "default",
-            "resource_type": "network"
-          },
-          "providers": [],
-          "attributesUsed": [
-            "vpc_id"
-          ],
-          "interfacesUsed": []
-        }
-      },
-      "outputAttributes": {
-        "controller_namespace": "local.controller_namespace",
-        "controller_service_account": "local.controller_service_account",
-        "controller_version": "var.instance.spec.controller_version",
-        "controller_role_arn": "aws_iam_role.alb_controller.arn",
-        "helm_release_id": "helm_release.alb_controller.id",
         "secrets": "[]"
       },
       "outputInterfaces": {}
@@ -3428,42 +3545,6 @@
       }
     },
     {
-      "id": "secret_manager/gcp/1.0",
-      "intent": "secret_manager",
-      "flavor": "gcp",
-      "version": "1.0",
-      "clouds": [
-        "gcp"
-      ],
-      "outputs": {
-        "default": {
-          "type": "@facets/secret_manager",
-          "hasProviders": false,
-          "providers": []
-        }
-      },
-      "inputs": {
-        "cloud_account": {
-          "type": "@facets/gcp_cloud_account",
-          "optional": false,
-          "default": null,
-          "providers": [
-            "google"
-          ],
-          "attributesUsed": [
-            "project_id"
-          ],
-          "interfacesUsed": []
-        }
-      },
-      "outputAttributes": {
-        "secret_ids": "{ for k, v in google_secret_manager_secret.this : k => v.secret_id }",
-        "secret_names": "{ for k, v in google_secret_manager_secret.this : k => v.name }",
-        "project_id": "var.inputs.cloud_account.attributes.project_id"
-      },
-      "outputInterfaces": {}
-    },
-    {
       "id": "redis/aws-elasticache/1.0",
       "intent": "redis",
       "flavor": "aws-elasticache",
@@ -3698,6 +3779,89 @@
         "writer": [],
         "reader": [],
         "cluster": []
+      }
+    },
+    {
+      "id": "secret_manager/gcp/1.0",
+      "intent": "secret_manager",
+      "flavor": "gcp",
+      "version": "1.0",
+      "clouds": [
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/secret_manager",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "cloud_account": {
+          "type": "@facets/gcp_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "google"
+          ],
+          "attributesUsed": [
+            "project_id"
+          ],
+          "interfacesUsed": []
+        }
+      },
+      "outputAttributes": {
+        "secret_ids": "{ for k, v in google_secret_manager_secret.this : k => v.secret_id }",
+        "secret_names": "{ for k, v in google_secret_manager_secret.this : k => v.name }",
+        "project_id": "var.inputs.cloud_account.attributes.project_id"
+      },
+      "outputInterfaces": {}
+    },
+    {
+      "id": "service/argo/3.0",
+      "intent": "service",
+      "flavor": "argo",
+      "version": "3.0",
+      "clouds": [
+        "gcp"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/service",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": {
+            "resource_type": "kubernetes_cluster",
+            "resource_name": "default"
+          },
+          "providers": [
+            "kubernetes",
+            "helm"
+          ]
+        },
+        "cloud_account": {
+          "type": "@facets/gcp_cloud_account",
+          "optional": false,
+          "default": null,
+          "providers": [
+            "google"
+          ]
+        },
+        "argo_stack": {
+          "type": "@facets/argo-stack",
+          "optional": false,
+          "default": {
+            "resource_type": "argo",
+            "resource_name": "default"
+          },
+          "providers": []
+        }
       }
     },
     {
@@ -4283,40 +4447,10 @@
         "operator_namespace": "local.operator_namespace"
       },
       "outputInterfaces": {}
-    },
-    {
-      "id": "aws_iam_policy/standard/1.0",
-      "intent": "aws_iam_policy",
-      "flavor": "standard",
-      "version": "1.0",
-      "clouds": ["aws"],
-      "outputs": {
-        "default": {
-          "type": "@facets/iam_policy",
-          "hasProviders": false,
-          "providers": []
-        }
-      },
-      "inputs": {
-        "cloud_account": {
-          "type": "@facets/aws_cloud_account",
-          "optional": false,
-          "default": null,
-          "providers": ["aws"],
-          "attributesUsed": [],
-          "interfacesUsed": []
-        }
-      },
-      "outputAttributes": {
-        "policy": "aws_iam_policy.iam_policy.policy",
-        "name": "aws_iam_policy.iam_policy.name",
-        "arn": "aws_iam_policy.iam_policy.arn"
-      },
-      "outputInterfaces": {}
     }
   ],
   "_metadata": {
-    "totalModules": 65,
+    "totalModules": 70,
     "generatedFrom": "facets-modules-redesign/modules/",
     "description": "Comprehensive wiring data model showing how modules connect at the attribute level"
   }

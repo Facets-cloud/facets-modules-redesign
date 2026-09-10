@@ -97,7 +97,7 @@ raptor import project-type --managed facets/gcp --name "My Platform"
 `PostgreSQL` `MySQL` `MongoDB` `Redis`
 
 **K8s Platform**
-`Helm` `Ingress/Gateway Fabric` `cert-manager` `ConfigMap` `Secrets` `PVC (k8s_standard)` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `VPA` `Artifactories`
+`Helm` `Ingress/Gateway Fabric` `cert-manager` `ConfigMap` `Secrets` `PVC (k8s_standard)` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `VPA` `Artifactories` `Argo Stack (gcp)` `Argo Service (gcp)` `Service/Argo (argo)`
 
 **Operators & Monitoring**
 `KubeBlocks` `Strimzi` `ECK` `WireGuard Operator` `WireGuard VPN` `Alert Rules` `Prometheus` `Grafana` `Monitoring`
