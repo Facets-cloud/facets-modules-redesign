@@ -1,6 +1,6 @@
 intent: service
-flavor: argo
-version: "3.0"
+flavor: argo_gcp
+version: "1.0"
 description: >-
   Deploys a service to Kubernetes through ArgoCD as an ApplicationSet, with the
   facets-argo-shim identity annotations injected so ${facets:...} references
@@ -390,8 +390,8 @@ spec:
 
 sample:
   kind: service
-  flavor: argo
-  version: "3.0"
+  flavor: argo_gcp
+  version: "1.0"
   spec:
     argocd_project: default
     namespace: bc

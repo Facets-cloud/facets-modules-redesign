@@ -1,4 +1,4 @@
-# service/argo/3.0
+# service/argo_gcp/1.0
 #
 # Creates one ArgoCD ApplicationSet per blueprint resource. The generated
 # Application carries the facets-argo-shim identity annotations, so

@@ -24,7 +24,7 @@ modules:
   - intent: service
     flavor: gcp
   - intent: service
-    flavor: argo
+    flavor: argo_gcp
   - intent: cloudrun
     flavor: cpu
 

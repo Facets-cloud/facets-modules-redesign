@@ -3779,10 +3779,10 @@
       "outputInterfaces": {}
     },
     {
-      "id": "service/argo/3.0",
+      "id": "service/argo_gcp/1.0",
       "intent": "service",
-      "flavor": "argo",
-      "version": "3.0",
+      "flavor": "argo_gcp",
+      "version": "1.0",
       "clouds": [
         "gcp"
       ],

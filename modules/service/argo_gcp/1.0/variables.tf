@@ -1,5 +1,5 @@
 variable "instance" {
-  description = "service/argo resource instance - mirrors the facets.yaml spec schema."
+  description = "service/argo_gcp resource instance - mirrors the facets.yaml spec schema."
   type = object({
     kind    = optional(string)
     flavor  = optional(string)

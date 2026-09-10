@@ -1,17 +1,19 @@
-# service / argo / 3.0
+# service / argo_gcp / 1.0
 
 Deploys a service to Kubernetes through ArgoCD as an **ApplicationSet**, with
 the facets-argo-shim identity annotations injected so `${facets:...}` references
 inside the deployed chart resolve against this project and environment.
 
-Redesign of `service/argo/2.1` against the `facets-modules-redesign` standards.
+Redesign of CoinSwitch's `service/argo/2.1` against the `facets-modules-redesign`
+standards. GCP-only: it creates GCP service accounts, IAM bindings and a Cloud
+DNS record, so AWS and Azure get their own `argo_aws` / `argo_azure` flavors.
 
 ## What changed from 2.1
 
 The core problem was CoinSwitch-specific chart knowledge hardcoded into a
 general flavor — `locals.tf` alone was 412 of 769 lines.
 
-| 2.1 | 3.0 |
+| CoinSwitch 2.1 | argo_gcp 1.0 |
 |---|---|
 | `chart_default_values_roots` — a table of 18 CoinSwitch chart names, used to *guess* each chart's internal values root | explicit `values_root` per service account |
 | k8s service name guessed via 4 lookup patterns + a `gateway-consumer` special case | publishes the Helm release name — stable and knowable |
