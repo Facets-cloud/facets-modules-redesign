@@ -205,12 +205,49 @@ locals {
     }
   }
 
-  helm_values_object = merge(
+  # Sources that contribute chart values, lowest precedence first.
+  helm_values_sources = [
     lookup(local.spec, "helm_values", {}),
     local.image_values,
     local.wi_values,
     local.reference_values_object,
-  )
+  ]
+
+  # A plain merge() here is SHALLOW, and these sources routinely write under the
+  # same top-level chart key. Verified against the cluster: helm_values
+  # {image:{tag:""}} plus image_values_path "image.repository" produced only
+  # {image:{repository:...}} in the Application - merge() replaced the whole
+  # `image` map and silently dropped `tag`, rendering an invalid
+  # "nginx:1.29-alpine:1.27-alpine". wi_values has the same exposure: its
+  # <values_root>.serviceaccount.annotations would clobber a user's own
+  # helm_values at that root.
+  #
+  # So union the top-level keys, then for any key that every contributing source
+  # sets as a map, merge those maps instead of overwriting. Both branches emit
+  # JSON *text* so the conditional stays a single type: values here are mixed
+  # (maps, strings, numbers, lists, null) and a map/string ternary fails with
+  # "Inconsistent conditional result types". Decode once at the end.
+  #
+  # Merging is one level deep - `a.b` still replaces wholesale - which covers
+  # every shape these sources produce (image.*,
+  # <root>.serviceaccount.annotations, facets_references_hash).
+  helm_values_flat = merge(local.helm_values_sources...)
+
+  helm_values_object = jsondecode(join("", [
+    "{",
+    join(",", [
+      for k, v in local.helm_values_flat :
+      "${jsonencode(k)}:${
+        can(keys(v))
+        ? jsonencode(merge([
+          for src in local.helm_values_sources : lookup(src, k, {})
+          if can(keys(lookup(src, k, {})))
+        ]...))
+        : jsonencode(v)
+      }"
+    ]),
+    "}",
+  ]))
 
   values_path = trimspace(lookup(local.chart, "values_path", ""))
 

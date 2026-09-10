@@ -51,8 +51,6 @@ modules:
     flavor: gcp
   - intent: argo
     flavor: gcp
-  - intent: argo_service
-    flavor: gcp
 
   # GCP Datastore Modules
   - intent: mysql

@@ -100,45 +100,6 @@
       }
     },
     {
-      "id": "argo_service/gcp/2.0",
-      "intent": "argo_service",
-      "flavor": "gcp",
-      "version": "2.0",
-      "clouds": [
-        "gcp"
-      ],
-      "outputs": {
-        "default": {
-          "type": "@facets/argo_service",
-          "hasProviders": false,
-          "providers": []
-        }
-      },
-      "inputs": {
-        "kubernetes_details": {
-          "type": "@facets/kubernetes-details",
-          "optional": false,
-          "default": {
-            "resource_type": "kubernetes_cluster",
-            "resource_name": "default"
-          },
-          "providers": [
-            "kubernetes",
-            "helm"
-          ]
-        },
-        "argo_stack": {
-          "type": "@facets/argo-stack",
-          "optional": false,
-          "default": {
-            "resource_type": "argo",
-            "resource_name": "default"
-          },
-          "providers": []
-        }
-      }
-    },
-    {
       "id": "artifactories/standard/1.0",
       "intent": "artifactories",
       "flavor": "standard",
@@ -4450,7 +4411,7 @@
     }
   ],
   "_metadata": {
-    "totalModules": 70,
+    "totalModules": 69,
     "generatedFrom": "facets-modules-redesign/modules/",
     "description": "Comprehensive wiring data model showing how modules connect at the attribute level"
   }

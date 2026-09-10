@@ -134,7 +134,7 @@ control plane's own cluster, never the target.
 | `shim_enabled` | `true` only once the shim values AND the RBAC are in place |
 | `shim_version` | image tag of the installed shim, empty when disabled |
 
-`argo_service/gcp/2.0` carries a `precondition` on `shim_enabled` and **fails
+`service/argo/3.0` carries a `precondition` on `shim_enabled` and **fails
 the plan** if a service uses `${facets:...}` refs without a shim — otherwise
 the release goes green and the render fails later inside ArgoCD, where
 Terraform cannot see it.

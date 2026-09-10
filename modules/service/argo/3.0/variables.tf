@@ -24,7 +24,7 @@ variable "instance" {
       sync_policy = optional(object({
         automated          = optional(bool, true)
         auto_prune         = optional(bool, false)
-        self_heal          = optional(bool, false)
+        self_heal          = optional(bool, true)
         preserve_on_delete = optional(bool, true)
         retry = optional(object({
           limit = optional(number, 5)
@@ -94,15 +94,18 @@ variable "environment" {
 variable "inputs" {
   description = "Wired dependencies for this module."
   type = object({
+    # RULE-006: kubernetes_cluster publishes @facets/kubernetes-details under its
+    # `attributes` output KEY, not `default`, so the platform injects these
+    # fields FLAT - no attributes/interfaces wrapper. (argo/gcp/1.1, which is
+    # deployed and working, declares it the same way.) Nothing in this module
+    # reads these today; the input exists to carry the kubernetes and helm
+    # providers, which is why the wrapped form went unnoticed.
     kubernetes_details = object({
-      attributes = optional(object({
-        cloud_provider   = optional(string)
-        cluster_id       = optional(string)
-        cluster_name     = optional(string)
-        cluster_location = optional(string)
-        cluster_endpoint = optional(string)
-      }), {})
-      interfaces = optional(object({}), {})
+      cloud_provider   = optional(string)
+      cluster_id       = optional(string)
+      cluster_name     = optional(string)
+      cluster_location = optional(string)
+      cluster_endpoint = optional(string)
     })
 
     cloud_account = object({
