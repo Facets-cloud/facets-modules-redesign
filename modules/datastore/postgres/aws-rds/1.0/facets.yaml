@@ -28,7 +28,17 @@ spec:
       x-ui-order:
       - engine_version
       - database_name
+      - master_username
       properties:
+        master_username:
+          type: string
+          title: Master Username
+          description: Master username for the database. Leave blank to use the default,
+            'pgadmin'. Cannot be a PostgreSQL reserved word.
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+          minLength: 1
+          maxLength: 63
+          default: pgadmin
         engine_version:
           type: string
           title: PostgreSQL Version
@@ -37,8 +47,10 @@ spec:
           - '14.21'
           - '15.16'
           - '16.12'
+          - '16.13'
           - '17.8'
           - '18.1'
+          - '18.3'
           default: '18.1'
         database_name:
           type: string
@@ -58,6 +70,7 @@ spec:
       - instance_class
       - allocated_storage
       - read_replica_count
+      - multi_az
       properties:
         instance_class:
           type: string
@@ -67,6 +80,10 @@ spec:
           - db.t3.micro
           - db.t3.small
           - db.t3.medium
+          - db.t4g.micro
+          - db.t4g.small
+          - db.t4g.medium
+          - db.t4g.large
           - db.m5.large
           - db.m5.xlarge
           default: db.t3.small
@@ -84,6 +101,12 @@ spec:
           minimum: 0
           maximum: 5
           default: 0
+        multi_az:
+          type: boolean
+          title: Multi-AZ
+          description: Deploy a standby in a second availability zone. Roughly doubles
+            instance and storage cost. Disable to match a single-AZ source instance.
+          default: true
       required:
       - instance_class
       - allocated_storage
@@ -111,12 +134,44 @@ spec:
       - source_db_instance_identifier
       - master_username
       - master_password
+      - restore_from_snapshot
+      - snapshot_identifier
+      - snapshot_kms_key_id
       properties:
         restore_from_backup:
           type: boolean
-          title: Restore from Backup
-          description: Restore database from existing backup
+          title: Restore from Backup (point-in-time)
+          description: Restore by point-in-time recovery from a live source instance in this
+            AWS account. Mutually exclusive with Restore from Snapshot.
           default: false
+        restore_from_snapshot:
+          type: boolean
+          title: Restore from Snapshot
+          description: Create the instance from an RDS DB snapshot instead of empty. The
+            snapshot is first copied into this account under the KMS key below, then the
+            instance is restored from that copy - so a snapshot shared from another AWS account
+            works too. Create-time only. Mutually exclusive with Restore from Backup.
+          default: false
+        snapshot_identifier:
+          type: string
+          title: Snapshot Identifier
+          description: DB snapshot to restore from. For a snapshot shared from another account
+            pass its full ARN (arn:aws:rds:<region>:<account>:snapshot:<name>); a plain
+            identifier works for a snapshot that already lives in this account.
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_snapshot
+            values:
+            - true
+        snapshot_kms_key_id:
+          type: string
+          title: Snapshot KMS Key
+          description: KMS key in THIS account (ARN, key ID or alias) that encrypts the local
+            snapshot copy and therefore the restored instance. Leave blank to use the account's
+            default aws/rds key.
+          x-ui-visible-if:
+            field: spec.restore_config.restore_from_snapshot
+            values:
+            - true
         source_db_instance_identifier:
           type: string
           title: Source DB Instance Identifier

@@ -56,8 +56,20 @@ locals {
   replica_identifier_base = local.is_importing ? substr("${local.base_cleaned}imp", 0, 47) : substr(local.db_instance_identifier, 0, 52)
 
   # Master credentials
-  master_username = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_username : "pgadmin"
+  master_username = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_username : var.instance.spec.version_config.master_username
   master_password = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.master_password : random_password.master_password[0].result
+
+  # Snapshot restore (create-time only), deliberately NOT folded into restore_from_backup.
+  # A snapshot carries the source's master username, and its password is unknown to us, so the
+  # module keeps generating its own random password (random_password.master_password stays at
+  # count 1 because restore_from_backup is false): the AWS provider applies it right after the
+  # restore via ModifyDBInstance, and Facets owns the credential from the first boot.
+  is_snapshot_restore      = var.instance.spec.restore_config.restore_from_snapshot
+  snapshot_seed_identifier = substr("${local.db_instance_identifier}-seed", 0, 63)
+  snapshot_kms_key_given   = try(length(var.instance.spec.restore_config.snapshot_kms_key_id) > 0, false)
+  snapshot_kms_key_id = local.is_snapshot_restore ? (
+    local.snapshot_kms_key_given ? var.instance.spec.restore_config.snapshot_kms_key_id : data.aws_kms_alias.rds[0].target_key_arn
+  ) : null
 
   # Database configuration
   database_name = var.instance.spec.version_config.database_name
@@ -138,18 +150,69 @@ resource "aws_security_group" "postgres" {
   }
 }
 
+# ---------------------------------------------------------------------------------------
+# Snapshot restore (create-time only)
+#
+# The account's default RDS key, looked up only when restoring from a snapshot without an
+# explicit snapshot_kms_key_id.
+data "aws_kms_alias" "rds" {
+  count = local.is_snapshot_restore && !local.snapshot_kms_key_given ? 1 : 0
+  name  = "alias/aws/rds"
+}
+
+# Copy the source snapshot into this account under our own key, then restore from the copy.
+# A direct restore from a snapshot shared by another account does work, but it leaves the
+# instance encrypted under THAT account's key for its whole life - revoke the grant or delete
+# the key over there and the database is gone. The copy re-keys it and makes it ours; the
+# sharing account can then drop its share. For a snapshot already in this account the copy is
+# simply a re-key under the chosen key.
+resource "aws_db_snapshot_copy" "seed" {
+  count                         = local.is_snapshot_restore ? 1 : 0
+  source_db_snapshot_identifier = var.instance.spec.restore_config.snapshot_identifier
+  target_db_snapshot_identifier = local.snapshot_seed_identifier
+  kms_key_id                    = local.snapshot_kms_key_id
+
+  tags = merge(local.common_tags, {
+    Name = local.snapshot_seed_identifier
+    Role = "restore-seed"
+  })
+
+  # A cross-account copy of a large snapshot can run well past the provider's 20m default.
+  timeouts {
+    create = "120m"
+  }
+
+  lifecycle {
+    # The seed is consumed once, at instance creation. Editing the source or key afterwards
+    # must not replace the copy (and, through it, churn the instance).
+    ignore_changes = [source_db_snapshot_identifier, kms_key_id]
+  }
+}
+# ---------------------------------------------------------------------------------------
+
 # RDS Instance
 resource "aws_db_instance" "postgres" {
   # Basic configuration
-  identifier     = local.db_instance_identifier
-  engine         = "postgres"
-  engine_version = var.instance.spec.version_config.engine_version
+  identifier = local.db_instance_identifier
+  engine     = "postgres"
+  # A snapshot restore comes up at exactly the snapshot's engine version; passing a version
+  # here would make the provider issue an in-place upgrade straight after the restore.
+  engine_version = local.is_snapshot_restore ? null : var.instance.spec.version_config.engine_version
   instance_class = var.instance.spec.sizing.instance_class
 
+  # Snapshot restore: the instance is created FROM the re-keyed copy above. Create-time only;
+  # RDS cannot swap the snapshot behind a live instance, so this attribute is also in
+  # ignore_changes. allocated_storage must be >= the snapshot's, or RDS rejects the restore.
+  snapshot_identifier = local.is_snapshot_restore ? aws_db_snapshot_copy.seed[0].db_snapshot_arn : (var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.source_db_instance_identifier : null)
+
   # Database configuration
-  db_name = local.database_name
+  # On a snapshot restore db_name and username come from the snapshot (RDS accepts neither for
+  # postgres), so they are left null here; the outputs read them back from the instance. The
+  # password IS honoured: the provider applies it with a ModifyDBInstance right after the
+  # restore, which is how the source's unknown master password is replaced by ours.
+  db_name = local.is_snapshot_restore ? null : local.database_name
   # Conditional credentials - only set when not restoring from snapshot or importing
-  username = local.master_username
+  username = local.is_snapshot_restore ? null : local.master_username
   password = local.master_password
   port     = local.db_port
 
@@ -170,15 +233,12 @@ resource "aws_db_instance" "postgres" {
   maintenance_window      = local.maintenance_window
   copy_tags_to_snapshot   = true
 
-  # High availability (hardcoded for production readiness)
-  multi_az = true
+  # High availability
+  multi_az = var.instance.spec.sizing.multi_az
 
   # Monitoring (disable enhanced monitoring to avoid IAM role requirement)
   monitoring_interval          = 0
   performance_insights_enabled = true
-
-  # Snapshot identifier for restore (conditional)
-  snapshot_identifier = var.instance.spec.restore_config.restore_from_backup ? var.instance.spec.restore_config.source_db_instance_identifier : null
 
   # Parameter group (use default for now)
   parameter_group_name = "default.postgres${split(".", var.instance.spec.version_config.engine_version)[0]}"
@@ -202,7 +262,10 @@ resource "aws_db_instance" "postgres" {
       username,
       password,
       # Ignore snapshot identifier after initial creation/import
-      snapshot_identifier
+      snapshot_identifier,
+      # On a snapshot restore the instance inherits the seed copy's key; a later change
+      # must not try to re-key (which would replace the instance).
+      kms_key_id
     ]
   }
 }
