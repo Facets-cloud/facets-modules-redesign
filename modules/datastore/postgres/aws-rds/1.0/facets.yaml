@@ -29,6 +29,7 @@ spec:
       - engine_version
       - database_name
       - master_username
+      - parameter_group_name
       properties:
         master_username:
           type: string
@@ -39,6 +40,16 @@ spec:
           minLength: 1
           maxLength: 63
           default: pgadmin
+        parameter_group_name:
+          type: string
+          title: DB Parameter Group Name
+          description: Name of an existing DB parameter group to attach (must match the engine
+            family, e.g. postgres16). Leave blank to use the engine default group
+            (default.postgres<major>). Use this to mirror a source instance's custom tuning -
+            e.g. rds.force_ssl to avoid breaking non-TLS clients at cutover.
+          pattern: ^[a-zA-Z][a-zA-Z0-9.-]*$
+          minLength: 1
+          maxLength: 255
         engine_version:
           type: string
           title: PostgreSQL Version

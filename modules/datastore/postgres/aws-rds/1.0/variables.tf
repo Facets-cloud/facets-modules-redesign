@@ -11,6 +11,9 @@ variable "instance" {
         # Optional: falls back to "pgadmin", which is what main.tf used unconditionally
         # before this attribute was reachable from the spec.
         master_username = optional(string, "pgadmin")
+        # Optional: name of an existing DB parameter group to attach. Leave null to keep the
+        # engine's default group (default.postgres<major>), which is the prior behaviour.
+        parameter_group_name = optional(string)
       })
       sizing = object({
         instance_class     = string

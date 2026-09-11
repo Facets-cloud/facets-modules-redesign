@@ -41,8 +41,17 @@ locals {
   # Use imported identifier if importing, otherwise use the generated identifier
   replica_source_identifier = local.is_importing ? lookup(var.instance.spec.imports, "db_instance_identifier", aws_db_instance.postgres.identifier) : aws_db_instance.postgres.identifier
 
-  # Parameter group name for consistency
-  parameter_group_for_replica = "default.postgres${split(".", var.instance.spec.version_config.engine_version)[0]}"
+  # Parameter group. When spec supplies a name (created out of band, e.g. a group that mirrors
+  # the source's custom tuning) it is attached to both the primary and any read replica;
+  # otherwise fall back to the engine's default group, which is the module's prior behaviour.
+  parameter_group_name = try(length(var.instance.spec.version_config.parameter_group_name) > 0, false) ? var.instance.spec.version_config.parameter_group_name : "default.postgres${split(".", var.instance.spec.version_config.engine_version)[0]}"
+
+  # Performance Insights is left OFF on the smallest burstable classes (db.t3/t4g .micro/.small).
+  # These classes are orderable WITH PI in ap-south-1, but PI adds cost/overhead that rarely
+  # makes sense on a micro, the mysql sibling makes the same call, and it matches the source
+  # posture here (all three blackbuck source postgres instances run PI disabled). Larger classes
+  # keep PI on. Turn this into an explicit spec field if a micro consumer ever needs PI.
+  performance_insights_supported = !contains(["db.t3.micro", "db.t3.small", "db.t4g.micro", "db.t4g.small"], var.instance.spec.sizing.instance_class)
 
   # Add suffix to replica names when importing to avoid conflicts with existing replicas
   # This ensures new Terraform-managed replicas don't conflict with pre-existing unmanaged replicas
@@ -238,10 +247,10 @@ resource "aws_db_instance" "postgres" {
 
   # Monitoring (disable enhanced monitoring to avoid IAM role requirement)
   monitoring_interval          = 0
-  performance_insights_enabled = true
+  performance_insights_enabled = local.performance_insights_supported
 
-  # Parameter group (use default for now)
-  parameter_group_name = "default.postgres${split(".", var.instance.spec.version_config.engine_version)[0]}"
+  # Parameter group - spec-provided (mirroring source tuning) or the engine default
+  parameter_group_name = local.parameter_group_name
 
   # Deletion protection (configurable for testing)
   deletion_protection = var.instance.spec.security_config.deletion_protection
@@ -294,10 +303,10 @@ resource "aws_db_instance" "read_replicas" {
 
   # Monitoring (disable enhanced monitoring to avoid IAM role requirement)
   monitoring_interval          = 0
-  performance_insights_enabled = true
+  performance_insights_enabled = local.performance_insights_supported
 
   # Parameter group (use consistent parameter group)
-  parameter_group_name = local.parameter_group_for_replica
+  parameter_group_name = local.parameter_group_name
 
   tags = merge(local.common_tags, {
     Name = "${local.replica_identifier_base}-replica-${count.index + 1}"
