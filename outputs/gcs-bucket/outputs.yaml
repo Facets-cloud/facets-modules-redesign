@@ -1,4 +1,6 @@
-name: '@facets/gcs-bucket'
+name: "@facets/gcs-bucket"
+title: "GCS Bucket"
+description: "Google Cloud Storage bucket with IAM roles and condition expressions for scoped access"
 properties:
   type: object
   properties:
