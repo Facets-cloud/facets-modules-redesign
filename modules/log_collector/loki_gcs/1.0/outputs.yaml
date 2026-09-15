@@ -1,0 +1,23 @@
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        loki_url:
+          type: string
+        namespace:
+          type: string
+        service_account:
+          type: string
+        bucket_name:
+          type: string
+    interfaces:
+      type: object
+      properties:
+        default:
+          type: object
+          properties:
+            url:
+              type: string
+providers: []
