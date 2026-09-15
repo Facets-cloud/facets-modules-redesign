@@ -4,6 +4,11 @@ version: "1.0"
 description: |
   Deploys Grafana Loki on Kubernetes with GCS as the storage backend using the unified grafana/loki chart.
   Includes Promtail (DaemonSet log scraper) and optional Loki Canary for end-to-end latency testing.
+intentDetails:
+  type: Monitoring & Observability
+  description: Loki log aggregation stack with GCS backend on GKE
+  displayName: Loki (GCS)
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/monitoring.svg
 clouds:
   - gcp
 
