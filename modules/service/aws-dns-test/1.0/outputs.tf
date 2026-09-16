@@ -28,11 +28,16 @@ locals {
   )
 
   output_attributes = {
-    selector_labels     = module.app-helm-chart.selector_labels
-    namespace           = module.app-helm-chart.namespace
-    resource_type       = local.resource_type
-    resource_name       = local.resource_name
-    service_name        = var.instance_name
-    service_account_arn = local.enable_irsa ? module.irsa.0.iam_role_arn : aws_iam_role.application-role.0.arn
+    selector_labels = module.app-helm-chart.selector_labels
+    namespace       = module.app-helm-chart.namespace
+    resource_type   = local.resource_type
+    resource_name   = local.resource_name
+    service_name    = var.instance_name
+    # Empty when the service uses neither IRSA nor iam_policies: this flavor
+    # gates aws_iam_role.application-role on create_iam_role, so indexing [0]
+    # unconditionally fails with "Invalid index" on a pure Kubernetes workload.
+    service_account_arn = local.enable_irsa ? module.irsa.0.iam_role_arn : (
+      local.create_iam_role ? aws_iam_role.application-role.0.arn : ""
+    )
   }
 }
