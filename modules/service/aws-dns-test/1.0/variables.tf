@@ -200,8 +200,12 @@ variable "inputs" {
       }))
     })
 
-    # Required: Kubernetes node pool details (Karpenter)
-    kubernetes_node_pool_details = object({
+    # Optional: Kubernetes node pool details (Karpenter).
+    # Optional here (unlike the aws flavor) so this flavor can be wired with the
+    # legacy input set - cloud_account + kubernetes_details only. main.tf already
+    # reads it through lookup() with an empty-map default, so taints and node
+    # selectors simply resolve to empty when it is not connected.
+    kubernetes_node_pool_details = optional(object({
       attributes = optional(object({
         node_class_name = optional(string)
         node_pool_name  = optional(string)
@@ -209,7 +213,7 @@ variable "inputs" {
         node_selector   = optional(string)
       }))
       interfaces = optional(object({}))
-    })
+    }), {})
 
     # Optional: Container registry access
     artifactories = optional(object({

@@ -41,7 +41,7 @@ inputs:
   kubernetes_node_pool_details:
     type: '@facets/aws_karpenter_nodepool'
     displayName: Node Pool
-    optional: false
+    optional: true
   artifactories:
     optional: true
     type: '@facets/artifactories'
