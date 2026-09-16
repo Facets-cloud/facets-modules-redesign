@@ -163,8 +163,10 @@ variable "instance" {
 variable "inputs" {
   description = "Input dependencies from other resources defined in facets.yaml inputs section"
   type = object({
-    # Required: AWS Cloud Account
-    cloud_account = object({
+    # Optional: AWS Cloud Account. Needed only when the service uses AWS IAM
+    # (IRSA or iam_policies) - it is what supplies the aws provider. A pure
+    # Kubernetes workload can leave it unconnected.
+    cloud_account = optional(object({
       attributes = optional(object({
         aws_iam_role = optional(string)
         aws_region   = optional(string)
@@ -172,7 +174,7 @@ variable "inputs" {
         session_name = optional(string)
       }))
       interfaces = optional(object({}))
-    })
+    }), {})
 
     # Required: Kubernetes cluster details (EKS)
     kubernetes_details = object({

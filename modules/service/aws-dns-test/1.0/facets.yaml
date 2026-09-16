@@ -20,8 +20,9 @@ inputs:
   cloud_account:
     type: '@facets/aws_cloud_account'
     displayName: Cloud Account
-    description: The AWS Cloud Account where the IAM Role will be created
-    optional: false
+    description: Required only when the service uses AWS IAM (IRSA or iam_policies).
+      Supplies the aws provider; leave unconnected for a pure Kubernetes workload.
+    optional: true
     default:
       resource_type: cloud_account
       resource_name: default
