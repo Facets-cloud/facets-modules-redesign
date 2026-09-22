@@ -1263,7 +1263,7 @@ raptor apply -f ./bp-templates/observability -p my-project</pre>
 const CLOUD_DATA = {
   aws: {
     name: "Amazon Web Services",
-    moduleCount: 41,
+    moduleCount: 42,
     praxisPrompt: "Import the official Facets AWS project type for me.\n\nraptor import project-type --managed facets/aws",
     raptorImport: "raptor import project-type --managed facets/aws",
     raptorImportNamed: 'raptor import project-type --managed facets/aws \\\n  --name "My Platform"',
@@ -1272,7 +1272,7 @@ const CLOUD_DATA = {
         "Cloud Account (aws_provider)", "Network/VPC (aws_network)", "EKS Standard (eks_standard)",
         "EKS Automode (eks_automode)", "Node Pool/Karpenter (karpenter)",
         "Node Pool/Automode (eks_automode)", "Karpenter (default)", "AWS ALB Controller (standard)",
-        "EFS CSI Driver (standard)", "AWS EFS (standard)", "StorageClass/EBS (aws_ebs)", "StorageClass/EFS (aws_efs)", "Service (aws)",
+        "EFS CSI Driver (standard)", "AWS EFS (standard)", "StorageClass/EBS (aws_ebs)", "StorageClass/EFS (aws_efs)", "Service (aws)", "Service/Argo (argo)",
         "AWS IAM Policy (standard)", "AWS IAM Role (standard)"
       ],
       "Managed Datastores": [
@@ -1296,14 +1296,14 @@ const CLOUD_DATA = {
   },
   gcp: {
     name: "Google Cloud Platform",
-    moduleCount: 35,
+    moduleCount: 37,
     praxisPrompt: "Import the official Facets GCP project type for me.\n\nraptor import project-type --managed facets/gcp",
     raptorImport: "raptor import project-type --managed facets/gcp",
     raptorImportNamed: 'raptor import project-type --managed facets/gcp \\\n  --name "My Platform"',
     categories: {
       "Infrastructure": [
         "Cloud Account (gcp_provider)", "Network/VPC (gcp_network)", "GKE (gke)",
-        "Node Pool (gcp)", "Node Fleet (gcp_node_fleet)", "Service (gcp)",
+        "Node Pool (gcp)", "Node Fleet (gcp_node_fleet)", "Service (gcp)", "Service/Argo (argo)", "Argo Stack (gcp)",
         "Workload Identity (gcp)", "Pub/Sub (gcp)", "GCP Secret Manager (gcp)"
       ],
       "Managed Datastores": [
@@ -1326,14 +1326,14 @@ const CLOUD_DATA = {
   },
   azure: {
     name: "Microsoft Azure",
-    moduleCount: 34,
+    moduleCount: 35,
     praxisPrompt: "Import the official Facets Azure project type for me.\n\nraptor import project-type --managed facets/azure",
     raptorImport: "raptor import project-type --managed facets/azure",
     raptorImportNamed: 'raptor import project-type --managed facets/azure \\\n  --name "My Platform"',
     categories: {
       "Infrastructure": [
         "Cloud Account (azure_provider)", "Network/VNet (azure_network)", "AKS (aks)",
-        "Node Pool (azure)", "Service (azure)", "Workload Identity (azure)"
+        "Node Pool (azure)", "Service (azure)", "Service/Argo (argo)", "Workload Identity (azure)"
       ],
       "Managed Datastores": [
         "PostgreSQL/Flexible Server (azure-flexible-server)",
