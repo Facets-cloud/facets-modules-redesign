@@ -34,6 +34,8 @@ modules:
     flavor: aws_network
   - intent: service
     flavor: aws
+  - intent: service
+    flavor: argo
   - intent: aws_efs
     flavor: standard
   - intent: aws_iam_role
