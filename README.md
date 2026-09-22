@@ -253,4 +253,3 @@ raptor import project-type -f ./project-type/linode/project-type.yml \
 ## Links
 
 - [Facets Control Plane](https://facets.cloud)
-- [Praxis AI](https://askpraxis.ai)
