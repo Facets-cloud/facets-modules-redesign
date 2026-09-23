@@ -48,13 +48,13 @@ raptor import project-type --managed facets/aws --name "My Platform"
 `PostgreSQL/RDS (aws-rds)` `PostgreSQL/Aurora (aws-aurora)` `PostgreSQL/Logical (logical)` `MySQL/RDS (aws-rds)` `MySQL/Aurora (aws-aurora)` `MongoDB/DocumentDB (aws-documentdb)` `Redis/ElastiCache (aws-elasticache)` `Kafka/MSK (aws-msk)`
 
 **Self-hosted via KubeBlocks**
-`PostgreSQL` `MySQL` `MongoDB` `Redis`
+`PostgreSQL` `MySQL` `MongoDB` `Redis` `Cassandra (k8ssandra)`
 
 **K8s Platform**
 `Helm` `Ingress/Gateway Fabric` `Ingress/NGINX` `cert-manager` `ConfigMap` `Secrets` `PVC (k8s_standard)` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `VPA` `Artifactories`
 
 **Operators & Monitoring**
-`KubeBlocks` `Strimzi` `ECK` `WireGuard Operator` `WireGuard VPN` `Alert Rules` `Prometheus` `Grafana` `Monitoring`
+`KubeBlocks` `Strimzi` `K8ssandra` `ECK` `WireGuard Operator` `WireGuard VPN` `Alert Rules` `Prometheus` `Grafana` `Monitoring`
 
 </details>
 
@@ -94,13 +94,13 @@ raptor import project-type --managed facets/gcp --name "My Platform"
 `PostgreSQL/Cloud SQL (gcp-cloudsql)` `PostgreSQL/Logical (logical)` `MySQL/Cloud SQL (gcp-cloudsql)` `Redis/Memorystore (gcp-memorystore)`
 
 **Self-hosted via KubeBlocks**
-`PostgreSQL` `MySQL` `MongoDB` `Redis`
+`PostgreSQL` `MySQL` `MongoDB` `Redis` `Cassandra (k8ssandra)`
 
 **K8s Platform**
 `Helm` `Ingress/Gateway Fabric` `cert-manager` `ConfigMap` `Secrets` `PVC (k8s_standard)` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `VPA` `Artifactories`
 
 **Operators & Monitoring**
-`KubeBlocks` `Strimzi` `ECK` `WireGuard Operator` `WireGuard VPN` `Alert Rules` `Prometheus` `Grafana` `Monitoring`
+`KubeBlocks` `Strimzi` `K8ssandra` `ECK` `WireGuard Operator` `WireGuard VPN` `Alert Rules` `Prometheus` `Grafana` `Monitoring`
 
 </details>
 
@@ -140,13 +140,13 @@ raptor import project-type --managed facets/azure --name "My Platform"
 `PostgreSQL/Flexible Server (azure-flexible-server)` `PostgreSQL/Logical (logical)` `MySQL/Flexible Server (azure-flexible-server)` `MongoDB/Cosmos DB (cosmosdb)` `Redis/Azure Cache (azure_cache_custom)`
 
 **Self-hosted via KubeBlocks**
-`PostgreSQL` `MySQL` `MongoDB` `Redis`
+`PostgreSQL` `MySQL` `MongoDB` `Redis` `Cassandra (k8ssandra)`
 
 **K8s Platform**
 `Helm` `Ingress/Gateway Fabric` `cert-manager` `ConfigMap` `Secrets` `PVC (k8s_standard)` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `VPA` `Artifactories`
 
 **Operators & Monitoring**
-`KubeBlocks` `Strimzi` `ECK` `WireGuard Operator` `WireGuard VPN` `Alert Rules` `Prometheus` `Grafana` `Monitoring`
+`KubeBlocks` `Strimzi` `K8ssandra` `ECK` `WireGuard Operator` `WireGuard VPN` `Alert Rules` `Prometheus` `Grafana` `Monitoring`
 
 </details>
 

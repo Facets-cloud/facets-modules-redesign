@@ -67,7 +67,7 @@ variable "inputs" {
         cluster = optional(object({
           connection_string = optional(string)
           endpoint          = optional(string)
-          endpoints         = optional(string)
+          endpoints         = optional(map(string), {})
           password          = optional(string)
           username          = optional(string)
         }), {})

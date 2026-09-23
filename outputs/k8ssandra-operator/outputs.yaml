@@ -1,0 +1,35 @@
+name: '@facets/k8ssandra-operator'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        namespace:
+          description: Kubernetes namespace where the k8ssandra-operator is deployed
+          type: string
+        release_name:
+          description: Helm release name
+          type: string
+        release_id:
+          description: Helm release ID
+          type: string
+        chart_version:
+          description: Helm chart version
+          type: string
+        operator_name:
+          description: Name of the operator
+          type: string
+        repository:
+          description: Helm chart repository URL
+          type: string
+        chart_name:
+          description: Helm chart name
+          type: string
+        status:
+          description: Helm release status
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

@@ -1,0 +1,19 @@
+name: '@facets/cassandra_k8s'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        cluster_name:
+          type: string
+        datacenter:
+          type: string
+        namespace:
+          type: string
+        service_name:
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []
