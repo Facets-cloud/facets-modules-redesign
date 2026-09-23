@@ -1,0 +1,22 @@
+name: '@facets/aws_iam_oidc_provider'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        provider_arn:
+          type: string
+          description: ARN of the AWS IAM OIDC identity provider.
+        issuer_url:
+          type: string
+          description: OIDC issuer URL registered with the provider.
+        client_id_list:
+          type: array
+          description: Accepted OIDC audiences (client ids).
+          items:
+            type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

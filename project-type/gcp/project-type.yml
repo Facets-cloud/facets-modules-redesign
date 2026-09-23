@@ -121,3 +121,19 @@ modules:
     flavor: kubeblocks
   - intent: redis
     flavor: kubeblocks
+
+  # GCP workload additions
+  - intent: redis
+    flavor: gcp-valkey
+  - intent: s3
+    flavor: gcp-gcs
+  - intent: postgres_pooler
+    flavor: pgbouncer
+  - intent: cloud_scheduler
+    flavor: gcp
+  - intent: gcp_service_connection_policy
+    flavor: standard
+  - intent: monitoring
+    flavor: gcp_dashboard
+  - intent: aws_iam_oidc_provider
+    flavor: gke

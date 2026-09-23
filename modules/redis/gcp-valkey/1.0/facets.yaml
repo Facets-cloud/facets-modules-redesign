@@ -1,0 +1,249 @@
+intent: redis
+flavor: gcp-valkey
+version: '1.0'
+clouds:
+- gcp
+description: Managed Memorystore for Valkey instance connected through Private Service Connect
+intentDetails:
+  type: Datastores
+  description: Google Cloud Memorystore for Valkey
+  displayName: Redis
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/redis.svg
+spec:
+  title: GCP Valkey Memorystore
+  description: Managed Memorystore for Valkey instance connected through Private Service Connect.
+  type: object
+  x-ui-order:
+  - version_config
+  - sizing
+  - security
+  - engine_config
+  - maintenance
+  - backup
+  properties:
+    version_config:
+      type: object
+      title: Version & Mode
+      properties:
+        engine_version:
+          type: string
+          title: Valkey Version
+          enum:
+          - VALKEY_7_2
+          - VALKEY_8_0
+          - VALKEY_9_0
+          default: VALKEY_7_2
+        mode:
+          type: string
+          title: Mode
+          description: >-
+            CLUSTER_DISABLED is a single primary with optional replicas and up to
+            100 logical databases. CLUSTER_ENABLED exposes a discovery endpoint and
+            speaks the Redis Cluster protocol, which a cluster-aware client (Lettuce
+            RedisClusterClient, redis-py RedisCluster) requires; it has exactly one
+            logical database, so engine_config.database_count is ignored there.
+            CLUSTER is the value the Terraform provider and gcloud accept;
+            CLUSTER_ENABLED is the REST API spelling and is normalised to CLUSTER.
+            Changing mode REPLACES the instance - the endpoint IP changes and all
+            cached data is lost.
+          enum:
+          - CLUSTER_DISABLED
+          - CLUSTER
+          - CLUSTER_ENABLED
+          default: CLUSTER_DISABLED
+      required:
+      - engine_version
+      - mode
+    sizing:
+      type: object
+      title: Sizing
+      properties:
+        node_type:
+          type: string
+          title: Node Type
+          enum:
+          - SHARED_CORE_NANO
+          - STANDARD_SMALL
+          - HIGHMEM_MEDIUM
+          - HIGHMEM_XLARGE
+          default: SHARED_CORE_NANO
+        shard_count:
+          type: integer
+          title: Shard Count
+          default: 1
+          minimum: 1
+          maximum: 1
+        replica_count:
+          type: integer
+          title: Replica Count
+          default: 0
+          minimum: 0
+          maximum: 2
+      required:
+      - node_type
+      - shard_count
+      - replica_count
+    security:
+      type: object
+      title: Security
+      properties:
+        enable_tls:
+          type: boolean
+          title: Enable TLS
+          default: true
+        authorization_mode:
+          type: string
+          title: Authorization Mode
+          enum:
+          - AUTH_DISABLED
+          - IAM_AUTH
+          default: AUTH_DISABLED
+      required:
+      - enable_tls
+      - authorization_mode
+    engine_config:
+      type: object
+      title: Engine Configuration
+      properties:
+        database_count:
+          type: integer
+          title: Database Count
+          description: >-
+            Number of logical databases. CLUSTER_DISABLED only - cluster mode has a
+            single database (db 0) and this value is not sent to the API.
+          default: 16
+          minimum: 11
+          maximum: 100
+        maxmemory_policy:
+          type: string
+          title: Maxmemory Policy
+          default: volatile-lru
+      required:
+      - database_count
+      - maxmemory_policy
+    maintenance:
+      type: object
+      title: Maintenance
+      description: Weekly maintenance window in UTC.
+      properties:
+        day:
+          type: string
+          title: Day
+          enum:
+          - MONDAY
+          - TUESDAY
+          - WEDNESDAY
+          - THURSDAY
+          - FRIDAY
+          - SATURDAY
+          - SUNDAY
+          default: MONDAY
+        hour:
+          type: integer
+          title: Hour
+          minimum: 0
+          maximum: 23
+          default: 22
+        minute:
+          type: integer
+          title: Minute
+          description: Must be 0. The Memorystore API supports whole hours only and rejects any other value with "Invalid start time, only hours are supported".
+          minimum: 0
+          maximum: 0
+          default: 0
+      required:
+      - day
+      - hour
+      - minute
+    backup:
+      type: object
+      title: Automated Backups
+      description: Daily automated backups, retained for a fixed number of days. Off by default; the AWS ElastiCache instances this replaces retain 1-7 days of snapshots.
+      x-ui-toggle: true
+      x-ui-order:
+      - enabled
+      - retention_days
+      - start_hour
+      properties:
+        enabled:
+          type: boolean
+          title: Enabled
+          description: Take a daily automated backup. Leave off for a pure cache that can be rebuilt from source.
+          default: false
+        retention_days:
+          type: integer
+          title: Retention (days)
+          description: How long to keep each backup. Mirrors the ElastiCache snapshot retention limit.
+          minimum: 1
+          maximum: 365
+          default: 1
+        start_hour:
+          type: integer
+          title: Backup Start Hour (UTC)
+          description: Hour of day the backup starts, UTC. Whole hours only - the API does not accept minutes here. Pick a low-traffic hour away from the maintenance window.
+          minimum: 0
+          maximum: 23
+          default: 21
+  required:
+  - version_config
+  - sizing
+  - security
+  - engine_config
+  - maintenance
+inputs:
+  gcp_provider:
+    type: '@facets/gcp_cloud_account'
+    optional: false
+    displayName: GCP Cloud Account
+    providers:
+    - google
+  network:
+    type: '@facets/gcp-network-details'
+    optional: false
+    displayName: GCP Network
+  service_connection_policy:
+    type: '@facets/gcp_service_connection_policy'
+    optional: false
+    displayName: Memorystore Service Connection Policy
+outputs:
+  default:
+    type: '@facets/redis'
+    title: Redis GCP Valkey
+imports:
+- name: instance_id
+  resource: google_memorystore_instance.main
+  resource_address: google_memorystore_instance.main
+  required: false
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+  - outputs.tf
+sample:
+  kind: redis
+  flavor: gcp-valkey
+  version: '1.0'
+  disabled: true
+  spec:
+    version_config:
+      engine_version: VALKEY_7_2
+      mode: CLUSTER_DISABLED
+    sizing:
+      node_type: SHARED_CORE_NANO
+      shard_count: 1
+      replica_count: 0
+    security:
+      enable_tls: true
+      authorization_mode: AUTH_DISABLED
+    engine_config:
+      database_count: 16
+      maxmemory_policy: volatile-lru
+    maintenance:
+      day: MONDAY
+      hour: 22
+      minute: 0
+    backup:
+      enabled: false
+      retention_days: 1
+      start_hour: 21
