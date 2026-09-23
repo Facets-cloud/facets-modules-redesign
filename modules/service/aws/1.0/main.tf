@@ -4,9 +4,83 @@ locals {
 
   aws_advanced_config   = lookup(lookup(var.instance, "advanced", {}), "aws", {})
   aws_cloud_permissions = lookup(lookup(local.spec, "cloud_permissions", {}), "aws", {})
-  enable_irsa           = lookup(local.aws_cloud_permissions, "enable_irsa", lookup(local.aws_advanced_config, "enable_irsa", false))
-  iam_arns              = lookup(local.aws_cloud_permissions, "iam_policies", lookup(local.aws_advanced_config, "iam", {}))
-  sa_name               = lower(var.instance_name)
+  # coalesce, not lookup fallbacks: lookup returns a present-but-null value
+  # (which optional(bool) produces) instead of the fallback, crashing every
+  # count/ternary downstream (S6)
+  enable_irsa = coalesce(
+    lookup(local.aws_cloud_permissions, "enable_irsa", null),
+    lookup(local.aws_advanced_config, "enable_irsa", null),
+    false
+  )
+  iam_arns = lookup(local.aws_cloud_permissions, "iam_policies", lookup(local.aws_advanced_config, "iam", {}))
+  sa_name  = lower(var.instance_name)
+
+  # ---- Null-stripping (S5) -------------------------------------------------
+  # optional() attributes with no default are emitted as null. yamlencode
+  # forwards them, helm's hasKey treats them as present, and the chart either
+  # crashes (autoscaling/health_checks: "wrong type for value ... got
+  # interface {}") or renders invalid manifests (cpu_limit/service_port).
+  # Strip nulls at every level before the spec reaches the chart.
+  runtime_raw = lookup(local.spec, "runtime", {})
+
+  size_clean = { for k, v in lookup(local.runtime_raw, "size", {}) : k => v if v != null }
+  ports_clean = { for pk, pv in lookup(local.runtime_raw, "ports", {}) :
+    pk => { for k, v in pv : k => v if v != null }
+  }
+  hc_raw   = lookup(local.runtime_raw, "health_checks", null)
+  hc_clean = local.hc_raw == null ? null : { for k, v in local.hc_raw : k => v if v != null }
+  as_raw   = lookup(local.runtime_raw, "autoscaling", null)
+  as_clean = local.as_raw == null ? null : { for k, v in local.as_raw : k => v if v != null }
+
+  release_raw    = lookup(local.spec, "release", {})
+  strategy_raw   = lookup(local.release_raw, "strategy", null)
+  disruption_raw = lookup(local.release_raw, "disruption_policy", null)
+  release_clean = merge(
+    { for k, v in local.release_raw : k => v if v != null && !contains(["strategy", "disruption_policy"], k) },
+    local.strategy_raw == null ? {} : { strategy = { for k, v in local.strategy_raw : k => v if v != null } },
+    local.disruption_raw == null ? {} : { disruption_policy = { for k, v in local.disruption_raw : k => v if v != null } },
+  )
+
+  sidecars_clean = {
+    for sc_name, sc in lookup(local.spec, "sidecars", {}) : sc_name => merge(
+      { for k, v in sc : k => v if v != null && k != "runtime" },
+      { runtime = merge(
+        { for k, v in lookup(sc, "runtime", {}) : k => v if v != null && k != "size" },
+        { size = { for k, v in lookup(lookup(sc, "runtime", {}), "size", {}) : k => v if v != null } },
+      ) },
+    )
+  }
+  init_containers_clean = {
+    for ic_name, ic in lookup(local.spec, "init_containers", {}) : ic_name => merge(
+      { for k, v in ic : k => v if v != null && k != "runtime" },
+      { runtime = merge(
+        { for k, v in lookup(ic, "runtime", {}) : k => v if v != null && k != "size" },
+        { size = { for k, v in lookup(lookup(ic, "runtime", {}), "size", {}) : k => v if v != null } },
+      ) },
+    )
+  }
+
+  runtime_clean = merge(
+    { for k, v in local.runtime_raw : k => v
+    if v != null && !contains(["size", "ports", "health_checks", "autoscaling"], k) },
+    { size = local.size_clean, ports = local.ports_clean },
+    local.hc_clean == null ? {} : { health_checks = local.hc_clean },
+    local.as_clean == null ? {} : { autoscaling = local.as_clean },
+  )
+
+  spec_clean = merge(
+    { for k, v in local.spec : k => v
+    if v != null && !contains(["runtime", "release", "sidecars", "init_containers"], k) },
+    {
+      runtime         = local.runtime_clean
+      release         = local.release_clean
+      sidecars        = local.sidecars_clean
+      init_containers = local.init_containers_clean
+    },
+  )
+
+  instance_clean = merge(var.instance, { spec = local.spec_clean })
+  # ---- end null-stripping --------------------------------------------------
 
   # Spec type for actions (application, cronjob, job, statefulset)
   spec_type                 = lookup(local.spec, "type", "application")
@@ -25,21 +99,18 @@ locals {
 
   image_pull_secrets = try(coalesce(var.inputs.artifactories.attributes.registry_secrets_list, []), [])
 
-  # Transform taints from object format to string format for utility module compatibility
+  # Node-pool taints/node_selector live under .attributes on the input wrapper,
+  # not at its top level (S8). The utility module's tolerations logic consumes
+  # taint OBJECTS ({key, value, effect}), so no string transformation is applied.
   kubernetes_node_pool_details = lookup(var.inputs, "kubernetes_node_pool_details", {})
-  node_pool_taints             = lookup(local.kubernetes_node_pool_details, "taints", [])
-  node_pool_labels             = lookup(local.kubernetes_node_pool_details, "node_selector", {})
+  node_pool_attributes         = try(var.inputs.kubernetes_node_pool_details.attributes, null)
+  node_pool_taints             = local.node_pool_attributes == null ? [] : local.node_pool_attributes.taints
+  node_pool_labels             = local.node_pool_attributes == null ? {} : local.node_pool_attributes.node_selector
 
-  # Convert taints from {key: "key", value: "value", effect: "effect"} to "key=value:effect" format
-  transformed_taints = [
-    for taint_name, taint_config in local.node_pool_taints :
-    "${taint_config.key}=${taint_config.value}:${taint_config.effect}"
-  ]
-
-  # Create modified inputs with transformed taints
+  # Surface taints/node_selector at the level the utility module reads them
   modified_inputs = merge(var.inputs, {
     kubernetes_node_pool_details = merge(local.kubernetes_node_pool_details, {
-      taints        = local.transformed_taints
+      taints        = local.node_pool_taints
       node_selector = local.node_pool_labels
     })
   })
@@ -75,7 +146,7 @@ locals {
   ) : []
 
   # Create instance configuration with VPA settings and topology spread constraints
-  instance_with_vpa_config = merge(var.instance, {
+  instance_with_vpa_config = merge(local.instance_clean, {
     advanced = merge(
       lookup(var.instance, "advanced", {}),
       {

@@ -10,9 +10,20 @@ properties:
         node_pool_name:
           type: string
         taints:
-          type: string
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+              effect:
+                type: string
         node_selector:
-          type: string
+          type: object
+          additionalProperties:
+            type: string
     interfaces:
       type: object
       properties: {}
