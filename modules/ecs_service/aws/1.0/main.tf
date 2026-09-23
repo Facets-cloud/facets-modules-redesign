@@ -107,9 +107,9 @@ module "iam_role_name" {
 
 module "secrets" {
   source      = "./aws_secret_manager"
-  baseinfra   = var.baseinfra
-  cc_metadata = var.cc_metadata
-  cluster     = var.cluster
+  baseinfra   = {}
+  cc_metadata = {}
+  cluster     = {}
   environment = var.environment
   instance = {
     spec = {
@@ -125,9 +125,9 @@ module "repository_credentials_secrets" {
   count = length(local.repository_credentials) > 0 ? 1 : 0
 
   source      = "./aws_secret_manager"
-  baseinfra   = var.baseinfra
-  cc_metadata = var.cc_metadata
-  cluster     = var.cluster
+  baseinfra   = {}
+  cc_metadata = {}
+  cluster     = {}
   environment = var.environment
   instance = {
     spec = {

@@ -44,17 +44,3 @@ variable "instance_name" { type = string }
 variable "environment" {
   type = object({ name = optional(string, "default"), unique_name = string, cloud_tags = optional(map(string), {}), deployment_id = optional(string, ""), common_environment_variables = optional(map(string), {}) })
 }
-
-# Compatibility values consumed only by the nested secret-manager module.
-variable "baseinfra" {
-  type    = any
-  default = {}
-}
-variable "cc_metadata" {
-  type    = any
-  default = {}
-}
-variable "cluster" {
-  type    = any
-  default = {}
-}

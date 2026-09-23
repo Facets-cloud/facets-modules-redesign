@@ -48,20 +48,21 @@ spec:
               type: string
               title: ECS Service
               x-ui-output-type: '@facets/ecs-service'
-            port: {type: integer, minimum: 1, maximum: 65535}
-            priority: {type: integer, minimum: 1, maximum: 50000}
-            path: {type: string, default: '/'}
-            domain_prefix: {type: string, default: ''}
+            port: {type: integer, title: Target Port, minimum: 1, maximum: 65535}
+            priority: {type: integer, title: Rule Priority, minimum: 1, maximum: 50000}
+            path: {type: string, title: Path Pattern, default: '/'}
+            domain_prefix: {type: string, title: Domain Prefix, default: ''}
             health_check:
               type: object
+              title: Health Check
               properties:
-                protocol: {type: string, enum: [HTTP, HTTPS, TCP, TLS], default: HTTP}
-                path: {type: string, default: '/'}
-                matcher: {type: string, default: '200-499'}
-                interval: {type: integer, minimum: 5, maximum: 300, default: 30}
-                timeout: {type: integer, minimum: 2, maximum: 120, default: 5}
-                healthy_threshold: {type: integer, minimum: 2, maximum: 10, default: 2}
-                unhealthy_threshold: {type: integer, minimum: 2, maximum: 10, default: 2}
+                protocol: {type: string, title: Protocol, enum: [HTTP, HTTPS, TCP, TLS], default: HTTP}
+                path: {type: string, title: Path, default: '/'}
+                matcher: {type: string, title: Matcher, default: '200-499'}
+                interval: {type: integer, title: Interval, minimum: 5, maximum: 300, default: 30}
+                timeout: {type: integer, title: Timeout, minimum: 2, maximum: 120, default: 5}
+                healthy_threshold: {type: integer, title: Healthy Threshold, minimum: 2, maximum: 10, default: 2}
+                unhealthy_threshold: {type: integer, title: Unhealthy Threshold, minimum: 2, maximum: 10, default: 2}
           required: [ecs_service_arn, port, priority, path]
   required: [public, domain, certificate_arn, rules]
 sample:
