@@ -56,8 +56,8 @@ locals {
       memory    = lookup(lookup(local.runtime, "size", {}), "memory", null) * 1024
       essential = lookup(local.advanced_ecs, "essential", true)
       command = concat(
-        lookup(local.runtime, "command", null) == null ? [] : [lookup(local.runtime, "command", null)],
-        [for key, value in lookup(local.runtime, "args", {}) : value.argument]
+        lookup(local.runtime, "command", []),
+        lookup(local.runtime, "args", [])
       )
       privileged                = false
       readonly_root_filesystem  = lookup(local.runtime, "readonly_root_filesystem", true)
