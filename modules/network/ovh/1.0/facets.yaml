@@ -34,7 +34,7 @@ spec:
       description: CIDR block for the private network
       x-ui-overrides-only: true
     vlan_id:
-      type: number
+      type: integer
       title: VLAN ID
       description: VLAN ID for the network (0-4000). Must be unique per OVH account.
       minimum: 0

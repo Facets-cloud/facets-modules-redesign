@@ -68,7 +68,7 @@ spec:
       description: Enable automatic object lifecycle management
       default: false
     expiration_days:
-      type: number
+      type: integer
       title: Object Expiration Days
       description: Number of days after which objects expire (if lifecycle is enabled)
       default: 0

@@ -70,14 +70,14 @@ spec:
           - db-n1-highmem-4
           default: db-n1-standard-1
         disk_size:
-          type: number
+          type: integer
           title: Storage Size (GB)
           description: Initial storage allocation in GB
           minimum: 10
           maximum: 30720
           default: 100
         read_replica_count:
-          type: number
+          type: integer
           title: Read Replica Count
           description: Number of read replicas to create
           minimum: 0

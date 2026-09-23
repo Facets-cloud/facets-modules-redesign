@@ -46,7 +46,7 @@ spec:
       description: Cluster sizing and resource allocation
       properties:
         replica_count:
-          type: number
+          type: integer
           title: Replica Count
           description: Number of Kafka broker replicas (dual-role controller+broker)
           default: 3
@@ -99,27 +99,27 @@ spec:
       description: Kafka broker configuration
       properties:
         offsets_topic_replication_factor:
-          type: number
+          type: integer
           title: Offsets Topic Replication Factor
           default: 3
           minimum: 1
         transaction_state_log_replication_factor:
-          type: number
+          type: integer
           title: Transaction State Log Replication Factor
           default: 3
           minimum: 1
         transaction_state_log_min_isr:
-          type: number
+          type: integer
           title: Transaction State Log Min ISR
           default: 2
           minimum: 1
         default_replication_factor:
-          type: number
+          type: integer
           title: Default Replication Factor
           default: 3
           minimum: 1
         min_insync_replicas:
-          type: number
+          type: integer
           title: Min In-Sync Replicas
           default: 2
           minimum: 1

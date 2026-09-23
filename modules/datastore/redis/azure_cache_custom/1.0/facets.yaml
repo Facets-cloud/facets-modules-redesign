@@ -70,14 +70,14 @@ spec:
           x-ui-error-message: Premium SKU is required for VNet integration and automatic
             backups
         capacity:
-          type: number
+          type: integer
           title: Cache Capacity
           description: Cache size/capacity (0-6 for Basic/Standard, 1-5 for Premium)
           minimum: 0
           maximum: 6
           default: 1
         replicas_per_master:
-          type: number
+          type: integer
           title: Replicas per Master
           description: Number of replicas per master (Premium only)
           minimum: 1
@@ -88,7 +88,7 @@ spec:
             values:
             - P
         replicas_per_primary:
-          type: number
+          type: integer
           title: Replicas per Primary
           description: Number of replicas per primary node (Premium only)
           minimum: 1
@@ -99,7 +99,7 @@ spec:
             values:
             - P
         shard_count:
-          type: number
+          type: integer
           title: Shard Count
           description: Number of shards for Premium clustered cache
           minimum: 1

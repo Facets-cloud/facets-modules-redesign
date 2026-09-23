@@ -68,21 +68,21 @@ spec:
       - client_subnets_count
       properties:
         number_of_broker_nodes:
-          type: number
+          type: integer
           title: Number of Broker Nodes
           description: Number of broker nodes per availability zone
           minimum: 1
           maximum: 15
           default: 3
         volume_size:
-          type: number
+          type: integer
           title: Volume Size (GB)
           description: EBS volume size per broker in GB
           minimum: 1
           maximum: 16384
           default: 100
         client_subnets_count:
-          type: number
+          type: integer
           title: Client Subnets Count
           description: Number of subnets to distribute brokers across (2-3 for multi-AZ)
           minimum: 2

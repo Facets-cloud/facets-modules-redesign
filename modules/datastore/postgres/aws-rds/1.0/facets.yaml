@@ -71,14 +71,14 @@ spec:
           - db.m5.xlarge
           default: db.t3.small
         allocated_storage:
-          type: number
+          type: integer
           title: Allocated Storage (GB)
           description: Initial storage allocation in GB
           minimum: 20
           maximum: 65536
           default: 100
         read_replica_count:
-          type: number
+          type: integer
           title: Read Replica Count
           description: Number of read replicas to create
           minimum: 0

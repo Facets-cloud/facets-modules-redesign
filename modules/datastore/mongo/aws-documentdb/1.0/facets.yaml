@@ -36,7 +36,7 @@ spec:
           - 6.0.0
           default: 4.0.0
         port:
-          type: number
+          type: integer
           title: Port
           description: Port number for DocumentDB cluster
           minimum: 1024
@@ -62,7 +62,7 @@ spec:
           - db.r6g.xlarge
           default: db.t4g.medium
         instance_count:
-          type: number
+          type: integer
           title: Instance Count
           description: Number of instances in the DocumentDB cluster
           minimum: 1

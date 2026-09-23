@@ -81,14 +81,14 @@ spec:
           - MO_Standard_E4s_v3
           default: GP_Standard_D2s_v3
         storage_gb:
-          type: number
+          type: integer
           title: Storage Size (GB)
           description: Storage capacity in gigabytes
           minimum: 32
           maximum: 16384
           default: 128
         read_replica_count:
-          type: number
+          type: integer
           title: Read Replica Count
           description: Number of read replicas to create
           minimum: 0
