@@ -1,0 +1,78 @@
+intent: load_balancer
+flavor: aws_ecs
+version: '1.0'
+description: HTTPS Application Load Balancer for AWS ECS services.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Route HTTPS traffic to one or more ECS services.
+  displayName: AWS ECS Load Balancer
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/service.svg
+clouds: [aws]
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: Cloud Account
+    optional: false
+    providers: [aws]
+  network_details:
+    type: '@facets/aws-vpc-details'
+    displayName: Network
+    optional: false
+spec:
+  title: AWS ECS Load Balancer
+  type: object
+  properties:
+    public:
+      type: boolean
+      title: Public Access
+      description: Whether the ALB is internet-facing.
+      default: false
+    domain:
+      type: string
+      title: Domain Name
+      description: DNS name used by the ALB endpoint.
+    certificate_arn:
+      type: string
+      title: Certificate ARN
+      description: Existing ACM certificate used by the HTTPS listener.
+      pattern: '^(arn:aws:acm:[a-z0-9-]+:[0-9]{12}:certificate/[a-f0-9-]+|\$\{[A-Za-z0-9._-]+\})$'
+      x-ui-typeable: true
+    rules:
+      type: object
+      title: Forwarding Rules
+      patternProperties:
+        '^[a-zA-Z0-9_-]+$':
+          type: object
+          properties:
+            ecs_service_arn:
+              type: string
+              title: ECS Service
+              x-ui-output-type: '@facets/ecs-service'
+            port: {type: integer, minimum: 1, maximum: 65535}
+            priority: {type: integer, minimum: 1, maximum: 50000}
+            path: {type: string, default: '/'}
+            domain_prefix: {type: string, default: ''}
+            health_check:
+              type: object
+              properties:
+                protocol: {type: string, enum: [HTTP, HTTPS, TCP, TLS], default: HTTP}
+                path: {type: string, default: '/'}
+                matcher: {type: string, default: '200-499'}
+                interval: {type: integer, minimum: 5, maximum: 300, default: 30}
+                timeout: {type: integer, minimum: 2, maximum: 120, default: 5}
+                healthy_threshold: {type: integer, minimum: 2, maximum: 10, default: 2}
+                unhealthy_threshold: {type: integer, minimum: 2, maximum: 10, default: 2}
+          required: [ecs_service_arn, port, priority, path]
+  required: [public, domain, certificate_arn, rules]
+sample:
+  kind: load_balancer
+  flavor: aws_ecs
+  version: '1.0'
+  spec:
+    public: true
+    domain: app.example.com
+    certificate_arn: '${certificate.main.out.attributes.arn}'
+    rules: {}
+outputs:
+  default:
+    type: '@facets/ecs-load-balancer'
