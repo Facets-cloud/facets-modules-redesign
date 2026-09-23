@@ -35,6 +35,15 @@ variable "instance" {
         })), {})
       }), {})
 
+      # Defaults mirror the fallbacks in main.tf's lookup() chain, so an omitted
+      # block behaves exactly as before this attribute existed.
+      default_node_pool = optional(object({
+        instance_types = optional(list(string), ["t3.medium"])
+        capacity_type  = optional(string, "ON_DEMAND")
+        size           = optional(number, 2)
+        disk_size      = optional(number, 50)
+      }), {})
+
       container_insights_enabled = optional(bool, false)
 
       cloudwatch_agent_policies = optional(map(object({
