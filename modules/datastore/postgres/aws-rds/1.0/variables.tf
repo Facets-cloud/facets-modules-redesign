@@ -8,11 +8,17 @@ variable "instance" {
       version_config = object({
         engine_version = string
         database_name  = string
+        # Optional: falls back to "pgadmin", which is what main.tf used unconditionally
+        # before this attribute was reachable from the spec.
+        master_username = optional(string, "pgadmin")
       })
       sizing = object({
         instance_class     = string
         allocated_storage  = number
         read_replica_count = number
+        # Optional: defaults to true, which is what main.tf hardcoded before this
+        # attribute existed. Set false to match a single-AZ source instance.
+        multi_az = optional(bool, true)
       })
       security_config = object({
         deletion_protection = bool

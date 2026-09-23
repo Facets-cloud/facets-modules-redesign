@@ -28,7 +28,17 @@ spec:
       x-ui-order:
       - engine_version
       - database_name
+      - master_username
       properties:
+        master_username:
+          type: string
+          title: Master Username
+          description: Master username for the database. Leave blank to use the default,
+            'pgadmin'. Cannot be a PostgreSQL reserved word.
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+          minLength: 1
+          maxLength: 63
+          default: pgadmin
         engine_version:
           type: string
           title: PostgreSQL Version
@@ -37,8 +47,10 @@ spec:
           - '14.21'
           - '15.16'
           - '16.12'
+          - '16.13'
           - '17.8'
           - '18.1'
+          - '18.3'
           default: '18.1'
         database_name:
           type: string
@@ -58,6 +70,7 @@ spec:
       - instance_class
       - allocated_storage
       - read_replica_count
+      - multi_az
       properties:
         instance_class:
           type: string
@@ -67,6 +80,10 @@ spec:
           - db.t3.micro
           - db.t3.small
           - db.t3.medium
+          - db.t4g.micro
+          - db.t4g.small
+          - db.t4g.medium
+          - db.t4g.large
           - db.m5.large
           - db.m5.xlarge
           default: db.t3.small
@@ -84,6 +101,12 @@ spec:
           minimum: 0
           maximum: 5
           default: 0
+        multi_az:
+          type: boolean
+          title: Multi-AZ
+          description: Deploy a standby in a second availability zone. Roughly doubles
+            instance and storage cost. Disable to match a single-AZ source instance.
+          default: true
       required:
       - instance_class
       - allocated_storage

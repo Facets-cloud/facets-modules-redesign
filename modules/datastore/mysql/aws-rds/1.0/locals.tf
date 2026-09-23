@@ -27,7 +27,7 @@ locals {
   is_restore_operation = var.instance.spec.restore_config.restore_from_backup
 
   # When importing, username and password should be same as the original to avoid overriding existing values
-  master_username = local.is_restore_operation ? var.instance.spec.restore_config.restore_master_username : "admin"
+  master_username = local.is_restore_operation ? var.instance.spec.restore_config.restore_master_username : var.instance.spec.version_config.master_username
   master_password = local.is_restore_operation ? var.instance.spec.restore_config.restore_master_password : random_password.master_password[0].result
 
   # Database name - should be same when importing
@@ -39,9 +39,11 @@ locals {
   # Port mapping for MySQL
   mysql_port = 3306
 
-  # Performance Insights support - only supported on certain instance classes
-  # db.t3.micro and db.t3.small don't support Performance Insights
-  performance_insights_supported = !contains(["db.t3.micro", "db.t3.small"], var.instance.spec.sizing.instance_class)
+  # Performance Insights support - only supported on certain instance classes.
+  # Confirmed against describe-orderable-db-instance-options for mysql 8.4.9 in ap-south-1:
+  # SupportsPerformanceInsights=false for db.t3.micro, db.t3.small, db.t4g.micro and db.t4g.small.
+  # The t4g entries matter as much as the t3 ones - enabling PI on an unsupported class fails at apply.
+  performance_insights_supported = !contains(["db.t3.micro", "db.t3.small", "db.t4g.micro", "db.t4g.small"], var.instance.spec.sizing.instance_class)
 
   # Enhanced Security Group Logic
   # Detect if security group exists by name (when not explicitly importing)
