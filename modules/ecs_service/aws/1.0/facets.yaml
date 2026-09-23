@@ -1,0 +1,113 @@
+intent: ecs_service
+flavor: aws
+version: '1.0'
+description: Deploy a containerized workload as an AWS ECS Fargate service.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Run an application container on AWS ECS Fargate.
+  displayName: ECS Service
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/service.svg
+clouds: [aws]
+artifact_inputs:
+  primary:
+    attribute_path: spec.release.image
+    artifact_type: docker_image
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: Cloud Account
+    optional: false
+    providers: [aws]
+  network_details:
+    type: '@facets/aws-vpc-details'
+    displayName: Network
+    optional: false
+  ecs_details:
+    type: '@facets/ecs-cluster'
+    displayName: ECS Cluster
+    optional: false
+spec:
+  title: ECS Service
+  type: object
+  properties:
+    runtime:
+      type: object
+      title: Runtime
+      properties:
+        ports:
+          type: object
+          title: Ports
+          x-ui-yaml-editor: true
+          patternProperties:
+            '^[a-zA-Z0-9_-]+$':
+              type: object
+              properties:
+                port: {type: string, title: Container Port, pattern: '^[1-9][0-9]{0,4}$'}
+                service_port: {type: string, title: Service Port, pattern: '^[1-9][0-9]{0,4}$'}
+                protocol: {type: string, title: Protocol, enum: [tcp, udp]}
+              required: [port, protocol]
+        size:
+          type: object
+          title: Task Size
+          properties:
+            cpu: {type: integer, title: CPU Units, minimum: 1}
+            memory: {type: integer, title: Memory (GB), minimum: 1}
+          required: [cpu, memory]
+        command: {type: array, title: Command, items: {type: string}}
+        args: {type: array, title: Arguments, items: {type: string}}
+        readonly_root_filesystem: {type: boolean, title: Read-only Root Filesystem, default: true}
+        autoscaling:
+          type: object
+          title: Autoscaling
+          properties:
+            min: {type: integer, title: Minimum Tasks, minimum: 1, default: 1}
+            max: {type: integer, title: Maximum Tasks, minimum: 1, default: 1}
+          required: [min, max]
+      required: [ports, size]
+    release:
+      type: object
+      title: Release
+      properties:
+        image: {type: string, title: Container Image, x-ui-skip: true}
+        registry_name: {type: string, title: Container Registry, default: ''}
+      required: [image]
+    env:
+      type: object
+      title: Environment Variables
+      x-ui-yaml-editor: true
+      patternProperties:
+        '^[a-zA-Z][a-zA-Z0-9_.-]*$': {type: string}
+    cloud_permissions:
+      type: object
+      title: Cloud Permissions
+      x-ui-toggle: true
+      properties:
+        aws:
+          type: object
+          title: AWS Permissions
+          properties:
+            iam_policies:
+              type: object
+              title: IAM Policies
+              x-ui-yaml-editor: true
+    advanced:
+      type: object
+      title: Advanced Settings
+      x-ui-toggle: true
+      x-ui-yaml-editor: true
+  required: [runtime, release, env]
+sample:
+  kind: ecs_service
+  flavor: aws
+  version: '1.0'
+  spec:
+    runtime:
+      ports:
+        http: {port: '80', service_port: '80', protocol: tcp}
+      size: {cpu: 512, memory: 1}
+      readonly_root_filesystem: true
+    release: {image: ''}
+    env: {}
+outputs:
+  default:
+    type: '@facets/ecs-service'

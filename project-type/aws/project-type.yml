@@ -32,6 +32,12 @@ modules:
     flavor: standard
   - intent: network
     flavor: aws_network
+  - intent: ecs_cluster
+    flavor: aws
+  - intent: ecs_service
+    flavor: aws
+  - intent: load_balancer
+    flavor: aws_ecs
   - intent: service
     flavor: aws
   - intent: aws_efs
