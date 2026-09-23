@@ -9,8 +9,8 @@ variable "instance" {
         atomic          = optional(bool)
         timeout         = optional(number)
         recreate_pods   = optional(bool)
-      }))
-    }))
+      }), {})
+    }), {})
   })
 }
 
