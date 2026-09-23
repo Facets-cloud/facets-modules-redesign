@@ -20,7 +20,7 @@ variable "instance" {
         import_existing           = optional(bool, false)
         cache_resource_id         = optional(string)
         firewall_rule_resource_id = optional(string)
-      }))
+      }), {})
     })
   })
 

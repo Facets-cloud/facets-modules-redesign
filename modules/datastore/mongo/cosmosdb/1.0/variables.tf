@@ -27,7 +27,7 @@ variable "instance" {
         import_existing = optional(bool, false)
         account_name    = optional(string)
         database_name   = optional(string)
-      }))
+      }), {})
     })
   })
 

@@ -29,7 +29,7 @@ variable "instance" {
         read_replica_1  = optional(string)
         read_replica_2  = optional(string)
         master_password = optional(string)
-      }))
+      }), {})
     })
   })
 
