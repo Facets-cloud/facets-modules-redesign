@@ -199,6 +199,17 @@ spec:
               - Vary
               - Content-Disposition
               - X-Tenant-ID
+              x-ui-dropdown:
+              - X-Frame-Options
+              - Content-Security-Policy
+              - Referrer-Policy
+              - X-Content-Type-Options
+              - X-Xss-Protection
+              - reflected-xss
+              - Cache-Control
+              - Vary
+              - Content-Disposition
+              - X-Tenant-ID
             header_value:
               type: string
               title: Header Value
@@ -330,6 +341,17 @@ spec:
                   - Vary
                   - Content-Disposition
                   - X-Tenant-ID
+                  x-ui-dropdown:
+                  - X-Frame-Options
+                  - Content-Security-Policy
+                  - Referrer-Policy
+                  - X-Content-Type-Options
+                  - X-Xss-Protection
+                  - reflected-xss
+                  - Cache-Control
+                  - Vary
+                  - Content-Disposition
+                  - X-Tenant-ID
                 header_value:
                   type: string
                   title: Header Value
@@ -394,6 +416,17 @@ spec:
                         characters and hyphens
                       x-ui-typeable: true
                       enum:
+                      - X-Frame-Options
+                      - Content-Security-Policy
+                      - Referrer-Policy
+                      - X-Content-Type-Options
+                      - X-Xss-Protection
+                      - reflected-xss
+                      - Cache-Control
+                      - Vary
+                      - Content-Disposition
+                      - X-Tenant-ID
+                      x-ui-dropdown:
                       - X-Frame-Options
                       - Content-Security-Policy
                       - Referrer-Policy
@@ -529,6 +562,17 @@ spec:
                               - Vary
                               - Content-Disposition
                               - X-Tenant-ID
+                              x-ui-dropdown:
+                              - X-Frame-Options
+                              - Content-Security-Policy
+                              - Referrer-Policy
+                              - X-Content-Type-Options
+                              - X-Xss-Protection
+                              - reflected-xss
+                              - Cache-Control
+                              - Vary
+                              - Content-Disposition
+                              - X-Tenant-ID
                             header_value:
                               type: string
                               title: Header Value
@@ -567,6 +611,9 @@ spec:
               description: The error code for which the custom page is to be shown
               x-ui-typeable: true
               enum:
+              - '404'
+              - '503'
+              x-ui-dropdown:
               - '404'
               - '503'
             page_content:
