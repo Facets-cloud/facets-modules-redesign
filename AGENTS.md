@@ -36,11 +36,11 @@ Key skills: `/facets-module` (module development), `/blueprint` (blueprint manag
 ## Raptor Commands
 
 ```bash
-# Validate module (always start with this)
-raptor create iac-module -f <module-path> --dry-run
+# Validate the module first
+raptor module validate -f <module-path>
 
-# If security scan fails, retry with skip (but report findings to user)
-raptor create iac-module -f <module-path> --dry-run --skip-security-scan
+# If the security scan fails, run it again without the scan, and report the findings to the user
+raptor module validate -f <module-path> --skip-security-scan
 
 # Upload after validation passes
 raptor create iac-module -f <module-path>
@@ -52,9 +52,10 @@ Look for `*_module_standard*.md` in the relevant directory:
 - `modules/service/` → `service_module_standard.md`
 - `modules/network/` → `network_module_standard.md`
 - `modules/cloud_account/` → `cloud_account_module_standard.md`
+- `modules/kubernetes_cluster/` → `cluster_module_standard.md`
 - `modules/kubernetes_node_pool/` → `kubernetes_node_pool_module_standard.md`
 - `modules/workload_identity/` → `workload_identity_module_standard.md`
-- `datastore/` → `datastore_module_standards.md`
+- `modules/datastore/` → `datastore_module_standards.md`
 
 ## Validation Rules
 
@@ -153,11 +154,10 @@ When creating a new module, complete ALL of these steps:
 
 ## Behavior Guidelines
 
-- **NEVER** auto-skip validation - always report issues to user
+- Do not skip validation, and do not use the `--skip-validation` flag. Report all validation issues to the user.
 - Report security scan results in **table format**
 - Branch naming: `fix/<issue-number>-<short-description>`
 - If provider issues (aws3tooling, facets provider), **report to user**
-- **NEVER** use `--skip-validation` flag
 
 ## Rule Discovery
 
