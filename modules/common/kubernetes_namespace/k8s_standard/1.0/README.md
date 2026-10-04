@@ -8,7 +8,7 @@ Creates one Kubernetes namespace. It's made for dependent (preview) environments
 
 1. Add one `kubernetes_namespace` resource to the blueprint, **switched off**. The base environment is untouched.
 2. Connect the `namespace` input of each service that a preview will dedicate to this resource. A service whose input points at a switched-off resource keeps using the environment namespace.
-3. Create the preview with this resource dedicated, e.g. `raptor create environment eph-feature-foo -p P --base-env dev --dedicated kubernetes_namespace/app --dedicated service/api`. The preview gets namespace `eph-feature-foo`, and its `api` runs there.
+3. Create the preview with this resource dedicated, e.g. `raptor create environment eph-feature-foo -p P --base-env dev --dedicated kubernetes_namespace/app --dedicated service/api`. Before its first launch, set the name explicitly for that environment: `raptor apply override kubernetes_namespace/app -p P -e eph-feature-foo --set name=eph-feature-foo`. The preview gets namespace `eph-feature-foo`, and its `api` runs there.
 4. Destroying the preview deletes the namespace and everything in it.
 
 ## Configurability
