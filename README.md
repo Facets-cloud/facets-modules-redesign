@@ -51,7 +51,7 @@ raptor import project-type --managed facets/aws --name "My Platform"
 `PostgreSQL` `MySQL` `MongoDB` `Redis`
 
 **K8s Platform**
-`Helm` `Ingress/Gateway Fabric` `Ingress/NGINX` `cert-manager` `ConfigMap` `Secrets` `PVC (k8s_standard)` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `VPA` `Artifactories`
+`Helm` `Ingress/Gateway Fabric` `Ingress/NGINX` `cert-manager` `ConfigMap` `Namespace` `Secrets` `PVC (k8s_standard)` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `VPA` `Artifactories`
 
 **Operators & Monitoring**
 `KubeBlocks` `Strimzi` `ECK` `WireGuard Operator` `WireGuard VPN` `Alert Rules` `Prometheus` `Grafana` `Monitoring`
@@ -97,7 +97,7 @@ raptor import project-type --managed facets/gcp --name "My Platform"
 `PostgreSQL` `MySQL` `MongoDB` `Redis`
 
 **K8s Platform**
-`Helm` `Ingress/Gateway Fabric` `cert-manager` `ConfigMap` `Secrets` `PVC (k8s_standard)` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `VPA` `Artifactories`
+`Helm` `Ingress/Gateway Fabric` `cert-manager` `ConfigMap` `Namespace` `Secrets` `PVC (k8s_standard)` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `VPA` `Artifactories`
 
 **Operators & Monitoring**
 `KubeBlocks` `Strimzi` `ECK` `WireGuard Operator` `WireGuard VPN` `Alert Rules` `Prometheus` `Grafana` `Monitoring`
@@ -143,7 +143,7 @@ raptor import project-type --managed facets/azure --name "My Platform"
 `PostgreSQL` `MySQL` `MongoDB` `Redis`
 
 **K8s Platform**
-`Helm` `Ingress/Gateway Fabric` `cert-manager` `ConfigMap` `Secrets` `PVC (k8s_standard)` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `VPA` `Artifactories`
+`Helm` `Ingress/Gateway Fabric` `cert-manager` `ConfigMap` `Namespace` `Secrets` `PVC (k8s_standard)` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `VPA` `Artifactories`
 
 **Operators & Monitoring**
 `KubeBlocks` `Strimzi` `ECK` `WireGuard Operator` `WireGuard VPN` `Alert Rules` `Prometheus` `Grafana` `Monitoring`
@@ -192,7 +192,7 @@ raptor import project-type -f ./project-type/vultr/project-type.yml \
 `PostgreSQL` `MySQL` `MongoDB` `Redis`
 
 **K8s Platform**
-`Helm` `Ingress/NGINX` `cert-manager` `ConfigMap` `Secrets` `PVC` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `Artifactories`
+`Helm` `Ingress/NGINX` `cert-manager` `ConfigMap` `Namespace` `Secrets` `PVC` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `Artifactories`
 
 **Operators & Monitoring**
 `KubeBlocks` `ECK` `Prometheus` `Grafana` `Alert Rules` `Monitoring`
@@ -241,7 +241,7 @@ raptor import project-type -f ./project-type/linode/project-type.yml \
 `PostgreSQL` `MySQL` `MongoDB` `Redis`
 
 **K8s Platform**
-`Helm` `Ingress/NGINX` `cert-manager` `ConfigMap` `Secrets` `PVC` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `Artifactories`
+`Helm` `Ingress/NGINX` `cert-manager` `ConfigMap` `Namespace` `Secrets` `PVC` `Access Controls` `Callbacks` `K8s Resources` `Gateway API CRD` `Artifactories`
 
 **Operators & Monitoring**
 `KubeBlocks` `ECK` `Prometheus` `Grafana` `Alert Rules` `Monitoring`

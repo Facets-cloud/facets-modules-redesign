@@ -59,6 +59,8 @@ modules:
     flavor: standard
   - intent: config_map
     flavor: k8s_standard
+  - intent: kubernetes_namespace
+    flavor: k8s_standard
   - intent: kubernetes_secret
     flavor: k8s_standard
   - intent: pvc

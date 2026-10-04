@@ -1,0 +1,49 @@
+intent: kubernetes_namespace
+flavor: k8s_standard
+version: '1.0'
+description: Creates a Kubernetes namespace named after the environment, for dependent (preview) environments.
+  Keep it switched off in the blueprint and dedicate it per preview. Switching it on in a base environment
+  moves every service connected to it into the new namespace.
+intentDetails:
+  type: Kubernetes Resources
+  description: Create and manage a Kubernetes namespace
+  displayName: Namespace
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_namespace.svg
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+inputs:
+  kubernetes_details:
+    optional: false
+    type: '@facets/kubernetes-details'
+    displayName: Kubernetes Cluster
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+    - kubernetes
+spec:
+  type: object
+  properties:
+    name:
+      type: string
+      title: Namespace Name
+      description: Per environment only. Leave empty to use the environment name. Can't be changed later,
+        because renaming replaces the namespace and deletes everything in it.
+      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$
+      maxLength: 63
+      x-ui-overrides-only: true
+      x-ui-immutable: true
+      x-ui-error-message: Use lowercase letters, digits and '-', starting and ending with a letter or digit (max 63)
+outputs:
+  default:
+    type: '@facets/kubernetes_namespace'
+    title: Namespace Details
+sample:
+  kind: kubernetes_namespace
+  flavor: k8s_standard
+  version: '1.0'
+  disabled: true
+  spec: {}

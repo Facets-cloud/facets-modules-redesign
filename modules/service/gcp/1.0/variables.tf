@@ -254,6 +254,14 @@ variable "inputs" {
       })), [])
       node_selector = optional(map(string), {})
     }))
+
+    # Optional: namespace to deploy into; falls back to the environment namespace
+    namespace = optional(object({
+      attributes = optional(object({
+        name = optional(string)
+      }))
+      interfaces = optional(object({}))
+    }))
   })
 }
 

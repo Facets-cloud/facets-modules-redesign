@@ -260,6 +260,12 @@
             ]
           },
           {
+            intent: "kubernetes_namespace", displayName: "Namespace", type: "Kubernetes Resources", icon: "kubernetes_namespace.svg",
+            flavors: [
+              { flavor: "k8s_standard", clouds: ["aws", "azure", "gcp", "kubernetes"] },
+            ]
+          },
+          {
             intent: "kubernetes_secret", displayName: "Secret", type: "Kubernetes Resources", icon: "kubernetes_secret.svg",
             flavors: [
               { flavor: "k8s_standard", clouds: ["aws", "azure", "gcp", "kubernetes"] },

@@ -446,6 +446,52 @@
       "outputInterfaces": {}
     },
     {
+      "id": "kubernetes_namespace/k8s_standard/1.0",
+      "intent": "kubernetes_namespace",
+      "flavor": "k8s_standard",
+      "version": "1.0",
+      "clouds": [
+        "aws",
+        "azure",
+        "gcp",
+        "kubernetes"
+      ],
+      "outputs": {
+        "default": {
+          "type": "@facets/kubernetes_namespace",
+          "hasProviders": false,
+          "providers": []
+        }
+      },
+      "inputs": {
+        "kubernetes_details": {
+          "type": "@facets/kubernetes-details",
+          "optional": false,
+          "default": {
+            "resource_type": "kubernetes_cluster",
+            "resource_name": "default"
+          },
+          "providers": [
+            "kubernetes"
+          ],
+          "attributesUsed": [
+            "cloud_provider",
+            "cluster_endpoint",
+            "cluster_id",
+            "cluster_location",
+            "cluster_name"
+          ],
+          "interfacesUsed": [
+            "kubernetes"
+          ]
+        }
+      },
+      "outputAttributes": {
+        "name": "local.create ? kubernetes_namespace_v1.this[0].metadata[0].name : local.name"
+      },
+      "outputInterfaces": {}
+    },
+    {
       "id": "eck-operator/helm/1.0",
       "intent": "eck-operator",
       "flavor": "helm",
