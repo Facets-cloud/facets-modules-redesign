@@ -208,6 +208,7 @@ spec:
       properties:
         retry:
           type: string
+          title: Retry Count
           default: 5
           minimum: 1
           x-ui-placeholder: Enter the minimum retry count for your job (default is

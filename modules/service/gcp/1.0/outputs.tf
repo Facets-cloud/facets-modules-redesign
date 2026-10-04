@@ -27,10 +27,11 @@ locals {
   )
 
   output_attributes = {
-    selector_labels = module.app-helm-chart.selector_labels
-    namespace       = module.app-helm-chart.namespace
-    resource_type   = local.resource_type
-    resource_name   = local.resource_name
-    service_name    = var.instance_name
+    selector_labels     = module.app-helm-chart.selector_labels
+    namespace           = module.app-helm-chart.namespace
+    resource_type       = local.resource_type
+    resource_name       = local.resource_name
+    service_name        = var.instance_name
+    service_account_arn = length(local.iam_arns) > 0 ? module.gcp-workload-identity.0.gcp_service_account_email : null
   }
 }
