@@ -71,6 +71,8 @@ modules:
     flavor: standard
   - intent: config_map
     flavor: k8s_standard
+  - intent: kubernetes_namespace
+    flavor: k8s_standard
   - intent: eck-operator
     flavor: helm
   - intent: grafana_dashboards

@@ -45,6 +45,10 @@ inputs:
     providers:
     - google
     - google-beta
+  namespace:
+    optional: true
+    type: '@facets/kubernetes_namespace'
+    displayName: Namespace
 outputs:
   default:
     type: '@facets/service'

@@ -59,6 +59,10 @@ inputs:
     default:
       resource_type: network
       resource_name: default
+  namespace:
+    optional: true
+    type: '@facets/kubernetes_namespace'
+    displayName: Namespace
 outputs:
   default:
     type: '@facets/service'
