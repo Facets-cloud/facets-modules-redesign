@@ -50,6 +50,8 @@ inputs:
     optional: true
     type: '@facets/kubernetes_namespace'
     displayName: Namespace
+    description: Namespace to deploy into. When not connected, the environment namespace is used. Connecting
+      or changing it on a running service redeploys the service into the new namespace.
 outputs:
   default:
     type: '@facets/service'

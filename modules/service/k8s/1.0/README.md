@@ -19,6 +19,7 @@ A unified deployment interface supporting `application` (Deployment), `cronjob`,
 - **Node Pool** (`@facets/kubernetes_nodepool`)
 - **Container Registries** (`@facets/artifactories`, optional)
 - **Vertical Pod Autoscaler** (`@facets/vpa`, optional)
+- **Namespace** (`@facets/kubernetes_namespace`, optional): namespace to deploy into; falls back to the environment namespace
 
 ## Outputs
 

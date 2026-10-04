@@ -96,6 +96,7 @@ The module requires the following AWS permissions to function:
 - **artifactories**: Registry secrets for private image repositories
 - **kubernetes_node_pool_details**: Karpenter node pool configuration
 - **vpa_details**: Vertical Pod Autoscaler configuration
+- **namespace**: Namespace to deploy into; falls back to the environment namespace
 
 ## Output Interfaces
 

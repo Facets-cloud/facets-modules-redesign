@@ -21,7 +21,7 @@ locals {
   enable_deployment_actions  = local.enable_actions && local.spec_type == "application" ? 1 : 0
   enable_statefulset_actions = local.enable_actions && local.spec_type == "statefulset" ? 1 : 0
 
-  namespace = coalesce(try(var.inputs.namespace.attributes.name, null), var.environment.namespace)
+  namespace = coalesce(try(var.inputs.namespace.attributes.name, null), var.environment.namespace, "default")
   annotations = merge(
     local.gcp_annotations,
     length(local.iam_arns) > 0 ? { "iam.gke.io/gcp-service-account" = module.gcp-workload-identity.0.gcp_service_account_email } : {},
