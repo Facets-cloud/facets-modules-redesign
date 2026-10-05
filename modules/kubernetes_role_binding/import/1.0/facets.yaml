@@ -1,0 +1,46 @@
+intent: kubernetes_role_binding
+flavor: import
+version: '1.0'
+description: MANAGED true-import of existing Kubernetes kubernetes_role_binding (import) (keyed map). Each map's
+  name, namespace, labels, annotations and data are driven by an env override carrying the
+  exact live spec so a plan against the live objects is 0-change.
+intentDetails:
+  type: Kubernetes
+  description: Managed zero-change import of existing kubernetes_role_binding (import)
+  displayName: kubernetes_role_binding (import) (Import Existing)
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes.svg
+clouds:
+- aws
+- gcp
+- azure
+spec:
+  type: object
+  properties:
+    role_bindings:
+      type: object
+      x-ui-yaml-editor: true
+      title: kubernetes_role_binding (import) keyed by namespace/name (from live)
+      x-ui-overrides-only: true
+inputs:
+  kubernetes_details:
+    type: '@facets/kubernetes-details'
+    displayName: Kubernetes Cluster
+    optional: false
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+    - kubernetes
+    - kubernetes-alpha
+    - helm
+outputs:
+  default:
+    type: '@facets/k8s_resource'
+sample:
+  kind: kubernetes_role_binding
+  flavor: import
+  version: '1.0'
+  spec: {}
+iac:
+  validated_files:
+  - variables.tf

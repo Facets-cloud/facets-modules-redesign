@@ -1,0 +1,40 @@
+intent: aws_cloudwatch_log_group
+flavor: import
+version: '1.0'
+description: MANAGED true-import of an existing AWS CloudWatch log group. Name, retention,
+  KMS key and tags are driven by an env override carrying the exact live spec so a plan
+  against the live log group is 0-change and it becomes Facets-managed.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Managed zero-change import of an existing CloudWatch log group
+  displayName: CloudWatch Log Group (Import Existing)
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/aws_cloudwatch_log_group.svg
+clouds:
+- aws
+spec:
+  type: object
+  properties:
+    log_group:
+      type: object
+      x-ui-yaml-editor: true
+      title: Log group config (from live)
+      x-ui-overrides-only: true
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: Cloud Account
+    description: The AWS Cloud Account the log group lives in
+    optional: false
+    providers:
+    - aws
+outputs:
+  default:
+    type: '@facets/aws_cloudwatch_log_group'
+sample:
+  kind: aws_cloudwatch_log_group
+  flavor: import
+  version: '1.0'
+  spec: {}
+iac:
+  validated_files:
+  - variables.tf

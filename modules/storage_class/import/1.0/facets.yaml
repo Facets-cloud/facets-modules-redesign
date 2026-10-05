@@ -1,0 +1,110 @@
+intent: storage_class
+flavor: import
+version: '1.0'
+description: MANAGED true-import of existing cluster-scoped Kubernetes StorageClasses. Keyed by name;
+  every field is driven by an env override carrying the exact live spec (provisioner, parameters,
+  reclaim/binding policy, mount options, annotations) so a plan against the live cluster is 0-change and
+  the objects become Facets-managed. provisioner/parameters/reclaim_policy/volume_binding_mode are
+  IMMUTABLE - they must match live exactly or the import forces destroy+recreate.
+intentDetails:
+  type: Kubernetes Resources
+  description: Zero-change import of existing cluster-scoped StorageClasses
+  displayName: Storage Class (Import Existing)
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/storage_class.svg
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+inputs:
+  kubernetes_details:
+    type: '@facets/kubernetes-details'
+    displayName: Kubernetes Cluster
+    optional: false
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+    - kubernetes
+    - kubernetes-alpha
+    - helm
+outputs:
+  default:
+    type: '@facets/k8s_resource'
+    title: Storage Class Details
+spec:
+  title: Storage Classes
+  description: Cluster-scoped StorageClasses to adopt (import) into Facets management.
+  type: object
+  properties:
+    storage_classes:
+      type: object
+      title: Storage Classes
+      description: Map of StorageClass name to definition.
+      patternProperties:
+        ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$:
+          type: object
+          title: Storage Class
+          properties:
+            provisioner:
+              type: string
+              title: Provisioner
+              description: CSI/in-tree provisioner. IMMUTABLE - must match live exactly.
+            parameters:
+              type: object
+              title: Parameters
+              description: Provisioner parameters (string map). IMMUTABLE.
+              x-ui-yaml-editor: true
+            reclaim_policy:
+              type: string
+              title: Reclaim Policy
+              enum:
+              - Delete
+              - Retain
+              description: IMMUTABLE. Defaults to Delete when unset.
+            volume_binding_mode:
+              type: string
+              title: Volume Binding Mode
+              enum:
+              - Immediate
+              - WaitForFirstConsumer
+              description: IMMUTABLE. Defaults to Immediate when unset.
+            allow_volume_expansion:
+              type: boolean
+              title: Allow Volume Expansion
+              default: true
+            mount_options:
+              type: array
+              title: Mount Options
+              items:
+                type: string
+            metadata:
+              type: object
+              title: Metadata
+              properties:
+                labels:
+                  type: object
+                  title: Labels
+                  x-ui-yaml-editor: true
+                annotations:
+                  type: object
+                  title: Annotations
+                  x-ui-yaml-editor: true
+          required:
+          - provisioner
+  required:
+  - storage_classes
+sample:
+  kind: storage_class
+  flavor: import
+  version: '1.0'
+  disabled: false
+  spec:
+    storage_classes:
+      gp3:
+        provisioner: ebs.csi.aws.com
+        parameters:
+          type: gp3
+iac:
+  validated_files:
+  - variables.tf

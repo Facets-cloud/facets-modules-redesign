@@ -1,0 +1,38 @@
+intent: alert_rules
+flavor: saas
+version: '1.0'
+description: Adopted cc-prometheus-rules-template releases (default k8s alert/recording rules; frozen until handoff, values owned by saas-cp)
+clouds:
+- aws
+spec:
+  type: object
+  properties:
+    values_b64:
+      type: string
+      title: Live helm values (base64 JSON)
+      description: base64 of the exact live helm config ({content, nameLabel, prometheusId})
+    namespace:
+      type: string
+      title: Namespace
+      default: default
+  required:
+  - values_b64
+inputs:
+  kubernetes_details:
+    type: '@facets/kubernetes-details'
+    displayName: Kubernetes Cluster
+    description: Cluster the rules are installed on
+    optional: false
+    providers:
+    - kubernetes
+    - helm
+outputs:
+  default:
+    type: '@facets/alert-rules'
+sample:
+  kind: alert_rules
+  flavor: saas
+  version: '1.0'
+  metadata: {}
+  spec:
+    values_b64: e30=
