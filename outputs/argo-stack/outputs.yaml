@@ -1,0 +1,50 @@
+name: '@facets/argo-stack'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        argocd_namespace:
+          type: string
+          description: Namespace ArgoCD is released into.
+        argocd_server_service:
+          type: string
+          description: Kubernetes Service name of the ArgoCD server.
+        workflows_namespace:
+          type: string
+          description: Namespace Argo Workflows is released into.
+        workflows_server_service:
+          type: string
+          description: Kubernetes Service name of the Argo Workflows server.
+        workflows_sa_email:
+          type: string
+          description: >-
+            Email of the GCP service account the Argo Workflows Kubernetes
+            ServiceAccount is Workload Identity-bound to.
+        events_namespace:
+          type: string
+          description: >-
+            Namespace Argo Events is released into. Consumers that create
+            Sensors must use this rather than assuming a namespace.
+        rollouts_namespace:
+          type: string
+          description: Namespace Argo Rollouts is released into.
+        rollouts_dashboard_service:
+          type: string
+          description: Kubernetes Service name of the Argo Rollouts dashboard.
+        shim_enabled:
+          type: boolean
+          description: >-
+            Whether facets-argo-shim is installed in argocd-repo-server AND the
+            RBAC it needs is in place. Consumers deploying charts that contain
+            ${facets:...} references gate on this: without the shim those
+            renders fail closed inside ArgoCD, which Terraform cannot otherwise
+            observe.
+        shim_version:
+          type: string
+          description: Image tag of the installed facets-argo-shim, empty when disabled.
+    interfaces:
+      type: object
+      properties: {}
+providers: []
