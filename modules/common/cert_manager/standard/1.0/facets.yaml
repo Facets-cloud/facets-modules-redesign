@@ -53,19 +53,63 @@ spec:
       description:
         Email address for ACME registration (defaults to cluster creator
         if not specified)
+      x-ui-order: 1
     cert_manager:
       type: object
       title: Cert Manager
-      description: Specification of the Cert Manager Helm chart values
-      x-ui-yaml-editor: true
-      x-ui-placeholder: Enter values in YAML format
+      description: Helm release options for the cert-manager chart
+      properties:
+        cleanup_on_fail:
+          type: boolean
+          title: Cleanup On Fail
+          description: Delete new resources created during a failed upgrade
+          default: true
+          x-ui-order: 1
+        wait:
+          type: boolean
+          title: Wait For Readiness
+          description: Wait until all cert-manager resources are ready before marking the release successful
+          default: true
+          x-ui-order: 2
+        atomic:
+          type: boolean
+          title: Atomic
+          description: Roll the release back automatically if the upgrade fails
+          default: false
+          x-ui-order: 3
+        timeout:
+          type: integer
+          title: Timeout (seconds)
+          description: Seconds to wait for any individual Kubernetes operation
+          default: 600
+          minimum: 60
+          maximum: 3600
+          x-ui-order: 4
+        recreate_pods:
+          type: boolean
+          title: Recreate Pods
+          description: Restart pods during upgrade or rollback
+          default: false
+          x-ui-order: 5
+        values:
+          type: object
+          title: Additional Helm Values
+          description: Extra values deep-merged into the cert-manager Helm release
+          x-ui-yaml-editor: true
+          x-ui-placeholder: Enter values in YAML format
+          x-ui-order: 6
 sample:
   kind: cert_manager
   flavor: standard
   disabled: true
   version: '1.1'
   spec:
-    cert_manager: {}
+    cert_manager:
+      cleanup_on_fail: true
+      wait: true
+      atomic: false
+      timeout: 600
+      recreate_pods: false
 iac:
   validated_files:
     - variables.tf
