@@ -1,0 +1,83 @@
+intent: cert_manager
+flavor: standard
+version: '1.2'
+description: Deploys Cert Manager for managing ssl certificates
+intentDetails:
+  type: Kubernetes Resources
+  description: Deploys Cert Manager for automated SSL/TLS certificate management in Kubernetes
+  displayName: Cert Manager
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cert_manager.svg
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+inputs:
+  prometheus_details:
+    type: '@facets/prometheus'
+    displayName: Prometheus
+    optional: true
+    default:
+      resource_type: prometheus
+      resource_name: default
+  kubernetes_details:
+    optional: false
+    type: '@facets/kubernetes-details'
+    displayName: Kubernetes Cluster
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+    - kubernetes
+    - helm
+  kubernetes_node_pool_details:
+    type: '@facets/kubernetes_nodepool'
+    displayName: Node Pool
+    optional: true
+  gateway_api_crd_details:
+    displayName: Gateway API CRD
+    type: '@facets/gateway_api_crd'
+    optional: true
+outputs:
+  default:
+    type: '@facets/cert_manager'
+    title: Certificate Manager Details
+spec:
+  title: Cert Manager Configuration
+  description: Configuration options for Cert Manager deployment
+  type: object
+  properties:
+    acme_email:
+      type: string
+      title: ACME Email
+      description: Email address for ACME registration (defaults to cluster creator if not specified)
+    manage_cluster_issuers:
+      type: boolean
+      title: Manage Cluster Issuers
+      description: When true (default) this module renders the letsencrypt staging/production http01 ClusterIssuers.
+        Set false when the ClusterIssuers already exist in the cluster and are owned by another resource
+        (zero-change adoption of an existing estate).
+    cluster_issuers:
+      type: object
+      title: Cluster Issuers
+      description: Explicit ClusterIssuers, keyed by issuer name. Overrides the built-in
+        letsencrypt http01 pair when set. Each entry takes server, solvers and optionally
+        email, name and private_key_secret_name - needed to adopt existing issuers whose
+        account-key Secret does not follow this module's generated name.
+      x-ui-yaml-editor: true
+    cert_manager:
+      type: object
+      title: Cert Manager
+      description: Specification of the Cert Manager Helm chart values
+      x-ui-yaml-editor: true
+      x-ui-placeholder: Enter values in YAML format
+sample:
+  kind: cert_manager
+  flavor: standard
+  disabled: true
+  version: '1.2'
+  spec:
+    cert_manager: {}
+iac:
+  validated_files:
+  - variables.tf

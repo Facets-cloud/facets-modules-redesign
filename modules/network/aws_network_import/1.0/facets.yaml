@@ -1,0 +1,101 @@
+intent: network
+flavor: aws_network_import
+version: '1.0'
+description: MANAGED true-import of an existing AWS VPC + subnets/routes/NAT/endpoints.
+  Every attribute is driven by an env override carrying the exact live spec (ids, cidrs,
+  azs, tags) so a plan against the live VPC is 0-change and the resources become
+  Facets-managed. Emits the same @facets/aws-vpc-details contract as aws_network.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Managed zero-change import of an existing AWS VPC
+  displayName: Network (Import Existing)
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/network.svg
+clouds:
+- aws
+spec:
+  type: object
+  properties:
+    vpc_cidr:
+      type: string
+      title: VPC CIDR
+      x-ui-overrides-only: true
+    vpc_name:
+      type: string
+      title: VPC Name prefix (Name tag base)
+      x-ui-overrides-only: true
+    common_tags:
+      type: object
+      title: Common tags shared by vpc/subnets/rt/nat/eip/igw
+      x-ui-overrides-only: true
+    nat_subnet_id:
+      type: string
+      title: Public subnet id the NAT Gateway lives in
+      x-ui-overrides-only: true
+    subnets:
+      type: array
+      title: Subnets (id/role/cidr/az from live)
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+          role:
+            type: string
+          cidr:
+            type: string
+          az:
+            type: string
+      x-ui-overrides-only: true
+    peering:
+      type: object
+      title: Private RT peering route (cidr + peering connection id)
+      properties:
+        cidr:
+          type: string
+        connection_id:
+          type: string
+      x-ui-overrides-only: true
+    endpoints:
+      type: array
+      title: VPC endpoints (explicit from live)
+      items:
+        type: object
+        properties:
+          key:
+            type: string
+          service_name:
+            type: string
+          type:
+            type: string
+          subnet_ids:
+            type: array
+            items:
+              type: string
+          security_group_ids:
+            type: array
+            items:
+              type: string
+          tags:
+            type: object
+      x-ui-overrides-only: true
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: Cloud Account
+    description: The AWS Cloud Account the VPC lives in
+    optional: false
+    providers:
+    - aws
+outputs:
+  default:
+    type: '@facets/aws-vpc-details'
+sample:
+  kind: network
+  flavor: aws_network_import
+  version: '1.0'
+  spec:
+    vpc_cidr: 10.0.0.0/16
+    vpc_name: example-vpc
+iac:
+  validated_files:
+  - variables.tf

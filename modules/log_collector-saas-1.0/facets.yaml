@@ -1,0 +1,32 @@
+intent: log_collector
+flavor: saas
+version: '1.0'
+description: Adopted loki-distributed + promtail stack (frozen until handoff; values owned by saas-cp)
+clouds:
+- aws
+spec:
+  type: object
+  properties: {}
+inputs:
+  kubernetes_details:
+    type: '@facets/kubernetes-details'
+    displayName: Kubernetes Cluster
+    description: Cluster the log collector runs on
+    optional: false
+    providers:
+    - kubernetes
+    - helm
+  s3_details:
+    type: '@facets/s3'
+    displayName: Loki S3 Bucket
+    description: Bucket loki stores chunks in
+    optional: false
+outputs:
+  default:
+    type: '@facets/log-collector'
+sample:
+  kind: log_collector
+  flavor: saas
+  version: '1.0'
+  metadata: {}
+  spec: {}

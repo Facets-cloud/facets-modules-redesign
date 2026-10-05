@@ -1,0 +1,55 @@
+intent: aws_efs
+flavor: import
+version: '1.0'
+description: MANAGED true-import of an existing AWS EFS file system + mount targets.
+  Every attribute is driven by an env override carrying the exact live spec (creation
+  token, kms key, performance/throughput mode, tags, mount-target subnets/SGs) so a
+  plan against the live filesystem is 0-change and the resources become Facets-managed.
+  Emits the same @facets/aws_efs contract as aws_efs/standard.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Managed zero-change import of an existing AWS EFS file system
+  displayName: AWS EFS (Import Existing)
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/aws_efs.svg
+clouds:
+- aws
+spec:
+  type: object
+  properties:
+    file_system:
+      type: object
+      x-ui-yaml-editor: true
+      title: EFS file system config (from live)
+      x-ui-overrides-only: true
+    mount_targets:
+      type: array
+      title: Mount targets (subnet + security groups from live)
+      items:
+        type: object
+        properties:
+          subnet_id:
+            type: string
+          security_group_ids:
+            type: array
+            items:
+              type: string
+      x-ui-overrides-only: true
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: Cloud Account
+    description: The AWS Cloud Account the EFS file system lives in
+    optional: false
+    providers:
+    - aws
+outputs:
+  default:
+    type: '@facets/aws_efs'
+sample:
+  kind: aws_efs
+  flavor: import
+  version: '1.0'
+  spec: {}
+iac:
+  validated_files:
+  - variables.tf

@@ -1,0 +1,65 @@
+intent: k8s_callback
+flavor: k8s_standard
+version: '1.2'
+description: Creates or adopts an admin ServiceAccount and optionally registers K8s credentials with the Facets
+  control plane
+intentDetails:
+  type: Kubernetes Resources
+  description: Creates ServiceAccount with admin role and registers K8s credentials with Facets control plane
+  displayName: K8s Callback
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/k8s_callback.svg
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+inputs:
+  kubernetes_details:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Kubernetes cluster configuration
+    providers:
+    - kubernetes
+spec:
+  title: K8s Callback
+  description: Configure K8s credential
+  type: object
+  properties:
+    service_account_name:
+      type: string
+      title: Existing Service Account Name (adopt)
+      x-ui-overrides-only: true
+      description: Override the service account name to adopt an existing admin service account. Defaults to facets-admin.
+    namespace:
+      type: string
+      title: Namespace (adopt)
+      x-ui-overrides-only: true
+      description: Namespace of the service account and its token secret. Defaults to kube-system.
+    cluster_role_binding_name:
+      type: string
+      title: Existing ClusterRoleBinding Name (adopt)
+      x-ui-overrides-only: true
+      description: Override the ClusterRoleBinding name to adopt an existing one. Defaults to <service_account_name>-binding.
+    token_secret_name:
+      type: string
+      title: Existing Token Secret Name (adopt)
+      x-ui-overrides-only: true
+      description: Override the service-account-token secret name to adopt an existing one. Defaults to <service_account_name>-token.
+    enable_callback:
+      type: boolean
+      title: Register Credentials With Control Plane
+      default: true
+      description: When true (default) POSTs the service account token to the control plane as this cluster credential.
+        Set false when adopting a cluster whose credentials are already registered, or which runs on in-cluster
+        identity - the POST is a write to control-plane state.
+sample:
+  kind: k8s_callback
+  flavor: k8s_standard
+  version: '1.2'
+  disabled: false
+  spec: {}
+iac:
+  validated_files:
+  - main.tf
+  - versions.tf
