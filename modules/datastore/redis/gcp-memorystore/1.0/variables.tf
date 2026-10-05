@@ -25,7 +25,7 @@ variable "instance" {
       imports = optional(object({
         import_existing = optional(bool, false)
         instance_id     = optional(string)
-      }))
+      }), {})
     })
   })
 
