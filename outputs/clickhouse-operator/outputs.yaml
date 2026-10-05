@@ -1,0 +1,17 @@
+name: '@facets/clickhouse-operator'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        namespace:
+          description: Kubernetes namespace where the ClickHouse operator is installed
+          type: string
+        release_name:
+          description: Helm release name of the ClickHouse operator
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

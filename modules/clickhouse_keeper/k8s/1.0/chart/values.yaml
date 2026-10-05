@@ -1,0 +1,17 @@
+# Defaults are overridden by the Terraform helm_release values block.
+keeperName: clickhouse-keeper
+namespace: clickhouse
+replicas: 3
+image: clickhouse/clickhouse-keeper:24.8-alpine
+storageClass: premium-rwo
+storageSize: 20Gi
+# Kubernetes cluster DNS domain (overridden by the Terraform helm_release values).
+clusterDomain: cluster.local
+resources:
+  cpu: "500m"
+  memory: "512Mi"
+# Dedicated node-pool placement (populated from the optional node_pool input).
+# nodeSelector: map of labels; tolerations: list of {key,value,effect,operator}.
+# Both empty by default so an unwired node_pool renders no placement.
+nodeSelector: {}
+tolerations: []

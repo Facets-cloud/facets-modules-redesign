@@ -1,0 +1,95 @@
+apiVersion: "clickhouse.altinity.com/v1"
+kind: "ClickHouseInstallation"
+metadata:
+  name: {{ .Values.clusterName | quote }}
+  namespace: {{ .Values.namespace | quote }}
+spec:
+  # Cluster DNS domain override. The operator hardcodes cluster.local when
+  # constructing replica host FQDNs; on clusters with a custom DNS domain (some
+  # GKE clusters use the env name, not cluster.local) that yields unresolvable
+  # hosts and the CHI deadlocks on replica health-checks. namespaceDomainPattern
+  # makes the operator build <pod>.<ns>.svc.<clusterDomain> instead.
+  namespaceDomainPattern: "%s.svc.{{ .Values.clusterDomain }}"
+  configuration:
+    {{- if .Values.zookeeper.host }}
+    zookeeper:
+      nodes:
+        - host: {{ .Values.zookeeper.host | quote }}
+          port: {{ int .Values.zookeeper.port }}
+    {{- end }}
+    clusters:
+      - name: {{ .Values.clusterName | quote }}
+        layout:
+          shardsCount: {{ int .Values.shards }}
+          replicasCount: {{ int .Values.replicas }}
+    {{- if .Values.users }}
+    users:
+      {{- range .Values.users }}
+      {{ .name }}/profile: {{ .profile | default "default" | quote }}
+      {{- if .password_sha256_hex }}
+      {{ .name }}/password_sha256_hex: {{ .password_sha256_hex | quote }}
+      {{- end }}
+      {{- if .networks }}
+      {{ .name }}/networks/ip:
+        {{- range .networks }}
+        - {{ . | quote }}
+        {{- end }}
+      {{- end }}
+      {{- end }}
+    {{- end }}
+    {{- if .Values.settings }}
+    settings:
+      {{- range $k, $v := .Values.settings }}
+      {{ $k }}: {{ $v | quote }}
+      {{- end }}
+    {{- end }}
+  defaults:
+    templates:
+      podTemplate: default
+      dataVolumeClaimTemplate: default
+  templates:
+    podTemplates:
+      - name: default
+        # Operator-native replica spreading. podDistribution is a direct child of
+        # the podTemplate entry (sibling of spec:), NOT under the cluster's
+        # templates — putting it on the cluster broke the STS reconcile. A raw
+        # podAntiAffinity in the podTemplate spec also caused STS churn; this lets
+        # Altinity manage the spread (across hosts, then across replicas) natively.
+        podDistribution:
+          - type: ClickHouseAntiAffinity
+          - type: ReplicaAntiAffinity
+        spec:
+          {{- if .Values.nodeSelector }}
+          nodeSelector:
+            {{- range $k, $v := .Values.nodeSelector }}
+            {{ $k }}: {{ $v | quote }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.tolerations }}
+          tolerations:
+            {{- range .Values.tolerations }}
+            - key: {{ .key | quote }}
+              value: {{ .value | quote }}
+              effect: {{ .effect | quote }}
+              operator: {{ .operator | default "Equal" | quote }}
+            {{- end }}
+          {{- end }}
+          containers:
+            - name: clickhouse
+              image: {{ .Values.image | quote }}
+              resources:
+                requests:
+                  cpu: {{ .Values.resources.cpu | quote }}
+                  memory: {{ .Values.resources.memory | quote }}
+                limits:
+                  cpu: {{ .Values.resources.cpu | quote }}
+                  memory: {{ .Values.resources.memory | quote }}
+    volumeClaimTemplates:
+      - name: default
+        spec:
+          storageClassName: {{ .Values.storageClass | quote }}
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: {{ .Values.storageSize | quote }}

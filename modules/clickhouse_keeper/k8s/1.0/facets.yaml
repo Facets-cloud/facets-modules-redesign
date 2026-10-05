@@ -1,0 +1,115 @@
+# ╔═══════════════════════════════════════════════════════════╗
+# ║ MANAGED BY: raptor module — DO NOT EDIT DIRECTLY         ║
+# ║                                                          ║
+# ║ Modify via:                                              ║
+# ║   raptor module set-spec --add <field>                   ║
+# ║   raptor module add-input / remove-input                 ║
+# ║   raptor module add-output / remove-output               ║
+# ║   raptor module show | raptor module validate            ║
+# ╚═══════════════════════════════════════════════════════════╝
+intent: clickhouse_keeper
+flavor: k8s
+version: "1.0"
+description: ClickHouse Keeper ensemble (replication coordination) via Altinity operator CHK CRD
+clouds:
+    - kubernetes
+    - gcp
+inputs:
+    clickhouse_operator:
+        type: '@facets/clickhouse-operator'
+    kubernetes_details:
+        type: '@facets/kubernetes-details'
+        providers:
+            - helm
+            - kubernetes
+    node_pool:
+        type: '@facets/kubernetes_nodepool'
+outputs:
+    default:
+        type: '@facets/clickhouse-keeper'
+spec:
+    properties:
+        cluster_domain:
+            default: cluster.local
+            description: Kubernetes cluster DNS domain. Override per-env when the cluster is not the default cluster.local (some GKE clusters use a custom domain e.g. the env name).
+            maxLength: 253
+            minLength: 1
+            title: Cluster DNS Domain
+            type: string
+        keeper_name:
+            default: clickhouse-keeper
+            description: Name of the ClickHouseKeeperInstallation resource
+            maxLength: 40
+            minLength: 1
+            pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+            title: Keeper Name
+            type: string
+        namespace:
+            default: clickhouse
+            description: Kubernetes namespace to deploy the Keeper ensemble into
+            maxLength: 63
+            minLength: 1
+            pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+            title: Namespace
+            type: string
+        replicas:
+            default: 3
+            description: Number of Keeper replicas in the ensemble (odd number recommended)
+            maximum: 9
+            minimum: 1
+            title: Replicas
+            type: number
+        resources:
+            properties:
+                cpu:
+                    default: 500m
+                    description: CPU request and limit per Keeper pod (e.g. 500m)
+                    maxLength: 16
+                    minLength: 1
+                    title: CPU Request/Limit
+                    type: string
+                memory:
+                    default: 512Mi
+                    description: Memory request and limit per Keeper pod (e.g. 512Mi)
+                    maxLength: 16
+                    minLength: 1
+                    title: Memory Request/Limit
+                    type: string
+            title: Resources
+            type: object
+        storage_class:
+            default: premium-rwo
+            description: StorageClass for the Keeper persistent volumes
+            maxLength: 63
+            minLength: 1
+            title: Storage Class
+            type: string
+        storage_size:
+            default: 20Gi
+            description: Persistent volume size per Keeper replica (e.g. 20Gi)
+            maxLength: 16
+            minLength: 2
+            title: Storage Size
+            type: string
+    type: object
+    x-ui-order:
+        - keeper_name
+        - namespace
+        - replicas
+        - storage_size
+        - storage_class
+        - resources
+        - cluster_domain
+sample:
+    flavor: k8s
+    kind: clickhouse_keeper
+    spec:
+        cluster_domain: cluster.local
+        keeper_name: clickhouse-keeper
+        namespace: clickhouse
+        replicas: 3
+        resources:
+            cpu: 500m
+        storage_class: premium-rwo
+        storage_size: 20Gi
+    version: "1.0"

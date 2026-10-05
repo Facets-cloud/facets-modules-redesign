@@ -1,0 +1,58 @@
+apiVersion: "clickhouse-keeper.altinity.com/v1"
+kind: "ClickHouseKeeperInstallation"
+metadata:
+  name: {{ .Values.keeperName | quote }}
+  namespace: {{ .Values.namespace | quote }}
+spec:
+  # Cluster DNS domain override — keep host-FQDN construction correct on
+  # clusters whose DNS domain is not cluster.local (kept in sync with the CHI).
+  namespaceDomainPattern: "%s.svc.{{ .Values.clusterDomain }}"
+  defaults:
+    templates:
+      podTemplate: default
+      dataVolumeClaimTemplate: default
+  configuration:
+    clusters:
+      - name: "keeper"
+        layout:
+          replicasCount: {{ int .Values.replicas }}
+    settings:
+      logger/level: "information"
+  templates:
+    podTemplates:
+      - name: default
+        spec:
+          {{- if .Values.nodeSelector }}
+          nodeSelector:
+            {{- range $k, $v := .Values.nodeSelector }}
+            {{ $k }}: {{ $v | quote }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.tolerations }}
+          tolerations:
+            {{- range .Values.tolerations }}
+            - key: {{ .key | quote }}
+              value: {{ .value | quote }}
+              effect: {{ .effect | quote }}
+              operator: {{ .operator | default "Equal" | quote }}
+            {{- end }}
+          {{- end }}
+          containers:
+            - name: clickhouse-keeper
+              image: {{ .Values.image | quote }}
+              resources:
+                requests:
+                  cpu: {{ .Values.resources.cpu | quote }}
+                  memory: {{ .Values.resources.memory | quote }}
+                limits:
+                  cpu: {{ .Values.resources.cpu | quote }}
+                  memory: {{ .Values.resources.memory | quote }}
+    volumeClaimTemplates:
+      - name: default
+        spec:
+          storageClassName: {{ .Values.storageClass | quote }}
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: {{ .Values.storageSize | quote }}

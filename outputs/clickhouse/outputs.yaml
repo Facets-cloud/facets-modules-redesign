@@ -1,0 +1,26 @@
+name: '@facets/clickhouse'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        cluster_name:
+          description: Logical ClickHouse cluster name
+          type: string
+        namespace:
+          description: Kubernetes namespace where the ClickHouse cluster runs
+          type: string
+        service_host:
+          description: In-cluster DNS name of the ClickHouse cluster service
+          type: string
+        http_port:
+          description: ClickHouse HTTP interface port (8123)
+          type: number
+        tcp_port:
+          description: ClickHouse native TCP protocol port (9000)
+          type: number
+    interfaces:
+      type: object
+      properties: {}
+providers: []
