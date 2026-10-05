@@ -42,7 +42,7 @@ raptor import project-type --managed facets/aws --name "My Platform"
 <summary><strong>What's included</strong></summary>
 
 **Infrastructure**
-`Cloud Account (aws_provider)` `Network/VPC (aws_network)` `EKS Standard (eks_standard)` `EKS Automode (eks_automode)` `Node Pool/Karpenter (karpenter)` `Node Pool/Automode (eks_automode)` `Karpenter (default)` `AWS ALB Controller (standard)` `EFS CSI Driver (standard)` `AWS EFS (standard)` `StorageClass/EBS (aws_ebs)` `StorageClass/EFS (aws_efs)` `Service (aws)` `AWS IAM Policy (standard)` `AWS IAM Role (standard)`
+`Cloud Account (aws_provider)` `Network/VPC (aws_network)` `EKS Standard (eks_standard)` `EKS Automode (eks_automode)` `Node Pool/Karpenter (karpenter)` `Node Pool/Automode (eks_automode)` `Karpenter (default)` `AWS ALB Controller (standard)` `EFS CSI Driver (standard)` `AWS EFS (standard)` `StorageClass/EBS (aws_ebs)` `StorageClass/EFS (aws_efs)` `Service (aws)` `Service/Argo (argo)` `AWS IAM Policy (standard)` `AWS IAM Role (standard)`
 
 **Managed Datastores**
 `PostgreSQL/RDS (aws-rds)` `PostgreSQL/Aurora (aws-aurora)` `PostgreSQL/Logical (logical)` `MySQL/RDS (aws-rds)` `MySQL/Aurora (aws-aurora)` `MongoDB/DocumentDB (aws-documentdb)` `Redis/ElastiCache (aws-elasticache)` `Kafka/MSK (aws-msk)`
@@ -88,7 +88,7 @@ raptor import project-type --managed facets/gcp --name "My Platform"
 <summary><strong>What's included</strong></summary>
 
 **Infrastructure**
-`Cloud Account (gcp_provider)` `Network/VPC (gcp_network)` `GKE (gke)` `Node Pool (gcp)` `Node Fleet (gcp_node_fleet)` `Service (gcp)` `Workload Identity (gcp)` `Pub/Sub (gcp)` `GCP Secret Manager (gcp)`
+`Cloud Account (gcp_provider)` `Network/VPC (gcp_network)` `GKE (gke)` `Node Pool (gcp)` `Node Fleet (gcp_node_fleet)` `Service (gcp)` `Service/Argo (argo)` `Argo Stack (gcp)` `Workload Identity (gcp)` `Pub/Sub (gcp)` `GCP Secret Manager (gcp)`
 
 **Managed Datastores**
 `PostgreSQL/Cloud SQL (gcp-cloudsql)` `PostgreSQL/Logical (logical)` `MySQL/Cloud SQL (gcp-cloudsql)` `Redis/Memorystore (gcp-memorystore)`
@@ -134,7 +134,7 @@ raptor import project-type --managed facets/azure --name "My Platform"
 <summary><strong>What's included</strong></summary>
 
 **Infrastructure**
-`Cloud Account (azure_provider)` `Network/VNet (azure_network)` `AKS (aks)` `Node Pool (azure)` `Service (azure)` `Workload Identity (azure)`
+`Cloud Account (azure_provider)` `Network/VNet (azure_network)` `AKS (aks)` `Node Pool (azure)` `Service (azure)` `Service/Argo (argo)` `Workload Identity (azure)`
 
 **Managed Datastores**
 `PostgreSQL/Flexible Server (azure-flexible-server)` `PostgreSQL/Logical (logical)` `MySQL/Flexible Server (azure-flexible-server)` `MongoDB/Cosmos DB (cosmosdb)` `Redis/Azure Cache (azure_cache_custom)`
