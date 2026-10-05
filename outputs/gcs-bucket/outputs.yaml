@@ -1,0 +1,46 @@
+name: "@facets/gcs-bucket"
+title: "GCS Bucket"
+description: "Google Cloud Storage bucket with IAM roles and condition expressions for scoped access"
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the created GCS bucket
+        bucket_name:
+          type: string
+          description: The name of the created GCS bucket
+        url:
+          type: string
+          description: Full URL of the GCS bucket in the format gs://bucket-name
+        bucket_url:
+          type: string
+          description: Full URL of the GCS bucket in the format gs://bucket-name
+        bucket_location:
+          type: string
+          description: The location of the GCS bucket
+        bucket_self_link:
+          type: string
+          description: The self link of the GCS bucket
+        bucket_storage_class:
+          type: string
+          description: The storage class of the GCS bucket
+        read_only_role:
+          type: string
+          description: The predefined IAM role for read-only access to the bucket
+        read_write_role:
+          type: string
+          description: The predefined IAM role for read-write access to the bucket
+        bucket_iam_condition_title:
+          type: string
+          description: Title for IAM condition restricting access to this bucket
+        bucket_iam_condition_expression:
+          type: string
+          description: An IAM condition expression using startsWith to match this specific bucket
+    interfaces:
+      type: object
+      properties: {}
+providers: []
