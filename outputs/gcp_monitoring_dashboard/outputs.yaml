@@ -1,0 +1,23 @@
+name: '@facets/gcp_monitoring_dashboard'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        project_id:
+          type: string
+          description: GCP project id owning the dashboard.
+        dashboard_id:
+          type: string
+          description: Full resource id of the monitoring dashboard.
+        display_name:
+          type: string
+          description: Dashboard display name.
+        console_url:
+          type: string
+          description: Cloud Console URL for the dashboard.
+    interfaces:
+      type: object
+      properties: {}
+providers: []

@@ -1,0 +1,74 @@
+intent: gcp_service_connection_policy
+flavor: standard
+version: '1.0'
+description: Regional Google Cloud Service Connection Policy for Private Service Connect automation
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Regional Google Cloud Service Connection Policy for Private Service Connect automation
+  displayName: GCP Service Connection Policy
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/gcp_project_iam.svg
+clouds:
+- gcp
+spec:
+  type: object
+  title: GCP Service Connection Policy
+  description: Creates a regional Service Connection Policy for Private Service Connect automation.
+  required:
+  - service_class
+  - connection_limit
+  properties:
+    service_class:
+      type: string
+      title: Service Class
+      description: Producer service class, for example gcp-memorystore.
+      default: gcp-memorystore
+      minLength: 1
+    connection_limit:
+      type: integer
+      title: Connection Limit
+      description: Maximum PSC connections allowed by this policy.
+      default: 4
+      minimum: 1
+    description:
+      type: string
+      title: Description
+      description: Free-text description for the policy.
+      default: Memorystore PSC service connection policy
+    labels:
+      type: object
+      title: Labels
+      description: Additional labels for the policy.
+      x-ui-yaml-editor: true
+  x-ui-order:
+  - service_class
+  - connection_limit
+  - description
+  - labels
+inputs:
+  cloud_account:
+    type: '@facets/gcp_cloud_account'
+    providers:
+    - google
+    optional: false
+  network:
+    type: '@facets/gcp-network-details'
+    optional: false
+outputs:
+  default:
+    type: '@facets/gcp_service_connection_policy'
+sample:
+  kind: gcp_service_connection_policy
+  flavor: standard
+  version: '1.0'
+  disabled: false
+  spec:
+    service_class: gcp-memorystore
+    connection_limit: 4
+    description: Memorystore PSC service connection policy
+    labels: {}
+iac:
+  validated_files:
+  - main.tf
+  - locals.tf
+  - outputs.tf
+  - variables.tf

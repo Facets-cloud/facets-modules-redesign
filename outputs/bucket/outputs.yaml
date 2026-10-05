@@ -1,0 +1,31 @@
+name: '@facets/bucket'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        bucket_name:
+          type: string
+          description: Bucket name.
+        resource_name:
+          type: string
+          description: Fully qualified resource name (e.g. projects/_/buckets/<name>).
+        region:
+          type: string
+          description: Bucket location/region.
+        read_grant:
+          type: string
+          description: IAM role granting read access to the bucket.
+        write_grant:
+          type: string
+          description: IAM role granting write access to the bucket.
+    interfaces:
+      type: object
+      properties:
+        default:
+          type: object
+          properties:
+            name:
+              type: string
+providers: []

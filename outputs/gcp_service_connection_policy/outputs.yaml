@@ -1,0 +1,37 @@
+name: '@facets/gcp_service_connection_policy'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Full resource id of the service connection policy.
+        name:
+          type: string
+          description: Policy name.
+        project_id:
+          type: string
+          description: GCP project id.
+        region:
+          type: string
+          description: Region.
+        network:
+          type: string
+          description: VPC network the policy applies to.
+        service_class:
+          type: string
+          description: Service class the policy authorizes (e.g. gcp-memorystore).
+        connection_limit:
+          type: number
+          description: Max PSC connections allowed by the policy.
+        subnetworks:
+          type: array
+          description: Subnetworks available for PSC endpoint auto-allocation.
+          items:
+            type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

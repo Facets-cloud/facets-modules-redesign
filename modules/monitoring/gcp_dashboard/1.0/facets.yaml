@@ -1,0 +1,59 @@
+intent: monitoring
+flavor: gcp_dashboard
+version: "1.0"
+clouds:
+  - gcp
+description: |
+  Create a GCP Cloud Monitoring dashboard from a dashboard JSON body.
+  The body is the Cloud Monitoring v1 Dashboard resource (mosaicLayout,
+  dashboardFilters, widgets) with `name` omitted — Terraform manages that.
+
+intentDetails:
+  type: Monitoring & Observability
+  description: Cloud Monitoring dashboards defined as code, so a dashboard lives in the blueprint next to the resources it watches.
+  displayName: Cloud Monitoring Dashboard
+
+inputs:
+  gcp_provider:
+    type: '@facets/gcp_cloud_account'
+    optional: false
+    displayName: GCP Cloud Account
+    description: GCP project and authentication configuration
+    providers:
+      - google
+
+sample:
+  kind: monitoring
+  flavor: gcp_dashboard
+  version: "1.0"
+  disabled: false
+  spec:
+    display_name: Example Dashboard
+    dashboard_json: |
+      {"mosaicLayout":{"columns":12,"tiles":[]}}
+
+spec:
+  title: Monitoring Dashboard Configuration
+  description: Configure a GCP Cloud Monitoring dashboard
+  type: object
+  properties:
+    display_name:
+      type: string
+      title: Display Name
+      description: Name shown in the Cloud Console dashboard list. Overrides any displayName inside the JSON body so the two cannot drift apart.
+    dashboard_json:
+      type: string
+      title: Dashboard JSON
+      description: Full Cloud Monitoring Dashboard resource as JSON. Omit `name` — it is assigned by the API.
+      x-ui-yaml-editor: true
+  required:
+    - display_name
+    - dashboard_json
+  x-ui-order:
+    - display_name
+    - dashboard_json
+
+outputs:
+  default:
+    type: '@facets/gcp_monitoring_dashboard'
+    title: GCP Monitoring Dashboard
