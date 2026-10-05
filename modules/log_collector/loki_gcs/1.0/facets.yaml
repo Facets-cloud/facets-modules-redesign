@@ -1,0 +1,405 @@
+intent: log_collector
+flavor: loki_gcs
+version: "1.0"
+description: |
+  Deploys Grafana Loki on Kubernetes with GCS as the storage backend using the unified grafana/loki chart.
+  Includes Promtail (DaemonSet log scraper) and optional Loki Canary for end-to-end latency testing.
+intentDetails:
+  type: Monitoring & Observability
+  description: Loki log aggregation stack with GCS backend on GKE
+  displayName: Loki (GCS)
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/monitoring.svg
+clouds:
+  - gcp
+
+inputs:
+  kubernetes_details:
+    type: "@facets/kubernetes-details"
+    optional: false
+    displayName: Kubernetes Cluster
+    description: GKE cluster — provides kubernetes, helm providers
+    providers:
+      - kubernetes
+      - helm
+  cloud_account:
+    type: "@facets/gcp_cloud_account"
+    optional: false
+    displayName: GCP Cloud Account
+    description: GCP project credentials — provides google provider
+    providers:
+      - google
+  storage:
+    type: "@facets/gcs-bucket"
+    optional: false
+    displayName: GCS Bucket
+    description: GCS bucket for Loki log storage (use storage/gcs module)
+  kubernetes_node_pool_details:
+    type: "@facets/kubernetes_nodepool"
+    optional: true
+    displayName: Node Pool
+    description: Target node pool for Loki and Promtail pods
+
+outputs:
+  default:
+    type: "@facets/loki"
+    title: Loki Log Collector
+
+spec:
+  title: Loki Log Collector Configuration
+  type: object
+  properties:
+    metadata:
+      type: object
+      title: Metadata
+      properties:
+        namespace:
+          type: string
+          title: Namespace
+          description: Kubernetes namespace for Loki deployment
+          default: facets
+          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+          x-ui-placeholder: e.g. logging, loki, facets
+
+    loki:
+      type: object
+      title: Loki Configuration
+      properties:
+        chart_version:
+          type: string
+          title: Chart Version
+          description: Helm chart version for grafana/loki (unified chart)
+          default: "6.55.0"
+        deployment_mode:
+          type: string
+          title: Deployment Mode
+          description: "Loki deployment topology: Distributed (individual components), SimpleScalable (write/read/backend), SingleBinary (all-in-one)"
+          default: SingleBinary
+          enum:
+            - SingleBinary
+            - Distributed
+        retention_hours:
+          type: integer
+          title: Retention (hours)
+          description: Log retention period in hours
+          default: 720
+        single_binary_size:
+          type: object
+          title: SingleBinary Resource Sizing
+          description: Resource sizing and persistence for the SingleBinary Loki pod
+          x-ui-visible-if:
+            field: spec.loki.deployment_mode
+            values:
+              - SingleBinary
+          properties:
+            resources:
+              type: object
+              title: Resources
+              properties:
+                requests:
+                  type: object
+                  title: Resource Requests
+                  properties:
+                    cpu:
+                      type: string
+                      title: CPU Request
+                      default: "1000m"
+                      pattern: '^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$'
+                    memory:
+                      type: string
+                      title: Memory Request
+                      default: "2Gi"
+                      pattern: '^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$'
+                limits:
+                  type: object
+                  title: Resource Limits
+                  properties:
+                    cpu:
+                      type: string
+                      title: CPU Limit
+                      default: "2000m"
+                      pattern: '^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$'
+                    memory:
+                      type: string
+                      title: Memory Limit
+                      default: "4Gi"
+                      pattern: '^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$'
+            persistence_size:
+              type: string
+              title: Persistence Size
+              description: Persistent volume size for SingleBinary Loki pod
+              default: "20Gi"
+              pattern: '^[0-9]+(\.[0-9]+)?[G]i?$'
+        size:
+          type: object
+          title: Component Resource Sizing
+          description: Per-component CPU and memory requests/limits for each Loki component
+          x-ui-visible-if:
+            field: spec.loki.deployment_mode
+            values:
+              - Distributed
+          properties:
+            distributor:
+              type: object
+              title: Distributor Resources
+              properties:
+                resources:
+                  type: object
+                  properties:
+                    requests:
+                      type: object
+                      properties:
+                        cpu: { type: string, title: CPU Request, default: "300m", pattern: '^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$' }
+                        memory: { type: string, title: Memory Request, default: "300Mi", pattern: '^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$' }
+                    limits:
+                      type: object
+                      properties:
+                        cpu: { type: string, title: CPU Limit, default: "1000m", pattern: '^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$' }
+                        memory: { type: string, title: Memory Limit, default: "1000Mi", pattern: '^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$' }
+            ingester:
+              type: object
+              title: Ingester Resources
+              properties:
+                resources:
+                  type: object
+                  properties:
+                    requests:
+                      type: object
+                      properties:
+                        cpu: { type: string, title: CPU Request, default: "300m", pattern: '^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$' }
+                        memory: { type: string, title: Memory Request, default: "500Mi", pattern: '^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$' }
+                    limits:
+                      type: object
+                      properties:
+                        cpu: { type: string, title: CPU Limit, default: "1000m", pattern: '^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$' }
+                        memory: { type: string, title: Memory Limit, default: "4000Mi", pattern: '^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$' }
+            querier:
+              type: object
+              title: Querier Resources
+              properties:
+                resources:
+                  type: object
+                  properties:
+                    requests:
+                      type: object
+                      properties:
+                        cpu: { type: string, title: CPU Request, default: "300m", pattern: '^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$' }
+                        memory: { type: string, title: Memory Request, default: "300Mi", pattern: '^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$' }
+                    limits:
+                      type: object
+                      properties:
+                        cpu: { type: string, title: CPU Limit, default: "1000m", pattern: '^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$' }
+                        memory: { type: string, title: Memory Limit, default: "4000Mi", pattern: '^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$' }
+            queryFrontend:
+              type: object
+              title: Query Frontend Resources
+              properties:
+                resources:
+                  type: object
+                  properties:
+                    requests:
+                      type: object
+                      properties:
+                        cpu: { type: string, title: CPU Request, default: "300m", pattern: '^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$' }
+                        memory: { type: string, title: Memory Request, default: "300Mi", pattern: '^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$' }
+                    limits:
+                      type: object
+                      properties:
+                        cpu: { type: string, title: CPU Limit, default: "1000m", pattern: '^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$' }
+                        memory: { type: string, title: Memory Limit, default: "1000Mi", pattern: '^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$' }
+            compactor:
+              type: object
+              title: Compactor Resources
+              properties:
+                resources:
+                  type: object
+                  properties:
+                    requests:
+                      type: object
+                      properties:
+                        cpu: { type: string, title: CPU Request, default: "300m", pattern: '^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$' }
+                        memory: { type: string, title: Memory Request, default: "300Mi", pattern: '^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$' }
+                    limits:
+                      type: object
+                      properties:
+                        cpu: { type: string, title: CPU Limit, default: "1000m", pattern: '^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$' }
+                        memory: { type: string, title: Memory Limit, default: "1000Mi", pattern: '^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$' }
+            indexGateway:
+              type: object
+              title: Index Gateway Resources
+              properties:
+                resources:
+                  type: object
+                  properties:
+                    requests:
+                      type: object
+                      properties:
+                        cpu: { type: string, title: CPU Request, default: "300m", pattern: '^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$' }
+                        memory: { type: string, title: Memory Request, default: "300Mi", pattern: '^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$' }
+                    limits:
+                      type: object
+                      properties:
+                        cpu: { type: string, title: CPU Limit, default: "1000m", pattern: '^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$' }
+                        memory: { type: string, title: Memory Limit, default: "1000Mi", pattern: '^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$' }
+            gateway:
+              type: object
+              title: Gateway Resources
+              properties:
+                resources:
+                  type: object
+                  properties:
+                    requests:
+                      type: object
+                      properties:
+                        cpu: { type: string, title: CPU Request, default: "300m", pattern: '^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$' }
+                        memory: { type: string, title: Memory Request, default: "300Mi", pattern: '^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$' }
+                    limits:
+                      type: object
+                      properties:
+                        cpu: { type: string, title: CPU Limit, default: "1000m", pattern: '^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$' }
+                        memory: { type: string, title: Memory Limit, default: "1000Mi", pattern: '^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$' }
+            queryScheduler:
+              type: object
+              title: Query Scheduler Resources
+              properties:
+                resources:
+                  type: object
+                  properties:
+                    requests:
+                      type: object
+                      properties:
+                        cpu: { type: string, title: CPU Request, default: "100m", pattern: '^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$' }
+                        memory: { type: string, title: Memory Request, default: "300Mi", pattern: '^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$' }
+                    limits:
+                      type: object
+                      properties:
+                        cpu: { type: string, title: CPU Limit, default: "500m", pattern: '^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$' }
+                        memory: { type: string, title: Memory Limit, default: "1000Mi", pattern: '^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$' }
+        chunks_cache_memory_mb:
+          type: integer
+          title: Chunks Cache Memory (MB)
+          description: Memory allocated to the Loki chunks cache (memcached). Chart default is 9830MB — set lower if cluster resources are limited.
+          default: 1024
+        values:
+          type: object
+          title: Additional Helm Values
+          description: Extra values deep-merged into the grafana/loki Helm release
+          x-ui-yaml-editor: true
+
+    promtail:
+      type: object
+      title: Promtail Configuration
+      properties:
+        enabled:
+          type: boolean
+          title: Enable Promtail
+          description: Deploy Promtail DaemonSet for pod log collection
+          default: true
+        chart_version:
+          type: string
+          title: Chart Version
+          description: Helm chart version for promtail
+          default: "6.17.1"
+          x-ui-visible-if:
+            field: spec.promtail.enabled
+            values:
+              - true
+        size:
+          type: object
+          title: Resource Sizing
+          x-ui-visible-if:
+            field: spec.promtail.enabled
+            values:
+              - true
+          properties:
+            resources:
+              type: object
+              title: Resources
+              properties:
+                requests:
+                  type: object
+                  title: Requests
+                  properties:
+                    cpu:
+                      type: string
+                      title: CPU Request
+                      default: "100m"
+                      pattern: ^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$
+                    memory:
+                      type: string
+                      title: Memory Request
+                      default: "100Mi"
+                      pattern: ^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$
+                limits:
+                  type: object
+                  title: Limits
+                  properties:
+                    cpu:
+                      type: string
+                      title: CPU Limit
+                      default: "1000m"
+                      pattern: ^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$
+                    memory:
+                      type: string
+                      title: Memory Limit
+                      default: "1000Mi"
+                      pattern: ^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$
+        values:
+          type: object
+          title: Additional Helm Values
+          description: Extra values deep-merged into the promtail Helm release
+          x-ui-yaml-editor: true
+          x-ui-visible-if:
+            field: spec.promtail.enabled
+            values:
+              - true
+
+    loki_canary:
+      type: object
+      title: Loki Canary
+      properties:
+        enabled:
+          type: boolean
+          title: Enable Loki Canary
+          description: Deploy Loki Canary for end-to-end write/read latency testing (built into unified grafana/loki chart)
+          default: false
+
+  x-ui-order:
+    - metadata
+    - loki
+    - promtail
+    - loki_canary
+
+sample:
+  $schema: https://facets-cloud.github.io/facets-schemas/schemas/log_collector/log_collector.schema.json
+  kind: log_collector
+  flavor: loki_gcs
+  version: "1.0"
+  disabled: true
+  spec:
+    metadata:
+      namespace: facets
+    loki:
+      chart_version: "6.55.0"
+      deployment_mode: SingleBinary
+      retention_hours: 720
+      chunks_cache_memory_mb: 1024
+      single_binary_size:
+        resources:
+          requests: { cpu: "1000m", memory: "2Gi" }
+          limits: { cpu: "2000m", memory: "4Gi" }
+        persistence_size: "20Gi"
+      values: {}
+    promtail:
+      enabled: true
+      chart_version: "6.17.1"
+      size:
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "100Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1000Mi"
+      values: {}
+    loki_canary:
+      enabled: false
