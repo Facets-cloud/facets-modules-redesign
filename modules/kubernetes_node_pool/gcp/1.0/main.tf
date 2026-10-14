@@ -79,7 +79,7 @@ resource "google_container_node_pool" "node_pool" {
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
     ]
-    disk_type = lookup(local.spec, "disk_type", "pd-standard")
+    disk_type = lookup(local.spec, "disk_type", "pd-balanced")
     metadata = {
       disable-legacy-endpoints = "true"
     }
