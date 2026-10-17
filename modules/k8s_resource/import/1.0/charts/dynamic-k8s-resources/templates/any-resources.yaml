@@ -1,0 +1,4 @@
+{{- range $i := .Values.resources }}
+{{ $i | toYaml}}
+---
+{{- end }}

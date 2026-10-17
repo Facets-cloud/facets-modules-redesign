@@ -1,0 +1,51 @@
+intent: helm
+flavor: import_many
+version: '1.0'
+description: MANAGED bulk true-import of existing Helm releases, keyed by release name. Each release is
+  driven by an env override carrying the live spec (chart, repository, version, namespace, release name,
+  the release flags and the verbatim rendered values). Charts that live as local .tgz in the source
+  (repo=null) are vendored under charts/ so the version resolves from the vendored Chart.yaml and matches
+  live; repo-backed charts keep their live repository + pinned version. The helm provider never reads
+  values back on import, so the first plan shows a structural `+ values` populate only.
+intentDetails:
+  type: Kubernetes Resources
+  description: Managed zero-change bulk import of existing Helm releases
+  displayName: Helm (Bulk Import Existing)
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/helm.svg
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+inputs:
+  kubernetes_details:
+    type: '@facets/kubernetes-details'
+    displayName: Kubernetes Cluster
+    optional: false
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+    - kubernetes
+    - kubernetes-alpha
+    - helm
+spec:
+  type: object
+  properties:
+    releases:
+      type: object
+      title: Helm releases to adopt (from live)
+      description: Map of release key to {name, namespace, chart, vendored, repository, version, create_namespace, max_history, wait, cleanup_on_fail, atomic, timeout, values_b64}.
+      x-ui-overrides-only: true
+outputs:
+  default:
+    type: '@facets/helm'
+sample:
+  kind: helm
+  flavor: import_many
+  version: '1.0'
+  spec:
+    releases: {}
+iac:
+  validated_files:
+  - variables.tf

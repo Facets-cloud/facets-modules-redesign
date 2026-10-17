@@ -23,4 +23,11 @@ properties:
 providers:
 - name: aws
   source: hashicorp/aws
-  version: "= 6.3.0"
+  version: "= 6.9.0"
+  attributes:
+    region: attributes.aws_region
+    skip_region_validation: true
+    assume_role:
+      role_arn: attributes.aws_iam_role
+      session_name: attributes.session_name
+      external_id: attributes.external_id

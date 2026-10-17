@@ -1,0 +1,54 @@
+intent: pvc
+flavor: import
+version: '1.0'
+description: MANAGED true-import of existing PersistentVolumeClaims, keyed by "<namespace>/<name>".
+  Every claim is adopted 1:1 from live via an env override carrying the exact live spec (access_modes,
+  storage request, storage_class_name, volume_name, labels, annotations). access_modes / storage
+  request / storage_class_name / volume_name / selector are IMMUTABLE on a PVC - they must match live
+  exactly or the import force-replaces the claim and orphans the backing PersistentVolume (and its EBS
+  volume + data). Only the k8s-controller-injected binding annotations are ignored; the plan is 0-change.
+intentDetails:
+  type: Kubernetes Resources
+  description: Zero-change import of existing PersistentVolumeClaims
+  displayName: PVC (Import Existing)
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/storage_class.svg
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+inputs:
+  kubernetes_details:
+    type: '@facets/kubernetes-details'
+    displayName: Kubernetes Cluster
+    optional: false
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+    - kubernetes
+    - kubernetes-alpha
+    - helm
+spec:
+  type: object
+  properties:
+    pvcs:
+      type: object
+      x-ui-yaml-editor: true
+      title: PVCs to adopt (from live)
+      description: Map of "<namespace>/<name>" to {name, namespace, access_modes, storage,
+        storage_class_name, volume_name, labels, annotations}.
+      x-ui-overrides-only: true
+outputs:
+  default:
+    type: '@facets/k8s_resource'
+    title: PVC Details
+sample:
+  kind: pvc
+  flavor: import
+  version: '1.0'
+  spec:
+    pvcs: {}
+iac:
+  validated_files:
+  - variables.tf

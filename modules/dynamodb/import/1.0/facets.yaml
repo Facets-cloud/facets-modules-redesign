@@ -1,0 +1,41 @@
+intent: dynamodb
+flavor: import
+version: '1.0'
+description: MANAGED true-import of an existing AWS DynamoDB table. Every attribute is
+  driven by an env override carrying the exact live spec (name, keys, attributes, billing
+  mode, capacities, pitr/ttl, tags) so a plan against the live table is 0-change and
+  the table becomes Facets-managed.
+intentDetails:
+  type: Datastores
+  description: Managed zero-change import of an existing AWS DynamoDB table
+  displayName: DynamoDB (Import Existing)
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/dynamodb.svg
+clouds:
+- aws
+spec:
+  type: object
+  properties:
+    table:
+      type: object
+      x-ui-yaml-editor: true
+      title: DynamoDB table config (from live)
+      x-ui-overrides-only: true
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: Cloud Account
+    description: The AWS Cloud Account the table lives in
+    optional: false
+    providers:
+    - aws
+outputs:
+  default:
+    type: '@facets/dynamodb'
+sample:
+  kind: dynamodb
+  flavor: import
+  version: '1.0'
+  spec: {}
+iac:
+  validated_files:
+  - variables.tf

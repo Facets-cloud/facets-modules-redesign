@@ -1,0 +1,96 @@
+intent: priority_class
+flavor: standard
+version: '1.0'
+description: Creates cluster-scoped Kubernetes PriorityClasses
+intentDetails:
+  type: Kubernetes Resources
+  description: Cluster-scoped Kubernetes PriorityClasses for pod scheduling priority
+  displayName: Priority Class
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/k8s_resource.svg
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+inputs:
+  kubernetes_details:
+    type: '@facets/kubernetes-details'
+    displayName: Kubernetes Cluster
+    optional: false
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+    - kubernetes
+    - kubernetes-alpha
+    - helm
+outputs:
+  default:
+    type: '@facets/k8s_resource'
+    title: Priority Class Details
+spec:
+  title: Priority Classes
+  description: Cluster-scoped PriorityClasses. Several redesign modules reference these by name (e.g.
+    vpa sets priorityClassName facets-critical), and Kubernetes REJECTS any pod whose priorityClassName
+    does not exist - so the cluster must have them.
+  type: object
+  properties:
+    priority_classes:
+      type: object
+      title: Priority Classes
+      description: Map of PriorityClass name to definition.
+      patternProperties:
+        ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$:
+          type: object
+          title: Priority Class
+          properties:
+            value:
+              type: integer
+              title: Value
+              description: Priority integer. Higher wins. IMMUTABLE - must match live exactly when adopting
+                an existing PriorityClass.
+            global_default:
+              type: boolean
+              title: Global Default
+              description: Use for pods that specify no priorityClassName. At most one per cluster.
+              default: false
+            description:
+              type: string
+              title: Description
+              description: Free text. Leave unset when adopting - live objects often have none.
+            preemption_policy:
+              type: string
+              title: Preemption Policy
+              enum:
+              - PreemptLowerPriority
+              - Never
+              description: IMMUTABLE. Defaults to PreemptLowerPriority when unset. Set explicitly only
+                when adopting a live PriorityClass created with a different policy.
+            metadata:
+              type: object
+              title: Metadata
+              properties:
+                labels:
+                  type: object
+                  title: Labels
+                  x-ui-yaml-editor: true
+                annotations:
+                  type: object
+                  title: Annotations
+                  x-ui-yaml-editor: true
+          required:
+          - value
+  required:
+  - priority_classes
+sample:
+  kind: priority_class
+  flavor: standard
+  version: '1.0'
+  disabled: false
+  spec:
+    priority_classes:
+      infra-critical:
+        value: 1000
+iac:
+  validated_files:
+  - variables.tf

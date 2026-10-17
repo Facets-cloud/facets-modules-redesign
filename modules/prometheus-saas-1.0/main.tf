@@ -1,0 +1,131 @@
+module "name" {
+  source          = "github.com/Facets-cloud/facets-utility-modules//name"
+  is_k8s          = true
+  globally_unique = false
+  resource_type   = "prometheus"
+  resource_name   = var.instance_name
+  environment     = var.environment
+  limit           = 45
+}
+
+# Deploy kube-prometheus-stack
+resource "helm_release" "prometheus-operator" {
+  depends_on      = []
+  wait            = true
+  name            = local.helm_name
+  repository      = "https://prometheus-community.github.io/helm-charts"
+  version         = "79.1.1"
+  chart           = "kube-prometheus-stack"
+  namespace       = local.namespace
+  cleanup_on_fail = true
+
+  values = [
+    yamlencode(local.default_values),
+    yamlencode({
+      prometheus = {
+        prometheusSpec = {
+          storageSpec = {
+            volumeClaimTemplate = {
+              metadata = {
+                name = "pvc"
+              }
+              spec = {
+                # Use existing PVC
+                # volumeName  = module.prometheus-pvc.pvc_name
+                volumeName  = "pvc"
+                accessModes = ["ReadWriteOnce"]
+                resources = {
+                  requests = {
+                    storage = lookup(local.prometheusSpec.size, "volume", "100Gi")
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      alertmanager = {
+        alertmanagerSpec = {
+          storage = {
+            volumeClaimTemplate = {
+              metadata = {
+                name = "pvc"
+              }
+              spec = {
+                # Use existing PVC
+                # volumeName  = module.alertmanager-pvc.pvc_name
+                volumeName  = "pvc"
+                accessModes = ["ReadWriteOnce"]
+                resources = {
+                  requests = {
+                    storage = lookup(local.alertmanagerSpec.size, "volume", "10Gi")
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      kube-state-metrics = {
+        enabled = true
+      }
+    }),
+    yamlencode(local.valuesSpec),         # User's custom values (other than alertmanager.config)
+    yamlencode(local.alertmanager_config) # Alertmanager config with concatenated receivers
+
+  ]
+
+  lifecycle {
+    ignore_changes = [
+      values,
+      version,
+      repository,
+      chart,
+      cleanup_on_fail,
+      name,
+    ]
+  }
+}
+
+# Deploy Pushgateway
+resource "helm_release" "prometheus-pushgateway" {
+  depends_on      = [helm_release.prometheus-operator]
+  name            = "${local.helm_name}-pushgateway"
+  chart           = "prometheus-pushgateway"
+  repository      = "https://prometheus-community.github.io/helm-charts"
+  namespace       = local.namespace
+  version         = "3.4.2"
+  wait            = true
+  cleanup_on_fail = true
+
+  values = [
+    yamlencode({
+      podAnnotations = {
+        "cluster-autoscaler.kubernetes.io/safe-to-evict" = "true"
+      }
+      resources = {
+        limits = {
+          memory = "512Mi"
+          cpu    = "100m"
+        }
+      }
+      serviceMonitor = {
+        enabled   = true
+        namespace = local.namespace
+      }
+      nodeSelector = local.nodeSelector
+      tolerations  = local.tolerations
+    })
+  ]
+
+  lifecycle {
+    ignore_changes = [
+      values,
+      version,
+      repository,
+      chart,
+      cleanup_on_fail,
+      name,
+    ]
+  }
+}
