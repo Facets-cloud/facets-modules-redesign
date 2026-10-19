@@ -167,6 +167,18 @@ spec:
                     - adot
                     - aws-privateca-connector-for-kubernetes
                     - sriov-network-metrics-exporter
+                  x-ui-dropdown:
+                    - aws-efs-csi-driver
+                    - aws-fsx-csi-driver
+                    - aws-mountpoint-s3-csi-driver
+                    - eks-node-monitoring-agent
+                    - snapshot-controller
+                    - aws-network-flow-monitoring-agent
+                    - aws-guardduty-agent
+                    - amazon-cloudwatch-observability
+                    - adot
+                    - aws-privateca-connector-for-kubernetes
+                    - sriov-network-metrics-exporter
                   x-ui-typeable: true
                   x-ui-overrides-only: false
                   x-ui-unique: true
