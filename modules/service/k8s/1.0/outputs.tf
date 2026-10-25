@@ -33,6 +33,6 @@ locals {
     resource_type       = local.resource_type
     resource_name       = local.resource_name
     service_name        = var.instance_name
-    service_account_arn = ""
+    service_account_arn = null
   }
 }
