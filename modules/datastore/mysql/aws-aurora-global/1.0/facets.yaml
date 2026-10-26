@@ -1,0 +1,103 @@
+intent: mysql
+flavor: aws-aurora-global
+version: '1.0'
+description: Blueprint-safe contract for an existing Aurora MySQL global database replication topology
+intentDetails:
+  type: Datastores
+  description: AWS Aurora MySQL global database replication contract
+  displayName: MySQL Global Database
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mysql.svg
+clouds:
+- aws
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: AWS Cloud Account
+    description: AWS account that supplies the provider for this contract
+    optional: false
+    providers:
+    - aws
+  source_database:
+    type: '@facets/mysql'
+    displayName: Source MySQL Database
+    description: Source database replicated to the secondary Aurora cluster
+    optional: false
+  destination_database:
+    type: '@facets/mysql'
+    displayName: Destination MySQL Database
+    description: Destination database replicated from the primary Aurora cluster
+    optional: false
+outputs:
+  default:
+    type: '@facets/aws_aurora_global'
+    title: Aurora MySQL Global Database Replication
+spec:
+  title: Aurora MySQL Global Database Replication
+  description: Describe an existing Aurora MySQL global database topology without creating resources
+  type: object
+  properties:
+    global_cluster_identifier:
+      type: string
+      title: Global Cluster Identifier
+      description: Existing Aurora Global Database identifier.
+    source_cluster_identifier:
+      type: string
+      title: Source Cluster Identifier
+      description: Primary Aurora cluster identifier participating in replication.
+    secondary_cluster_identifier:
+      type: string
+      title: Secondary Cluster Identifier
+      description: Secondary Aurora cluster identifier represented by this contract.
+    engine:
+      type: string
+      title: Database Engine
+      description: Aurora engine used by the global database.
+      enum: [aurora-mysql]
+      default: aurora-mysql
+    engine_version:
+      type: string
+      title: Engine Version
+      description: Aurora engine version shared by the global clusters.
+    database_name:
+      type: string
+      title: Database Name
+      description: Default database name exposed to downstream services.
+    port:
+      type: number
+      title: Database Port
+      description: MySQL listener port exposed by the secondary cluster.
+  required:
+  - global_cluster_identifier
+  - source_cluster_identifier
+  - secondary_cluster_identifier
+  - engine
+  - engine_version
+  - database_name
+  - port
+  x-ui-order:
+  - global_cluster_identifier
+  - source_cluster_identifier
+  - secondary_cluster_identifier
+  - engine
+  - engine_version
+  - database_name
+  - port
+sample:
+  kind: mysql
+  flavor: aws-aurora-global
+  version: '1.0'
+  disabled: true
+  spec:
+    global_cluster_identifier: example-global
+    source_cluster_identifier: example-primary
+    secondary_cluster_identifier: example-secondary
+    engine: aurora-mysql
+    engine_version: 8.0.mysql_aurora.3.05.2
+    database_name: trading
+    port: 3306
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+  - outputs.tf

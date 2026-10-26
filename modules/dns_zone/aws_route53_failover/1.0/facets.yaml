@@ -1,0 +1,102 @@
+intent: dns_zone
+flavor: aws_route53_failover
+version: '1.0'
+description: Blueprint-safe contract for AWS Route 53 failover records.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Configures Route 53 DNS failover record identities.
+  displayName: Route 53 Failover Record
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/dns_zone.svg
+clouds:
+- aws
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: AWS Cloud Account
+    description: AWS account that supplies the Terraform AWS provider.
+    optional: false
+    providers:
+    - aws
+  primary_load_balancer:
+    type: '@facets/aws_load_balancer'
+    displayName: Primary Load Balancer
+    description: Load balancer serving the primary failover record.
+    optional: false
+  secondary_load_balancer:
+    type: '@facets/aws_load_balancer'
+    displayName: Secondary Load Balancer
+    description: Load balancer serving the secondary failover record.
+    optional: false
+outputs:
+  default:
+    type: '@facets/aws_route53_failover'
+    title: Route 53 Failover Record
+spec:
+  type: object
+  title: Route 53 Failover Record
+  description: Desired Route 53 failover record identities and routing configuration.
+  properties:
+    hosted_zone_id:
+      type: string
+      title: Hosted Zone ID
+      description: Route 53 hosted zone containing the failover record.
+      pattern: '^Z[A-Z0-9]+$'
+    record_name:
+      type: string
+      title: Record Name
+      description: Fully qualified DNS record name switched during failover.
+    record_type:
+      type: string
+      title: Record Type
+      enum: [A, AAAA, CNAME]
+      default: A
+    primary_health_check_id:
+      type: string
+      title: Primary Health Check ID
+      description: Optional Route 53 health check associated with the primary record.
+      default: ''
+    secondary_health_check_id:
+      type: string
+      title: Secondary Health Check ID
+      description: Optional Route 53 health check associated with the secondary record.
+      default: ''
+    ttl:
+      type: number
+      title: TTL
+      description: DNS record time to live in seconds.
+      minimum: 0
+      maximum: 172800
+      default: 60
+    evaluate_target_health:
+      type: boolean
+      title: Evaluate Target Health
+      description: Include the target load balancer health in Route 53 evaluation.
+      default: false
+  required: [hosted_zone_id, record_name, record_type]
+  x-ui-order:
+  - hosted_zone_id
+  - record_name
+  - record_type
+  - primary_health_check_id
+  - secondary_health_check_id
+  - ttl
+  - evaluate_target_health
+sample:
+  kind: dns_zone
+  flavor: aws_route53_failover
+  version: '1.0'
+  disabled: false
+  spec:
+    hosted_zone_id: Z0123456789ABCDEF
+    record_name: trade-dr.example.com
+    record_type: A
+    primary_health_check_id: ''
+    secondary_health_check_id: ''
+    ttl: 60
+    evaluate_target_health: false
+iac:
+  validated_files:
+  - main.tf
+  - locals.tf
+  - outputs.tf
+  - variables.tf

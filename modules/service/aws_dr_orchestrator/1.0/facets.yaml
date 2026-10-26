@@ -1,0 +1,90 @@
+intent: service
+flavor: aws_dr_orchestrator
+version: "1.0"
+description: Contract-only AWS disaster recovery orchestration configuration.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Coordinate AWS disaster recovery runbook steps
+  displayName: AWS DR Orchestrator
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/service.svg
+clouds:
+  - aws
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: AWS Cloud Account
+    description: AWS account supplying the AWS provider
+    optional: false
+    providers:
+      - aws
+  route53_failover:
+    type: '@facets/aws_route53_failover'
+    displayName: Route 53 Failover
+    description: Route 53 failover configuration
+    optional: false
+  drs_replication:
+    type: '@facets/aws_drs'
+    displayName: AWS DRS Replication
+    description: Optional AWS DRS recovery configuration
+    optional: true
+outputs:
+  default:
+    type: '@facets/aws_dr_orchestrator'
+    title: AWS DR Orchestrator Details
+spec:
+  title: AWS DR Orchestrator Configuration
+  type: object
+  properties:
+    ordered_steps:
+      title: Ordered Steps
+      description: Ordered phases executed by the disaster recovery runbook.
+      type: array
+      minItems: 1
+      uniqueItems: true
+      items:
+        type: string
+        enum: [PROMOTE_DATA, LAUNCH_DRS, RELEASE_COMPUTE, RUN_CHECKS, SWITCH_DNS]
+    require_manual_approval:
+      title: Require Manual Approval
+      description: Pause before destructive or traffic-switching phases.
+      type: boolean
+      default: true
+    validation_endpoints:
+      title: Validation Endpoints
+      description: HTTP endpoints checked before DNS is switched.
+      type: array
+      minItems: 1
+      uniqueItems: true
+      items:
+        type: string
+    timeout_minutes:
+      title: Timeout Minutes
+      description: Maximum runtime allowed for the complete recovery sequence.
+      type: number
+      minimum: 1
+      maximum: 1440
+      default: 60
+    rollback_on_failure:
+      title: Roll Back on Failure
+      description: Request rollback when a validation or execution phase fails.
+      type: boolean
+      default: true
+  required: [ordered_steps, validation_endpoints]
+  x-ui-order: [ordered_steps, require_manual_approval, validation_endpoints, timeout_minutes, rollback_on_failure]
+sample:
+  kind: service
+  flavor: aws_dr_orchestrator
+  version: "1.0"
+  disabled: true
+  spec:
+    ordered_steps: [PROMOTE_DATA, LAUNCH_DRS, RELEASE_COMPUTE, RUN_CHECKS, SWITCH_DNS]
+    require_manual_approval: true
+    validation_endpoints: [https://trade-dr.example.com/health]
+    timeout_minutes: 60
+    rollback_on_failure: true
+iac:
+  validated_files:
+    - variables.tf
+    - main.tf
+    - locals.tf
+    - outputs.tf

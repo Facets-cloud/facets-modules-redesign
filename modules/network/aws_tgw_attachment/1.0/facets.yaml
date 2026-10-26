@@ -1,0 +1,49 @@
+intent: network
+flavor: aws_tgw_attachment
+version: '1.0'
+clouds: [aws]
+description: Represents an existing AWS Transit Gateway attachment without managing AWS resources.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: AWS Transit Gateway attachment details for blueprint wiring.
+  displayName: Network
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/network.svg
+spec:
+  type: object
+  properties:
+    transit_gateway_id: { type: string, title: Transit Gateway ID, description: Existing transit gateway identifier }
+    attachment_id: { type: string, title: Attachment ID, description: Existing transit gateway attachment identifier }
+    transit_gateway_route_table_ids:
+      type: array
+      title: Transit Gateway Route Table IDs
+      description: Existing transit gateway route table identifiers
+      items: { type: string }
+    appliance_mode_support: { type: boolean, title: Appliance Mode Support, description: Whether appliance mode is enabled }
+  required: [transit_gateway_id, attachment_id, transit_gateway_route_table_ids, appliance_mode_support]
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: Cloud Account
+    description: AWS account containing the transit gateway attachment
+    optional: false
+    providers: [aws]
+  network_details:
+    type: '@facets/aws-vpc-details'
+    displayName: VPC Network
+    description: VPC attached to the transit gateway
+    optional: false
+outputs:
+  default:
+    type: '@facets/aws_tgw_attachment'
+    title: AWS Transit Gateway Attachment
+sample:
+  kind: network
+  flavor: aws_tgw_attachment
+  version: '1.0'
+  spec:
+    transit_gateway_id: tgw-0123456789abcdef0
+    attachment_id: tgw-attach-0123456789abcdef0
+    transit_gateway_route_table_ids: [tgw-rtb-0123456789abcdef0]
+    appliance_mode_support: false
+iac:
+  validated_files: [variables.tf, main.tf, locals.tf, outputs.tf]

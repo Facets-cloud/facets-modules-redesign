@@ -42,10 +42,10 @@ raptor import project-type --managed facets/aws --name "My Platform"
 <summary><strong>What's included</strong></summary>
 
 **Infrastructure**
-`Cloud Account (aws_provider)` `Network/VPC (aws_network)` `EKS Standard (eks_standard)` `EKS Automode (eks_automode)` `Node Pool/Karpenter (karpenter)` `Node Pool/Automode (eks_automode)` `Karpenter (default)` `AWS ALB Controller (standard)` `EFS CSI Driver (standard)` `AWS EFS (standard)` `StorageClass/EBS (aws_ebs)` `StorageClass/EFS (aws_efs)` `Service (aws)` `AWS IAM Policy (standard)` `AWS IAM Role (standard)`
+`Cloud Account (aws_provider)` `Network/VPC (aws_network)` `Existing AWS Network (aws_existing)` `AWS TGW Attachment (aws_tgw_attachment)` `EKS Standard (eks_standard)` `EKS Automode (eks_automode)` `EKS Managed Node Pool (eks_managed)` `Node Pool/Karpenter (karpenter)` `Node Pool/Automode (eks_automode)` `Karpenter (default)` `AWS ALB Controller (standard)` `Application Load Balancer (aws_alb)` `Network Load Balancer (aws_nlb)` `Route 53 Failover (aws_route53_failover)` `EFS CSI Driver (standard)` `AWS EFS (standard)` `EFS Replication (replication)` `S3 Cross-Region Replication (cross_region_replication)` `StorageClass/EBS (aws_ebs)` `StorageClass/EFS (aws_efs)` `Service (aws)` `Amazon ECS Service (aws_ecs)` `AWS VM Group (aws_vm_group)` `AWS Elastic Disaster Recovery (aws_drs)` `AWS DR Orchestrator (aws_dr_orchestrator)` `AWS IAM Policy (standard)` `AWS IAM Role (standard)` `ECR Replication (aws_ecr_replication)` `Secrets Manager Replication (replication)`
 
 **Managed Datastores**
-`PostgreSQL/RDS (aws-rds)` `PostgreSQL/Aurora (aws-aurora)` `PostgreSQL/Logical (logical)` `MySQL/RDS (aws-rds)` `MySQL/Aurora (aws-aurora)` `MongoDB/DocumentDB (aws-documentdb)` `Redis/ElastiCache (aws-elasticache)` `Kafka/MSK (aws-msk)`
+`PostgreSQL/RDS (aws-rds)` `PostgreSQL/Aurora (aws-aurora)` `PostgreSQL/Logical (logical)` `MySQL/RDS (aws-rds)` `MySQL/Aurora (aws-aurora)` `Aurora Global Database (aws-aurora-global)` `MongoDB/DocumentDB (aws-documentdb)` `Redis/ElastiCache (aws-elasticache)` `ElastiCache Global Datastore (aws-elasticache-global)` `Kafka/MSK (aws-msk)` `MSK Replicator (aws-msk-replicator)`
 
 **Self-hosted via KubeBlocks**
 `PostgreSQL` `MySQL` `MongoDB` `Redis`

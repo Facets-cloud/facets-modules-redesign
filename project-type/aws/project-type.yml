@@ -22,6 +22,8 @@ modules:
     flavor: karpenter
   - intent: kubernetes_node_pool
     flavor: eks_automode
+  - intent: kubernetes_node_pool
+    flavor: eks_managed
   - intent: karpenter
     flavor: default
   - intent: aws_iam_policy
@@ -32,18 +34,42 @@ modules:
     flavor: standard
   - intent: network
     flavor: aws_network
+  - intent: network
+    flavor: aws_existing
+  - intent: network
+    flavor: aws_tgw_attachment
   - intent: service
     flavor: aws
+  - intent: service
+    flavor: aws_vm_group
+  - intent: service
+    flavor: aws_ecs
+  - intent: service
+    flavor: aws_drs
+  - intent: service
+    flavor: aws_dr_orchestrator
+  - intent: load_balancer
+    flavor: aws_alb
+  - intent: load_balancer
+    flavor: aws_nlb
+  - intent: dns_zone
+    flavor: aws_route53_failover
   - intent: aws_efs
     flavor: standard
+  - intent: aws_efs
+    flavor: replication
   - intent: aws_iam_role
     flavor: standard
   - intent: aws_secret_manager
     flavor: standard
+  - intent: aws_secret_manager
+    flavor: replication
 
   # === AWS Messaging & Storage Modules ===
   - intent: s3
     flavor: standard
+  - intent: s3
+    flavor: cross_region_replication
   - intent: sqs
     flavor: standard
   - intent: sns
@@ -52,10 +78,14 @@ modules:
   # === AWS Datastore Modules ===
   - intent: kafka
     flavor: aws-msk
+  - intent: kafka
+    flavor: aws-msk-replicator
   - intent: mongo
     flavor: aws-documentdb
   - intent: mysql
     flavor: aws-aurora
+  - intent: mysql
+    flavor: aws-aurora-global
   - intent: mysql
     flavor: aws-rds
   - intent: postgres
@@ -66,12 +96,16 @@ modules:
     flavor: logical
   - intent: redis
     flavor: aws-elasticache
+  - intent: redis
+    flavor: aws-elasticache-global
   - intent: keda
     flavor: standard
 
   # === Common Modules ===
   - intent: artifactories
     flavor: standard
+  - intent: artifactories
+    flavor: aws_ecr_replication
   - intent: image_pull_secret_injector
     flavor: standard
   - intent: alert_rules

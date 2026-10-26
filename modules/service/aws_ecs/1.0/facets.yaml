@@ -1,0 +1,93 @@
+intent: service
+flavor: aws_ecs
+version: '1.0'
+clouds: [aws]
+description: Represents an existing Amazon ECS service without managing AWS resources.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Existing Amazon ECS service details for blueprint wiring.
+  displayName: Service
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/service.svg
+spec:
+  type: object
+  properties:
+    cluster_arn: { type: string, title: Cluster ARN, description: Existing ECS cluster ARN }
+    service_arn: { type: string, title: Service ARN, description: Existing ECS service ARN }
+    service_name: { type: string, title: Service Name, description: Existing ECS service name }
+    task_definition_arn: { type: string, title: Task Definition ARN, description: Existing ECS task definition ARN }
+    task_role_arn: { type: string, title: Task Role ARN, description: IAM task role used by the ECS workload, default: '' }
+    desired_count: { type: integer, title: Desired Count, description: Desired task count including zero, minimum: 0 }
+    compute_mode:
+      type: string
+      title: Compute Mode
+      description: Choose either an ECS launch type or a capacity provider strategy
+      enum: [LAUNCH_TYPE, CAPACITY_PROVIDER]
+      default: LAUNCH_TYPE
+    launch_type:
+      type: string
+      title: Launch Type
+      description: ECS launch type
+      enum: [EC2, FARGATE, EXTERNAL]
+      default: FARGATE
+      x-ui-visible-if:
+        field: spec.compute_mode
+        values: [LAUNCH_TYPE]
+    capacity_provider_strategy:
+      type: array
+      title: Capacity Provider Strategy
+      description: Existing ECS capacity provider strategy
+      default: []
+      x-ui-visible-if:
+        field: spec.compute_mode
+        values: [CAPACITY_PROVIDER]
+      items:
+        type: object
+        properties:
+          capacity_provider: { type: string }
+          weight: { type: integer, minimum: 0 }
+          base: { type: integer, minimum: 0 }
+        required: [capacity_provider]
+    subnets: { type: array, title: Subnets, description: ECS service subnet identifiers, items: { type: string } }
+    security_groups: { type: array, title: Security Groups, description: ECS service security group identifiers, items: { type: string } }
+    tags:
+      type: object
+      title: Tags
+      description: Existing ECS service tags
+      patternProperties:
+        ^[a-zA-Z0-9_.:/=+@-]+$: { type: string }
+  required: [cluster_arn, service_arn, service_name, task_definition_arn, desired_count, compute_mode, subnets, security_groups, tags]
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: Cloud Account
+    description: AWS account containing the ECS service
+    optional: false
+    providers: [aws]
+  network_details:
+    type: '@facets/aws-vpc-details'
+    displayName: VPC Network
+    description: VPC hosting the ECS service
+    optional: false
+outputs:
+  default:
+    type: '@facets/service'
+    title: Service
+sample:
+  kind: service
+  flavor: aws_ecs
+  version: '1.0'
+  spec:
+    cluster_arn: arn:aws:ecs:us-east-1:123456789012:cluster/app
+    service_arn: arn:aws:ecs:us-east-1:123456789012:service/app/web
+    service_name: web
+    task_definition_arn: arn:aws:ecs:us-east-1:123456789012:task-definition/web:1
+    task_role_arn: arn:aws:iam::123456789012:role/web-task
+    desired_count: 0
+    compute_mode: LAUNCH_TYPE
+    launch_type: FARGATE
+    capacity_provider_strategy: []
+    subnets: [subnet-private-a]
+    security_groups: [sg-0123456789abcdef0]
+    tags: { Environment: development }
+iac:
+  validated_files: [variables.tf, main.tf, locals.tf, outputs.tf]

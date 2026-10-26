@@ -1,0 +1,91 @@
+intent: kafka
+flavor: aws-msk-replicator
+version: '1.0'
+description: Blueprint-safe contract for an existing AWS MSK Replicator configuration
+intentDetails:
+  type: Datastores
+  description: AWS MSK Replicator configuration contract
+  displayName: MSK Replicator
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kafka.svg
+clouds:
+- aws
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: AWS Cloud Account
+    description: AWS account that supplies the provider for this contract
+    optional: false
+    providers:
+    - aws
+  source_kafka:
+    type: '@facets/kafka'
+    displayName: Source Kafka Cluster
+    description: Source cluster replicated by MSK Replicator
+    optional: false
+  destination_kafka:
+    type: '@facets/kafka'
+    displayName: Destination Kafka Cluster
+    description: Destination cluster replicated by MSK Replicator
+    optional: false
+outputs:
+  default:
+    type: '@facets/aws_msk_replicator'
+    title: AWS MSK Replicator
+spec:
+  title: AWS MSK Replicator
+  description: Describe an existing MSK Replicator without creating resources
+  type: object
+  properties:
+    replicator_arn:
+      type: string
+      title: Replicator ARN
+      description: ARN of the existing MSK Replicator represented by this contract.
+      pattern: '^arn:aws[a-zA-Z-]*:kafka:[a-z0-9-]+:[0-9]{12}:replicator/.+$'
+    topic_name_pattern:
+      type: string
+      title: Topic Name Pattern
+      description: Regular expression selecting topics for replication.
+    consumer_group_pattern:
+      type: string
+      title: Consumer Group Pattern
+      description: Regular expression selecting consumer groups for replication.
+    starting_position:
+      type: string
+      title: Starting Position
+      description: Initial offset policy for newly replicated topics.
+      enum: [LATEST, EARLIEST]
+      default: LATEST
+    detect_and_copy_new_topics:
+      type: boolean
+      title: Detect and Copy New Topics
+      description: Include new topics that later match the topic pattern.
+      default: false
+  required:
+  - replicator_arn
+  - topic_name_pattern
+  - consumer_group_pattern
+  - starting_position
+  - detect_and_copy_new_topics
+  x-ui-order:
+  - replicator_arn
+  - topic_name_pattern
+  - consumer_group_pattern
+  - starting_position
+  - detect_and_copy_new_topics
+sample:
+  kind: kafka
+  flavor: aws-msk-replicator
+  version: '1.0'
+  disabled: true
+  spec:
+    replicator_arn: arn:aws:kafka:ap-south-2:123456789012:replicator/example/01234567-89ab-cdef-0123-456789abcdef-1
+    topic_name_pattern: '.*'
+    consumer_group_pattern: '.*'
+    starting_position: LATEST
+    detect_and_copy_new_topics: false
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+  - outputs.tf

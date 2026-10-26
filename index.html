@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Facets Module Catalog</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg-primary: #0B001C;
@@ -73,11 +70,17 @@
   box-sizing: border-box;
 }
 
+html {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -94,7 +97,7 @@ body {
   top: -100px;
   left: 50%;
   transform: translateX(-50%);
-  width: 600px;
+  width: min(600px, calc(100vw - 8px));
   height: 600px;
   background: radial-gradient(ellipse at center, rgba(100,93,246,0.20) 0%, transparent 70%);
   pointer-events: none;
@@ -168,7 +171,7 @@ body {
   border: none;
   cursor: pointer;
   background: transparent;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   transition: background 250ms ease, color 250ms ease;
   position: relative;
   z-index: 2;
@@ -375,7 +378,7 @@ body {
   line-height: 1;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
 }
 
 .card-name {
@@ -391,7 +394,7 @@ body {
 .preview-badge {
   display: inline-block;
   vertical-align: 2px;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -891,11 +894,14 @@ body {
   font-weight: 400;
   line-height: 1.5;
   letter-spacing: 0.005em;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
 }
 
 .footer-inner a {
-  color: var(--accent-primary);
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  color: var(--accent-primary-hover);
   text-decoration: none;
   transition: color 200ms ease;
 }
@@ -995,13 +1001,13 @@ body {
     <!-- Cloud Cards -->
     <div class="cloud-grid" role="radiogroup" aria-label="Select a project type">
       <!-- AWS -->
-      <div class="cloud-card" data-cloud="aws" role="radio" aria-checked="false" tabindex="0" aria-label="AWS - 41 modules" onclick="selectCloud('aws')" onkeydown="handleCardKey(event, 'aws')">
+      <div class="cloud-card" data-cloud="aws" role="radio" aria-checked="false" tabindex="0" aria-label="Amazon Web Services project type" onclick="selectCloud('aws')" onkeydown="handleCardKey(event, 'aws')">
         <div class="card-top">
           <div class="card-icon">
             <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11.4 22.6c0 .4.04.7.1.9.08.2.17.5.3.7.04.08.06.16.06.2 0 .1-.06.2-.18.28l-.6.4a.44.44 0 01-.24.08c-.1 0-.2-.04-.28-.14a2.9 2.9 0 01-.34-.44 7.5 7.5 0 01-.3-.56c-.74.88-1.68 1.32-2.8 1.32-.8 0-1.44-.22-1.9-.68-.48-.46-.72-1.06-.72-1.82 0-.8.28-1.46.86-1.96.58-.5 1.34-.74 2.32-.74.32 0 .66.02 1.02.08.36.06.72.14 1.12.24v-.7c0-.72-.14-1.22-.44-1.52-.3-.3-.8-.44-1.54-.44-.34 0-.68.04-1.04.12-.36.08-.7.2-1.04.34-.16.06-.28.1-.34.12a.56.56 0 01-.12.02c-.1 0-.16-.08-.16-.24v-.46c0-.12.02-.22.06-.28.04-.06.12-.12.26-.18.34-.18.74-.32 1.2-.44a5.6 5.6 0 011.5-.18c1.14 0 1.98.26 2.52.78.52.52.8 1.3.8 2.36v3.12h-.02zm-3.86 1.44c.32 0 .64-.06.98-.16.34-.1.64-.3.88-.58.14-.16.26-.36.32-.58.06-.22.1-.5.1-.82v-.4a7.3 7.3 0 00-.9-.18 7.2 7.2 0 00-.9-.06c-.64 0-1.1.12-1.4.38-.3.26-.46.62-.46 1.1 0 .44.12.78.34 1 .22.22.54.3.96.3h.08zm7.64 1.02c-.14 0-.22-.02-.28-.08-.06-.04-.12-.16-.16-.32l-1.84-6.04a1.7 1.7 0 01-.08-.34c0-.14.06-.2.2-.2h.72c.14 0 .22.02.28.08.06.04.1.16.14.32L15.4 23.8l1.14-4.34c.04-.18.08-.28.14-.34.06-.04.16-.08.28-.08h.58c.14 0 .22.02.28.08.06.04.1.16.14.34l1.16 4.38 1.28-4.38c.04-.18.08-.28.14-.34.06-.04.16-.08.28-.08h.68c.14 0 .2.06.2.2 0 .04-.02.08-.02.14-.02.04-.04.1-.06.2l-1.88 6.04c-.04.18-.1.28-.16.34-.06.04-.16.08-.28.08h-.62c-.14 0-.22-.02-.28-.08-.06-.06-.1-.16-.14-.34l-1.14-4.22-1.12 4.2c-.04.18-.08.28-.14.34-.06.06-.16.08-.28.08h-.62l.02.02zm12.24.28c-.5 0-.98-.06-1.44-.16-.46-.12-.82-.24-1.06-.38-.14-.08-.24-.18-.28-.26a.64.64 0 01-.04-.24v-.48c0-.16.06-.24.18-.24a.4.4 0 01.14.02l.18.1c.36.16.7.3 1.08.38.38.1.74.14 1.12.14.58 0 1.04-.1 1.36-.32.32-.22.48-.52.48-.92 0-.28-.08-.5-.26-.68-.18-.18-.5-.34-.96-.48l-1.38-.44c-.7-.22-1.2-.54-1.52-.96-.32-.42-.48-.88-.48-1.38 0-.4.08-.74.26-1.06.18-.3.4-.58.7-.78.28-.22.62-.38 1-.5.38-.12.78-.16 1.2-.16.2 0 .42.02.64.04.22.04.42.08.62.14.18.06.36.12.52.2.16.06.28.14.36.2.12.08.2.16.24.24.04.08.06.18.06.3v.44c0 .16-.06.24-.18.24-.06 0-.18-.06-.34-.16a4.46 4.46 0 00-1.92-.4c-.54 0-.96.08-1.26.26-.3.18-.44.46-.44.84 0 .28.1.52.28.7.2.18.54.36 1.02.52l1.34.42c.68.22 1.18.52 1.48.92.3.38.44.82.44 1.32 0 .4-.08.78-.26 1.1-.18.34-.42.62-.72.86-.3.24-.66.42-1.08.54-.44.14-.9.2-1.38.2z" fill="#FF9900"/><path d="M25.54 28.82c-3.06 2.26-7.5 3.46-11.32 3.46-5.36 0-10.18-1.98-13.82-5.28-.28-.26-.04-.6.32-.4 3.94 2.28 8.8 3.66 13.82 3.66 3.4 0 7.1-.7 10.52-2.16.52-.22.94.34.48.72z" fill="#FF9900"/><path d="M26.94 27.22c-.4-.5-2.6-.24-3.58-.12-.3.04-.34-.22-.08-.42 1.76-1.24 4.64-.88 4.98-.46.34.42-.1 3.34-1.74 4.74-.24.22-.48.1-.38-.16.36-.92 1.18-3.08.8-3.58z" fill="#FF9900"/></svg>
           </div>
           <div class="card-stat">
-            <div class="stat-number">41</div>
+            <div class="stat-number"></div>
             <div class="stat-label">MODULES</div>
           </div>
         </div>
@@ -1010,13 +1016,13 @@ body {
       </div>
 
       <!-- GCP -->
-      <div class="cloud-card" data-cloud="gcp" role="radio" aria-checked="false" tabindex="0" aria-label="GCP - 35 modules" onclick="selectCloud('gcp')" onkeydown="handleCardKey(event, 'gcp')">
+      <div class="cloud-card" data-cloud="gcp" role="radio" aria-checked="false" tabindex="0" aria-label="Google Cloud Platform project type" onclick="selectCloud('gcp')" onkeydown="handleCardKey(event, 'gcp')">
         <div class="card-top">
           <div class="card-icon">
             <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M25.56 13.12l2.18-2.18.14-1.12A12.42 12.42 0 0 0 7.78 14.4l.94-.1 4.36-.72s.22-.36.34-.34a8.06 8.06 0 0 1 12.14-.12z" fill="#EA4335"/><path d="M30.6 14.4a12.44 12.44 0 0 0-3.76-6.06l-3.08 3.08a7.98 7.98 0 0 1 2.94 6.34v.8c2.22 0 4.02 1.8 4.02 4.02s-1.8 4.02-4.02 4.02H20l-.8.82v4.82l.8.76h6.7A8.38 8.38 0 0 0 30.6 14.4z" fill="#4285F4"/><path d="M13.3 33h6.7v-4.4H13.3a4 4 0 0 1-1.66-.36l-1.14.36-2.2 2.18-.28 1.1A8.32 8.32 0 0 0 13.3 33z" fill="#34A853"/><path d="M13.3 16.24A8.38 8.38 0 0 0 8.02 31.88l3.64-3.64a4.02 4.02 0 1 1 5.32-5.32l3.64-3.64A8.36 8.36 0 0 0 13.3 16.24z" fill="#FBBC05"/></svg>
           </div>
           <div class="card-stat">
-            <div class="stat-number">35</div>
+            <div class="stat-number"></div>
             <div class="stat-label">MODULES</div>
           </div>
         </div>
@@ -1025,13 +1031,13 @@ body {
       </div>
 
       <!-- Azure -->
-      <div class="cloud-card" data-cloud="azure" role="radio" aria-checked="false" tabindex="0" aria-label="Azure - 34 modules" onclick="selectCloud('azure')" onkeydown="handleCardKey(event, 'azure')">
+      <div class="cloud-card" data-cloud="azure" role="radio" aria-checked="false" tabindex="0" aria-label="Microsoft Azure project type" onclick="selectCloud('azure')" onkeydown="handleCardKey(event, 'azure')">
         <div class="card-top">
           <div class="card-icon">
             <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14.4 7h8.18L14 31.5a1.2 1.2 0 0 1-1.12.8H7.2a1.2 1.2 0 0 1-1.12-1.62L13.28 7.8A1.2 1.2 0 0 1 14.4 7z" fill="url(#az1)"/><path d="M26 24.1H14.58a.56.56 0 0 0-.38.96l7.36 6.88c.22.2.5.32.8.32h7.56L26 24.1z" fill="#0078D4"/><path d="M14.4 7a1.18 1.18 0 0 0-1.14.82L6.1 30.66c-.26.7.26 1.44 1 1.44h6.02c.42-.1.78-.4.94-.8L16.8 24 22 30.56c.2.18.46.28.74.3h7.2l-3.18-6.76-6.78-14.28A1.2 1.2 0 0 0 18.86 9h-4.46z" fill="url(#az2)"/><path d="M27.08 7.8A1.2 1.2 0 0 0 25.94 7h-11.4a1.2 1.2 0 0 1 1.12.8l7.2 22.88a1.2 1.2 0 0 1-1.12 1.62h11.4a1.2 1.2 0 0 0 1.12-1.62L27.08 7.8z" fill="#0078D4"/><defs><linearGradient id="az1" x1="16" y1="8" x2="10" y2="32" gradientUnits="userSpaceOnUse"><stop stop-color="#114A8B"/><stop offset="1" stop-color="#0669BC"/></linearGradient><linearGradient id="az2" x1="20" y1="16" x2="17" y2="32" gradientUnits="userSpaceOnUse"><stop stop-opacity=".3"/><stop offset=".07" stop-opacity=".2"/><stop offset=".32" stop-opacity=".1"/><stop offset=".62" stop-opacity=".05"/><stop offset="1" stop-opacity="0"/></linearGradient></defs></svg>
           </div>
           <div class="card-stat">
-            <div class="stat-number">34</div>
+            <div class="stat-number"></div>
             <div class="stat-label">MODULES</div>
           </div>
         </div>
@@ -1040,13 +1046,13 @@ body {
       </div>
 
       <!-- Vultr (preview) -->
-      <div class="cloud-card" data-cloud="vultr" role="radio" aria-checked="false" tabindex="0" aria-label="Vultr, preview - 28 modules" onclick="selectCloud('vultr')" onkeydown="handleCardKey(event, 'vultr')">
+      <div class="cloud-card" data-cloud="vultr" role="radio" aria-checked="false" tabindex="0" aria-label="Vultr preview project type" onclick="selectCloud('vultr')" onkeydown="handleCardKey(event, 'vultr')">
         <div class="card-top">
           <div class="card-icon">
             <img src="icons/vultr-icon.svg" width="40" height="40" alt="" loading="lazy">
           </div>
           <div class="card-stat">
-            <div class="stat-number">28</div>
+            <div class="stat-number"></div>
             <div class="stat-label">MODULES</div>
           </div>
         </div>
@@ -1055,13 +1061,13 @@ body {
       </div>
 
       <!-- Linode / Akamai (preview) -->
-      <div class="cloud-card" data-cloud="linode" role="radio" aria-checked="false" tabindex="0" aria-label="Linode by Akamai, preview - 28 modules" onclick="selectCloud('linode')" onkeydown="handleCardKey(event, 'linode')">
+      <div class="cloud-card" data-cloud="linode" role="radio" aria-checked="false" tabindex="0" aria-label="Linode by Akamai preview project type" onclick="selectCloud('linode')" onkeydown="handleCardKey(event, 'linode')">
         <div class="card-top">
           <div class="card-icon">
             <img src="icons/linode-icon.svg" width="40" height="40" alt="" loading="lazy">
           </div>
           <div class="card-stat">
-            <div class="stat-number">28</div>
+            <div class="stat-number"></div>
             <div class="stat-label">MODULES</div>
           </div>
         </div>
@@ -1070,13 +1076,13 @@ body {
       </div>
 
       <!-- Empty: blank slate, no cloud committed to -->
-      <div class="cloud-card" data-cloud="empty" role="radio" aria-checked="false" tabindex="0" aria-label="Empty blank slate - 3 modules" onclick="selectCloud('empty')" onkeydown="handleCardKey(event, 'empty')">
+      <div class="cloud-card" data-cloud="empty" role="radio" aria-checked="false" tabindex="0" aria-label="Empty project type" onclick="selectCloud('empty')" onkeydown="handleCardKey(event, 'empty')">
         <div class="card-top">
           <div class="card-icon">
             <img src="icons/empty-icon.svg" width="40" height="40" alt="" loading="lazy">
           </div>
           <div class="card-stat">
-            <div class="stat-number">3</div>
+            <div class="stat-number"></div>
             <div class="stat-label">MODULES</div>
           </div>
         </div>
@@ -1261,22 +1267,27 @@ raptor apply -f ./bp-templates/observability -p my-project</pre>
 const CLOUD_DATA = {
   aws: {
     name: "Amazon Web Services",
-    moduleCount: 41,
     praxisPrompt: "Import the official Facets AWS project type for me.\n\nraptor import project-type --managed facets/aws",
     raptorImport: "raptor import project-type --managed facets/aws",
     raptorImportNamed: 'raptor import project-type --managed facets/aws \\\n  --name "My Platform"',
     categories: {
       "Infrastructure": [
-        "Cloud Account (aws_provider)", "Network/VPC (aws_network)", "EKS Standard (eks_standard)",
-        "EKS Automode (eks_automode)", "Node Pool/Karpenter (karpenter)",
-        "Node Pool/Automode (eks_automode)", "Karpenter (default)", "AWS ALB Controller (standard)",
-        "EFS CSI Driver (standard)", "AWS EFS (standard)", "StorageClass/EBS (aws_ebs)", "StorageClass/EFS (aws_efs)", "Service (aws)",
-        "AWS IAM Policy (standard)", "AWS IAM Role (standard)"
+        "Cloud Account (aws_provider)", "Network/VPC (aws_network)", "Existing AWS Network (aws_existing)",
+        "AWS TGW Attachment (aws_tgw_attachment)", "EKS Standard (eks_standard)", "EKS Automode (eks_automode)",
+        "EKS Managed Node Pool (eks_managed)", "Node Pool/Karpenter (karpenter)", "Node Pool/Automode (eks_automode)",
+        "Karpenter (default)", "AWS ALB Controller (standard)", "Application Load Balancer (aws_alb)",
+        "Network Load Balancer (aws_nlb)", "Route 53 Failover (aws_route53_failover)", "EFS CSI Driver (standard)",
+        "AWS EFS (standard)", "EFS Replication (replication)", "S3 Cross-Region Replication (cross_region_replication)",
+        "StorageClass/EBS (aws_ebs)", "StorageClass/EFS (aws_efs)", "Service (aws)", "Amazon ECS Service (aws_ecs)",
+        "AWS VM Group (aws_vm_group)", "AWS Elastic Disaster Recovery (aws_drs)", "AWS DR Orchestrator (aws_dr_orchestrator)",
+        "AWS IAM Policy (standard)", "AWS IAM Role (standard)", "ECR Replication (aws_ecr_replication)",
+        "Secrets Manager Replication (replication)"
       ],
       "Managed Datastores": [
         "PostgreSQL/RDS (aws-rds)", "PostgreSQL/Aurora (aws-aurora)", "PostgreSQL/Logical (logical)", "MySQL/RDS (aws-rds)",
-        "MySQL/Aurora (aws-aurora)", "MongoDB/DocumentDB (aws-documentdb)",
-        "Redis/ElastiCache (aws-elasticache)", "Kafka/MSK (aws-msk)"
+        "MySQL/Aurora (aws-aurora)", "Aurora Global Database (aws-aurora-global)", "MongoDB/DocumentDB (aws-documentdb)",
+        "Redis/ElastiCache (aws-elasticache)", "ElastiCache Global Datastore (aws-elasticache-global)",
+        "Kafka/MSK (aws-msk)", "MSK Replicator (aws-msk-replicator)"
       ],
       "Self-hosted via KubeBlocks": [
         "PostgreSQL", "MySQL", "MongoDB", "Redis"
@@ -1294,7 +1305,6 @@ const CLOUD_DATA = {
   },
   gcp: {
     name: "Google Cloud Platform",
-    moduleCount: 35,
     praxisPrompt: "Import the official Facets GCP project type for me.\n\nraptor import project-type --managed facets/gcp",
     raptorImport: "raptor import project-type --managed facets/gcp",
     raptorImportNamed: 'raptor import project-type --managed facets/gcp \\\n  --name "My Platform"',
@@ -1324,7 +1334,6 @@ const CLOUD_DATA = {
   },
   azure: {
     name: "Microsoft Azure",
-    moduleCount: 34,
     praxisPrompt: "Import the official Facets Azure project type for me.\n\nraptor import project-type --managed facets/azure",
     raptorImport: "raptor import project-type --managed facets/azure",
     raptorImportNamed: 'raptor import project-type --managed facets/azure \\\n  --name "My Platform"',
@@ -1357,7 +1366,6 @@ const CLOUD_DATA = {
   // from the repo by file path rather than `--managed facets/<cloud>`.
   vultr: {
     name: "Vultr",
-    moduleCount: 28,
     preview: true,
     prereq: {
       text: "Create a Vultr API key and add your control plane egress IP to the API access-control allow-list before importing.",
@@ -1391,7 +1399,6 @@ const CLOUD_DATA = {
   },
   linode: {
     name: "Linode (Akamai)",
-    moduleCount: 28,
     preview: true,
     prereq: {
       text: "Create a Linode API token with read/write on Linodes, Kubernetes, VPCs, IPs, Object Storage, and Databases before importing.",
@@ -1427,7 +1434,6 @@ const CLOUD_DATA = {
   // nothing else. No base template, so projects start with an empty blueprint.
   empty: {
     name: "Empty",
-    moduleCount: 3,
     praxisPrompt: "Import the official Facets empty project type for me.\n\nraptor import project-type --managed facets/empty",
     raptorImport: "raptor import project-type --managed facets/empty",
     raptorImportNamed: 'raptor import project-type --managed facets/empty \\\n  --name "My Platform"',
@@ -1454,6 +1460,21 @@ const WARNING_ICON_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="
 
 let selectedCloud = null;
 let isSwitching = false;
+
+function getModuleCount(data) {
+  return Object.values(data.categories).reduce((total, modules) => total + modules.length, 0);
+}
+
+function renderModuleCounts() {
+  document.querySelectorAll('.cloud-card[data-cloud]').forEach(card => {
+    const data = CLOUD_DATA[card.dataset.cloud];
+    const count = getModuleCount(data);
+    card.querySelector('.stat-number').textContent = count;
+    card.setAttribute('aria-label', data.name + (data.preview ? ', preview' : '') + ' - ' + count + ' modules');
+  });
+}
+
+renderModuleCounts();
 
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -1518,6 +1539,7 @@ function selectCloud(cloud) {
 function renderDetail(cloud) {
   const data = CLOUD_DATA[cloud];
   const panel = document.getElementById('detail-panel');
+  const moduleCount = getModuleCount(data);
   panel.setAttribute('aria-label', data.name + ' project type details');
 
   let pillIndex = 0;
@@ -1581,7 +1603,7 @@ function renderDetail(cloud) {
     '<div class="detail-section">' +
       '<div class="whats-included-header">' +
         '<div class="section-label">What\'s Included</div>' +
-        '<div class="module-count-badge"><strong>' + data.moduleCount + '</strong> modules</div>' +
+        '<div class="module-count-badge"><strong>' + moduleCount + '</strong> modules</div>' +
       '</div>' +
       categoriesHtml +
     '</div>';

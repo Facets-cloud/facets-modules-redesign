@@ -129,6 +129,7 @@
             flavors: [
               { flavor: "karpenter", clouds: ["aws"] },
               { flavor: "eks_automode", clouds: ["aws"] },
+              { flavor: "eks_managed", clouds: ["aws"] },
               { flavor: "gcp", clouds: ["gcp"] },
               { flavor: "gcp_node_fleet", clouds: ["gcp"] },
               { flavor: "azure", clouds: ["azure"] },
@@ -150,6 +151,8 @@
             intent: "network", displayName: "Network", type: "Cloud & Infrastructure", icon: "network.svg",
             flavors: [
               { flavor: "aws_network", clouds: ["aws"] },
+              { flavor: "aws_existing", clouds: ["aws"] },
+              { flavor: "aws_tgw_attachment", clouds: ["aws"] },
               { flavor: "gcp_network", clouds: ["gcp"] },
               { flavor: "azure_network", clouds: ["azure"] },
             ]
@@ -158,8 +161,37 @@
             intent: "service", displayName: "Service", type: "Cloud & Infrastructure", icon: "service.svg",
             flavors: [
               { flavor: "aws", clouds: ["aws"] },
+              { flavor: "aws_vm_group", clouds: ["aws"] },
+              { flavor: "aws_ecs", clouds: ["aws"] },
+              { flavor: "aws_drs", clouds: ["aws"] },
+              { flavor: "aws_dr_orchestrator", clouds: ["aws"] },
               { flavor: "gcp", clouds: ["gcp"] },
               { flavor: "azure", clouds: ["azure"] },
+            ]
+          },
+          {
+            intent: "load_balancer", displayName: "Load Balancer", type: "Cloud & Infrastructure", icon: "service.svg",
+            flavors: [
+              { flavor: "aws_alb", clouds: ["aws"] },
+              { flavor: "aws_nlb", clouds: ["aws"] },
+            ]
+          },
+          {
+            intent: "dns_zone", displayName: "DNS Zone", type: "Cloud & Infrastructure", icon: "dns_zone.svg",
+            flavors: [
+              { flavor: "aws_route53_failover", clouds: ["aws"] },
+            ]
+          },
+          {
+            intent: "aws_efs", displayName: "AWS EFS", type: "Cloud & Infrastructure", icon: "aws_efs.svg",
+            flavors: [
+              { flavor: "replication", clouds: ["aws"] },
+            ]
+          },
+          {
+            intent: "s3", displayName: "S3", type: "Cloud & Infrastructure", icon: "s3.svg",
+            flavors: [
+              { flavor: "cross_region_replication", clouds: ["aws"] },
             ]
           },
           {
@@ -187,6 +219,7 @@
               { flavor: "kubeblocks", clouds: ["kubernetes", "aws", "azure", "gcp"] },
               { flavor: "aws-aurora", clouds: ["aws"] },
               { flavor: "aws-rds", clouds: ["aws"] },
+              { flavor: "aws-aurora-global", clouds: ["aws"] },
               { flavor: "gcp-cloudsql", clouds: ["gcp"] },
               { flavor: "flexible_server", clouds: ["azure"] },
             ]
@@ -206,6 +239,7 @@
             flavors: [
               { flavor: "kubeblocks", clouds: ["kubernetes", "aws", "azure", "gcp"] },
               { flavor: "aws-elasticache", clouds: ["aws"] },
+              { flavor: "aws-elasticache-global", clouds: ["aws"] },
               { flavor: "gcp-memorystore", clouds: ["gcp"] },
               { flavor: "azure_cache_custom", clouds: ["azure"] },
             ]
@@ -214,6 +248,7 @@
             intent: "kafka", displayName: "Kafka", type: "Datastores", icon: "kafka.svg",
             flavors: [
               { flavor: "aws-msk", clouds: ["aws"] },
+              { flavor: "aws-msk-replicator", clouds: ["aws"] },
               { flavor: "gcp-msk", clouds: ["gcp"] },
             ]
           },
@@ -305,6 +340,7 @@
             intent: "artifactories", displayName: "Artifactories", type: "Kubernetes Resources", icon: "artifactories.svg",
             flavors: [
               { flavor: "standard", clouds: ["gcp", "kubernetes", "azure", "aws"] },
+              { flavor: "aws_ecr_replication", clouds: ["aws"] },
             ]
           },
         ]
@@ -392,6 +428,12 @@
             intent: "azure_workload_identity", displayName: "Azure Workload Identity", type: "Security & Identity", icon: "azure_workload_identity.svg",
             flavors: [
               { flavor: "azure", clouds: ["azure"] },
+            ]
+          },
+          {
+            intent: "aws_secret_manager", displayName: "AWS Secrets Manager", type: "Security & Identity", icon: "aws_secret_manager.svg",
+            flavors: [
+              { flavor: "replication", clouds: ["aws"] },
             ]
           },
           {

@@ -1,0 +1,103 @@
+intent: service
+flavor: aws_vm_group
+version: '1.0'
+clouds: [aws]
+description: Represents an existing AWS VM group without managing AWS resources.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Existing AWS virtual machine group details for blueprint wiring.
+  displayName: Service
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/service.svg
+spec:
+  type: object
+  properties:
+    mode:
+      type: string
+      title: Mode
+      description: Existing compute group mode
+      enum: [SINGLE_INSTANCE, AUTO_SCALING_GROUP]
+    instance_ids:
+      type: array
+      title: Instance IDs
+      description: Existing EC2 instance identifiers
+      items: { type: string }
+      default: []
+      x-ui-visible-if:
+        field: spec.mode
+        values: [SINGLE_INSTANCE]
+    autoscaling_group_name:
+      type: string
+      title: Auto Scaling Group Name
+      description: Existing Auto Scaling group name
+      default: ''
+      x-ui-visible-if:
+        field: spec.mode
+        values: [AUTO_SCALING_GROUP]
+    ami_id: { type: string, title: AMI ID, description: AMI used by the VM group }
+    instance_type: { type: string, title: Instance Type, description: EC2 instance type }
+    min_size:
+      type: integer
+      title: Minimum Size
+      description: Minimum group capacity
+      minimum: 0
+      default: 0
+      x-ui-visible-if:
+        field: spec.mode
+        values: [AUTO_SCALING_GROUP]
+    max_size:
+      type: integer
+      title: Maximum Size
+      description: Maximum group capacity
+      minimum: 0
+      default: 0
+      x-ui-visible-if:
+        field: spec.mode
+        values: [AUTO_SCALING_GROUP]
+    desired_capacity:
+      type: integer
+      title: Desired Capacity
+      description: Desired group capacity including zero
+      minimum: 0
+      default: 0
+      x-ui-visible-if:
+        field: spec.mode
+        values: [AUTO_SCALING_GROUP]
+    tags:
+      type: object
+      title: Tags
+      description: Existing EC2 tags
+      patternProperties:
+        ^[a-zA-Z0-9_.:/=+@-]+$: { type: string }
+  required: [mode, ami_id, instance_type, tags]
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: Cloud Account
+    description: AWS account containing the VM group
+    optional: false
+    providers: [aws]
+  network_details:
+    type: '@facets/aws-vpc-details'
+    displayName: VPC Network
+    description: VPC hosting the VM group
+    optional: false
+outputs:
+  default:
+    type: '@facets/aws_vm_group'
+    title: AWS VM Group
+sample:
+  kind: service
+  flavor: aws_vm_group
+  version: '1.0'
+  spec:
+    mode: AUTO_SCALING_GROUP
+    instance_ids: []
+    autoscaling_group_name: app-workers
+    ami_id: ami-0123456789abcdef0
+    instance_type: m6i.large
+    min_size: 0
+    max_size: 3
+    desired_capacity: 0
+    tags: { Environment: development }
+iac:
+  validated_files: [variables.tf, main.tf, locals.tf, outputs.tf]

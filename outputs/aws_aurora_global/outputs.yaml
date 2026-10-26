@@ -1,0 +1,11 @@
+name: '@facets/aws_aurora_global'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties: {}
+    interfaces:
+      type: object
+      properties: {}
+providers: []

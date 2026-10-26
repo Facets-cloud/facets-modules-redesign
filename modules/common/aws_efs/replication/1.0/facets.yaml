@@ -1,0 +1,74 @@
+intent: aws_efs
+flavor: replication
+version: '1.0'
+description: Blueprint-safe contract for an existing AWS EFS replication configuration
+intentDetails:
+  type: Cloud & Infrastructure
+  description: AWS EFS replication configuration contract
+  displayName: AWS EFS Replication
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/aws_efs.svg
+clouds:
+- aws
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: AWS Cloud Account
+    description: AWS account that supplies the provider for this contract
+    optional: false
+    providers:
+    - aws
+  source_file_system:
+    type: '@facets/aws_efs'
+    displayName: Source File System
+    description: Source EFS file system for replication
+    optional: false
+  destination_file_system:
+    type: '@facets/aws_efs'
+    displayName: Destination File System
+    description: Destination EFS file system replicated from the source
+    optional: false
+outputs:
+  default:
+    type: '@facets/aws_efs_replication'
+    title: AWS EFS Replication
+spec:
+  title: AWS EFS Replication
+  description: Describe an existing EFS replication configuration without creating resources
+  type: object
+  properties:
+    destination_region:
+      type: string
+      title: Destination Region
+      description: AWS region containing the destination file system.
+      x-ui-overrides-only: true
+    destination_availability_zone_name:
+      type: string
+      title: Destination Availability Zone
+      description: Optional single-AZ destination for one-zone file systems.
+      default: ''
+    kms_key_id:
+      type: string
+      title: Destination KMS Key ID
+      description: KMS key identifier used to encrypt the destination file system.
+      default: ''
+  required:
+  - destination_region
+  x-ui-order:
+  - destination_region
+  - destination_availability_zone_name
+  - kms_key_id
+sample:
+  kind: aws_efs
+  flavor: replication
+  version: '1.0'
+  disabled: true
+  spec:
+    destination_region: ap-south-2
+    destination_availability_zone_name: ''
+    kms_key_id: ''
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+  - outputs.tf

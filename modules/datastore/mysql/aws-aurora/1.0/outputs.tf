@@ -4,7 +4,7 @@ locals {
     reader = {
       host     = aws_rds_cluster.aurora.reader_endpoint
       username = aws_rds_cluster.aurora.master_username
-      port     = tostring(aws_rds_cluster.aurora.port)
+      port     = aws_rds_cluster.aurora.port
       password = local.restore_from_backup ? var.instance.spec.restore_config.master_password : local.master_password
       database = aws_rds_cluster.aurora.database_name
       connection_string = format(
@@ -20,7 +20,7 @@ locals {
 
     writer = {
       host     = aws_rds_cluster.aurora.endpoint
-      port     = tostring(aws_rds_cluster.aurora.port)
+      port     = aws_rds_cluster.aurora.port
       username = aws_rds_cluster.aurora.master_username
       password = local.restore_from_backup ? var.instance.spec.restore_config.master_password : local.master_password
       database = aws_rds_cluster.aurora.database_name

@@ -1,0 +1,99 @@
+intent: s3
+flavor: cross_region_replication
+version: '1.0'
+description: Blueprint-safe contract for an existing Amazon S3 cross-region replication configuration
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Amazon S3 cross-region replication configuration contract
+  displayName: S3 Cross-Region Replication
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/s3.svg
+clouds:
+- aws
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: AWS Cloud Account
+    description: AWS account that supplies the provider for this contract
+    optional: false
+    providers:
+    - aws
+  source_bucket:
+    type: '@facets/s3'
+    displayName: Source S3 Bucket
+    description: Source bucket with an existing replication configuration
+    optional: false
+  destination_bucket:
+    type: '@facets/s3'
+    displayName: Destination S3 Bucket
+    description: Destination bucket receiving replicated objects
+    optional: false
+outputs:
+  default:
+    type: '@facets/aws_s3_replication'
+    title: S3 Cross-Region Replication
+spec:
+  title: S3 Cross-Region Replication
+  description: Describe an existing S3 cross-region replication configuration without creating resources or policies
+  type: object
+  properties:
+    destination_region:
+      type: string
+      title: Destination Region
+      description: AWS region containing the destination bucket.
+      x-ui-overrides-only: true
+    destination_account_id:
+      type: string
+      title: Destination AWS Account ID
+      description: Twelve-digit AWS account ID that owns the destination bucket.
+      pattern: '^[0-9]{12}$'
+    prefix:
+      type: string
+      title: Object Key Prefix
+      description: Optional object-key prefix included in replication.
+      default: ''
+    storage_class:
+      type: string
+      title: Replica Storage Class
+      description: Storage class assigned to replicated objects.
+      enum: [STANDARD, STANDARD_IA, ONEZONE_IA, INTELLIGENT_TIERING, GLACIER_IR, DEEP_ARCHIVE]
+      default: STANDARD
+    replica_kms_key_id:
+      type: string
+      title: Replica KMS Key ID
+      description: Optional KMS key identifier used for replicated objects.
+      default: ''
+    delete_marker_replication:
+      type: boolean
+      title: Replicate Delete Markers
+      description: Replicate delete markers to the destination bucket.
+      default: false
+  required:
+  - destination_region
+  - destination_account_id
+  - storage_class
+  - delete_marker_replication
+  x-ui-order:
+  - destination_region
+  - destination_account_id
+  - prefix
+  - storage_class
+  - replica_kms_key_id
+  - delete_marker_replication
+sample:
+  kind: s3
+  flavor: cross_region_replication
+  version: '1.0'
+  disabled: true
+  spec:
+    destination_region: ap-south-2
+    destination_account_id: '123456789012'
+    prefix: ''
+    storage_class: STANDARD
+    replica_kms_key_id: ''
+    delete_marker_replication: false
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+  - outputs.tf

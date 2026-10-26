@@ -1,0 +1,91 @@
+intent: kubernetes_node_pool
+flavor: eks_managed
+version: '1.0'
+clouds: [aws]
+description: Represents an existing EKS managed node group without managing AWS resources.
+intentDetails:
+  type: Kubernetes
+  description: Existing EKS managed node group details for blueprint wiring.
+  displayName: Kubernetes Node Pool
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_node_pool.svg
+spec:
+  type: object
+  properties:
+    node_group_name: { type: string, title: Node Group Name, description: Existing EKS managed node group name }
+    instance_types: { type: array, title: Instance Types, description: EC2 instance types in the node group, items: { type: string } }
+    capacity_type:
+      type: string
+      title: Capacity Type
+      description: EKS managed node group capacity type
+      enum: [ON_DEMAND, SPOT]
+    min_size: { type: integer, title: Minimum Size, description: Minimum node count including zero, minimum: 0 }
+    max_size: { type: integer, title: Maximum Size, description: Maximum node count including zero, minimum: 0 }
+    desired_size: { type: integer, title: Desired Size, description: Desired node count including zero, minimum: 0 }
+    disk_size: { type: integer, title: Disk Size, description: Node root disk size in GiB, minimum: 1 }
+    ami_type: { type: string, title: AMI Type, description: EKS node AMI type }
+    labels:
+      type: object
+      title: Labels
+      description: Node labels
+      patternProperties:
+        ^[a-zA-Z0-9_.:/-]+$: { type: string }
+    taints:
+      type: array
+      title: Taints
+      description: Node taints
+      items:
+        type: object
+        properties:
+          key: { type: string }
+          value: { type: string }
+          effect: { type: string, enum: [NO_SCHEDULE, NO_EXECUTE, PREFER_NO_SCHEDULE] }
+        required: [key, value, effect]
+    tags:
+      type: object
+      title: Tags
+      description: Existing node group tags
+      patternProperties:
+        ^[a-zA-Z0-9_.:/=+@-]+$: { type: string }
+  required: [node_group_name, instance_types, capacity_type, min_size, max_size, desired_size, disk_size, ami_type, labels, taints, tags]
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: Cloud Account
+    description: AWS account containing the EKS node group
+    optional: false
+    providers: [aws]
+  kubernetes_details:
+    type: '@facets/eks'
+    displayName: EKS Cluster
+    description: EKS cluster owning the managed node group
+    optional: false
+  network_details:
+    type: '@facets/aws-vpc-details'
+    displayName: VPC Network
+    description: VPC hosting the EKS node group
+    optional: false
+outputs:
+  default:
+    type: '@facets/kubernetes_nodepool'
+    title: Kubernetes Node Pool
+  attributes:
+    type: '@facets/aws_eks_managed_nodepool'
+    title: AWS EKS Managed Node Pool
+sample:
+  kind: kubernetes_node_pool
+  flavor: eks_managed
+  version: '1.0'
+  spec:
+    node_group_name: workers
+    instance_types: [m6i.large]
+    capacity_type: ON_DEMAND
+    min_size: 0
+    max_size: 3
+    desired_size: 0
+    disk_size: 50
+    ami_type: AL2023_x86_64_STANDARD
+    labels: { workload: general }
+    taints: []
+    tags: { Environment: development }
+iac:
+  validated_files: [variables.tf, main.tf, locals.tf, outputs.tf]

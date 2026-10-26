@@ -1,0 +1,98 @@
+intent: artifactories
+flavor: aws_ecr_replication
+version: "1.0"
+description: Contract-only AWS ECR replication configuration.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Configure Amazon ECR registry replication
+  displayName: AWS ECR Replication
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/artifactories.svg
+clouds:
+  - aws
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: AWS Cloud Account
+    description: AWS account supplying the AWS provider
+    optional: false
+    providers:
+      - aws
+outputs:
+  default:
+    type: '@facets/aws_ecr_replication'
+    title: AWS ECR Replication Details
+spec:
+  title: AWS ECR Replication Configuration
+  type: object
+  properties:
+    source_registry_id:
+      title: Source Registry ID
+      description: AWS account registry identifier used as the replication source.
+      type: string
+      pattern: '^[0-9]{12}$'
+    destinations:
+      title: Replication Destinations
+      description: AWS region and registry pairs that receive matching container images.
+      type: array
+      minItems: 1
+      uniqueItems: true
+      x-ui-overrides-only: true
+      items:
+        type: object
+        properties:
+          region:
+            type: string
+            title: Region
+            description: AWS destination region.
+          registry_id:
+            type: string
+            title: Registry ID
+            description: Twelve-digit AWS account registry identifier.
+            pattern: '^[0-9]{12}$'
+        required: [region, registry_id]
+    repository_prefixes:
+      title: Repository Prefixes
+      description: Repository name prefixes included in replication.
+      type: array
+      default: []
+      items:
+        type: string
+    repository_filters:
+      title: Repository Filters
+      description: Additional repository filters represented by this contract.
+      type: array
+      default: []
+      items:
+        type: string
+    scan_on_push:
+      title: Scan on Push
+      description: Enable vulnerability scanning when images are pushed.
+      type: boolean
+      default: true
+    immutable_tags:
+      title: Immutable Tags
+      description: Prevent existing image tags from being overwritten.
+      type: boolean
+      default: true
+  required: [source_registry_id, destinations]
+  x-ui-order: [source_registry_id, destinations, repository_prefixes, repository_filters, scan_on_push, immutable_tags]
+sample:
+  kind: artifactories
+  flavor: aws_ecr_replication
+  version: "1.0"
+  disabled: true
+  spec:
+    source_registry_id: '123456789012'
+    destinations:
+      - region: ap-south-2
+        registry_id: '123456789012'
+    repository_prefixes: []
+    repository_filters: []
+    scan_on_push: true
+    immutable_tags: true
+iac:
+  validated_files:
+    - variables.tf
+    - main.tf
+    - locals.tf
+    - outputs.tf

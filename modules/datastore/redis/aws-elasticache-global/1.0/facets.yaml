@@ -1,0 +1,88 @@
+intent: redis
+flavor: aws-elasticache-global
+version: '1.0'
+description: Blueprint-safe contract for an existing ElastiCache Global Datastore replication topology
+intentDetails:
+  type: Datastores
+  description: AWS ElastiCache Global Datastore replication contract
+  displayName: Redis Global Datastore
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/redis.svg
+clouds:
+- aws
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: AWS Cloud Account
+    description: AWS account that supplies the provider for this contract
+    optional: false
+    providers:
+    - aws
+  source_cache:
+    type: '@facets/redis'
+    displayName: Source Redis Cache
+    description: Source cache replicated to the secondary replication group
+    optional: false
+  destination_cache:
+    type: '@facets/redis'
+    displayName: Destination Redis Cache
+    description: Destination cache replicated from the primary replication group
+    optional: false
+outputs:
+  default:
+    type: '@facets/aws_elasticache_global'
+    title: ElastiCache Global Datastore Replication
+spec:
+  title: ElastiCache Global Datastore Replication
+  description: Describe an existing ElastiCache Global Datastore without creating resources
+  type: object
+  properties:
+    global_replication_group_id:
+      type: string
+      title: Global Replication Group ID
+      description: Existing ElastiCache Global Datastore identifier.
+    primary_replication_group_id:
+      type: string
+      title: Primary Replication Group ID
+      description: Primary regional replication group identifier.
+    secondary_replication_group_id:
+      type: string
+      title: Secondary Replication Group ID
+      description: Secondary regional replication group represented by this contract.
+    engine_version:
+      type: string
+      title: Redis Engine Version
+      description: Redis or Valkey engine version shared by the replication groups.
+    port:
+      type: string
+      title: Redis Port
+      description: Listener port exposed by the secondary replication group.
+      pattern: '^[0-9]{1,5}$'
+  required:
+  - global_replication_group_id
+  - primary_replication_group_id
+  - secondary_replication_group_id
+  - engine_version
+  - port
+  x-ui-order:
+  - global_replication_group_id
+  - primary_replication_group_id
+  - secondary_replication_group_id
+  - engine_version
+  - port
+sample:
+  kind: redis
+  flavor: aws-elasticache-global
+  version: '1.0'
+  disabled: true
+  spec:
+    global_replication_group_id: example-global
+    primary_replication_group_id: example-primary
+    secondary_replication_group_id: example-secondary
+    engine_version: '7.1'
+    port: '6379'
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+  - outputs.tf

@@ -1,0 +1,109 @@
+intent: network
+flavor: aws_existing
+version: '1.0'
+clouds: [aws]
+description: Represents an existing AWS VPC without managing AWS resources.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Existing AWS VPC network details for blueprint wiring.
+  displayName: Network
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/network.svg
+spec:
+  type: object
+  properties:
+    vpc_id: { type: string, title: VPC ID, description: Existing VPC identifier }
+    vpc_cidr_block: { type: string, title: VPC CIDR Block, description: Existing VPC CIDR block }
+    availability_zones:
+      type: array
+      title: Availability Zones
+      description: Availability zones used by the VPC
+      items: { type: string }
+    private_subnet_ids:
+      type: array
+      title: Private Subnet IDs
+      description: Existing private subnet identifiers
+      items: { type: string }
+    public_subnet_ids:
+      type: array
+      title: Public Subnet IDs
+      description: Existing public subnet identifiers
+      items: { type: string }
+    database_subnet_ids:
+      type: array
+      title: Database Subnet IDs
+      description: Existing database subnet identifiers
+      items: { type: string }
+    database_subnet_group_name:
+      type: string
+      title: Database Subnet Group Name
+      description: Existing database subnet group name
+      default: ''
+    internet_gateway_id:
+      type: string
+      title: Internet Gateway ID
+      description: Existing internet gateway identifier
+      default: ''
+    nat_gateway_ids:
+      type: array
+      title: NAT Gateway IDs
+      description: Existing NAT gateway identifiers
+      items: { type: string }
+      default: []
+    vpc_endpoint_dynamodb_id:
+      type: string
+      title: DynamoDB VPC Endpoint ID
+      description: Existing DynamoDB VPC endpoint identifier
+      default: ''
+    vpc_endpoint_ecr_api_id:
+      type: string
+      title: ECR API VPC Endpoint ID
+      description: Existing ECR API VPC endpoint identifier
+      default: ''
+    vpc_endpoint_ecr_dkr_id:
+      type: string
+      title: ECR Docker VPC Endpoint ID
+      description: Existing ECR Docker VPC endpoint identifier
+      default: ''
+    vpc_endpoint_s3_id:
+      type: string
+      title: S3 VPC Endpoint ID
+      description: Existing S3 VPC endpoint identifier
+      default: ''
+    vpc_endpoints_security_group_id:
+      type: string
+      title: VPC Endpoint Security Group ID
+      description: Existing security group used by interface VPC endpoints
+      default: ''
+  required: [vpc_id, vpc_cidr_block, availability_zones, private_subnet_ids, public_subnet_ids, database_subnet_ids]
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: Cloud Account
+    description: AWS account containing the existing VPC
+    optional: false
+    providers: [aws]
+outputs:
+  default:
+    type: '@facets/aws-vpc-details'
+    title: AWS VPC Details
+sample:
+  kind: network
+  flavor: aws_existing
+  version: '1.0'
+  spec:
+    vpc_id: vpc-0123456789abcdef0
+    vpc_cidr_block: 10.0.0.0/16
+    availability_zones: [us-east-1a, us-east-1b]
+    private_subnet_ids: [subnet-private-a, subnet-private-b]
+    public_subnet_ids: [subnet-public-a, subnet-public-b]
+    database_subnet_ids: [subnet-database-a, subnet-database-b]
+    database_subnet_group_name: existing-db-subnets
+    internet_gateway_id: igw-0123456789abcdef0
+    nat_gateway_ids: [nat-0123456789abcdef0]
+    vpc_endpoint_dynamodb_id: vpce-0123456789abcdef0
+    vpc_endpoint_ecr_api_id: vpce-1123456789abcdef0
+    vpc_endpoint_ecr_dkr_id: vpce-2123456789abcdef0
+    vpc_endpoint_s3_id: vpce-3123456789abcdef0
+    vpc_endpoints_security_group_id: sg-0123456789abcdef0
+iac:
+  validated_files: [variables.tf, main.tf, locals.tf, outputs.tf]

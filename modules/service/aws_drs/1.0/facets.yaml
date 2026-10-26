@@ -1,0 +1,108 @@
+intent: service
+flavor: aws_drs
+version: "1.0"
+description: Contract-only AWS Elastic Disaster Recovery configuration.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Configure AWS Elastic Disaster Recovery recovery settings
+  displayName: AWS Elastic Disaster Recovery
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/service.svg
+clouds:
+  - aws
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: AWS Cloud Account
+    description: AWS account supplying the AWS provider
+    optional: false
+    providers:
+      - aws
+  network_details:
+    type: '@facets/aws-vpc-details'
+    displayName: AWS VPC Details
+    description: Network details for recovery configuration
+    optional: false
+outputs:
+  default:
+    type: '@facets/aws_drs'
+    title: AWS DRS Details
+spec:
+  title: AWS Elastic Disaster Recovery Configuration
+  type: object
+  properties:
+    source_server_ids:
+      title: Source Server IDs
+      description: AWS DRS source server identifiers included in this recovery group.
+      type: array
+      minItems: 1
+      uniqueItems: true
+      items:
+        type: string
+    staging_subnet_id:
+      title: Staging Subnet ID
+      description: Subnet used by the DRS replication staging area.
+      type: string
+      pattern: '^subnet-[0-9a-f]+$'
+    recovery_subnet_ids:
+      title: Recovery Subnet IDs
+      description: Subnets where recovered instances may be launched.
+      type: array
+      minItems: 1
+      uniqueItems: true
+      items:
+        type: string
+    security_group_ids:
+      title: Security Group IDs
+      description: Security groups attached to recovered instances.
+      type: array
+      minItems: 1
+      uniqueItems: true
+      items:
+        type: string
+    instance_type_right_sizing:
+      title: Instance Type Right Sizing
+      description: AWS DRS right-sizing policy for recovery instances.
+      type: string
+      enum: [NONE, BASIC]
+      default: NONE
+    copy_private_ip:
+      title: Copy Private IP
+      description: Preserve source private IP addresses during recovery.
+      type: boolean
+      default: false
+    launch_disposition:
+      title: Launch Disposition
+      description: Initial power state for recovered instances.
+      type: string
+      enum: [STARTED, STOPPED]
+      default: STOPPED
+    tags:
+      title: Tags
+      description: Additional tags associated with the recovery configuration.
+      type: object
+      patternProperties:
+        ^[a-zA-Z0-9_.:/=+@-]+$:
+          type: string
+      default: {}
+  required: [source_server_ids, staging_subnet_id, recovery_subnet_ids, security_group_ids]
+  x-ui-order: [source_server_ids, staging_subnet_id, recovery_subnet_ids, security_group_ids, instance_type_right_sizing, copy_private_ip, launch_disposition, tags]
+sample:
+  kind: service
+  flavor: aws_drs
+  version: "1.0"
+  disabled: true
+  spec:
+    source_server_ids: [s-0123456789abcdef0]
+    staging_subnet_id: subnet-0123456789abcdef0
+    recovery_subnet_ids: [subnet-1123456789abcdef0]
+    security_group_ids: [sg-0123456789abcdef0]
+    instance_type_right_sizing: NONE
+    copy_private_ip: false
+    launch_disposition: STOPPED
+    tags: {}
+iac:
+  validated_files:
+    - variables.tf
+    - main.tf
+    - locals.tf
+    - outputs.tf

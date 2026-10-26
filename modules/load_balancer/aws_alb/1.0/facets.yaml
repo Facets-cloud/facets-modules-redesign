@@ -1,0 +1,136 @@
+intent: load_balancer
+flavor: aws_alb
+version: '1.0'
+description: Blueprint-safe contract for an AWS Application Load Balancer.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Configures an AWS application load balancer contract.
+  displayName: Application Load Balancer
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/service.svg
+clouds:
+- aws
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: AWS Cloud Account
+    description: AWS account that supplies the Terraform AWS provider.
+    optional: false
+    providers:
+    - aws
+  network_details:
+    type: '@facets/aws-vpc-details'
+    displayName: AWS VPC
+    description: VPC details available to the load balancer.
+    optional: false
+outputs:
+  default:
+    type: '@facets/aws_load_balancer'
+    title: AWS Application Load Balancer
+spec:
+  type: object
+  title: AWS Application Load Balancer
+  description: Desired Application Load Balancer identity and configuration.
+  properties:
+    load_balancer_arn:
+      type: string
+      title: Load Balancer ARN
+      description: ARN of the existing Application Load Balancer represented by this contract.
+      pattern: '^arn:aws[a-zA-Z-]*:elasticloadbalancing:[a-z0-9-]+:[0-9]{12}:loadbalancer/.+$'
+    scheme:
+      type: string
+      title: Scheme
+      description: Whether the load balancer is internet-facing or internal.
+      enum: [internet-facing, internal]
+      default: internet-facing
+    ip_address_type:
+      type: string
+      title: IP Address Type
+      description: Address family exposed by the load balancer.
+      enum: [ipv4, dualstack]
+      default: ipv4
+    subnet_ids:
+      type: array
+      title: Subnet IDs
+      description: VPC subnets containing load balancer nodes.
+      items:
+        type: string
+      default: []
+    security_group_ids:
+      type: array
+      title: Security Group IDs
+      description: Security groups attached to the Application Load Balancer.
+      items:
+        type: string
+      default: []
+    listeners:
+      type: array
+      title: Listeners
+      description: Existing listener and target-group associations.
+      items:
+        type: object
+        properties:
+          port:
+            type: number
+            title: Port
+            description: Listener port.
+          protocol:
+            type: string
+            title: Protocol
+            description: Listener protocol.
+          target_group_arn:
+            type: string
+            title: Target Group ARN
+            description: Optional default target group ARN.
+          certificate_arn:
+            type: string
+            title: Certificate ARN
+            description: Optional ACM certificate ARN for TLS listeners.
+          ssl_policy:
+            type: string
+            title: SSL Policy
+            description: Optional ELB security policy for TLS listeners.
+        required: [port, protocol]
+      default: []
+    target_group_arns:
+      type: array
+      title: Target Group ARNs
+      description: Existing target groups associated with the load balancer.
+      items:
+        type: string
+      default: []
+    tags:
+      type: object
+      title: Tags
+      description: Existing AWS tags on the load balancer.
+      x-ui-yaml-editor: true
+      default: {}
+  required: [load_balancer_arn]
+  x-ui-order:
+  - load_balancer_arn
+  - scheme
+  - ip_address_type
+  - subnet_ids
+  - security_group_ids
+  - listeners
+  - target_group_arns
+  - tags
+sample:
+  kind: load_balancer
+  flavor: aws_alb
+  version: '1.0'
+  disabled: false
+  spec:
+    load_balancer_arn: arn:aws:elasticloadbalancing:ap-south-2:123456789012:loadbalancer/app/mirae-dr/0123456789abcdef
+    scheme: internet-facing
+    ip_address_type: ipv4
+    subnet_ids: []
+    security_group_ids: []
+    listeners: []
+    target_group_arns: []
+    tags: {}
+iac:
+  validated_files:
+  - main.tf
+  - locals.tf
+  - outputs.tf
+  - variables.tf

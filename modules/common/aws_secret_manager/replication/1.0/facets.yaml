@@ -1,0 +1,72 @@
+intent: aws_secret_manager
+flavor: replication
+version: "1.0"
+description: Contract-only AWS Secrets Manager replication configuration.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Configure AWS Secrets Manager regional secret replication
+  displayName: AWS Secrets Manager Replication
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/aws_secret_manager.svg
+clouds:
+  - aws
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: AWS Cloud Account
+    description: AWS account supplying the AWS provider
+    optional: false
+    providers:
+      - aws
+  source_secret:
+    type: '@facets/aws_secret_manager'
+    displayName: Source Secret
+    description: Source secret identity to replicate without reading its value
+    optional: false
+outputs:
+  default:
+    type: '@facets/aws_secret_replication'
+    title: AWS Secrets Manager Replication
+spec:
+  title: AWS Secrets Manager Replication Configuration
+  type: object
+  properties:
+    replica_regions:
+      title: Replica Regions
+      description: AWS regions that receive replicas of the source secret.
+      type: array
+      minItems: 1
+      uniqueItems: true
+      x-ui-overrides-only: true
+      items:
+        type: string
+    replica_kms_key_ids:
+      title: Replica KMS Key IDs
+      description: Optional region-to-KMS-key mapping for replica encryption.
+      type: object
+      x-ui-overrides-only: true
+      default: {}
+      patternProperties:
+        ^[a-zA-Z0-9-]+$:
+          type: string
+    force_overwrite_replica_secret:
+      title: Force Overwrite Replica Secret
+      description: Replace an existing replica with the source secret when names collide.
+      type: boolean
+      default: false
+  required: [replica_regions]
+  x-ui-order: [replica_regions, replica_kms_key_ids, force_overwrite_replica_secret]
+sample:
+  kind: aws_secret_manager
+  flavor: replication
+  version: "1.0"
+  disabled: true
+  spec:
+    replica_regions: [ap-south-2]
+    replica_kms_key_ids: {}
+    force_overwrite_replica_secret: false
+iac:
+  validated_files:
+    - variables.tf
+    - main.tf
+    - locals.tf
+    - outputs.tf
