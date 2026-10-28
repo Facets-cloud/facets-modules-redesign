@@ -1,0 +1,128 @@
+name: '@facets/any_cloud_network'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        cloud_provider:
+          type: string
+          description: AWS or GCP, from the linked cloud_account
+        network_id:
+          type: string
+          description: VPC ID (AWS) or VPC network ID (GCP)
+        vpc_id:
+          type: string
+          description: Alias of network_id
+        cidr:
+          type: string
+          description: Base VPC CIDR
+        region:
+          type: string
+          description: Region of the network
+        project_id:
+          type: string
+          description: GCP project ID (null on AWS)
+        private_subnet_ids:
+          type: array
+          items:
+            type: string
+          description: Private subnet IDs
+        public_subnet_ids:
+          type: array
+          items:
+            type: string
+          description: Public subnet IDs
+        database_subnet_ids:
+          type: array
+          items:
+            type: string
+          description: Database subnet IDs
+    interfaces:
+      type: object
+      properties:
+        aws:
+          type: object
+          description: AWS VPC details. Populated on AWS; same keys with null/empty
+            values on GCP.
+          properties:
+            availability_zones:
+              type: array
+              items:
+                type: string
+            internet_gateway_id:
+              type: string
+            nat_gateway_ids:
+              type: array
+              items:
+                type: string
+            database_subnet_group_name:
+              type: string
+            vpc_endpoint_s3_id:
+              type: string
+            vpc_endpoint_dynamodb_id:
+              type: string
+            vpc_endpoint_ids:
+              type: object
+              additionalProperties:
+                type: string
+            vpc_endpoints_sg_id:
+              type: string
+        gcp:
+          type: object
+          description: GCP VPC details. Populated on GCP; same keys with null/empty
+            values on AWS.
+          properties:
+            zones:
+              type: array
+              items:
+                type: string
+            vpc_self_link:
+              type: string
+            vpc_name:
+              type: string
+            gke_pods_range_name:
+              type: string
+            gke_pods_cidr:
+              type: string
+            gke_services_range_name:
+              type: string
+            gke_services_cidr:
+              type: string
+            private_subnet_name:
+              type: string
+            internal_lb_subnet_id:
+              type: string
+            router_id:
+              type: string
+            router_name:
+              type: string
+            nat_name:
+              type: string
+            nat_gateway_ids:
+              type: array
+              items:
+                type: string
+            network_tags:
+              type: object
+              additionalProperties:
+                type: string
+            vpc_connector_enabled:
+              type: boolean
+            vpc_connector_id:
+              type: string
+            vpc_connector_name:
+              type: string
+            vpc_connector_self_link:
+              type: string
+            private_services_connection_id:
+              type: string
+            private_services_peering_connection:
+              type: string
+            private_services_range_name:
+              type: string
+            private_services_range_address:
+              type: string
+            google_services_cidr:
+              type: string
+providers: []

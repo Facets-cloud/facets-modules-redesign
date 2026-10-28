@@ -1,0 +1,52 @@
+name: '@facets/any_cloud_account'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        cloud_provider:
+          description: Selected cloud provider (AWS or GCP). Downstream anycloud modules branch on this.
+          type: string
+        aws:
+          description: AWS credentials. Populated when cloud_provider is AWS; same keys with null values otherwise.
+          type: object
+          properties:
+            role_arn:
+              description: IAM role assumed by the aws provider (sensitive)
+              type: string
+            external_id:
+              description: External ID for the assume-role call (sensitive)
+              type: string
+            region:
+              description: AWS region
+              type: string
+        gcp:
+          description: GCP credentials. Populated when cloud_provider is GCP; null-keyed with a stub access_token otherwise.
+          type: object
+          properties:
+            project_id:
+              description: GCP project ID
+              type: string
+            credentials:
+              description: Service account key JSON (sensitive)
+              type: string
+            access_token:
+              description: Non-null stub when GCP is inactive, so the google provider configures without ADC
+              type: string
+            region:
+              description: GCP region
+              type: string
+    interfaces:
+      type: object
+      properties: {}
+providers:
+- name: aws
+  source: hashicorp/aws
+  version: 6.9.0
+- name: google
+  source: hashicorp/google
+  version: 6.43.0
+- name: google-beta
+  source: hashicorp/google-beta
+  version: 6.43.0

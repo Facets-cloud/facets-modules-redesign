@@ -1,0 +1,23 @@
+name: '@facets/any_cloud_config_map'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        cloud_provider:
+          description: Cloud of the linked kubernetes_cluster (AWS or GCP); informational only
+          type: string
+        config_map_name:
+          description: Name of the created ConfigMap object; consumers mount by this name
+          type: string
+        namespace:
+          description: Namespace the ConfigMap was created in
+          type: string
+        data_keys:
+          description: Comma-separated, sorted list of ConfigMap keys
+          type: string
+    interfaces:
+      type: object
+      properties: {}
+providers: []

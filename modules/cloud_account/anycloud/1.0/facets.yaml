@@ -1,0 +1,140 @@
+intent: cloud_account
+flavor: anycloud
+version: "1.0"
+description: Multi-cloud (anycloud) cloud account. spec.cloud_provider (AWS|GCP) picks the active cloud; aws, google and google-beta providers are always exposed, with only the selected one credentialed.
+clouds:
+    - aws
+    - gcp
+intentDetails:
+    type: Cloud & Infrastructure
+    description: Cloud account that resolves to AWS or GCP via the cloud_provider switch. Always exposes aws, google and google-beta providers to downstream anycloud modules; the inactive cloud is null-keyed and inert.
+    displayName: Cloud Account
+    iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cloud_account.svg
+outputs:
+    default:
+        type: '@facets/any_cloud_account'
+        providers:
+            aws:
+                source: hashicorp/aws
+                version: 6.9.0
+                attributes:
+                    assume_role:
+                        external_id: attributes.aws.external_id
+                        role_arn: attributes.aws.role_arn
+                    region: attributes.aws.region
+            google:
+                source: hashicorp/google
+                version: 6.43.0
+                attributes:
+                    access_token: attributes.gcp.access_token
+                    credentials: attributes.gcp.credentials
+                    project: attributes.gcp.project_id
+            google-beta:
+                source: hashicorp/google-beta
+                version: 6.43.0
+                attributes:
+                    access_token: attributes.gcp.access_token
+                    credentials: attributes.gcp.credentials
+                    project: attributes.gcp.project_id
+spec:
+    properties:
+        aws_cloud_account:
+            description: Select the AWS cloud account to use (must be previously linked)
+            title: AWS Cloud Account
+            type: string
+            x-ui-api-source:
+                endpoint: /cc-ui/v1/accounts/
+                filterConditions:
+                    - field: accountType
+                      value: CLOUD
+                    - field: provider
+                      value: AWS
+                labelKey: name
+                method: GET
+                params:
+                    includeContent: false
+                valueKey: id
+            x-ui-overrides-only: true
+            x-ui-show-label-selected: true
+            x-ui-typeable: true
+            x-ui-visible-if:
+                field: spec.cloud_provider
+                values:
+                    - AWS
+        aws_region:
+            description: AWS region where resources will be created. Pick from the dropdown or type any valid region (e.g. ap-southeast-5) — newer regions may not appear in the dropdown yet.
+            title: AWS Region
+            type: string
+            x-ui-api-source:
+                endpoint: /cc-ui/v1/dropdown/aws/regions-v2
+                labelKey: region
+                method: GET
+                path: regions
+                valueKey: region
+            x-ui-typeable: true
+            x-ui-overrides-only: true
+            x-ui-visible-if:
+                field: spec.cloud_provider
+                values:
+                    - AWS
+        cloud_provider:
+            default: AWS
+            description: Which cloud this account resolves to
+            enum:
+                - AWS
+                - GCP
+            title: Cloud Provider
+            type: string
+        gcp_cloud_account:
+            description: Select the GCP cloud account to use (must be previously linked)
+            title: GCP Cloud Account
+            type: string
+            x-ui-api-source:
+                endpoint: /cc-ui/v1/accounts/
+                filterConditions:
+                    - field: accountType
+                      value: CLOUD
+                    - field: provider
+                      value: GCP
+                labelKey: name
+                method: GET
+                params:
+                    includeContent: false
+                valueKey: id
+            x-ui-overrides-only: true
+            x-ui-show-label-selected: true
+            x-ui-typeable: true
+            x-ui-visible-if:
+                field: spec.cloud_provider
+                values:
+                    - GCP
+        gcp_region:
+            description: GCP region where resources will be created
+            title: GCP Region
+            type: string
+            x-ui-api-source:
+                endpoint: /cc-ui/v1/dropdown/gcp/regions-v2
+                labelKey: region
+                method: GET
+                path: regions
+                valueKey: region
+            x-ui-overrides-only: true
+            x-ui-visible-if:
+                field: spec.cloud_provider
+                values:
+                    - GCP
+    required:
+        - cloud_provider
+    type: object
+    x-ui-order:
+        - cloud_provider
+        - aws_region
+        - aws_cloud_account
+        - gcp_region
+        - gcp_cloud_account
+sample:
+    flavor: anycloud
+    kind: cloud_account
+    spec:
+        cloud_provider: AWS
+    version: "1.0"
