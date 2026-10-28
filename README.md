@@ -250,6 +250,22 @@ raptor import project-type -f ./project-type/linode/project-type.yml \
 
 ---
 
+## Multi-cloud reference (anycloud)
+
+Reference modules that run the **same blueprint on AWS or GCP**. One resource per intent; the cloud is chosen once, on the cloud account (`spec.cloud_provider: AWS | GCP`), so you no longer need AWS/GCP twin resources toggled per environment. These are examples to copy and extend. They are not part of any project type. Pattern guide: [`modules/ANYCLOUD_PATTERN.md`](modules/ANYCLOUD_PATTERN.md).
+
+`Cloud Account (anycloud)` `Network (anycloud)` `Kubernetes Cluster (anycloud)` `Service (anycloud)` `ConfigMap (anycloud)`
+
+**Prompt for Praxis:**
+
+```
+Using the anycloud reference modules in the facets-modules-redesign repo
+(modules/ANYCLOUD_PATTERN.md), set up a blueprint that runs on AWS in staging
+and on GCP in production, with cloud_provider set per environment as an override.
+```
+
+---
+
 ## Links
 
 - [Facets Control Plane](https://facets.cloud)
