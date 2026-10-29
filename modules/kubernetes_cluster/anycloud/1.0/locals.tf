@@ -9,8 +9,9 @@ locals {
   # common fields (defensive: Facets does not inject schema defaults into var.instance.spec)
   cluster_version = try(local.spec.cluster_version, "1.30")
 
-  # cluster name — globally unique from env + resource name
-  cluster_name = local.resource_name
+  # cluster name — the name of the cluster actually created on the active cloud
+  # (GKE needs a letter-first name, see name.tf)
+  cluster_name = local.is_aws ? local.resource_name : local.gke_cluster_name
 
   # Default system node pool — created WITH the cluster only when enabled. Off by default →
   # control-plane-only cluster (count-gated to 0). The linked cloud_account's cloud_provider decides

@@ -27,7 +27,7 @@ variable "instance" {
         managed_prometheus_enabled = optional(bool)
         network_policy_enabled     = optional(bool)
         logging_enabled            = optional(bool)
-        master_authorized_networks = optional(map(any))
+        master_authorized_networks = optional(map(string))
         nap_enabled                = optional(bool)
         nap_max_cpu                = optional(number)
         nap_max_memory_gb          = optional(number)

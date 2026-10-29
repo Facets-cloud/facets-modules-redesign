@@ -212,14 +212,15 @@ spec:
                     title: Enable Logging
                     type: boolean
                 master_authorized_networks:
+                    description: 'Map of label -> CIDR allowed to reach the control plane, e.g. {office: 203.0.113.0/24} (GCP only). Empty = no restriction.'
                     patternProperties:
                         ^[a-zA-Z0-9_.-]+$:
-                            description: Map of label -> CIDR allowed to reach the control plane (GCP only). Empty = no restriction.
-                            title: Master Authorized Networks
-                            type: object
-                            x-ui-yaml-editor: true
+                            pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$
+                            title: CIDR
+                            type: string
                     title: Master Authorized Networks
                     type: object
+                    x-ui-yaml-editor: true
                 nap_enabled:
                     default: false
                     description: Enable GKE Node Auto Provisioning — the cluster auto-creates/sizes node pools within the CPU/memory limits below (GCP only).
