@@ -25,11 +25,15 @@ resource "google_container_cluster" "this" {
     enable_private_endpoint = false
   }
 
-  # Workload Identity (GCP SA <-> KSA federation) — on by default.
-  dynamic "workload_identity_config" {
-    for_each = local.gcp_workload_identity && local.gcp_project != null ? [1] : []
-    content {
-      workload_pool = "${local.gcp_project}.svc.id.goog"
+  # Workload Identity (GCP SA <-> KSA federation) — always on.
+  workload_identity_config {
+    workload_pool = "${local.gcp_project}.svc.id.goog"
+  }
+
+  # Hide node metadata from pods on the (removed) default pool too.
+  node_config {
+    workload_metadata_config {
+      mode = "GKE_METADATA"
     }
   }
 
@@ -181,12 +185,8 @@ resource "google_container_node_pool" "system" {
     }
 
     # Serve the GKE metadata server to pods (hides node metadata and enables Workload Identity).
-    # Requires the cluster's workload_identity_config, so it follows the same toggle.
-    dynamic "workload_metadata_config" {
-      for_each = local.gcp_workload_identity && local.gcp_project != null ? [1] : []
-      content {
-        mode = "GKE_METADATA"
-      }
+    workload_metadata_config {
+      mode = "GKE_METADATA"
     }
   }
 

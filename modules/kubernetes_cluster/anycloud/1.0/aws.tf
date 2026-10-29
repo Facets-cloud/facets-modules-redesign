@@ -27,7 +27,7 @@ resource "aws_iam_role_policy_attachment" "eks_vpc_resource_controller" {
 
 # ── KMS key for Kubernetes secret envelope encryption ──
 resource "aws_kms_key" "eks" {
-  count                   = local.is_aws && local.aws_kms_encryption ? 1 : 0
+  count                   = local.is_aws ? 1 : 0
   description             = "EKS secret encryption for ${local.cluster_name}"
   deletion_window_in_days = 7
   enable_key_rotation     = true
@@ -35,7 +35,7 @@ resource "aws_kms_key" "eks" {
 }
 
 resource "aws_kms_alias" "eks" {
-  count         = local.is_aws && local.aws_kms_encryption ? 1 : 0
+  count         = local.is_aws ? 1 : 0
   name          = "alias/${local.cluster_name}-eks"
   target_key_id = aws_kms_key.eks[0].key_id
 }
@@ -69,14 +69,12 @@ resource "aws_eks_cluster" "this" {
     public_access_cidrs     = local.aws_endpoint_public_access ? local.aws_public_access_cidrs : null
   }
 
-  dynamic "encryption_config" {
-    for_each = local.aws_kms_encryption ? [1] : []
-    content {
-      provider {
-        key_arn = aws_kms_key.eks[0].arn
-      }
-      resources = ["secrets"]
+  # Kubernetes secrets are always envelope-encrypted with this cluster's KMS key.
+  encryption_config {
+    provider {
+      key_arn = aws_kms_key.eks[0].arn
     }
+    resources = ["secrets"]
   }
 
   tags = local.aws_tags

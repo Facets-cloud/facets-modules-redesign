@@ -15,7 +15,6 @@ variable "instance" {
         enabled_log_types               = optional(list(string))
         endpoint_private_access         = bool
         endpoint_public_access          = bool
-        kms_secret_encryption           = optional(bool)
         public_access_cidrs             = optional(list(string))
         tags                            = optional(map(any))
       })
@@ -35,7 +34,6 @@ variable "instance" {
         nap_min_cpu                = optional(number)
         nap_min_memory_gb          = optional(number)
         release_channel            = string
-        workload_identity_enabled  = optional(bool)
         zone                       = optional(string)
       })
       default_node_pool = optional(object({

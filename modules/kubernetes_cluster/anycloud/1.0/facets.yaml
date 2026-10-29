@@ -138,11 +138,6 @@ spec:
                     title: EKS Public Endpoint
                     type: boolean
                     x-ui-override-disable: true
-                kms_secret_encryption:
-                    default: true
-                    description: Encrypt Kubernetes secrets with a customer-managed KMS key (AWS only).
-                    title: KMS Secret Encryption
-                    type: boolean
                 public_access_cidrs:
                     default:
                         - 10.0.0.0/8
@@ -268,11 +263,6 @@ spec:
                     title: GKE Release Channel
                     type: string
                     x-ui-override-disable: true
-                workload_identity_enabled:
-                    default: true
-                    description: Enable GKE Workload Identity (<project>.svc.id.goog) (GCP only).
-                    title: Workload Identity
-                    type: boolean
                 zone:
                     description: When set, creates a ZONAL cluster in this zone. Empty = regional in the account region (GCP only). Pick a common one or type any valid zone.
                     enum:

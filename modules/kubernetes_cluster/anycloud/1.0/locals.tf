@@ -66,7 +66,6 @@ locals {
   aws_endpoint_private_access = try(local.spec.aws.endpoint_private_access, true)
   aws_public_access_cidrs     = try(local.spec.aws.public_access_cidrs, ["10.0.0.0/8"])
 
-  aws_kms_encryption  = try(local.spec.aws.kms_secret_encryption, true)
   aws_auth_mode       = try(local.spec.aws.authentication_mode, "API_AND_CONFIG_MAP")
   aws_bootstrap_admin = try(local.spec.aws.bootstrap_cluster_creator_admin, true)
   aws_enable_irsa     = try(local.spec.aws.enable_irsa, true)
@@ -103,7 +102,6 @@ locals {
   # inside the template; the outer conditional then still yields null on non-GCP.
   gcp_oidc_issuer = local.is_gcp ? "https://container.googleapis.com/v1/projects/${coalesce(local.gcp_project, "")}/locations/${coalesce(local.gcp_location, "")}/clusters/${coalesce(local.gke_cluster_name, "")}" : null
 
-  gcp_workload_identity  = try(local.spec.gcp.workload_identity_enabled, true)
   gcp_cost_management    = try(local.spec.gcp.cost_management_enabled, false)
   gcp_managed_prometheus = try(local.spec.gcp.managed_prometheus_enabled, false)
   gcp_network_policy     = try(local.spec.gcp.network_policy_enabled, false)
