@@ -1,0 +1,598 @@
+intent: kubernetes_cluster
+flavor: anycloud
+version: "1.0"
+description: Multi-cloud (anycloud) Kubernetes cluster. Creates EKS or GKE depending on the cloud_provider of the linked cloud_account.
+intentDetails:
+    type: Cloud & Infrastructure
+    description: Managed Kubernetes cluster that is AWS EKS or GCP GKE, chosen by the linked cloud_account's cloud_provider. The attributes output exposes kubernetes/helm providers; the default output carries EKS internals (OIDC/IRSA, security groups) and GKE details.
+    displayName: Kubernetes Cluster
+    iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/kubernetes_cluster.svg
+clouds:
+    - aws
+    - gcp
+inputs:
+    cloud_account:
+        type: '@facets/any_cloud_account'
+        providers:
+            - aws
+            - google
+    network:
+        type: '@facets/any_cloud_network'
+outputs:
+    default:
+        type: '@facets/any_cloud_kubernetes_cluster'
+        title: Anycloud Kubernetes Cluster Attributes
+        description: Cloud-specific cluster details (interfaces.aws for EKS, interfaces.gcp for GKE). No providers.
+    attributes:
+        type: '@facets/kubernetes-details'
+        title: Kubernetes Cluster Output
+        description: Cloud-neutral cluster details plus the kubernetes, helm and kubernetes-alpha providers.
+        providers:
+            kubernetes:
+                source: hashicorp/kubernetes
+                version: 2.38.0
+                attributes:
+                    cluster_ca_certificate: cluster_ca_certificate
+                    exec:
+                        api_version: kubernetes_provider_exec.api_version
+                        args: kubernetes_provider_exec.args
+                        command: kubernetes_provider_exec.command
+                        env: kubernetes_provider_exec.env
+                    host: cluster_endpoint
+            helm:
+                source: hashicorp/helm
+                version: 2.17.0
+                attributes:
+                    kubernetes:
+                        cluster_ca_certificate: cluster_ca_certificate
+                        exec:
+                            api_version: kubernetes_provider_exec.api_version
+                            args: kubernetes_provider_exec.args
+                            command: kubernetes_provider_exec.command
+                            env: kubernetes_provider_exec.env
+                        host: cluster_endpoint
+            kubernetes-alpha:
+                source: hashicorp/kubernetes-alpha
+                version: 0.6.0
+                attributes:
+                    cluster_ca_certificate: cluster_ca_certificate
+                    exec:
+                        api_version: kubernetes_provider_exec.api_version
+                        args: kubernetes_provider_exec.args
+                        command: kubernetes_provider_exec.command
+                        env: kubernetes_provider_exec.env
+                    host: cluster_endpoint
+spec:
+    properties:
+        aws:
+            description: Applied only when the linked cloud_account resolves to AWS (EKS). Ignored on GCP.
+            properties:
+                addons:
+                    properties:
+                        coredns:
+                            default: true
+                            description: Manage the CoreDNS addon (AWS only).
+                            title: 'Addon: CoreDNS'
+                            type: boolean
+                        ebs_csi:
+                            default: true
+                            description: Manage the aws-ebs-csi-driver addon with IRSA (AWS only).
+                            title: 'Addon: EBS CSI Driver'
+                            type: boolean
+                        kube_proxy:
+                            default: true
+                            description: Manage the kube-proxy addon (AWS only).
+                            title: 'Addon: kube-proxy'
+                            type: boolean
+                        metrics_server:
+                            default: true
+                            description: Manage the metrics-server addon (AWS only).
+                            title: 'Addon: Metrics Server'
+                            type: boolean
+                        vpc_cni:
+                            default: true
+                            description: Manage the Amazon VPC CNI addon (AWS only).
+                            title: 'Addon: VPC CNI'
+                            type: boolean
+                    title: Addons
+                    type: object
+                authentication_mode:
+                    default: API_AND_CONFIG_MAP
+                    description: EKS access management mode (AWS only).
+                    enum:
+                        - API
+                        - API_AND_CONFIG_MAP
+                        - CONFIG_MAP
+                    title: Authentication Mode
+                    type: string
+                bootstrap_cluster_creator_admin:
+                    default: true
+                    description: Grant the cluster creator admin access on create (AWS only).
+                    title: Bootstrap Creator Admin
+                    type: boolean
+                enable_irsa:
+                    default: true
+                    description: Create the IAM OIDC provider so service accounts can assume IAM roles (AWS only).
+                    title: Enable IRSA (OIDC provider)
+                    type: boolean
+                enabled_log_types:
+                    default:
+                        - api
+                        - audit
+                        - authenticator
+                    description: EKS control-plane log types to ship to CloudWatch (AWS only).
+                    items:
+                        type: string
+                    title: Control-plane Log Types
+                    type: array
+                    x-ui-override-disable: true
+                endpoint_private_access:
+                    default: true
+                    description: Enable private access to the EKS API server endpoint (AWS only).
+                    title: EKS Private Endpoint
+                    type: boolean
+                    x-ui-override-disable: true
+                endpoint_public_access:
+                    default: false
+                    description: Expose the EKS API server endpoint publicly (AWS only). Defaults false (private endpoint). Only enable as an explicit opt-in, and scope it with public_access_cidrs.
+                    title: EKS Public Endpoint
+                    type: boolean
+                    x-ui-override-disable: true
+                public_access_cidrs:
+                    default:
+                        - 10.0.0.0/8
+                    description: CIDRs allowed to reach the EKS public API endpoint — used ONLY when endpoint_public_access is true. NEVER 0.0.0.0/0; set to your operator/admin CIDR. Placeholder default is an RFC1918 range.
+                    items:
+                        type: string
+                    title: EKS Public Access CIDRs
+                    type: array
+                    x-ui-override-disable: true
+                tags:
+                    patternProperties:
+                        ^.+$:
+                            description: Tags applied to EKS resources (AWS only).
+                            title: Cluster Tags (AWS)
+                            type: object
+                            x-ui-yaml-editor: true
+                    title: Tags
+                    type: object
+            required:
+                - endpoint_public_access
+                - endpoint_private_access
+            title: AWS (EKS) configuration
+            type: object
+            x-ui-override-disable: true
+        cluster_version:
+            default: "1.30"
+            description: Kubernetes control-plane version (e.g. 1.30). Applies to both EKS and GKE.
+            maxLength: 20
+            minLength: 3
+            title: Kubernetes Version
+            type: string
+            x-ui-override-disable: true
+        gcp:
+            description: Applied only when the linked cloud_account resolves to GCP (GKE). Ignored on AWS.
+            properties:
+                cost_management_enabled:
+                    default: false
+                    description: Enable GKE cost management / resource usage export (GCP only).
+                    title: Cost Management
+                    type: boolean
+                enable_private_nodes:
+                    default: true
+                    description: Provision GKE nodes with private IPs only (GCP only).
+                    title: GKE Private Nodes
+                    type: boolean
+                    x-ui-override-disable: true
+                maintenance_recurrence:
+                    description: e.g. FREQ=WEEKLY;BYDAY=SU (GCP only). Requires a start time.
+                    maxLength: 120
+                    minLength: 1
+                    title: Maintenance Recurrence (RRULE)
+                    type: string
+                maintenance_start_time:
+                    description: Recurring maintenance window start, RFC3339 time e.g. 2026-01-01T03:00:00Z (GCP only). Empty = none.
+                    maxLength: 40
+                    minLength: 1
+                    title: Maintenance Start (UTC)
+                    type: string
+                managed_prometheus_enabled:
+                    default: false
+                    description: Enable Google Managed Prometheus on the cluster (GCP only).
+                    title: Managed Prometheus
+                    type: boolean
+                network_policy_enabled:
+                    default: false
+                    description: Enable Calico network policy (pod-level firewalling) on the cluster (GCP only).
+                    title: Network Policy (Calico)
+                    type: boolean
+                logging_enabled:
+                    default: true
+                    description: Enable GKE control-plane + workload logging (SYSTEM_COMPONENTS + WORKLOADS) (GCP only).
+                    title: Enable Logging
+                    type: boolean
+                master_authorized_networks:
+                    description: 'Map of label -> CIDR allowed to reach the control plane, e.g. {office: 203.0.113.0/24} (GCP only). Empty = no restriction.'
+                    patternProperties:
+                        ^[a-zA-Z0-9_.-]+$:
+                            pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$
+                            title: CIDR
+                            type: string
+                    title: Master Authorized Networks
+                    type: object
+                    x-ui-yaml-editor: true
+                nap_enabled:
+                    default: false
+                    description: Enable GKE Node Auto Provisioning — the cluster auto-creates/sizes node pools within the CPU/memory limits below (GCP only).
+                    title: Node Auto-Provisioning (NAP)
+                    type: boolean
+                nap_max_cpu:
+                    default: 100
+                    description: NAP total vCPU upper bound (GCP only).
+                    maximum: 100000
+                    minimum: 1
+                    title: NAP Max vCPU
+                    type: integer
+                nap_max_memory_gb:
+                    default: 400
+                    description: NAP total memory upper bound (GCP only).
+                    maximum: 1000000
+                    minimum: 1
+                    title: NAP Max Memory (GB)
+                    type: integer
+                nap_min_cpu:
+                    default: 4
+                    description: NAP total vCPU lower bound (GCP only).
+                    maximum: 100000
+                    minimum: 0
+                    title: NAP Min vCPU
+                    type: integer
+                nap_min_memory_gb:
+                    default: 16
+                    description: NAP total memory lower bound (GCP only).
+                    maximum: 1000000
+                    minimum: 0
+                    title: NAP Min Memory (GB)
+                    type: integer
+                release_channel:
+                    default: STABLE
+                    description: GKE release channel for control-plane upgrades (GCP only).
+                    enum:
+                        - STABLE
+                        - REGULAR
+                        - RAPID
+                    title: GKE Release Channel
+                    type: string
+                    x-ui-override-disable: true
+                zone:
+                    description: When set, creates a ZONAL cluster in this zone. Empty = regional in the account region (GCP only). Pick a common one or type any valid zone.
+                    enum:
+                        - asia-south1-a
+                        - asia-south1-b
+                        - asia-south1-c
+                        - us-central1-a
+                        - us-central1-b
+                        - us-central1-c
+                        - europe-west1-b
+                        - europe-west1-c
+                    maxLength: 40
+                    minLength: 1
+                    title: GKE Zone (zonal)
+                    type: string
+                    x-ui-typeable: true
+            required:
+                - release_channel
+                - enable_private_nodes
+            title: GCP (GKE) configuration
+            type: object
+            x-ui-override-disable: true
+        default_node_pool:
+            title: Default System Node Pool
+            description: A small node pool created WITH the cluster for system workloads (CoreDNS, controllers). Enable it to avoid a nodeless cluster; leave it off for a control-plane-only cluster and attach nodepool resources separately. The linked cloud_account decides the cloud, so an EKS managed node group (aws settings) or a GKE node pool (gcp settings) is created.
+            type: object
+            x-ui-toggle: true
+            x-ui-order:
+            - enabled
+            - aws
+            - gcp
+            properties:
+                enabled:
+                    default: false
+                    title: Create Default System Node Pool
+                    description: Create a default system node group (EKS) / node pool (GKE) together with the cluster.
+                    type: boolean
+                aws:
+                    type: object
+                    title: AWS Node Group Config
+                    description: EKS managed node group settings. Applied only when the linked cloud_account is AWS.
+                    x-ui-order:
+                    - instance_type
+                    - instance_types
+                    - capacity_type
+                    - ami_type
+                    - disk_size_gb
+                    - min_size
+                    - max_size
+                    - desired_size
+                    - max_unavailable
+                    - availability_zones
+                    x-ui-visible-if:
+                        field: spec.default_node_pool.enabled
+                        values:
+                        - true
+                    properties:
+                        instance_type:
+                            default: t3.medium
+                            description: EC2 instance type for the default system node group. Graviton families (t4g/c6g/c7g/m7g/r8g) auto-select the arm64 AMI. Pick a common one or type any.
+                            enum:
+                            - t3.medium
+                            - t3.large
+                            - t3.xlarge
+                            - m5.large
+                            - m5.xlarge
+                            - m6a.xlarge
+                            - c5.large
+                            - c5a.xlarge
+                            - r5.large
+                            - t4g.small
+                            - t4g.medium
+                            - t4g.large
+                            - t4g.xlarge
+                            - c6g.xlarge
+                            - c6g.2xlarge
+                            - c6g.4xlarge
+                            - c6g.8xlarge
+                            - c7g.xlarge
+                            - m7g.xlarge
+                            - r8g.large
+                            - r8g.xlarge
+                            maxLength: 40
+                            minLength: 1
+                            title: EC2 Instance Type
+                            type: string
+                            x-ui-typeable: true
+                        instance_types:
+                            description: Multiple EC2 instance types for the managed node group (overrides EC2 Instance Type when set).
+                            items:
+                                type: string
+                            title: EC2 Instance Types
+                            type: array
+                        capacity_type:
+                            default: ON_DEMAND
+                            description: Managed node group purchase option.
+                            enum:
+                            - ON_DEMAND
+                            - SPOT
+                            title: Capacity Type
+                            type: string
+                        ami_type:
+                            description: AMI type. Leave empty to AUTO-SELECT by instance architecture — arm64 (AL2023_ARM_64_STANDARD) for Graviton families (t4g/c6g/c7g/m7g/r8g …), else x86_64. Set explicitly only to override.
+                            enum:
+                            - AL2023_x86_64_STANDARD
+                            - AL2023_ARM_64_STANDARD
+                            - BOTTLEROCKET_x86_64
+                            - BOTTLEROCKET_ARM_64
+                            - AL2_x86_64
+                            title: AMI Type
+                            type: string
+                            x-ui-typeable: true
+                        disk_size_gb:
+                            default: 50
+                            description: Node root EBS volume size (GB).
+                            maximum: 16384
+                            minimum: 20
+                            title: Disk Size (GB)
+                            type: integer
+                        min_size:
+                            default: 1
+                            description: Lower bound. NOTE managed node groups do NOT self-scale — this is a bound for an external Cluster Autoscaler (not deployed). For elastic AWS scaling use Karpenter; otherwise the group stays at Desired.
+                            maximum: 1000
+                            minimum: 0
+                            title: Min Nodes
+                            type: integer
+                        max_size:
+                            default: 3
+                            description: Upper bound (see Min Nodes note — managed NGs don't self-scale without Cluster Autoscaler; use Karpenter for elastic scaling).
+                            maximum: 1000
+                            minimum: 1
+                            title: Max Nodes
+                            type: integer
+                        desired_size:
+                            default: 2
+                            description: Desired node count at create (autoscaler adjusts within min/max after).
+                            maximum: 1000
+                            minimum: 0
+                            title: Desired Nodes
+                            type: integer
+                        max_unavailable:
+                            default: 1
+                            description: Max nodes unavailable during a managed node group version/config update.
+                            maximum: 100
+                            minimum: 1
+                            title: Max Unavailable (updates)
+                            type: integer
+                        availability_zones:
+                            description: Restrict the system node group to specific AZs (a subset of the VPC's private subnets), e.g. ap-southeast-5a. Empty = all AZs. Use to co-locate a single-AZ pool.
+                            items:
+                                type: string
+                            title: Pin to Availability Zones
+                            type: array
+                gcp:
+                    type: object
+                    title: GCP Node Pool Config
+                    description: GKE node pool settings. Applied only when the linked cloud_account is GCP.
+                    x-ui-order:
+                    - machine_type
+                    - disk_type
+                    - disk_size_gb
+                    - spot
+                    - autoscaling_enabled
+                    - min_node_count
+                    - max_node_count
+                    - image_type
+                    - auto_repair
+                    - auto_upgrade
+                    - upgrade_max_surge
+                    - upgrade_max_unavailable
+                    - max_pods_per_node
+                    - enable_secure_boot
+                    - enable_integrity_monitoring
+                    - service_account_email
+                    - location
+                    - node_locations
+                    x-ui-visible-if:
+                        field: spec.default_node_pool.enabled
+                        values:
+                        - true
+                    properties:
+                        machine_type:
+                            default: e2-medium
+                            description: GCE machine type for the GKE node pool (used when the linked account is GCP). Pick a common one or type any.
+                            enum:
+                            - e2-medium
+                            - e2-standard-2
+                            - e2-standard-4
+                            - n2-standard-2
+                            - n2-standard-4
+                            - c2-standard-4
+                            maxLength: 40
+                            minLength: 1
+                            title: GCE Machine Type
+                            type: string
+                            x-ui-typeable: true
+                        disk_type:
+                            default: pd-balanced
+                            description: Node boot disk type (GCP only).
+                            enum:
+                            - pd-balanced
+                            - pd-standard
+                            - pd-ssd
+                            title: Disk Type
+                            type: string
+                        disk_size_gb:
+                            default: 100
+                            description: Node boot disk size (GCP only).
+                            maximum: 65536
+                            minimum: 10
+                            title: Disk Size (GB)
+                            type: integer
+                        spot:
+                            default: false
+                            description: Use Spot VMs for the node pool (GCP only).
+                            title: Spot VMs
+                            type: boolean
+                        autoscaling_enabled:
+                            default: true
+                            description: Enable node-pool autoscaling (GCP only).
+                            title: Autoscaling
+                            type: boolean
+                        min_node_count:
+                            default: 1
+                            description: Autoscaling minimum per location (GCP only).
+                            maximum: 1000
+                            minimum: 0
+                            title: Min Nodes
+                            type: integer
+                        max_node_count:
+                            default: 3
+                            description: Autoscaling maximum per location (GCP only).
+                            maximum: 1000
+                            minimum: 1
+                            title: Max Nodes
+                            type: integer
+                        image_type:
+                            default: COS_CONTAINERD
+                            description: Node image type (GCP only).
+                            enum:
+                            - COS_CONTAINERD
+                            - UBUNTU_CONTAINERD
+                            title: Image Type
+                            type: string
+                        auto_repair:
+                            default: true
+                            description: Node auto-repair (GCP only).
+                            title: Auto Repair
+                            type: boolean
+                        auto_upgrade:
+                            default: true
+                            description: Node auto-upgrade (GCP only).
+                            title: Auto Upgrade
+                            type: boolean
+                        upgrade_max_surge:
+                            default: 1
+                            description: Extra nodes added during a surge upgrade (zero-downtime rolling upgrade).
+                            minimum: 0
+                            title: Upgrade Max Surge
+                            type: integer
+                        upgrade_max_unavailable:
+                            default: 0
+                            description: Nodes allowed unavailable during upgrade. 0 + surge ≥1 = no capacity loss.
+                            minimum: 0
+                            title: Upgrade Max Unavailable
+                            type: integer
+                        max_pods_per_node:
+                            default: 110
+                            description: Max pods per node (VPC-native pod range sizing).
+                            minimum: 8
+                            maximum: 256
+                            title: Max Pods Per Node
+                            type: integer
+                        enable_secure_boot:
+                            default: true
+                            description: Shielded VM secure boot (GCP only).
+                            title: Enable Secure Boot
+                            type: boolean
+                        enable_integrity_monitoring:
+                            default: true
+                            description: Shielded VM integrity monitoring (GCP only).
+                            title: Enable Integrity Monitoring
+                            type: boolean
+                        service_account_email:
+                            description: Dedicated node service account email. Empty = default compute SA (GCP only).
+                            title: Node Service Account
+                            type: string
+                        location:
+                            description: Zone (for a ZONAL cluster, e.g. asia-south1-b) or region. Must match the linked cluster's location. Empty = account region (GCP only).
+                            maxLength: 40
+                            minLength: 1
+                            title: Node Pool Location
+                            type: string
+                        node_locations:
+                            description: Zones the node pool's nodes are placed in (a subset of the cluster's locations), e.g. asia-south1-a. Empty = the cluster's default node locations (GCP only).
+                            items:
+                                type: string
+                            title: Pin to Zones (Node Locations)
+                            type: array
+        name:
+            description: Custom resource name. Optional — auto-generated (name module) when empty.
+            maxLength: 100
+            minLength: 1
+            title: Name
+            type: string
+    required:
+        - cluster_version
+        - aws
+        - gcp
+    type: object
+    x-ui-order:
+        - name
+        - cluster_version
+        - aws
+        - gcp
+        - default_node_pool
+sample:
+    flavor: anycloud
+    kind: kubernetes_cluster
+    spec:
+        aws:
+            endpoint_private_access: true
+            endpoint_public_access: false
+            public_access_cidrs:
+                - 10.0.0.0/8
+        cluster_version: "1.30"
+        gcp:
+            enable_private_nodes: true
+            release_channel: STABLE
+        default_node_pool:
+            enabled: false
+    version: "1.0"
