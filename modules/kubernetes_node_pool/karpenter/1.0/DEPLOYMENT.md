@@ -185,11 +185,22 @@ node_pools:
 ```yaml
 node_pools:
   gpu:
-    instance_families: [p3, p4, g4dn]
+    instance_families: [g4dn, g5, g6]
+    instance_sizes: [xlarge, 2xlarge]
     capacity_types: [on-demand]
+    gpu_limits: "8"            # cap the pool by GPUs, not only by CPU/memory
+    use_instance_store: true   # images and model caches on the bundled NVMe
     labels:
       accelerator: nvidia
 ```
+
+Inference images are large (Triton, vLLM and TGI are 10–20 GB on disk) and do not fit on
+Karpenter's default 20Gi root volume; the pod is evicted for ephemeral storage and Karpenter
+replaces the node until the pool's limits are reached. Either `use_instance_store: true`
+(GPU families bundle 100+ GiB of NVMe at no extra cost) or `disk_size: 50Gi` avoids this.
+The NVIDIA device plugin (or GPU Operator) must be installed separately for pods to request
+`nvidia.com/gpu`; the `gpu_limits` field labels the nodes so the plugin's default affinity
+finds them.
 
 ## Monitoring
 

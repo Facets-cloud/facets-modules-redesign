@@ -15,37 +15,60 @@ module "ec2_node_class" {
       namespace = local.karpenter_namespace
     }
 
-    spec = {
-      # Use the instance profile from karpenter_details input
-      instanceProfile = local.node_instance_profile_name
+    spec = merge(
+      {
+        # Use the instance profile from karpenter_details input
+        instanceProfile = local.node_instance_profile_name
 
-      # Specify AMI family so Karpenter can generate correct UserData
-      # EKS 1.33 requires AL2023
-      amiFamily = "AL2023"
+        # Specify AMI family so Karpenter can generate correct UserData
+        # EKS 1.33 requires AL2023
+        amiFamily = "AL2023"
 
-      amiSelectorTerms = [
-        {
-          # Use Amazon Linux 2023 EKS optimized AMI
-          alias = "al2023@latest"
-        }
-      ]
-
-      subnetSelectorTerms = [
-        {
-          tags = {
-            "karpenter.sh/discovery" = local.cluster_name
+        amiSelectorTerms = [
+          {
+            # Use Amazon Linux 2023 EKS optimized AMI
+            alias = "al2023@latest"
           }
-        }
-      ]
+        ]
 
-      securityGroupSelectorTerms = [
-        {
-          tags = {
-            "karpenter.sh/discovery" = local.cluster_name
+        subnetSelectorTerms = [
+          {
+            tags = {
+              "karpenter.sh/discovery" = local.cluster_name
+            }
           }
-        }
-      ]
-    }
+        ]
+
+        securityGroupSelectorTerms = [
+          {
+            tags = {
+              "karpenter.sh/discovery" = local.cluster_name
+            }
+          }
+        ]
+      },
+      # Put containerd and kubelet on the bundled NVMe (RAID0) if configured.
+      # Families that ship local NVMe include it in the instance price; by
+      # default Karpenter leaves it unmounted and only the root volume is used.
+      lookup(var.instance.spec, "use_instance_store", false) ? {
+        instanceStorePolicy = "RAID0"
+      } : {},
+      # Explicit root volume size if configured (Karpenter's default is 20Gi)
+      lookup(var.instance.spec, "disk_size", "") != "" ? {
+        blockDeviceMappings = [
+          {
+            deviceName = "/dev/xvda"
+            rootVolume = true
+            ebs = {
+              volumeSize          = lookup(var.instance.spec, "disk_size", "")
+              volumeType          = "gp3"
+              encrypted           = true
+              deleteOnTermination = true
+            }
+          }
+        ]
+      } : {}
+    )
   }
 
   advanced_config = {
@@ -81,7 +104,11 @@ module "node_pool" {
             {
               # Reference helm_release_id to create dependency on Karpenter installation
               "facets.cloud/karpenter-release-id" = var.inputs.karpenter_details.attributes.helm_release_id
-            }
+            },
+            # Lets the NVIDIA device plugin chart's default node affinity match this pool
+            lookup(var.instance.spec, "gpu_limits", "") != "" ? {
+              "nvidia.com/gpu.present" = "true"
+            } : {}
           )
         }
 
@@ -140,10 +167,16 @@ module "node_pool" {
         )
       }
 
-      limits = {
-        cpu    = lookup(var.instance.spec, "cpu_limits", "1000")
-        memory = lookup(var.instance.spec, "memory_limits", "1000Gi")
-      }
+      limits = merge(
+        {
+          cpu    = lookup(var.instance.spec, "cpu_limits", "1000")
+          memory = lookup(var.instance.spec, "memory_limits", "1000Gi")
+        },
+        # Cap the pool by GPUs if configured; cpu/memory alone cannot bound a GPU pool
+        lookup(var.instance.spec, "gpu_limits", "") != "" ? {
+          "nvidia.com/gpu" = lookup(var.instance.spec, "gpu_limits", "")
+        } : {}
+      )
 
       disruption = {
         consolidationPolicy = lookup(var.instance.spec, "enable_consolidation", true) ? "WhenEmptyOrUnderutilized" : "WhenEmpty"

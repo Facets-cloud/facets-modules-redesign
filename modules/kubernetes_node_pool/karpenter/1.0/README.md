@@ -129,6 +129,9 @@ Each node pool supports:
 |-----------|------|---------|-------------|
 | `cpu_limits` | string | `"1000"` | Max CPU cores for this pool |
 | `memory_limits` | string | `"1000Gi"` | Max memory for this pool |
+| `gpu_limits` | string | `""` | Max GPUs (`nvidia.com/gpu`) for this pool; also labels nodes `nvidia.com/gpu.present=true` for the NVIDIA device plugin |
+| `disk_size` | string | `""` | Root volume size, e.g. `50Gi` (encrypted gp3). Empty keeps Karpenter's 20Gi default |
+| `use_instance_store` | bool | `false` | RAID0 the instance's bundled NVMe and put containerd/kubelet on it (g4dn, g5, g6, p4, c5d, m5d, ...). Ephemeral; included in the instance price |
 | `instance_families` | list(string) | `["t3", "t3a"]` | EC2 instance families |
 | `instance_sizes` | list(string) | `["medium", "large", "xlarge"]` | Instance sizes |
 | `capacity_types` | list(string) | `["on-demand", "spot"]` | Capacity types |

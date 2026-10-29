@@ -99,11 +99,26 @@ spec:
             title: CPU Limits
             type: string
             x-ui-placeholder: "1000"
+        disk_size:
+            description: Root volume size for provisioned nodes (encrypted gp3). Leave empty for Karpenter's default of 20Gi
+            pattern: ^([0-9]+Gi)?$
+            title: Disk Size
+            type: string
+            x-ui-error-message: Value must be a size in Gi, e.g. 50Gi
+            x-ui-placeholder: 50Gi
         enable_consolidation:
             default: true
             description: Enable automatic node consolidation to optimize costs
             title: Enable Consolidation
             type: boolean
+        gpu_limits:
+            default: ""
+            description: Maximum GPUs (nvidia.com/gpu) across all nodes in this pool. Leave empty for no GPU limit
+            pattern: ^[0-9]*$
+            title: GPU Limits
+            type: string
+            x-ui-error-message: Value must be a whole number, e.g. 8
+            x-ui-placeholder: "8"
         instance_families:
             default:
                 - t3
@@ -146,6 +161,11 @@ spec:
             title: Node Taints
             type: object
             x-ui-yaml-editor: true
+        use_instance_store:
+            default: false
+            description: Put container images and kubelet data on the instance's bundled NVMe (RAID0) instead of the root volume. Applies to families that ship local NVMe (g4dn, g5, g6, p4, c5d, m5d, ...); the disk is ephemeral and already included in the instance price
+            title: Use Instance Store
+            type: boolean
     title: Karpenter NodePool Configuration
     type: object
     x-ui-order:
@@ -159,4 +179,7 @@ spec:
         - labels
         - taints
         - tags
+        - gpu_limits
+        - disk_size
+        - use_instance_store
 version: "1.0"
