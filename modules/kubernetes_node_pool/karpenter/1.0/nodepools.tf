@@ -50,18 +50,22 @@ module "ec2_node_class" {
       # Put containerd and kubelet on the bundled NVMe (RAID0) if configured.
       # Families that ship local NVMe include it in the instance price; by
       # default Karpenter leaves it unmounted and only the root volume is used.
-      lookup(var.instance.spec, "use_instance_store", false) ? {
+      local.use_instance_store ? {
         instanceStorePolicy = "RAID0"
       } : {},
-      # Explicit root volume size if configured (Karpenter's default is 20Gi)
-      lookup(var.instance.spec, "disk_size", "") != "" ? {
+      # Explicit root volume if configured (Karpenter's default is 20Gi gp3 at
+      # baseline 3000 IOPS / 125 MB/s). Changing any of these on an existing
+      # pool is drift: Karpenter replaces every node in the pool.
+      local.disk_size != "" ? {
         blockDeviceMappings = [
           {
             deviceName = "/dev/xvda"
             rootVolume = true
             ebs = {
-              volumeSize          = lookup(var.instance.spec, "disk_size", "")
+              volumeSize          = local.disk_size
               volumeType          = "gp3"
+              iops                = local.disk_iops
+              throughput          = local.disk_throughput
               encrypted           = true
               deleteOnTermination = true
             }
@@ -104,11 +108,7 @@ module "node_pool" {
             {
               # Reference helm_release_id to create dependency on Karpenter installation
               "facets.cloud/karpenter-release-id" = var.inputs.karpenter_details.attributes.helm_release_id
-            },
-            # Lets the NVIDIA device plugin chart's default node affinity match this pool
-            lookup(var.instance.spec, "gpu_limits", "") != "" ? {
-              "nvidia.com/gpu.present" = "true"
-            } : {}
+            }
           )
         }
 
@@ -173,8 +173,8 @@ module "node_pool" {
           memory = lookup(var.instance.spec, "memory_limits", "1000Gi")
         },
         # Cap the pool by GPUs if configured; cpu/memory alone cannot bound a GPU pool
-        lookup(var.instance.spec, "gpu_limits", "") != "" ? {
-          "nvidia.com/gpu" = lookup(var.instance.spec, "gpu_limits", "")
+        local.gpu_limits != "" ? {
+          "nvidia.com/gpu" = local.gpu_limits
         } : {}
       )
 

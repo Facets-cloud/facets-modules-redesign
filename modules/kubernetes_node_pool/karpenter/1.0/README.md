@@ -129,15 +129,21 @@ Each node pool supports:
 |-----------|------|---------|-------------|
 | `cpu_limits` | string | `"1000"` | Max CPU cores for this pool |
 | `memory_limits` | string | `"1000Gi"` | Max memory for this pool |
-| `gpu_limits` | string | `""` | Max GPUs (`nvidia.com/gpu`) for this pool; also labels nodes `nvidia.com/gpu.present=true` for the NVIDIA device plugin |
-| `disk_size` | string | `""` | Root volume size, e.g. `50Gi` (encrypted gp3). Empty keeps Karpenter's 20Gi default |
-| `use_instance_store` | bool | `false` | RAID0 the instance's bundled NVMe and put containerd/kubelet on it (g4dn, g5, g6, p4, c5d, m5d, ...). Ephemeral; included in the instance price |
+| `gpu_limits` | string | `""` | Max GPUs (`nvidia.com/gpu`) for this pool. Empty means no GPU limit |
+| `disk_size` | string | `""` | Root volume size, e.g. `50Gi` (encrypted gp3, minimum `20Gi`). Empty keeps Karpenter's 20Gi default |
+| `disk_iops` | integer | `3000` | Root volume IOPS (3000–16000). Applied only when `disk_size` is set |
+| `disk_throughput` | integer | `125` | Root volume throughput in MB/s (125–1000). Applied only when `disk_size` is set |
+| `use_instance_store` | bool | `false` | RAID0 the instance's bundled NVMe and put containerd/kubelet on it (g4dn, g5, g6, p4d, p4de, c5d, m5d, ...). Ephemeral; included in the instance price |
 | `instance_families` | list(string) | `["t3", "t3a"]` | EC2 instance families |
 | `instance_sizes` | list(string) | `["medium", "large", "xlarge"]` | Instance sizes |
 | `capacity_types` | list(string) | `["on-demand", "spot"]` | Capacity types |
 | `architecture` | list(string) | `["amd64"]` | CPU architecture |
 | `labels` | map(string) | `{}` | Kubernetes node labels |
 | `taints` | map(string) | `{}` | Kubernetes node taints |
+
+Changing `disk_size`, `disk_iops`, `disk_throughput` or `use_instance_store` on an existing pool
+changes its EC2NodeClass; Karpenter treats that as drift and replaces every node in the pool.
+Apply such changes to a busy pool in a maintenance window, or create a new pool.
 
 ## How Karpenter Works
 

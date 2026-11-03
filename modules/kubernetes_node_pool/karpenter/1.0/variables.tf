@@ -17,6 +17,8 @@ variable "instance" {
 
       # Node storage
       disk_size          = optional(string, "")
+      disk_iops          = optional(number, 3000)
+      disk_throughput    = optional(number, 125)
       use_instance_store = optional(bool, false)
 
       # Node pool behavior
