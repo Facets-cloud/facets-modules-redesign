@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+#
+# GKE exec-auth credential helper.
+#
+# Why this exists: GKE's standard kubeconfig auth path requires
+# `gke-gcloud-auth-plugin` (or the community `gke-auth-plugin`) on every
+# machine that talks to the cluster. The Facets runner image doesn't ship
+# that binary and installing release artifacts at apply time is fragile.
+# This script performs the same OAuth2 JWT-bearer exchange the plugin
+# performs (RFC 7523), using only tools already on the runner: bash, curl,
+# openssl, and standard text utilities.
+#
+# Terraform's templatefile() substitutes $${credentials} below with the raw
+# GCP service-account JSON before the script is handed to `bash -c`.
+# stdout is the Kubernetes ExecCredential JSON that the kubernetes provider
+# consumes; everything else goes to stderr.
+
+set -euo pipefail
+
+creds_file=$(mktemp -t gke-creds.XXXXXX)
+key_file=$(mktemp -t gke-key.XXXXXX)
+trap 'rm -f "$creds_file" "$key_file"' EXIT
+
+# Single-quoted heredoc — credentials are written verbatim with no shell
+# expansion. templatefile() injects the JSON before bash ever sees it.
+cat > "$creds_file" <<'__CREDS_EOF__'
+${credentials}
+__CREDS_EOF__
+
+# --- 1. Parse service-account JSON ------------------------------------------
+# Avoiding jq because it isn't guaranteed on the runner. The private_key
+# field stores literal "\n" escape sequences; openssl needs real newlines.
+client_email=$(grep -o '"client_email" *: *"[^"]*"' "$creds_file" \
+    | head -1 \
+    | cut -d'"' -f4)
+
+sed -n '/"private_key"/s/.*"private_key" *: *"//p' "$creds_file" \
+    | sed 's/",*$//' \
+    | sed 's/\\n/\n/g' \
+    > "$key_file"
+
+if [[ -z "$client_email" || ! -s "$key_file" ]]; then
+    echo "gke-exec-auth: failed to parse client_email / private_key from credentials JSON" >&2
+    exit 1
+fi
+
+# --- 2. Build and sign a JWT, exchange it for an access token --------------
+b64url() {
+    openssl base64 | tr -d '=\n' | tr '/+' '_-'
+}
+
+now=$(date +%s)
+exp=$((now + 3600))
+
+header=$(printf '{"alg":"RS256","typ":"JWT"}' | b64url)
+claim=$(printf \
+    '{"iss":"%s","scope":"https://www.googleapis.com/auth/cloud-platform","aud":"https://oauth2.googleapis.com/token","iat":%d,"exp":%d}' \
+    "$client_email" "$now" "$exp" \
+    | b64url)
+signature=$(printf '%s.%s' "$header" "$claim" \
+    | openssl dgst -sha256 -sign "$key_file" -binary \
+    | b64url)
+assertion="$header.$claim.$signature"
+
+if ! response=$(curl -sf -X POST https://oauth2.googleapis.com/token \
+        --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
+        --data-urlencode "assertion=$assertion"); then
+    echo "gke-exec-auth: token endpoint request failed" >&2
+    exit 1
+fi
+
+access_token=$(echo "$response" | grep -o '"access_token" *: *"[^"]*"' | head -1 | cut -d'"' -f4)
+if [[ -z "$access_token" ]]; then
+    echo "gke-exec-auth: no access_token in oauth2 response" >&2
+    exit 1
+fi
+
+# --- 3. Emit ExecCredential -------------------------------------------------
+# Schema reference: https://kubernetes.io/docs/reference/access-authn-authz/authentication/#client-go-credential-plugins
+printf '{"apiVersion":"client.authentication.k8s.io/v1","kind":"ExecCredential","status":{"token":"%s"}}\n' \
+    "$access_token"
