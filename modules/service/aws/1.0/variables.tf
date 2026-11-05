@@ -47,11 +47,41 @@ variable "instance" {
           protocol     = string
         })), {})
 
-        # Health checks (optional)
+        # Health checks (optional) - full shape mirroring facets.yaml so probe
+        # detail fields are not silently discarded by type conversion (S4/S7)
         health_checks = optional(object({
-          readiness_check_type = string
-          liveness_check_type  = string
+          readiness_check_type        = optional(string)
+          readiness_start_up_time     = optional(number)
+          readiness_timeout           = optional(number)
+          readiness_period            = optional(number)
+          readiness_port              = optional(string)
+          readiness_url               = optional(string)
+          readiness_exec_command      = optional(list(string))
+          readiness_failure_threshold = optional(number)
+          readiness_success_threshold = optional(number)
+          liveness_check_type         = optional(string)
+          liveness_start_up_time      = optional(number)
+          liveness_timeout            = optional(number)
+          liveness_period             = optional(number)
+          liveness_port               = optional(string)
+          liveness_url                = optional(string)
+          liveness_exec_command       = optional(list(string))
+          liveness_failure_threshold  = optional(number)
+          liveness_success_threshold  = optional(number)
+          startup_check_type          = optional(string)
+          startup_start_up_time       = optional(number)
+          startup_timeout             = optional(number)
+          startup_period              = optional(number)
+          startup_port                = optional(string)
+          startup_url                 = optional(string)
+          startup_headers             = optional(map(map(string)))
+          startup_exec_command        = optional(list(string))
+          startup_failure_threshold   = optional(number)
+          startup_success_threshold   = optional(number)
         }))
+
+        # Fixed replica count without an HPA (S11); ignored when autoscaling is set
+        instance_count = optional(number)
 
         # Autoscaling (optional)
         autoscaling = optional(object({
@@ -92,10 +122,20 @@ variable "instance" {
         }), {})
       })
 
-      # Release configuration
+      # Release configuration - strategy/disruption_policy mirrored from
+      # facets.yaml so they are not silently discarded (S9)
       release = optional(object({
         image             = optional(string)
         image_pull_policy = optional(string, "IfNotPresent")
+        strategy = optional(object({
+          type            = optional(string)
+          max_available   = optional(string)
+          max_unavailable = optional(string)
+        }))
+        disruption_policy = optional(object({
+          min_available   = optional(string)
+          max_unavailable = optional(string)
+        }))
       }), {})
 
       # Environment variables
@@ -201,12 +241,18 @@ variable "inputs" {
     })
 
     # Required: Kubernetes node pool details (Karpenter)
+    # taints/node_selector typed to match what kubernetes_node_pool/karpenter
+    # actually emits (list of objects / map), not strings (S8)
     kubernetes_node_pool_details = object({
       attributes = optional(object({
         node_class_name = optional(string)
         node_pool_name  = optional(string)
-        taints          = optional(string)
-        node_selector   = optional(string)
+        taints = optional(list(object({
+          key    = string
+          value  = string
+          effect = string
+        })), [])
+        node_selector = optional(map(string), {})
       }))
       interfaces = optional(object({}))
     })
@@ -249,10 +295,15 @@ variable "instance_name" {
 variable "environment" {
   description = "Environment configuration including namespace and other environment-specific settings"
   type = object({
-    name        = optional(string)
-    unique_name = string
-    namespace   = string
-    cloud_tags  = optional(map(string), {})
+    name                         = optional(string)
+    unique_name                  = string
+    namespace                    = string
+    cloud_tags                   = optional(map(string), {})
+    default_tolerations          = optional(list(any), [])
+    global_variables             = optional(map(string), {})
+    common_environment_variables = optional(map(string), {})
+    deployment_id                = optional(string, "")
+    secrets                      = optional(map(string), {})
   })
   default = {
     name        = "default"
