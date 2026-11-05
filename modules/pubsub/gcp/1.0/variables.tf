@@ -1,17 +1,12 @@
 variable "instance" {
   type = object({
     spec = object({
-      topic_name                 = string
+      topic_name                 = optional(string)
       message_retention_duration = optional(string)
       create_subscription        = optional(bool)
       subscription_ack_deadline  = optional(number)
     })
   })
-
-  validation {
-    condition     = can(var.instance.spec.topic_name) && length(var.instance.spec.topic_name) > 0
-    error_message = "Topic name must be provided and cannot be empty"
-  }
 
   validation {
     condition     = can(var.instance.spec.message_retention_duration) ? can(regex("^\\d+s$", var.instance.spec.message_retention_duration)) : true
