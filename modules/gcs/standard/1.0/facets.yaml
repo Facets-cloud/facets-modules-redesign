@@ -31,7 +31,7 @@ outputs:
     title: Read-Write IAM Role
     type: '@outputs/gcp_iam_role_name'
   default:
-    type: '@outputs/google_cloud_storage_bucket'
+    type: '@facets/gcs-bucket'
 spec:
   description: Creates and manages a Google Cloud Storage bucket with configurable options.
   type: object
