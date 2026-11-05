@@ -21,8 +21,9 @@ locals {
 
   # Transform taints from object format to string format for utility module compatibility
   kubernetes_node_pool_details = lookup(var.inputs, "kubernetes_node_pool_details", {})
-  node_pool_taints             = lookup(local.kubernetes_node_pool_details, "taints", [])
-  node_pool_labels             = lookup(local.kubernetes_node_pool_details, "node_selector", {})
+  node_pool_attributes         = lookup(local.kubernetes_node_pool_details, "attributes", {})
+  node_pool_taints             = lookup(local.node_pool_attributes, "taints", [])
+  node_pool_labels             = lookup(local.node_pool_attributes, "node_selector", {})
 
   # Convert taints from {key: "key", value: "value", effect: "effect"} to "key=value:effect" format
   transformed_taints = [
