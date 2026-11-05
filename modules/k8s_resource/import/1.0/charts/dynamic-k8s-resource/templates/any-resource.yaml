@@ -1,0 +1,3 @@
+{{- if .Values.resource }}
+{{- toJson .Values.resource | nindent 2 }} 
+{{- end }}

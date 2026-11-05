@@ -1,0 +1,48 @@
+intent: grafana_dashboard
+flavor: saas
+version: '1.0'
+description: Adds grafana_dashboard - default flavor
+clouds:
+- aws
+- gcp
+- azure
+- kubernetes
+inputs:
+  kubernetes_details:
+    optional: false
+    type: '@facets/kubernetes-details'
+    default:
+      resource_type: kubernetes_cluster
+      resource_name: default
+    providers:
+    - kubernetes
+    - kubernetes-alpha
+    - helm
+spec:
+  type: object
+  title: Grafana Dashboard Configuration
+  description: Configuration for a Grafana dashboard, including panels, data sources,
+    and layout.
+  properties:
+    dashboard:
+      type: object
+      title: Dashboard JSON Definition
+      description: Complete Grafana dashboard definition following the Grafana JSON
+        model
+      x-ui-editor: true
+    preserve_uid:
+      type: boolean
+      title: Preserve Dashboard UID
+      description: Keep the uid embedded in the dashboard JSON instead of generating a random one (zero-change adoption)
+    dashboard_b64:
+      type: string
+      title: Dashboard JSON (base64)
+      description: Exact dashboard JSON, base64-encoded. Takes precedence over 'dashboard'. Survives storage round-trips that drop empty-string values (zero-change adoption)
+sample:
+  kind: grafana_dashboard
+  flavor: saas
+  version: '1.0'
+  disabled: true
+  metadata: {}
+  spec:
+    dashboard: {}

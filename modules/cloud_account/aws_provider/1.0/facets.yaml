@@ -61,11 +61,10 @@ outputs:
         attributes:
           region: attributes.aws_region
           skip_region_validation: true
-          attributes:
-            assume_role:
-              role_arn: attributes.aws_iam_role
-              session_name: attributes.session_name
-              external_id: attributes.external_id
+          assume_role:
+            role_arn: attributes.aws_iam_role
+            session_name: attributes.session_name
+            external_id: attributes.external_id
 sample:
   version: '1.0'
   flavor: aws_provider

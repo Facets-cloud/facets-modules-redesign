@@ -1,0 +1,9 @@
+name: "@facets/log-collector"
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+    interfaces:
+      type: object
+providers: []

@@ -1,0 +1,38 @@
+intent: cloud_account
+flavor: aws_local
+version: '1.0'
+description: Emits an AWS provider using the release runner's own identity (no assume-role),
+  for importing resources that live in the runner's own account rather than an assumed one.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: AWS provider using the runner's native identity (no assume-role)
+  displayName: AWS Cloud Account (Runner-native, no assume-role)
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/aws_cloud_account.svg
+clouds:
+- aws
+spec:
+  type: object
+  properties:
+    region:
+      type: string
+      title: AWS Region
+      x-ui-overrides-only: true
+outputs:
+  default:
+    type: '@facets/aws_cloud_account_local'
+    providers:
+      aws:
+        source: hashicorp/aws
+        version: = 6.9.0
+        attributes:
+          region: attributes.aws_region
+          skip_region_validation: true
+sample:
+  kind: cloud_account
+  flavor: aws_local
+  version: '1.0'
+  spec:
+    region: us-east-1
+iac:
+  validated_files:
+  - variables.tf
