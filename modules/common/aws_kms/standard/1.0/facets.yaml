@@ -66,7 +66,7 @@ spec:
       description: Specifies whether key rotation is enabled
       default: true
     deletion_window_in_days:
-      type: number
+      type: integer
       title: Deletion Window (Days)
       description: Waiting period before KMS deletes the key (7-30 days)
       minimum: 7
@@ -211,7 +211,7 @@ spec:
           hosted_zone_arn:
             type: string
     rotation_period_in_days:
-      type: number
+      type: integer
       title: Rotation Period (Days)
       description: Custom period of time between automatic rotations
       minimum: 90

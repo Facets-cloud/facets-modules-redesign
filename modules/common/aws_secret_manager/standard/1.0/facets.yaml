@@ -54,7 +54,7 @@ spec:
       description: (Optional) Valid JSON document representing a resource policy. For more information about building AWS IAM policy documents with Terraform, see the AWS IAM Policy Document Guide. Removing policy from your configuration or setting policy to null or an empty string (i.e., policy = "") will not delete the policy since it could have been set by aws_secretsmanager_secret_policy. To delete the policy, set it to "{}" (an empty JSON document).
       x-ui-yaml-editor: true
     recovery_window_in_days:
-      type: number
+      type: integer
       title: Recovery Window (Days)
       description: (Optional) Number of days that AWS Secrets Manager waits before it can delete the secret. This value can be 0 to force deletion without recovery or range from 7 to 30 days. The default value is 30.
       default: 30
@@ -80,7 +80,7 @@ spec:
           description: Configuration for rotation schedule
           properties:
             automatically_after_days:
-              type: number
+              type: integer
               title: Automatically After Days
               description: Number of days between automatic scheduled rotations
               minimum: 1

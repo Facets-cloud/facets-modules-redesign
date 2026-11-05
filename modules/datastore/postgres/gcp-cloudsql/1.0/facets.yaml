@@ -66,14 +66,14 @@ spec:
           - db-custom-16-65536
           default: db-custom-2-7680
         disk_size:
-          type: number
+          type: integer
           title: Disk Size (GB)
           description: Initial disk size in GB
           minimum: 10
           maximum: 30720
           default: 100
         read_replica_count:
-          type: number
+          type: integer
           title: Read Replica Count
           description: Number of read replicas to create
           minimum: 0

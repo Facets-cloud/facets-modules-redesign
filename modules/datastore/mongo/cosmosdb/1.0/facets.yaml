@@ -50,7 +50,7 @@ spec:
           - consistent_prefix
           default: session
         port:
-          type: number
+          type: integer
           title: Port
           description: Port number for MongoDB connection
           minimum: 1024
@@ -73,7 +73,7 @@ spec:
           - serverless
           default: provisioned
         max_throughput:
-          type: number
+          type: integer
           title: Maximum Throughput (RU/s)
           description: Maximum Request Units per second for autoscale provisioned
             throughput
