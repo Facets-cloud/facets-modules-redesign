@@ -1,0 +1,172 @@
+intent: mysql_user
+flavor: k8s_job
+version: '1.0'
+clouds:
+- aws
+- azure
+- gcp
+- kubernetes
+description: Creates MySQL databases and a least-privilege MySQL user on an existing
+  MySQL instance, by running an idempotent SQL job inside the Kubernetes cluster.
+  Publishes the generated user credentials as outputs.
+intentDetails:
+  type: Datastores
+  description: A MySQL user (and optional databases) provisioned on an existing MySQL
+    instance via an in-cluster job
+  displayName: MySQL User
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mysql_user.svg
+spec:
+  title: MySQL User and Databases
+  description: Provisions databases and a dedicated user on an existing MySQL instance.
+    The SQL runs from a Kubernetes Job inside the cluster, so it works against a
+    private instance that the Terraform runner cannot reach. All statements are
+    idempotent, so re-running is safe.
+  type: object
+  x-ui-order:
+  - user
+  - databases
+  - grants
+  - job
+  properties:
+    user:
+      type: object
+      title: User
+      description: The MySQL user to create. Its password is generated and published
+        as a secret output; it is never taken as input.
+      x-ui-order:
+      - name
+      - auth_plugin
+      - host
+      properties:
+        name:
+          type: string
+          title: Username
+          description: MySQL username to create
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+          minLength: 1
+          maxLength: 32
+        auth_plugin:
+          type: string
+          title: Authentication Plugin
+          description: Password-checking method for this user. Choose
+            mysql_native_password when the consuming application ships a JDBC driver
+            older than Connector/J 8.0, which cannot speak caching_sha2_password.
+            The plugin is a per-user property, so this does not change any other user
+            on the instance.
+          enum:
+          - mysql_native_password
+          - caching_sha2_password
+          default: mysql_native_password
+        host:
+          type: string
+          title: Allowed Host
+          description: Host pattern the user may connect from
+          default: '%'
+          minLength: 1
+          maxLength: 60
+      required:
+      - name
+    databases:
+      type: array
+      title: Databases
+      description: Databases (schemas) to create on the instance if absent. Use this
+        where an application expects a schema name that differs from the instance's
+        initial database.
+      items:
+        type: string
+        pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+        minLength: 1
+        maxLength: 64
+    grants:
+      type: array
+      title: Grants
+      description: Privileges to grant the user, one entry per database
+      items:
+        type: object
+        title: Grant
+        x-ui-order:
+        - database
+        - privileges
+        properties:
+          database:
+            type: string
+            title: Database
+            description: Database the privileges apply to
+            pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+            minLength: 1
+            maxLength: 64
+          privileges:
+            type: string
+            title: Privileges
+            description: Comma-separated MySQL privileges, e.g. SELECT,INSERT,UPDATE,DELETE
+            default: ALL PRIVILEGES
+            minLength: 1
+        required:
+        - database
+    job:
+      type: object
+      title: Job Settings
+      description: Settings for the in-cluster job that runs the SQL
+      x-ui-order:
+      - namespace
+      - image
+      properties:
+        namespace:
+          type: string
+          title: Namespace
+          description: Namespace the job and its credential secret are created in
+          default: default
+          minLength: 1
+          maxLength: 63
+        image:
+          type: string
+          title: MySQL Client Image
+          description: Image providing the mysql client. Pin this to a digest for
+            reproducibility; a floating tag can move or be withdrawn.
+          default: mysql:8.4
+          minLength: 1
+  required:
+  - user
+inputs:
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Cluster the provisioning job runs in. Must have network reach to the
+      MySQL instance.
+    providers:
+    - kubernetes
+  mysql:
+    type: '@facets/mysql'
+    optional: false
+    displayName: MySQL Instance
+    description: Existing MySQL instance to provision into. Its writer credentials are
+      used as the administrative connection.
+outputs:
+  default:
+    type: '@facets/mysql_user'
+    title: MySQL User
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - locals.tf
+  - outputs.tf
+sample:
+  kind: mysql_user
+  flavor: k8s_job
+  version: '1.0'
+  disabled: true
+  spec:
+    user:
+      name: acs
+      auth_plugin: mysql_native_password
+      host: '%'
+    databases:
+    - access_control
+    grants:
+    - database: access_control
+      privileges: ALL PRIVILEGES
+    job:
+      namespace: default
+      image: mysql:8.4
