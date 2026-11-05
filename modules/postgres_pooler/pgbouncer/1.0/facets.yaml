@@ -1,0 +1,383 @@
+# ╔═══════════════════════════════════════════════════════════╗
+# ║ MANAGED BY: raptor module — DO NOT EDIT DIRECTLY         ║
+# ║                                                          ║
+# ║ Modify via:                                              ║
+# ║   raptor module set-spec --add <field>                   ║
+# ║   raptor module add-input / remove-input                 ║
+# ║   raptor module add-output / remove-output               ║
+# ║   raptor module show | raptor module validate            ║
+# ╚═══════════════════════════════════════════════════════════╝
+intent: postgres_pooler
+flavor: pgbouncer
+version: "1.0"
+description: In-cluster PgBouncer connection pooler (static userlist, scram-sha-256) fronting an existing Postgres source. Renders writer/reader planes as separate Deployments+Services, each real dbname. Drop-in @facets/postgres output. Portable k8s (EKS/GKE).
+clouds:
+    - aws
+    - gcp
+inputs:
+    kubernetes_details:
+        type: '@facets/kubernetes-details'
+        providers:
+            - kubernetes
+    node_pool:
+        type: '@facets/kubernetes_nodepool'
+        optional: true
+outputs:
+    default:
+        type: '@facets/postgres'
+spec:
+    properties:
+        auth_type:
+            default: scram-sha-256
+            description: Client authentication method against the static userlist.
+            enum:
+                - scram-sha-256
+                - md5
+            title: Auth Type
+            type: string
+        client_tls:
+            properties:
+                cert:
+                    description: 'Secret ref: PEM bundle (server cert+key) for the client-facing TLS listener. Required when sslmode != disable and clients present TLS.'
+                    maxLength: 8192
+                    minLength: 1
+                    title: Client TLS Cert
+                    type: string
+                    x-ui-secret-ref: true
+                sslmode:
+                    default: allow
+                    description: PgBouncer client-side TLS mode. allow = accept both plaintext and TLS clients (transparent). require/verify need a cert.
+                    enum:
+                        - disable
+                        - allow
+                        - require
+                    title: Client TLS sslmode
+                    type: string
+            title: Client Tls
+            type: object
+        default_pool_size:
+            default: 50
+            description: Server connections per (user,db) kept to the backend.
+            maximum: 1000
+            minimum: 1
+            title: Default Pool Size
+            type: number
+        dns_max_ttl:
+            default: 15
+            description: Seconds PgBouncer caches the backend hostname. Lower reacts faster to RDS failover.
+            maximum: 3600
+            minimum: 0
+            title: DNS Max TTL
+            type: number
+        expose:
+            default: clusterip
+            description: Service exposure. clusterip = in-cluster ClusterIP (in-cluster consumers only). internal-lb = one internal AWS NLB per plane (K8s-only, provisioned by the AWS Load Balancer Controller in external mode with ip targets) for out-of-cluster consumers (ECS/VM) in the same VPC; the @facets/postgres host becomes the NLB DNS. One NLB per pgbouncer plane (writer/reader) — no LB sharing.
+            enum:
+                - clusterip
+                - internal-lb
+            title: Expose
+            type: string
+        health_checks:
+            description: Liveness and readiness probe tuning for the PgBouncer container.
+            properties:
+                liveness:
+                    properties:
+                        failure_threshold:
+                            default: 3
+                            maximum: 10
+                            minimum: 1
+                            title: Failure Threshold
+                            type: number
+                        initial_delay_seconds:
+                            default: 15
+                            maximum: 300
+                            minimum: 0
+                            title: Initial Delay
+                            type: number
+                        period_seconds:
+                            default: 20
+                            maximum: 300
+                            minimum: 1
+                            title: Period
+                            type: number
+                        timeout_seconds:
+                            default: 1
+                            maximum: 60
+                            minimum: 1
+                            title: Timeout
+                            type: number
+                    title: Liveness Probe
+                    type: object
+                readiness:
+                    properties:
+                        failure_threshold:
+                            default: 3
+                            maximum: 10
+                            minimum: 1
+                            title: Failure Threshold
+                            type: number
+                        initial_delay_seconds:
+                            default: 5
+                            maximum: 300
+                            minimum: 0
+                            title: Initial Delay
+                            type: number
+                        period_seconds:
+                            default: 10
+                            maximum: 300
+                            minimum: 1
+                            title: Period
+                            type: number
+                        timeout_seconds:
+                            default: 1
+                            maximum: 60
+                            minimum: 1
+                            title: Timeout
+                            type: number
+                    title: Readiness Probe
+                    type: object
+            title: Health Checks
+            type: object
+        image:
+            default: edoburu/pgbouncer:v1.25.2-p0
+            description: Container image for PgBouncer (edoburu tag scheme vX.Y.Z-pN). Override to your registry mirror in locked-down environments.
+            maxLength: 256
+            minLength: 3
+            title: PgBouncer Image
+            type: string
+        listen_backlog:
+            default: 128
+            description: TCP accept queue depth. Raise for connection storms at high client counts.
+            maximum: 65535
+            minimum: 16
+            title: Listen Backlog
+            type: number
+        listen_port:
+            default: 5432
+            description: Port PgBouncer listens on (both planes' Services).
+            maximum: 65535
+            minimum: 1
+            title: Listen Port
+            type: number
+        max_client_conn:
+            default: 3000
+            description: Max client connections PgBouncer accepts.
+            maximum: 100000
+            minimum: 1
+            title: Max Client Connections
+            type: number
+        max_db_connections:
+            default: 300
+            description: Max total server connections PgBouncer opens to the backend across all pools.
+            maximum: 100000
+            minimum: 1
+            title: Max DB Connections
+            type: number
+        metrics:
+            description: 'Optional metrics pipeline: a pgbouncer-exporter sidecar (scrapes the admin console) plus an otel-collector sidecar that scrapes the exporter and pushes OTLP to a collector. Off by default, so consumers that do not set it render an identical Deployment.'
+            title: Metrics (OpenTelemetry)
+            type: object
+            properties:
+                enabled:
+                    default: false
+                    title: Enable Metrics Sidecars
+                    type: boolean
+                otlp_endpoint:
+                    default: ""
+                    description: OTLP gRPC endpoint the collector pushes to, e.g. scout-collector-opentelemetry-collector.observability:4317
+                    title: OTLP Endpoint
+                    type: string
+                exporter_image:
+                    default: prometheuscommunity/pgbouncer-exporter:v0.10.2
+                    title: Exporter Image
+                    type: string
+                collector_image:
+                    default: otel/opentelemetry-collector-contrib:0.159.0
+                    title: Collector Image
+                    type: string
+                exporter_port:
+                    default: 9127
+                    title: Exporter Port
+                    type: number
+                scrape_interval:
+                    default: 30s
+                    title: Scrape Interval
+                    type: string
+        min_pool_size:
+            default: 10
+            description: Minimum idle server connections kept warm.
+            maximum: 1000
+            minimum: 0
+            title: Min Pool Size
+            type: number
+        namespace:
+            default: default
+            description: Kubernetes namespace to deploy PgBouncer into.
+            maxLength: 63
+            minLength: 1
+            title: Namespace
+            type: string
+        pkt_buf:
+            default: 4096
+            description: Internal packet buffer in bytes. Larger reduces syscalls on large result sets.
+            maximum: 65536
+            minimum: 1024
+            title: Packet Buffer
+            type: number
+        pool_mode:
+            default: transaction
+            description: Global PgBouncer pooling mode fallback. transaction = aggressive multiplexing.
+            enum:
+                - session
+                - transaction
+                - statement
+            title: Pool Mode
+            type: string
+        pool_reader:
+            default: true
+            description: Render the reader plane pooling the source replica. Skipped when the source has no distinct reader.
+            title: Pool Reader
+            type: boolean
+        pool_writer:
+            default: true
+            description: Render the writer plane (Deployment+Service) pooling the source primary.
+            title: Pool Writer
+            type: boolean
+        reader:
+            description: Optional per-plane pgbouncer overrides for the reader plane. Omitted keys inherit the globals.
+            title: Reader Plane Overrides
+            type: object
+            x-ui-yaml-editor: true
+        replicas:
+            default: 2
+            description: PgBouncer pod replicas per plane (HA).
+            maximum: 10
+            minimum: 1
+            title: Replicas
+            type: number
+        reserve_pool_size:
+            default: 5
+            description: Extra connections above default_pool_size under load.
+            maximum: 1000
+            minimum: 0
+            title: Reserve Pool Size
+            type: number
+        resources:
+            description: PgBouncer pod CPU/memory requests and limits. PgBouncer is single-threaded, so a cpu_limit above ~1000m is not used by one pod.
+            properties:
+                cpu_limit:
+                    default: 500m
+                    title: CPU Limit
+                    type: string
+                cpu_request:
+                    default: 50m
+                    title: CPU Request
+                    type: string
+                memory_limit:
+                    default: 256Mi
+                    title: Memory Limit
+                    type: string
+                memory_request:
+                    default: 64Mi
+                    title: Memory Request
+                    type: string
+            title: Resources
+            type: object
+        source:
+            description: The Postgres datastore this pooler fronts. Resolves to the selected resource's full outputs (interfaces.writer/reader + attributes). Blueprint-level; resolves per environment.
+            title: Source PostgreSQL
+            type: object
+            x-ui-output-type: '@facets/postgres'
+        users:
+            patternProperties:
+                .*:
+                    properties:
+                        credential:
+                            description: Secret ref to the app's existing DB password secret for this role.
+                            maxLength: 8192
+                            minLength: 1
+                            title: Credential
+                            type: string
+                            x-ui-secret-ref: true
+                        max_user_connections:
+                            description: Per-user cap on server connections (pgbouncer max_user_connections). Omit to inherit the global.
+                            maximum: 100000
+                            minimum: 1
+                            title: Max User Connections
+                            type: number
+                        pool_mode:
+                            description: Per-user pool mode override. Omit to inherit the global pool_mode.
+                            enum:
+                                - session
+                                - transaction
+                                - statement
+                            title: User Pool Mode
+                            type: string
+                    type: object
+            title: Users
+            type: object
+        writer:
+            description: Optional per-plane pgbouncer overrides for the writer plane (e.g. default_pool_size, pool_mode). Omitted keys inherit the globals.
+            title: Writer Plane Overrides
+            type: object
+            x-ui-yaml-editor: true
+    required:
+        - source
+    type: object
+    x-ui-order:
+        - source
+        - pool_writer
+        - pool_reader
+        - pool_mode
+        - default_pool_size
+        - min_pool_size
+        - reserve_pool_size
+        - max_db_connections
+        - max_client_conn
+        - auth_type
+        - expose
+        - listen_port
+        - namespace
+        - replicas
+        - image
+        - client_tls
+        - users
+        - writer
+        - reader
+        - resources
+        - health_checks
+        - dns_max_ttl
+        - pkt_buf
+        - listen_backlog
+        - metrics
+sample:
+    flavor: pgbouncer
+    kind: postgres_pooler
+    spec:
+        auth_type: scram-sha-256
+        client_tls:
+            cert: <wire-a-secret>
+            sslmode: allow
+        default_pool_size: 50
+        dns_max_ttl: 15
+        expose: clusterip
+        image: edoburu/pgbouncer:v1.25.2-p0
+        listen_backlog: 128
+        listen_port: 5432
+        max_client_conn: 3000
+        max_db_connections: 300
+        min_pool_size: 10
+        namespace: default
+        pkt_buf: 4096
+        pool_mode: transaction
+        pool_reader: true
+        pool_writer: true
+        replicas: 2
+        reserve_pool_size: 5
+        source: {}
+        users:
+            app_user:
+                credential: <wire-a-secret>
+                max_user_connections: 100
+                pool_mode: transaction
+    version: "1.0"
