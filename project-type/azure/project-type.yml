@@ -22,6 +22,8 @@ modules:
     flavor: azure_network
   - intent: service
     flavor: azure
+  - intent: service
+    flavor: argo
 
   # === Azure-Specific Modules ===
   - intent: azure_workload_identity

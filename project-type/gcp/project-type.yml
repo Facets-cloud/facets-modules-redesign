@@ -23,6 +23,8 @@ modules:
     flavor: gcp_network
   - intent: service
     flavor: gcp
+  - intent: service
+    flavor: argo
   - intent: cloudrun
     flavor: cpu
 
@@ -121,3 +123,5 @@ modules:
     flavor: kubeblocks
   - intent: redis
     flavor: kubeblocks
+  - intent: argo
+    flavor: gcp
