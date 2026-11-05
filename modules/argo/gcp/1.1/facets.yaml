@@ -1,0 +1,307 @@
+intent: argo
+flavor: gcp
+version: "1.1"
+description: >-
+  Deploys the Argo stack on GKE — ArgoCD, Argo Workflows, Argo Events, and
+  Argo Rollouts. Includes Workload Identity for Workflows SA with Artifact
+  Registry access. Each component is toggleable with configurable chart versions,
+  resources, and custom helm values. Optionally installs the facets-argo-shim
+  into argocd-repo-server so ${facets:...} references inside deployed charts
+  resolve against the Facets control plane.
+clouds:
+    - gcp
+inputs:
+    kubernetes_details:
+        type: '@facets/kubernetes-details'
+        optional: false
+        displayName: Kubernetes Cluster
+        default:
+            resource_type: kubernetes_cluster
+            resource_name: default
+        providers:
+            - kubernetes
+            - helm
+    cloud_account:
+        type: '@facets/gcp_cloud_account'
+        optional: false
+        displayName: Cloud Account
+        providers:
+            - google
+    node_pool:
+        type: '@facets/gke_node_pool_details'
+        optional: true
+        displayName: Node Pool
+        description: Node pool where Argo pods will be scheduled
+intentDetails:
+    description: Argo stack (CD, Workflows, Events, Rollouts) on GKE
+    displayName: Argo Stack
+    iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/argo.svg
+    type: Operators
+outputs:
+    default:
+        mock:
+            attributes:
+                argocd_namespace: mock-string-value
+                argocd_server_service: mock-string-value
+                workflows_namespace: mock-string-value
+                workflows_server_service: mock-string-value
+                events_namespace: mock-string-value
+                rollouts_namespace: mock-string-value
+                rollouts_dashboard_service: mock-string-value
+                workflows_sa_email: mock-string-value
+                shim_enabled: false
+                shim_version: mock-string-value
+            interfaces: {}
+        title: Argo Stack Attributes
+        type: '@facets/argo-stack'
+sample:
+    flavor: gcp
+    kind: argo
+    spec:
+        argocd:
+            enabled: true
+            chart_version: "9.4.16"
+            namespace: argocd
+            facets_shim:
+                enabled: false
+                image: docker.io/facetscloud/facets-argo-shim:v0.13.1
+                argocd_image: quay.io/argoproj/argocd:v3.3.5
+                # cp_username / cp_token have no defaults (a credential has no
+                # sane default), so they are omitted here. Set them by picking a
+                # project variable and secret - at the blueprint level for a
+                # shared identity, or per environment to isolate one.
+                credentials_secret: facets-cp-credentials
+                repo_server_service_account: argo-cd-argocd-repo-server
+        workflows:
+            enabled: true
+            chart_version: "1.0.6"
+        events:
+            enabled: true
+            chart_version: "2.4.21"
+        rollouts:
+            enabled: true
+            chart_version: "2.40.8"
+    version: "1.1"
+spec:
+    properties:
+        argocd:
+            description: ArgoCD configuration
+            properties:
+                enabled:
+                    default: true
+                    description: Enable ArgoCD deployment
+                    title: Enabled
+                    type: boolean
+                chart_version:
+                    default: "9.4.16"
+                    description: ArgoCD Helm chart version
+                    title: Chart Version
+                    type: string
+                custom_values:
+                    default: {}
+                    description: Additional Helm values for ArgoCD
+                    title: Custom Values
+                    type: object
+                    x-ui-yaml-editor: true
+                namespace:
+                    default: argocd
+                    description: Namespace the Argo components are released into.
+                    title: Namespace
+                    type: string
+                    pattern: '^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$'
+                facets_shim:
+                    description: >-
+                        Installs the facets-argo-shim into argocd-repo-server, so
+                        ${facets:...} references inside charts deployed by ArgoCD
+                        resolve against the Facets control plane. Adds two
+                        initContainers, a shared /custom-tools volume that shadows
+                        the helm binary, and a Role granting `list` on
+                        applications.argoproj.io in the ArgoCD namespace.
+                        Without this, any render containing a reference fails
+                        closed inside ArgoCD - which Terraform cannot see.
+                    title: Facets Argo Shim
+                    type: object
+                    x-ui-toggle: true
+                    properties:
+                        enabled:
+                            default: false
+                            description: >-
+                                Enable the shim. Off by default: it grants
+                                repo-server read access to Application objects
+                                and requires control-plane credentials, so it
+                                should be turned on deliberately.
+                            title: Enabled
+                            type: boolean
+                        image:
+                            default: docker.io/facetscloud/facets-argo-shim:v0.13.1
+                            description: >-
+                                Shim image. The tag is published as
+                                shim_version on the output.
+                            title: Shim Image
+                            type: string
+                        argocd_image:
+                            default: quay.io/argoproj/argocd:v3.3.5
+                            description: >-
+                                Image the real helm binary is copied from. Match
+                                your ArgoCD version so the shimmed helm is
+                                version-exact.
+                            title: ArgoCD Image
+                            type: string
+                        cp_username:
+                            description: >-
+                                Facets user the shim authenticates to the control
+                                plane as. Use a dedicated service identity (e.g.
+                                argo-shim@yourorg.com), not a person. It needs
+                                read access to the project, VIEW_SECRETS if any
+                                chart uses blueprint.self.secrets refs, and
+                                blueprint WRITE for the consumed-references
+                                callback (without write, refs still resolve but
+                                the callback warns and skips). Pick a project
+                                variable holding the username, so the identity is
+                                declared once and reused. Set it once at the
+                                blueprint level for a shared service identity, and
+                                override it per environment where an environment
+                                needs its own (e.g. an isolated prod identity, so
+                                a leaked dev token cannot read prod secrets).
+                            title: CP Username
+                            type: string
+                            x-ui-variable-ref: true
+                        cp_token:
+                            description: >-
+                                That user's personal access token, selected from the
+                                project's secrets. Generate it in the Control Plane
+                                UI under Account Settings > Personal Token, store it
+                                as a project secret, then pick it here - there is no
+                                API to mint one, and it is shown only once. The
+                                module writes it into a Kubernetes Secret; it is
+                                never placed in the resource JSON. A blueprint-level
+                                token is shared by every environment, which means a
+                                dev cluster holds a credential that can read prod
+                                secrets - override it per environment for any
+                                environment that must be isolated.
+                            title: CP Token
+                            type: string
+                            x-ui-secret-ref: true
+                        credentials_secret:
+                            default: facets-cp-credentials
+                            description: >-
+                                Name of the Kubernetes Secret this module creates
+                                in the ArgoCD namespace to hold the credentials
+                                above. Only change it to avoid a collision.
+                            title: CP Credentials Secret Name
+                            type: string
+                        rbac_name:
+                            description: >-
+                                Name for the Role and RoleBinding granting
+                                repo-server `list` on applications. Defaults to
+                                facets-shim-app-reader-<resource name>, which is
+                                instance-unique so two argo resources sharing a
+                                namespace cannot overwrite each other's grant.
+                                Override only to adopt a pre-existing grant.
+                            title: RBAC Object Name
+                            type: string
+                        repo_server_service_account:
+                            default: argo-cd-argocd-repo-server
+                            description: >-
+                                ServiceAccount name of argocd-repo-server, used as
+                                the RoleBinding subject. On the argo-helm chart
+                                this is "<release>-argocd-repo-server".
+                            title: Repo Server ServiceAccount
+                            type: string
+            title: ArgoCD
+            type: object
+        workflows:
+            description: Argo Workflows configuration
+            properties:
+                enabled:
+                    default: true
+                    description: Enable Argo Workflows deployment
+                    title: Enabled
+                    type: boolean
+                chart_version:
+                    default: "1.0.6"
+                    description: Argo Workflows Helm chart version
+                    title: Chart Version
+                    type: string
+                custom_values:
+                    default: {}
+                    description: Additional Helm values for Argo Workflows
+                    title: Custom Values
+                    type: object
+                    x-ui-yaml-editor: true
+                create_service_account:
+                    default: true
+                    description: Create the Argo Workflows Kubernetes ServiceAccount (with the Workload Identity annotation) via the Helm chart. Set false when the ServiceAccount is managed externally (e.g. git-synced by ArgoCD), so this module creates only the GCP service account + Workload Identity binding and does not create a k8s ServiceAccount.
+                    title: Create Workflows ServiceAccount
+                    type: boolean
+                service_account_namespace:
+                    default: argocd
+                    description: Namespace of the Kubernetes ServiceAccount that the Workflows GCP service account is Workload-Identity-bound to. Set this to the namespace where the workflow build pods actually run (e.g. workflows).
+                    title: Workflows ServiceAccount Namespace
+                    type: string
+            title: Argo Workflows
+            type: object
+        events:
+            description: Argo Events configuration
+            properties:
+                enabled:
+                    default: true
+                    description: Enable Argo Events deployment
+                    title: Enabled
+                    type: boolean
+                chart_version:
+                    default: "2.4.21"
+                    description: Argo Events Helm chart version
+                    title: Chart Version
+                    type: string
+                namespace:
+                    description: >-
+                        Namespace to release Argo Events into. Defaults to the
+                        ArgoCD namespace (co-located, matching 1.0 behaviour).
+                        Set to a dedicated namespace such as `argo-events` when
+                        Argo Events runs separately - whatever is set here is
+                        what the events_namespace output publishes, so
+                        consumers follow it instead of guessing.
+                    title: Namespace
+                    type: string
+                    pattern: '^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$'
+                custom_values:
+                    default: {}
+                    description: Additional Helm values for Argo Events
+                    title: Custom Values
+                    type: object
+                    x-ui-yaml-editor: true
+            title: Argo Events
+            type: object
+        rollouts:
+            description: Argo Rollouts configuration
+            properties:
+                enabled:
+                    default: true
+                    description: Enable Argo Rollouts deployment
+                    title: Enabled
+                    type: boolean
+                chart_version:
+                    default: "2.40.8"
+                    description: Argo Rollouts Helm chart version
+                    title: Chart Version
+                    type: string
+                custom_values:
+                    default: {}
+                    description: Additional Helm values for Argo Rollouts
+                    title: Custom Values
+                    type: object
+                    x-ui-yaml-editor: true
+            title: Argo Rollouts
+            type: object
+        workflows_sa_roles:
+            default:
+                artifact_registry_writer:
+                    role: roles/artifactregistry.writer
+            description: IAM roles for the Argo Workflows GCP service account
+            title: Workflows SA IAM Roles
+            type: object
+            x-ui-yaml-editor: true
+    required: []
+    type: object
+title: Argo Stack (GKE)
