@@ -1,0 +1,185 @@
+intent: cassandra
+flavor: k8ssandra
+version: '1.0'
+clouds:
+- kubernetes
+- aws
+- azure
+- gcp
+description: Creates and manages Apache Cassandra clusters using the k8ssandra-operator
+intentDetails:
+  type: Datastores
+  description: K8ssandra-managed Apache Cassandra database on Kubernetes
+  displayName: Cassandra
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/cassandra.svg
+inputs:
+  k8ssandra_operator:
+    type: '@facets/k8ssandra-operator'
+    optional: false
+    displayName: K8ssandra Operator
+    description: K8ssandra operator installation (CRDs must be ready)
+  kubernetes_cluster:
+    type: '@facets/kubernetes-details'
+    optional: false
+    displayName: Kubernetes Cluster
+    description: Target Kubernetes cluster
+    providers:
+    - kubernetes
+    - helm
+  node_pool:
+    type: '@facets/kubernetes_nodepool'
+    optional: false
+    displayName: Node Pool
+    description: Node pool for Cassandra pods
+spec:
+  title: Cassandra Cluster Configuration
+  description: Apache Cassandra cluster managed by the k8ssandra-operator
+  type: object
+  x-ui-order:
+  - namespace_override
+  - cassandra_version
+  - mode
+  - replicas
+  - resources
+  - storage
+  - high_availability
+  properties:
+    namespace_override:
+      type: string
+      title: Namespace Override
+      description: (Optional) Specify a custom namespace for the cluster. If not set,
+        the namespace from the environment will be used.
+      default: ''
+    cassandra_version:
+      type: string
+      title: Cassandra Version
+      description: Apache Cassandra version to deploy (must have a published
+        k8ssandra/cass-management-api image)
+      enum:
+      - 3.11.17
+      - 4.0.17
+      - 4.1.10
+      default: 4.1.10
+    mode:
+      type: string
+      title: Cluster Mode
+      description: Deployment mode - standalone for a single node, replication for
+        a multi-node ring
+      enum:
+      - standalone
+      - replication
+      default: replication
+    replicas:
+      type: integer
+      title: Number of Nodes
+      description: Ring size (3+ recommended for production; quorum needs an odd count)
+      default: 3
+      minimum: 1
+      maximum: 7
+      x-ui-visible-if:
+        field: spec.mode
+        values:
+        - replication
+    resources:
+      type: object
+      title: Resource Allocation
+      description: CPU and memory resources for Cassandra pods
+      x-ui-order:
+      - cpu_request
+      - cpu_limit
+      - memory_request
+      - memory_limit
+      properties:
+        cpu_request:
+          type: string
+          title: CPU Request
+          description: Minimum CPU allocation
+          default: 500m
+        cpu_limit:
+          type: string
+          title: CPU Limit
+          description: Maximum CPU allocation
+          default: 2000m
+        memory_request:
+          type: string
+          title: Memory Request
+          description: Minimum memory allocation (Cassandra heap needs headroom)
+          default: 2Gi
+        memory_limit:
+          type: string
+          title: Memory Limit
+          description: Maximum memory allocation
+          default: 4Gi
+    storage:
+      type: object
+      title: Storage Configuration
+      description: Persistent storage settings for Cassandra data
+      x-ui-order:
+      - size
+      - storage_class
+      properties:
+        size:
+          type: string
+          title: Storage Size
+          description: Size of persistent volume per node (can be expanded later via
+            volume expansion, cannot be reduced)
+          default: 20Gi
+        storage_class:
+          type: string
+          title: Storage Class
+          description: (Optional) Kubernetes StorageClass name for the persistent
+            volume. Leave empty to use the cluster's default StorageClass.
+          default: ''
+      required:
+      - size
+    high_availability:
+      type: object
+      title: High Availability Settings
+      description: Scheduling behavior for multi-node rings
+      x-ui-visible-if:
+        field: spec.mode
+        values:
+        - replication
+      properties:
+        soft_pod_anti_affinity:
+          type: boolean
+          title: Soft Pod Anti-Affinity
+          description: Prefer spreading Cassandra pods across different nodes but
+            allow colocation when capacity requires it
+          default: true
+  required:
+  - cassandra_version
+  - mode
+outputs:
+  default:
+    type: '@facets/cassandra'
+    title: Cassandra Cluster Credentials
+  attributes:
+    type: '@facets/cassandra_k8s'
+    title: Additional Output Attributes
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+  - locals.tf
+sample:
+  kind: cassandra
+  flavor: k8ssandra
+  version: '1.0'
+  disabled: true
+  spec:
+    namespace_override: ''
+    cassandra_version: 4.1.10
+    mode: replication
+    replicas: 3
+    resources:
+      cpu_request: 500m
+      cpu_limit: 2000m
+      memory_request: 2Gi
+      memory_limit: 4Gi
+    storage:
+      size: 20Gi
+      storage_class: ''
+    high_availability:
+      soft_pod_anti_affinity: true
