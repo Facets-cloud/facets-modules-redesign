@@ -1,0 +1,61 @@
+intent: ecs_cluster
+flavor: aws
+version: '1.0'
+description: Managed AWS ECS Fargate cluster.
+intentDetails:
+  type: Cloud & Infrastructure
+  description: Provision an AWS ECS cluster with Fargate capacity providers.
+  displayName: ECS Cluster
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/service.svg
+clouds: [aws]
+inputs:
+  cloud_account:
+    type: '@facets/aws_cloud_account'
+    displayName: Cloud Account
+    optional: false
+    providers: [aws]
+spec:
+  title: ECS Cluster
+  type: object
+  properties:
+    cluster_name:
+      type: string
+      title: Cluster Name
+      description: Optional AWS name. Leave empty to derive a name from the resource and environment.
+      default: ''
+      x-ui-overrides-only: true
+    capacity:
+      type: string
+      title: Fargate Capacity
+      description: Capacity provider used by services in this cluster.
+      enum: [ondemand, spot]
+      default: ondemand
+    create_cloudwatch_log_group:
+      type: boolean
+      title: Create CloudWatch Log Group
+      default: false
+    cloudwatch_log_group_name:
+      type: string
+      title: CloudWatch Log Group Name
+      default: ''
+      x-ui-overrides-only: true
+    cloudwatch_log_group_retention_in_days:
+      type: integer
+      title: Log Retention (days)
+      minimum: 1
+      default: 90
+  required: [capacity]
+sample:
+  kind: ecs_cluster
+  flavor: aws
+  version: '1.0'
+  disabled: false
+  spec:
+    cluster_name: ''
+    capacity: ondemand
+    create_cloudwatch_log_group: false
+    cloudwatch_log_group_name: ''
+    cloudwatch_log_group_retention_in_days: 90
+outputs:
+  default:
+    type: '@facets/ecs-cluster'
