@@ -13,6 +13,13 @@ variable "instance" {
       # Node pool limits
       cpu_limits    = optional(string, "1000")
       memory_limits = optional(string, "1000Gi")
+      gpu_limits    = optional(string, "")
+
+      # Node storage
+      disk_size          = optional(string, "")
+      disk_iops          = optional(number, 3000)
+      disk_throughput    = optional(number, 125)
+      use_instance_store = optional(bool, false)
 
       # Node pool behavior
       enable_consolidation = optional(bool, true)

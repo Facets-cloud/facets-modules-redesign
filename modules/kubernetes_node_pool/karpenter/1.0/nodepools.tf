@@ -15,37 +15,64 @@ module "ec2_node_class" {
       namespace = local.karpenter_namespace
     }
 
-    spec = {
-      # Use the instance profile from karpenter_details input
-      instanceProfile = local.node_instance_profile_name
+    spec = merge(
+      {
+        # Use the instance profile from karpenter_details input
+        instanceProfile = local.node_instance_profile_name
 
-      # Specify AMI family so Karpenter can generate correct UserData
-      # EKS 1.33 requires AL2023
-      amiFamily = "AL2023"
+        # Specify AMI family so Karpenter can generate correct UserData
+        # EKS 1.33 requires AL2023
+        amiFamily = "AL2023"
 
-      amiSelectorTerms = [
-        {
-          # Use Amazon Linux 2023 EKS optimized AMI
-          alias = "al2023@latest"
-        }
-      ]
-
-      subnetSelectorTerms = [
-        {
-          tags = {
-            "karpenter.sh/discovery" = local.cluster_name
+        amiSelectorTerms = [
+          {
+            # Use Amazon Linux 2023 EKS optimized AMI
+            alias = "al2023@latest"
           }
-        }
-      ]
+        ]
 
-      securityGroupSelectorTerms = [
-        {
-          tags = {
-            "karpenter.sh/discovery" = local.cluster_name
+        subnetSelectorTerms = [
+          {
+            tags = {
+              "karpenter.sh/discovery" = local.cluster_name
+            }
           }
-        }
-      ]
-    }
+        ]
+
+        securityGroupSelectorTerms = [
+          {
+            tags = {
+              "karpenter.sh/discovery" = local.cluster_name
+            }
+          }
+        ]
+      },
+      # Put containerd and kubelet on the bundled NVMe (RAID0) if configured.
+      # Families that ship local NVMe include it in the instance price; by
+      # default Karpenter leaves it unmounted and only the root volume is used.
+      local.use_instance_store ? {
+        instanceStorePolicy = "RAID0"
+      } : {},
+      # Explicit root volume if configured (Karpenter's default is 20Gi gp3 at
+      # baseline 3000 IOPS / 125 MB/s). Changing any of these on an existing
+      # pool is drift: Karpenter replaces every node in the pool.
+      local.disk_size != "" ? {
+        blockDeviceMappings = [
+          {
+            deviceName = "/dev/xvda"
+            rootVolume = true
+            ebs = {
+              volumeSize          = local.disk_size
+              volumeType          = "gp3"
+              iops                = local.disk_iops
+              throughput          = local.disk_throughput
+              encrypted           = true
+              deleteOnTermination = true
+            }
+          }
+        ]
+      } : {}
+    )
   }
 
   advanced_config = {
@@ -140,10 +167,16 @@ module "node_pool" {
         )
       }
 
-      limits = {
-        cpu    = lookup(var.instance.spec, "cpu_limits", "1000")
-        memory = lookup(var.instance.spec, "memory_limits", "1000Gi")
-      }
+      limits = merge(
+        {
+          cpu    = lookup(var.instance.spec, "cpu_limits", "1000")
+          memory = lookup(var.instance.spec, "memory_limits", "1000Gi")
+        },
+        # Cap the pool by GPUs if configured; cpu/memory alone cannot bound a GPU pool
+        local.gpu_limits != "" ? {
+          "nvidia.com/gpu" = local.gpu_limits
+        } : {}
+      )
 
       disruption = {
         consolidationPolicy = lookup(var.instance.spec, "enable_consolidation", true) ? "WhenEmptyOrUnderutilized" : "WhenEmpty"

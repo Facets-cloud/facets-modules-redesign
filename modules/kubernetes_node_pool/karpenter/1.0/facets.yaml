@@ -57,7 +57,11 @@ sample:
             - on-demand
             - spot
         cpu_limits: "1000"
+        disk_iops: 3000
+        disk_size: ""
+        disk_throughput: 125
         enable_consolidation: true
+        gpu_limits: ""
         instance_families:
             - t3
             - t3a
@@ -66,6 +70,7 @@ sample:
             - large
             - xlarge
         memory_limits: 1000Gi
+        use_instance_store: false
     version: "1.0"
 spec:
     description: Configure Karpenter NodePool for your EKS cluster
@@ -99,11 +104,43 @@ spec:
             title: CPU Limits
             type: string
             x-ui-placeholder: "1000"
+        disk_iops:
+            default: 3000
+            description: IOPS for the root volume. Only applied when disk_size is set (gp3 baseline is 3000)
+            maximum: 16000
+            minimum: 3000
+            title: Disk IOPS
+            type: integer
+            x-ui-error-message: Disk IOPS must be between 3000 and 16000 for gp3
+        disk_size:
+            default: ""
+            description: Root volume size for provisioned nodes (encrypted gp3), minimum 20Gi (the AL2023 AMI snapshot size). Leave empty to keep Karpenter's default of 20Gi
+            pattern: ^(([2-9][0-9]|[1-9][0-9]{2,})Gi)?$
+            title: Disk Size
+            type: string
+            x-ui-error-message: Value must be a size of at least 20Gi, e.g. 50Gi
+            x-ui-placeholder: 50Gi
+        disk_throughput:
+            default: 125
+            description: Throughput in MB/s for the root volume. Only applied when disk_size is set (gp3 baseline is 125)
+            maximum: 1000
+            minimum: 125
+            title: Disk Throughput (MB/s)
+            type: integer
+            x-ui-error-message: Disk throughput must be between 125 and 1000 MB/s for gp3
         enable_consolidation:
             default: true
             description: Enable automatic node consolidation to optimize costs
             title: Enable Consolidation
             type: boolean
+        gpu_limits:
+            default: ""
+            description: Maximum GPUs (nvidia.com/gpu) across all nodes in this pool. Leave empty for no GPU limit
+            pattern: ^[0-9]*$
+            title: GPU Limits
+            type: string
+            x-ui-error-message: Value must be a whole number, e.g. 8
+            x-ui-placeholder: "8"
         instance_families:
             default:
                 - t3
@@ -146,6 +183,11 @@ spec:
             title: Node Taints
             type: object
             x-ui-yaml-editor: true
+        use_instance_store:
+            default: false
+            description: Put container images and kubelet data on the instance's bundled NVMe (RAID0) instead of the root volume. Applies to families that ship local NVMe (g4dn, g5, g6, p4d, p4de, c5d, m5d, ...); the disk is ephemeral and already included in the instance price
+            title: Use Instance Store
+            type: boolean
     title: Karpenter NodePool Configuration
     type: object
     x-ui-order:
@@ -159,4 +201,9 @@ spec:
         - labels
         - taints
         - tags
+        - gpu_limits
+        - disk_size
+        - disk_iops
+        - disk_throughput
+        - use_instance_store
 version: "1.0"
