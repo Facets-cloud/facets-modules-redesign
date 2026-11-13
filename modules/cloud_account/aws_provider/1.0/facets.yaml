@@ -48,7 +48,6 @@ spec:
   title: Cloud Account Manager
   type: object
   x-ui-order:
-  - cloud_provider
   - cloud_account
   - region
 outputs:
