@@ -10,9 +10,8 @@ locals {
   gcp_annotations = {
     "cloud.google.com/neg" = "{\"ingress\":true}"
   }
-  gcp_advanced_config       = lookup(lookup(var.instance, "advanced", {}), "gcp", {})
   gcp_cloud_permissions     = lookup(lookup(local.spec, "cloud_permissions", {}), "gcp", {})
-  iam_arns                  = lookup(local.gcp_cloud_permissions, "roles", lookup(local.gcp_advanced_config, "iam", {}))
+  iam_arns                  = lookup(local.gcp_cloud_permissions, "roles", {})
   sa_name                   = lower(var.instance_name)
   spec_type                 = lookup(local.spec, "type", "application")
   actions_required_vars_set = can(var.instance.kind) && can(var.instance.version) && can(var.instance.flavor) && !contains(["cronjob", "job"], local.spec_type)
@@ -29,7 +28,7 @@ locals {
   )
   roles                     = { for key, val in local.iam_arns : val.role => { role = val.role, condition = lookup(val, "condition", {}) } }
   labels                    = {}
-  backend_config            = lookup(local.gcp_advanced_config, "backend_config", {})
+  backend_config            = lookup(local.spec, "backend_config", {})
   enable_alb_backend_config = lookup(local.backend_config, "enabled", false)
   runtime                   = lookup(local.spec, "runtime", {})
   backendConfig = {
@@ -86,36 +85,27 @@ locals {
 
   # Create instance configuration with VPA settings, topology spread constraints, and KEDA configuration
   instance = merge(var.instance, {
-    advanced = merge(
-      lookup(var.instance, "advanced", {}),
-      {
-        common = merge(
-          lookup(lookup(var.instance, "advanced", {}), "common", {}),
-          {
-            app_chart = merge(
-              lookup(lookup(lookup(var.instance, "advanced", {}), "common", {}), "app_chart", {}),
-              {
-                values = merge(
-                  lookup(lookup(lookup(lookup(var.instance, "advanced", {}), "common", {}), "app_chart", {}), "values", {}),
-                  {
-                    enable_vpa = local.vpa_available
-                    # Configure pod distribution for the application chart
-                    pod_distribution_enabled = true
-                    pod_distribution         = local.pod_distribution
-                  },
-                  # Add KEDA configuration when enabled
-                  local.enable_keda ? { keda = local.keda_config } : {},
+    advanced = {
+      common = {
+        app_chart = {
+          values = merge(
+            lookup(local.spec, "chart_values", {}),
+            {
+              enable_vpa = local.vpa_available
+              # Configure pod distribution for the application chart
+              pod_distribution_enabled = true
+              pod_distribution         = local.pod_distribution
+            },
+            # Add KEDA configuration when enabled
+            local.enable_keda ? { keda = local.keda_config } : {},
 
-                  {
-                    image_pull_secrets = try(coalesce(var.inputs.artifactories.attributes.registry_secrets_list, []), [])
-                  }
-                )
-              }
-            )
-          }
-        )
+            {
+              image_pull_secrets = try(coalesce(var.inputs.artifactories.attributes.registry_secrets_list, []), [])
+            }
+          )
+        }
       }
-    )
+    }
   })
 }
 

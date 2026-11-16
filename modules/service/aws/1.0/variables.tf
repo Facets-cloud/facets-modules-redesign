@@ -143,20 +143,10 @@ variable "instance" {
 
       # Enable actions (deployment/statefulset actions)
       enable_actions = optional(bool, true)
-    })
 
-    # Advanced/AWS-specific configuration
-    advanced = optional(object({
-      aws = optional(object({
-        enable_irsa = optional(bool)
-        iam         = optional(map(object({ arn = string })), {})
-      }), {})
-      common = optional(object({
-        app_chart = optional(object({
-          values = optional(any, {})
-        }), {})
-      }), {})
-    }), {})
+      # Additional settings for the application chart
+      chart_values = optional(any, {})
+    })
   })
 }
 

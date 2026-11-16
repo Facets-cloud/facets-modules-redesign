@@ -1611,6 +1611,17 @@ spec:
           - image
           - pull_policy
           - runtime
+    chart_values:
+      type: object
+      title: Additional Chart Values
+      description: 'Additional settings for the application chart, in YAML format.
+        Supported keys: tolerations, node_selector, pod (affinity, anti_affinity),
+        node (affinity), priority_class_name, priority_class_value, security_context,
+        lifecycle, termination_grace_period_seconds, service_account_name, enable_service_links,
+        revision_history_limit, pod_management_policy, additional_volumes, additional_volume_mounts,
+        additional_k8s_env, additional_k8s_env_from, allow_dots_in_env, include_build_id_env,
+        exclude_env_and_secret_values, hpa, keda and additional_k8s_objects.'
+      x-ui-yaml-editor: true
   required:
   - type
   - runtime
@@ -1629,6 +1640,7 @@ spec:
   - persistent_volume_claims
   - cloud_permissions
   - env
+  - chart_values
 sample:
   $schema: https://facets-cloud.github.io/facets-schemas/schemas/service/service.schema.json
   flavor: azure
