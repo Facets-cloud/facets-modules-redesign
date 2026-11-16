@@ -10,9 +10,6 @@ variable "instance" {
         value = string
       })), {})
     }), {})
-    advanced = optional(object({
-      k8s = optional(map(any), {})
-    }), {})
   })
 }
 

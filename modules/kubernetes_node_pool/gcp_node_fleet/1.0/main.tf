@@ -18,15 +18,6 @@ module "gke-node-fleet" {
       })
       iam = lookup(each.value, "iam", {})
     }
-    advanced = {
-      gke = merge({
-        node_locations = lookup(each.value, "azs", lookup(var.inputs.network_details.attributes, "zones", null))
-        node_config = {
-          spot = lookup(each.value, "spot", false)
-        }
-        },
-      lookup(local.gke_advanced, each.key, {}))
-    }
   }
   instance_name = each.key
   environment   = var.environment
