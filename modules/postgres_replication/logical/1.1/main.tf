@@ -340,5 +340,5 @@ module "postgres-replication-resources" {
   release_name    = module.name.name
   namespace       = local.namespace
   resources_data  = local.resources_data
-  advanced_config = lookup(lookup(var.instance, "advanced", {}), "postgres_replication", {})
+  advanced_config = local.spec.helm_release
 }
