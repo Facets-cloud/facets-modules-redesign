@@ -7,9 +7,8 @@ data "aws_route53_zone" "base-domain-zone" {
 
 locals {
   tenant_provider = lower(local.cc_tenant_provider != "" ? local.cc_tenant_provider : "aws")
-  advanced_config = lookup(lookup(var.instance, "advanced", {}), "nginx_ingress_controller", {})
   # Get user supplied helm values and merge with PDB configuration
-  base_helm_values = lookup(local.advanced_config, "values", {})
+  base_helm_values = lookup(var.instance.spec, "helm_values", {})
 
   # Create PDB configuration for remote chart
   pdb_helm_values = {
@@ -25,7 +24,7 @@ locals {
   record_type               = lookup(var.inputs.kubernetes_details, "lb_service_record_type", var.inputs.kubernetes_details.cloud_provider == "AWS" ? "CNAME" : "A")
   #If environment name and instance exceeds 33 , take md5
   instance_env_name          = length(var.environment.unique_name) + length(var.instance_name) + length(local.tenant_base_domain) >= 60 ? substr(md5("${var.instance_name}-${var.environment.unique_name}"), 0, 20) : "${var.instance_name}-${var.environment.unique_name}"
-  check_domain_prefix        = coalesce(lookup(local.advanced_config, "domain_prefix_override", null), local.instance_env_name)
+  check_domain_prefix        = coalesce(lookup(var.instance.spec, "domain_prefix_override", null), local.instance_env_name)
   base_domain                = lower("${local.check_domain_prefix}.${local.tenant_base_domain}") # domains are to be always lowercase
   base_subdomain             = "*.${local.base_domain}"
   dns_validation_secret_name = lower("nginx-ingress-cert-${var.instance_name}")
@@ -119,7 +118,7 @@ locals {
       "service.beta.kubernetes.io/aws-load-balancer-scheme" = "internet-facing"
       }, {
       "service.beta.kubernetes.io/aws-load-balancer-backend-protocol"        = "http"
-      "service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout" = lookup(local.advanced_config, "connection_idle_timeout", "60")
+      "service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout" = tostring(lookup(var.instance.spec, "connection_idle_timeout", 60))
       "service.beta.kubernetes.io/aws-load-balancer-ssl-ports"               = "443"
       "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"         = "ip"
       "service.beta.kubernetes.io/aws-load-balancer-type"                    = "external"
@@ -181,7 +180,7 @@ locals {
     { // default cert manager annotations
       "cert-manager.io/cluster-issuer" : local.disable_endpoint_validation ? local.cluster_issuer_dns : local.cluster_issuer_http,
       "acme.cert-manager.io/http01-ingress-class" : local.name,
-      "cert-manager.io/renew-before" : lookup(local.advanced_config, "renew_cert_before", "720h") // 30days; value must be parsable by https://pkg.go.dev/time#ParseDuration
+      "cert-manager.io/renew-before" : lookup(var.instance.spec, "renew_cert_before", "720h") // 30days; value must be parsable by https://pkg.go.dev/time#ParseDuration
     }
   )
 
@@ -270,7 +269,7 @@ locals {
   ingress_tolerations = local.nodepool_tolerations
 
   name                        = lower(var.environment.namespace == "default" ? "${var.instance_name}" : "${var.environment.namespace}-${var.instance_name}")
-  disable_endpoint_validation = lookup(local.advanced_config, "disable_endpoint_validation", false) || lookup(var.instance.spec, "private", false)
+  disable_endpoint_validation = lookup(var.instance.spec, "disable_endpoint_validation", false) || lookup(var.instance.spec, "private", false)
   external_services = {
     for k, v in local.ingressObjectsFiltered :
     k => {
@@ -292,7 +291,7 @@ locals {
 # ingress helm chart nginx
 resource "helm_release" "nginx_ingress_ctlr" {
   name = local.name
-  wait = lookup(local.advanced_config, "wait", true)
+  wait = lookup(var.instance.spec, "helm_wait", true)
 
   depends_on = [kubernetes_config_map_v1.custom_error_pages_configmap]
 
@@ -368,7 +367,7 @@ LIMITS
     prometheus.io/scrape: "true"
   config:
     annotations-risk-level: ${lookup(var.instance.spec, "annotations_risk_level", "Critical")}
-    enable-underscores-in-headers: "${lookup(local.advanced_config, "enable-underscores-in-headers", false)}"
+    enable-underscores-in-headers: "${lookup(var.instance.spec, "enable_underscores_in_headers", false)}"
     ${length(local.custom_http_errors) > 0 ? "custom-http-errors: \"${local.custom_http_errors}\"" : ""}
   extraEnvs:
     - name: "TZ"
