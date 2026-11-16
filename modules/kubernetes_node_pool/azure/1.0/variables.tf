@@ -17,11 +17,7 @@ variable "instance" {
       "zones"          = [],
       "taints"         = [],
       "node_labels"    = {}
-    },
-    "advanced" = {
-      aks = {
-        node_pool = {}
-    } }
+    }
   }
 }
 

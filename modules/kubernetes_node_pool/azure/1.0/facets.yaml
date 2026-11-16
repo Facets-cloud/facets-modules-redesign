@@ -102,6 +102,124 @@ spec:
       x-ui-placeholder: 'Eg. key1: value1'
       type: object
       x-ui-yaml-editor: true
+    priority:
+      title: Priority
+      description: Priority of the virtual machines. Spot nodes cost less and Azure
+        can evict them.
+      type: string
+      enum:
+      - Regular
+      - Spot
+      default: Regular
+    spot_max_price:
+      title: Spot Max Price
+      description: Maximum price in US dollars for one hour of a Spot node. Use -1
+        to pay up to the on-demand price.
+      type: number
+      default: -1
+      x-ui-visible-if:
+        field: spec.priority
+        values:
+        - Spot
+    eviction_policy:
+      title: Eviction Policy
+      description: What Azure does with a Spot node when it evicts the node
+      type: string
+      enum:
+      - Delete
+      - Deallocate
+      default: Delete
+      x-ui-visible-if:
+        field: spec.priority
+        values:
+        - Spot
+    mode:
+      title: Mode
+      description: A System pool runs cluster components. A User pool runs applications.
+      type: string
+      enum:
+      - User
+      - System
+      default: User
+    os_type:
+      title: OS Type
+      description: Operating system of the nodes
+      type: string
+      enum:
+      - Linux
+      - Windows
+      default: Linux
+    os_disk_type:
+      title: OS Disk Type
+      description: Type of the operating system disk
+      type: string
+      enum:
+      - Managed
+      - Ephemeral
+      default: Managed
+    enable_auto_scaling:
+      title: Enable Auto Scaling
+      description: Let the cluster autoscaler change the number of nodes between the
+        minimum and the maximum
+      type: boolean
+      default: true
+    node_count:
+      title: Initial Node Count
+      description: Number of nodes at creation. The default is the minimum node count.
+      type: integer
+      minimum: 0
+      maximum: 100
+    max_pods:
+      title: Max Pods
+      description: Maximum number of pods on one node
+      type: integer
+      minimum: 10
+      maximum: 250
+    orchestrator_version:
+      title: Kubernetes Version
+      description: Kubernetes version of the node pool. The default is the version
+        of the cluster.
+      type: string
+    vnet_subnet_id:
+      title: Subnet ID
+      description: ID of the subnet for the nodes. The default is the first private
+        subnet of the network.
+      type: string
+    enable_host_encryption:
+      title: Enable Host Encryption
+      description: Encrypt the disks and the cache at the virtual machine host
+      type: boolean
+      default: false
+    enable_node_public_ip:
+      title: Enable Node Public IP
+      description: Give each node a public IP address
+      type: boolean
+      default: false
+    upgrade_settings:
+      title: Upgrade Settings
+      description: Settings for a node pool upgrade. Applies to Regular priority only.
+      type: object
+      properties:
+        max_surge:
+          title: Max Surge
+          description: Number or percentage of extra nodes during an upgrade
+          type: string
+          default: 10%
+          pattern: ^([1-9][0-9]*|([1-9][0-9]?|100)%)$
+          x-ui-error-message: Value must be a positive integer or a percentage between
+            1% and 100%
+    tags:
+      title: Tags
+      description: Map of Azure tags for the node pool, in YAML format
+      type: object
+      x-ui-yaml-editor: true
+    linux_os_config:
+      title: Linux OS Config
+      description: Linux settings of the nodes in YAML format. Supports swap_file_size_mb,
+        transparent_huge_page_enabled, transparent_huge_page_defrag and a sysctl_config
+        map.
+      type: object
+      x-ui-yaml-editor: true
   required:
   - instance_type
   - min_node_count
