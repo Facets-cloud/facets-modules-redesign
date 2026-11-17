@@ -16,7 +16,9 @@ variable "inputs" {
   description = "Input references from other modules"
   type = object({
     network_details = object({
-      attributes = map(any)
+      # `any`, not map(any): network outputs mix strings and lists (zones, database_subnet_ids),
+      # which map(any) cannot unify. CRD releases enforce this type; backend releases did not.
+      attributes = any
     })
     cloud_account = object({
       attributes = object({
