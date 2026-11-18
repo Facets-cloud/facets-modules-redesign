@@ -57,6 +57,42 @@ spec:
                 only pass one manifest per resource.
               x-ui-yaml-editor: true
               x-ui-placeholder: Enter kubernetes manifest in YAML format
+    helm_release:
+      type: object
+      title: Helm Release Settings
+      description: Settings of the Helm release that applies the manifests
+      x-ui-toggle: true
+      properties:
+        timeout:
+          type: integer
+          title: Timeout
+          description: Time in seconds to wait for the release to complete
+          default: 300
+          minimum: 1
+        wait:
+          type: boolean
+          title: Wait
+          description: Wait until all resources are ready before the release is
+            marked as successful
+          default: false
+        max_history:
+          type: integer
+          title: Max History
+          description: Maximum number of release revisions that Helm keeps
+          default: 10
+          minimum: 1
+        cleanup_on_fail:
+          type: boolean
+          title: Cleanup On Fail
+          description: Delete new resources that an upgrade created when the upgrade
+            fails. Applies to the main resource only.
+          default: true
+        create_namespace:
+          type: boolean
+          title: Create Namespace
+          description: Create the namespace if it does not exist. Applies to the
+            main resource only.
+          default: true
   required:
   - resource
 outputs:

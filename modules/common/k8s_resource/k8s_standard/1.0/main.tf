@@ -1,5 +1,5 @@
 locals {
-  advanced_config      = lookup(lookup(var.instance, "advanced", {}), "k8s_resource", {})
+  helm_release         = lookup(local.spec, "helm_release", {})
   data                 = lookup(var.instance.spec, "resource", {})
   spec                 = lookup(var.instance, "spec", {})
   namespace_spec       = lookup(lookup(local.data, "metadata", {}), "namespace", null) # in the .spec.resource.metadata block
@@ -25,7 +25,7 @@ module "k8s-any-resource" {
   release_name    = module.name.name
   namespace       = local.namespace
   data            = local.data
-  advanced_config = local.advanced_config
+  advanced_config = local.helm_release
 }
 
 
@@ -36,6 +36,6 @@ module "add-k8s-any-resource" {
   release_name    = length("${module.name.name}-ak8s") >= 40 ? substr(md5("${module.name.name}-ak8s"), 0, 20) : "${module.name.name}-ak8s"
   namespace       = local.namespace
   resources_data  = local.additional_resources
-  advanced_config = local.advanced_config
+  advanced_config = local.helm_release
 }
 
