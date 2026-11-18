@@ -598,6 +598,48 @@ spec:
       type: boolean
       title: Force SSL Redirection
       description: Force HTTP to HTTPS redirection
+    enable_underscores_in_headers:
+      type: boolean
+      title: Enable Underscores In Headers
+      description: Accept request headers that have an underscore in the name
+      default: false
+    connection_idle_timeout:
+      type: integer
+      title: Connection Idle Timeout
+      description: Idle timeout in seconds for load balancer connections. Applies
+        to AWS load balancers only.
+      default: 60
+      minimum: 1
+    renew_cert_before:
+      type: string
+      title: Renew Certificate Before
+      description: Time before expiry at which cert-manager renews the certificate,
+        as a Go duration (for example 720h)
+      default: 720h
+      pattern: ^([0-9]+(h|m|s))+$
+      x-ui-error-message: Value must be a duration such as 720h or 30m
+    domain_prefix_override:
+      type: string
+      title: Domain Prefix Override
+      description: Prefix for the base domain. The default is the resource name and
+        the environment name.
+    disable_endpoint_validation:
+      type: boolean
+      title: Disable Endpoint Validation
+      description: Skip the check that waits for the ingress endpoints to respond.
+        A private ingress always skips this check.
+      default: false
+    helm_wait:
+      type: boolean
+      title: Wait For Helm Release
+      description: Wait until the ingress controller is ready before the release
+        is marked as successful
+      default: true
+    helm_values:
+      type: object
+      title: Helm Values
+      description: Additional values for the ingress-nginx Helm chart
+      x-ui-yaml-editor: true
   required:
   - private
   - rules
@@ -614,6 +656,13 @@ spec:
   - pdb
   - custom_error_pages
   - force_ssl_redirection
+  - enable_underscores_in_headers
+  - connection_idle_timeout
+  - renew_cert_before
+  - domain_prefix_override
+  - disable_endpoint_validation
+  - helm_wait
+  - helm_values
 outputs:
   default:
     type: '@facets/ingress'
