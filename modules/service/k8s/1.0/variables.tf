@@ -135,16 +135,10 @@ variable "instance" {
 
       # Enable actions (deployment/statefulset actions)
       enable_actions = optional(bool, true)
-    })
 
-    # Advanced configuration (no AWS-specific block)
-    advanced = optional(object({
-      common = optional(object({
-        app_chart = optional(object({
-          values = optional(any, {})
-        }), {})
-      }), {})
-    }), {})
+      # Additional settings for the application chart
+      chart_values = optional(any, {})
+    })
   })
 }
 

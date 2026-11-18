@@ -156,22 +156,10 @@ variable "instance" {
 
       # Enable actions (deployment/statefulset actions)
       enable_actions = optional(bool, true)
-    })
 
-    # Advanced/Azure-specific configuration
-    advanced = optional(object({
-      azure = optional(object({
-        iam = optional(map(object({
-          role      = string
-          condition = optional(any)
-        })), {})
-      }), {})
-      common = optional(object({
-        app_chart = optional(object({
-          values = optional(any, {})
-        }), {})
-      }), {})
-    }), {})
+      # Additional settings for the application chart
+      chart_values = optional(any, {})
+    })
   })
 }
 

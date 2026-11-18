@@ -2,10 +2,8 @@ locals {
   # Core instance spec
   spec = lookup(var.instance, "spec", {})
 
-  azure_advanced_config     = lookup(lookup(var.instance, "advanced", {}), "azure", {})
   azure_cloud_permissions   = lookup(lookup(local.spec, "cloud_permissions", {}), "azure", {})
-  azure_advanced_iam        = lookup(lookup(lookup(var.instance, "advanced", {}), "azure", {}), "iam", {})
-  iam_arns                  = lookup(local.azure_cloud_permissions, "roles", local.azure_advanced_iam)
+  iam_arns                  = lookup(local.azure_cloud_permissions, "roles", {})
   sa_name                   = lower(var.instance_name)
   spec_type                 = lookup(local.spec, "type", "application")
   actions_required_vars_set = can(var.instance.kind) && can(var.instance.version) && can(var.instance.flavor) && !contains(["cronjob", "job"], local.spec_type)
@@ -57,33 +55,24 @@ locals {
 
   # Create instance configuration with VPA settings and topology spread constraints
   instance_with_vpa_config = merge(var.instance, {
-    advanced = merge(
-      lookup(var.instance, "advanced", {}),
-      {
-        common = merge(
-          lookup(lookup(var.instance, "advanced", {}), "common", {}),
-          {
-            app_chart = merge(
-              lookup(lookup(lookup(var.instance, "advanced", {}), "common", {}), "app_chart", {}),
-              {
-                values = merge(
-                  lookup(lookup(lookup(lookup(var.instance, "advanced", {}), "common", {}), "app_chart", {}), "values", {}),
-                  {
-                    enable_vpa = local.vpa_available
-                    # Configure pod distribution for the application chart
-                    pod_distribution_enabled = local.pod_distribution_enabled
-                    pod_distribution         = local.pod_distribution
-                  },
-                  {
-                    image_pull_secrets = local.image_pull_secrets
-                  }
-                )
-              }
-            )
-          }
-        )
+    advanced = {
+      common = {
+        app_chart = {
+          values = merge(
+            lookup(local.spec, "chart_values", {}),
+            {
+              enable_vpa = local.vpa_available
+              # Configure pod distribution for the application chart
+              pod_distribution_enabled = local.pod_distribution_enabled
+              pod_distribution         = local.pod_distribution
+            },
+            {
+              image_pull_secrets = local.image_pull_secrets
+            }
+          )
+        }
       }
-    )
+    }
   })
 
   # Network details
