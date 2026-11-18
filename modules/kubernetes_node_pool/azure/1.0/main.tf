@@ -1,10 +1,9 @@
 locals {
-  aks_advanced              = lookup(lookup(lookup(var.instance, "advanced", {}), "aks", {}), "node_pool", {})
-  aks_upgrade_settings      = lookup(local.aks_advanced, "upgrade_settings", {})
-  aks_linux_os_config       = lookup(local.aks_advanced, "linux_os_config", {})
+  aks_upgrade_settings      = lookup(local.spec, "upgrade_settings", {})
+  aks_linux_os_config       = lookup(local.spec, "linux_os_config", {})
   aks_sysctl_config         = lookup(local.aks_linux_os_config, "sysctl_config", {})
-  priority                  = lookup(local.aks_advanced, "priority", "Regular")
-  user_defined_tags         = lookup(local.aks_advanced, "tags", {})
+  priority                  = lookup(local.spec, "priority", "Regular")
+  user_defined_tags         = lookup(local.spec, "tags", {})
   facets_defined_cloud_tags = lookup(var.environment, "cloud_tags", {})
   tags                      = merge(local.user_defined_tags, local.facets_defined_cloud_tags)
 
@@ -14,8 +13,8 @@ locals {
   taints         = lookup(local.spec, "taints", [])
   node_taints    = [for taint in local.taints : "${taint.key}=${taint.value}:${taint.effect}"]
   node_labels    = lookup(var.instance.spec, "labels", {})
-  spot_max_price = lookup(local.aks_advanced, "spot_max_price", null)
-  os_type        = lookup(local.aks_advanced, "os_type", "Linux")
+  spot_max_price = lookup(local.spec, "spot_max_price", null)
+  os_type        = lookup(local.spec, "os_type", "Linux")
 }
 
 resource "azurerm_kubernetes_cluster_node_pool" "node_pool" {
@@ -24,28 +23,28 @@ resource "azurerm_kubernetes_cluster_node_pool" "node_pool" {
   vm_size               = var.instance.spec.instance_type
   os_disk_size_gb       = trim(var.instance.spec.disk_size, "G")
   os_type               = local.os_type
-  os_disk_type          = lookup(local.aks_advanced, "os_disk_type", "Managed")
+  os_disk_type          = lookup(local.spec, "os_disk_type", "Managed")
 
-  auto_scaling_enabled = lookup(local.aks_advanced, "enable_auto_scaling", true)
+  auto_scaling_enabled = lookup(local.spec, "enable_auto_scaling", true)
   max_count            = var.instance.spec.max_node_count
   min_count            = var.instance.spec.min_node_count
-  node_count           = lookup(local.aks_advanced, "node_count", var.instance.spec.min_node_count)
+  node_count           = lookup(local.spec, "node_count", var.instance.spec.min_node_count)
   node_taints          = local.node_taints
   node_labels          = local.node_labels
-  max_pods             = lookup(local.aks_advanced, "max_pods", null)
+  max_pods             = lookup(local.spec, "max_pods", null)
 
-  priority = lookup(local.aks_advanced, "priority", "Regular")
+  priority = lookup(local.spec, "priority", "Regular")
 
-  host_encryption_enabled = lookup(local.aks_advanced, "enable_host_encryption", false)
-  node_public_ip_enabled  = lookup(local.aks_advanced, "enable_node_public_ip", false)
+  host_encryption_enabled = lookup(local.spec, "enable_host_encryption", false)
+  node_public_ip_enabled  = lookup(local.spec, "enable_node_public_ip", false)
 
-  mode                 = lookup(local.aks_advanced, "mode", "User")
-  orchestrator_version = lookup(local.aks_advanced, "orchestrator_version", null)
-  vnet_subnet_id       = lookup(local.aks_advanced, "vnet_subnet_id", var.inputs.network_details.attributes.private_subnet_ids[0])
-  eviction_policy      = local.priority == "Spot" ? lookup(local.aks_advanced, "eviction_policy", "Delete") : null
+  mode                 = lookup(local.spec, "mode", "User")
+  orchestrator_version = lookup(local.spec, "orchestrator_version", null)
+  vnet_subnet_id       = lookup(local.spec, "vnet_subnet_id", var.inputs.network_details.attributes.private_subnet_ids[0])
+  eviction_policy      = local.priority == "Spot" ? lookup(local.spec, "eviction_policy", "Delete") : null
 
   tags           = local.tags
-  spot_max_price = local.priority == "Spot" ? lookup(local.aks_advanced, "spot_max_price", "-1") : local.spot_max_price
+  spot_max_price = local.priority == "Spot" ? lookup(local.spec, "spot_max_price", "-1") : local.spot_max_price
   zones          = length(compact(lookup(var.environment, "azs", []))) == 0 ? null : [lookup(var.environment, "azs", [])[0]]
 
   dynamic "linux_os_config" {
