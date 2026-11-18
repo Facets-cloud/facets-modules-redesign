@@ -47,6 +47,11 @@ variable "instance" {
         repl_user      = string
       }))
       tolerations = optional(object({}), {})
+      helm_release = optional(object({
+        timeout     = optional(number, 300)
+        wait        = optional(bool, false)
+        max_history = optional(number, 10)
+      }), {})
     })
   })
 }

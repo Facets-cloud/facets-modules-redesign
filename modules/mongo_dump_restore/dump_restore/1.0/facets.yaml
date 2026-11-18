@@ -33,6 +33,7 @@ spec:
     - options
     - slack
     - tolerations
+    - helm_release
   properties:
     source:
       type: object
@@ -238,6 +239,29 @@ spec:
       patternProperties:
         "^[a-zA-Z0-9_-]+$":
           type: object
+    helm_release:
+      type: object
+      title: Helm Release Settings
+      description: Settings of the Helm release that applies the job resources
+      x-ui-toggle: true
+      properties:
+        timeout:
+          type: integer
+          title: Timeout
+          description: Time in seconds to wait for the release to complete
+          default: 300
+          minimum: 1
+        wait:
+          type: boolean
+          title: Wait
+          description: Wait until all resources are ready before the release is marked as successful
+          default: false
+        max_history:
+          type: integer
+          title: Max History
+          description: Maximum number of release revisions that Helm keeps
+          default: 10
+          minimum: 1
 sample:
   kind: mongo_dump_restore
   flavor: dump_restore

@@ -257,5 +257,5 @@ module "mongo-dump-restore-resources" {
   release_name    = module.name.name
   namespace       = local.namespace
   resources_data  = local.resources_data
-  advanced_config = lookup(lookup(var.instance, "advanced", {}), "mongo_dump_restore", {})
+  advanced_config = local.spec.helm_release
 }

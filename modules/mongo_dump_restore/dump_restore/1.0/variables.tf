@@ -29,8 +29,12 @@ variable "instance" {
       options     = optional(any, {})
       slack       = optional(any, {})
       tolerations = optional(object({}), {})
+      helm_release = optional(object({
+        timeout     = optional(number, 300)
+        wait        = optional(bool, false)
+        max_history = optional(number, 10)
+      }), {})
     })
-    advanced = optional(any, {})
   })
 }
 
