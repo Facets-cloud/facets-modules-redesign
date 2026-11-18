@@ -27,9 +27,6 @@ variable "instance" {
         effect = string
       })), [])
     })
-    advanced = optional(object({
-      gke = optional(map(any), {})
-    }), {})
   })
 }
 
