@@ -5,6 +5,9 @@ properties:
     attributes:
       type: object
       properties:
+        aws_account_id:
+          description: AWS account ID of the linked account (from the role ARN)
+          type: string
         aws_iam_role:
           description: AWS IAM role ARN (sensitive)
           type: string
