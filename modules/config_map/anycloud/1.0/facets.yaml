@@ -1,0 +1,105 @@
+intent: config_map
+flavor: anycloud
+version: "1.0"
+description: 'Kubernetes ConfigMap rendered from a map of key -> content. Cloud-neutral — the kubernetes and helm providers come from the linked kubernetes_cluster input, so the same resource works on EKS and GKE. The ConfigMap object itself is created directly with the kubernetes provider (not templated into a helm release). The target namespace is created if missing, using Helm create-and-abandon semantics, so the ConfigMap never has to be ordered after a namespace owner and can never delete a namespace it shares.'
+clouds:
+    - aws
+    - gcp
+intentDetails:
+    type: Cloud & Infrastructure
+    description: A Kubernetes ConfigMap holding non-confidential configuration as key/value pairs. Consumers mount it as a file or load it as environment variables. Use a secret for anything sensitive.
+    displayName: ConfigMap
+    iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/config_map.svg
+inputs:
+    kubernetes_cluster:
+        type: '@facets/kubernetes-details'
+        optional: false
+        displayName: Kubernetes Cluster
+        description: Target cluster the ConfigMap is created in (the `attributes` output of kubernetes_cluster/anycloud). Supplies the kubernetes and helm providers.
+        default:
+            resource_type: kubernetes_cluster
+            resource_name: default
+        providers:
+            - kubernetes
+            - helm
+outputs:
+    default:
+        type: '@facets/any_cloud_config_map'
+spec:
+    type: object
+    properties:
+        name:
+            type: string
+            title: Name
+            description: ConfigMap object name. Optional — defaults to the blueprint resource name. Pin it when a consumer mounts the ConfigMap by a fixed name.
+            maxLength: 253
+            minLength: 1
+        namespace:
+            type: string
+            title: Namespace
+            description: Target namespace. Created automatically if missing (see Create Namespace below) but never owned — removing this ConfigMap never deletes the namespace, so a shared namespace is safe.
+            default: default
+            maxLength: 63
+            minLength: 1
+        create_namespace:
+            type: boolean
+            title: Create Namespace
+            description: Create the target namespace if it does not already exist. Uses Helm create-and-abandon semantics — the namespace is created outside the release manifest, so it is never owned and is never deleted when this ConfigMap is removed. Safe to leave on when other resources also create the namespace; the first one creates it and the rest no-op. Ignored for the default namespace.
+            default: true
+        data:
+            type: object
+            title: Data
+            description: 'ConfigMap entries. The map KEY is the ConfigMap key (and the filename when mounted, e.g. .env or app.yaml); set the entry''s content below. Values may reference other resources, e.g. ${dynamodb.my-table.out.attributes.table_name}.'
+            patternProperties:
+                "^[a-zA-Z0-9._-]+$":
+                    type: object
+                    title: Entry
+                    description: One ConfigMap key. The map key above is used as the ConfigMap key name.
+                    properties:
+                        content:
+                            type: string
+                            title: Content
+                            description: Value for this key. Multi-line is supported — use it for dotenv or YAML file bodies.
+                            x-ui-textarea: true
+                            x-ui-yaml-editor: true
+                    required:
+                        - content
+                    x-ui-order:
+                        - content
+        immutable:
+            type: boolean
+            title: Immutable
+            description: Mark the ConfigMap immutable. Kubernetes then rejects any data change, so an update requires replacing the object — and consumers must be restarted to pick it up. Leave off unless you specifically want that guarantee.
+            default: false
+        labels:
+            type: object
+            title: Labels
+            description: Extra labels applied to the ConfigMap (free-form map).
+            x-ui-yaml-editor: true
+        annotations:
+            type: object
+            title: Annotations
+            description: Extra annotations applied to the ConfigMap (free-form map).
+            x-ui-yaml-editor: true
+    required:
+        - namespace
+    x-ui-order:
+        - name
+        - namespace
+        - create_namespace
+        - data
+        - immutable
+        - labels
+        - annotations
+sample:
+    kind: config_map
+    flavor: anycloud
+    version: "1.0"
+    disabled: false
+    spec:
+        namespace: default
+        create_namespace: true
+        immutable: false
+        data: {}
+        labels: {}
+        annotations: {}

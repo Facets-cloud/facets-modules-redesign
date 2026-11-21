@@ -1,0 +1,93 @@
+name: '@facets/any_cloud_kubernetes_cluster'
+properties:
+  type: object
+  properties:
+    attributes:
+      type: object
+      properties:
+        cloud_provider:
+          type: string
+          description: AWS or GCP, from the linked cloud_account
+        cluster_id:
+          type: string
+          description: Cluster ID
+        cluster_name:
+          type: string
+          description: Cluster name
+        cluster_location:
+          type: string
+          description: Region (EKS) or region/zone (GKE)
+        cluster_endpoint:
+          type: string
+          description: Kubernetes API server endpoint (https URL)
+        region:
+          type: string
+          description: Cluster region
+        cluster_version:
+          type: string
+          description: Kubernetes version
+        cluster_ca_certificate:
+          type: string
+          description: Decoded cluster CA certificate (sensitive)
+        kubernetes_provider_exec:
+          type: object
+          description: Exec-auth config for the kubernetes/helm providers (sensitive)
+          properties:
+            api_version:
+              type: string
+            command:
+              type: string
+            args:
+              type: array
+              items:
+                type: string
+            env:
+              type: object
+              additionalProperties:
+                type: string
+    interfaces:
+      type: object
+      properties:
+        kubernetes:
+          type: object
+          description: Same shape as @facets/kubernetes-details interfaces.kubernetes
+          properties:
+            host:
+              type: string
+            cluster_ca_certificate:
+              type: string
+        aws:
+          type: object
+          description: EKS details. Populated on AWS; same keys with null values on
+            GCP.
+          properties:
+            cluster_arn:
+              type: string
+            oidc_issuer_url:
+              type: string
+            oidc_provider:
+              type: string
+            oidc_provider_arn:
+              type: string
+            node_security_group_id:
+              type: string
+            cluster_security_group_id:
+              type: string
+        gcp:
+          type: object
+          description: GKE details. Populated on GCP; same keys with null values on
+            AWS.
+          properties:
+            project_id:
+              type: string
+            pods_range_name:
+              type: string
+            services_range_name:
+              type: string
+            network:
+              type: string
+            subnetwork:
+              type: string
+            oidc_issuer_url:
+              type: string
+providers: []

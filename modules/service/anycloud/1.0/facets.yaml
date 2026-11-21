@@ -1,0 +1,1890 @@
+intent: service
+flavor: anycloud
+version: "1.0"
+description: Multi-cloud (anycloud) Kubernetes service supporting deployment, cronjob, job and statefulset workloads. Runs on the EKS or GKE cluster from kubernetes_cluster/anycloud; same-cloud pod IAM (EKS IRSA / GKE Workload Identity) follows the linked cloud_account.
+intentDetails:
+    type: Cloud & Infrastructure
+    description: Deploy and manage containerized workloads (deployment, cronjob, job, statefulset) on Kubernetes, cloud-agnostically.
+    displayName: Service
+    iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/service.svg
+clouds:
+    - aws
+    - gcp
+controlPlaneUISettings:
+    enableKubernetesExplorer: true
+inputs:
+    kubernetes_details:
+        type: '@facets/kubernetes-details'
+        optional: false
+        displayName: Kubernetes Cluster
+        description: The `attributes` output of kubernetes_cluster/anycloud. Supplies the kubernetes, kubernetes-alpha and helm providers.
+        default:
+            resource_type: kubernetes_cluster
+            resource_name: default
+        providers:
+            - kubernetes
+            - kubernetes-alpha
+            - helm
+    kubernetes_cluster:
+        type: '@facets/any_cloud_kubernetes_cluster'
+        optional: false
+        displayName: Kubernetes Cluster (cloud details)
+        description: The `default` output of the SAME kubernetes_cluster/anycloud resource. Supplies the EKS OIDC provider used by IRSA.
+        default:
+            resource_type: kubernetes_cluster
+            resource_name: default
+    cloud_account:
+        type: '@facets/any_cloud_account'
+        optional: false
+        displayName: Cloud Account
+        description: The workload cloud account (same as the cluster's). Provides the aws/google providers used to create same-cloud pod IAM for cloud_permissions — EKS IRSA (AWS) / GKE Workload Identity (GCP).
+        default:
+            resource_type: cloud_account
+            resource_name: default
+        providers:
+            - aws
+            - google
+    kubernetes_node_pool_details:
+        type: '@facets/kubernetes_nodepool'
+        optional: true
+        displayName: Node Pool
+        description: Optional node pool to schedule this workload's pods onto (sets nodeSelector + tolerations). Leave unwired to schedule anywhere.
+    artifactories:
+        type: '@facets/artifactories'
+        optional: true
+        displayName: Container Registries
+        default:
+            resource_type: artifactories
+            resource_name: default
+outputs:
+    default:
+        type: '@facets/service'
+spec:
+    properties:
+        cronjob:
+            description: Cron scheduler to be specified in cron format
+            properties:
+                concurrency_policy:
+                    description: Specifies how to treat concurrent executions of a job created by this cron job
+                    enum:
+                        - Allow
+                        - Forbid
+                        - Replace
+                    title: Concurrent Policy
+                    type: string
+                schedule:
+                    description: Cron scheduler to be specified in cron format
+                    title: Schedule
+                    type: string
+                    x-ui-placeholder: Enter the cron schedule (e.g., * * * * *)
+                suspend:
+                    description: Suspend all executions
+                    title: Suspend
+                    type: boolean
+            required:
+                - schedule
+                - suspend
+                - concurrency_policy
+            title: Cronjob
+            type: object
+            x-ui-override-disable: true
+            x-ui-toggle: true
+            x-ui-visible-if:
+                field: spec.type
+                values:
+                    - cronjob
+        enable_host_anti_affinity:
+            description: Distribute instances across different physical hosts within cluster
+            title: Enable Host Anti-Affinity
+            type: boolean
+            x-ui-visible-if:
+                field: spec.type
+                values:
+                    - application
+                    - statefulset
+        env:
+            description: Map of environment variables passed to the main container.
+            title: Environment Variables
+            type: object
+            x-ui-yaml-editor: true
+        cloud_permissions:
+            title: Cloud Permissions
+            description: Keyless same-cloud IAM for this workload's pods — EKS IRSA when the linked cloud_account is AWS, GKE Workload Identity when it is GCP. Only the active cloud's block is applied.
+            type: object
+            x-ui-toggle: true
+            properties:
+                aws:
+                    title: AWS access (EKS IRSA)
+                    description: Applied only on an AWS cloud_account. Creates an IAM role bound to this service's ServiceAccount via the cluster's OIDC provider.
+                    type: object
+                    x-ui-toggle: true
+                    properties:
+                        enable_irsa:
+                            default: false
+                            title: Enable IRSA (EKS)
+                            description: Create an IAM role bound to this service's ServiceAccount via the cluster's OIDC provider (no static keys).
+                            type: boolean
+                        inline_policy_json:
+                            title: Inline Policy (JSON)
+                            description: 'Optional custom permissions attached inline to the IRSA role. Value is a full IAM policy document as JSON. For standard AWS-managed policies use IAM Policies (ARNs) below instead.'
+                            type: string
+                            x-ui-editor: true
+                            x-ui-editor-language: json
+                            x-ui-placeholder: '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:GetObject"],"Resource":"arn:aws:s3:::my-bucket/*"}]}'
+                            x-ui-visible-if:
+                                field: spec.cloud_permissions.aws.enable_irsa
+                                values:
+                                    - true
+                        iam_policies:
+                            title: IAM Policies
+                            description: Managed policy ARNs attached to the IRSA role.
+                            type: object
+                            x-ui-visible-if:
+                                field: spec.cloud_permissions.aws.enable_irsa
+                                values:
+                                    - true
+                            patternProperties:
+                                "^[a-zA-Z0-9_.-]+$":
+                                    type: object
+                                    properties:
+                                        arn:
+                                            title: Policy ARN
+                                            type: string
+                                            pattern: '^(arn:aws:iam::(\d{12}|aws):policy\/[A-Za-z0-9+=,.@\-_]+|\$\{[A-Za-z0-9._-]+\})$'
+                                            x-ui-placeholder: "arn:aws:iam::123456789012:policy/policy1"
+                                    required:
+                                        - arn
+                gcp:
+                    title: GCP access (GKE Workload Identity)
+                    description: Applied only on a GCP cloud_account. Grants IAM roles directly to this service's Kubernetes ServiceAccount Workload Identity principal.
+                    type: object
+                    x-ui-toggle: true
+                    properties:
+                        enable_wi:
+                            default: false
+                            title: Enable Workload Identity (GKE)
+                            description: Grant IAM roles directly to this service's KSA Workload Identity principal (no GSA, no static keys). The GKE equivalent of EKS IRSA.
+                            type: boolean
+                        roles:
+                            title: IAM Roles
+                            description: GCP IAM roles granted to the KSA's Workload Identity principal.
+                            type: object
+                            x-ui-visible-if:
+                                field: spec.cloud_permissions.gcp.enable_wi
+                                values:
+                                    - true
+                            patternProperties:
+                                "^[a-zA-Z0-9_.-]+$":
+                                    type: object
+                                    properties:
+                                        role:
+                                            title: Role
+                                            type: string
+                                            x-ui-placeholder: roles/pubsub.viewer
+                                    required:
+                                        - role
+            x-ui-order:
+                - aws
+                - gcp
+        init_containers:
+            description: Map of specialized containers that run before app containers in a Pod. Init containers can contain utilities or setup scripts not present in an app image.
+            patternProperties:
+                ^[a-z]([-a-z0-9]{0,61}[a-z0-9])?$:
+                    description: Init Container Specification.
+                    properties:
+                        additional_k8s_env:
+                            description: List of evironment variables to be created from referencing key from configmap or secret. Eg https://raw.githubusercontent.com/kubernetes/website/main/content/en/examples/pods/pod-configmap-env-var-valueFrom.yaml.
+                            title: Additional Environment Variables
+                            type: object
+                            x-ui-yaml-editor: true
+                        additional_k8s_env_from:
+                            description: List of configmap or secret reference from which environments varibales to be imported. Eg. https://raw.githubusercontent.com/kubernetes/website/main/content/en/examples/pods/inject/pod-secret-envFrom.yaml.
+                            title: Import Additional Environment Variables
+                            type: object
+                            x-ui-yaml-editor: true
+                        env:
+                            description: Map of environment variables passed to init container.
+                            title: Environment Variables
+                            type: object
+                            x-ui-yaml-editor: true
+                        image:
+                            description: Docker image of the init container.
+                            title: Image
+                            type: string
+                            x-ui-error-message: Value doesn't match pattern for a container image
+                        pull_policy:
+                            default: IfNotPresent
+                            description: Specifies when the image should be pulled from the registry.
+                            enum:
+                                - IfNotPresent
+                                - Always
+                                - Never
+                            title: Image Pull Policy
+                            type: string
+                        runtime:
+                            description: Customize runtime settings like size, healthchecks etc.
+                            properties:
+                                args:
+                                    description: Arguments to pass to the command
+                                    items:
+                                        type: string
+                                    title: Arguments
+                                    type: array
+                                    x-ui-command: true
+                                    x-ui-override-disable: true
+                                command:
+                                    description: Command to run in the container
+                                    items:
+                                        type: string
+                                    title: Command
+                                    type: array
+                                    x-ui-command: true
+                                    x-ui-override-disable: true
+                                size:
+                                    description: Configure container size to meet resource requirements.
+                                    properties:
+                                        cpu:
+                                            description: CPU size
+                                            pattern: ^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$
+                                            title: CPU
+                                            type: string
+                                            x-ui-error-message: Value doesn't match pattern, it should be number ranging from 1 to 32 or 1m to 32000m
+                                            x-ui-placeholder: Enter CPU requests for your application
+                                        cpu_limit:
+                                            description: CPU limit size
+                                            pattern: ^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$
+                                            title: CPU Limit
+                                            type: string
+                                            x-ui-error-message: Value doesn't match pattern, it should be number ranging from 1 to 32 or 1m to 32000m
+                                            x-ui-placeholder: Enter CPU limits for your application
+                                        memory:
+                                            description: Memory size
+                                            pattern: ^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$
+                                            title: Memory
+                                            type: string
+                                            x-ui-error-message: Value doesn't match pattern, it should be number ranging from 1Gi to 64Gi or 1Mi to 64000Mi
+                                            x-ui-placeholder: Enter Memory requests for your application
+                                        memory_limit:
+                                            description: Memory limit size
+                                            pattern: ^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$
+                                            title: Memory Limit
+                                            type: string
+                                            x-ui-error-message: Value doesn't match pattern, it should be number ranging from 1Gi to 64Gi or 1Mi to 64000Mi
+                                            x-ui-placeholder: Enter Memory limits for your application
+                                    required:
+                                        - cpu
+                                        - memory
+                                    title: Size
+                                    type: object
+                                volumes:
+                                    description: Manage data storage volumes to ensure access and persistence.
+                                    properties:
+                                        config_maps:
+                                            description: Config map mounts
+                                            patternProperties:
+                                                ^[a-zA-Z0-9_.-]*$:
+                                                    properties:
+                                                        mount_path:
+                                                            description: Mount path for config maps
+                                                            title: Mount Path
+                                                            type: string
+                                                        name:
+                                                            description: Config map name
+                                                            pattern: ^[a-zA-Z0-9]([a-zA-Z0-9-]{1,18}[a-zA-Z0-9])$
+                                                            title: Name
+                                                            type: string
+                                                            x-ui-api-source:
+                                                                endpoint: /cc-ui/v1/dropdown/stack/{{stackName}}/resources-info
+                                                                filterConditions:
+                                                                    - field: resourceType
+                                                                      value: config_map
+                                                                labelKey: resourceName
+                                                                method: GET
+                                                                params:
+                                                                    includeContent: false
+                                                                valueKey: resourceName
+                                                                valueTemplate: ${config_map.{{value}}.out.attributes.name}
+                                                            x-ui-error-message: Value doesn't match pattern, it should start with an alphanumeric character and should be in range of 3-20 characters
+                                                            x-ui-typeable: true
+                                                        sub_path:
+                                                            description: Path within the ConfigMap to mount a specific key or file
+                                                            title: Sub Path
+                                                            type: string
+                                                    required:
+                                                        - name
+                                                        - mount_path
+                                                    title: Config Map Name
+                                                    type: object
+                                            title: Config Maps
+                                            type: object
+                                        host_path:
+                                            description: Host path mounts
+                                            patternProperties:
+                                                ^[a-zA-Z0-9_.-]*$:
+                                                    properties:
+                                                        mount_path:
+                                                            description: Mount path for host path
+                                                            title: Mount Path
+                                                            type: string
+                                                        sub_path:
+                                                            description: Path within the host filesystem to mount a specific directory or file
+                                                            title: Sub Path
+                                                            type: string
+                                                    required:
+                                                        - name
+                                                        - mount_path
+                                                    title: Host Path Name
+                                                    type: object
+                                            title: Host Path
+                                            type: object
+                                        pvc:
+                                            description: PVC mounts
+                                            patternProperties:
+                                                ^[a-zA-Z0-9_.-]*$:
+                                                    properties:
+                                                        claim_name:
+                                                            description: PVC name
+                                                            pattern: ^[a-zA-Z0-9]([a-zA-Z0-9-]{1,18}[a-zA-Z0-9])$
+                                                            title: Claim Name
+                                                            type: string
+                                                            x-ui-api-source:
+                                                                endpoint: /cc-ui/v1/dropdown/stack/{{stackName}}/resources-info
+                                                                filterConditions:
+                                                                    - field: resourceType
+                                                                      value: pvc
+                                                                labelKey: resourceName
+                                                                method: GET
+                                                                params:
+                                                                    includeContent: false
+                                                                valueKey: resourceName
+                                                                valueTemplate: ${pvc.{{value}}.out.attributes.name}
+                                                            x-ui-error-message: Value doesn't match pattern, it should start with an alphanumeric character and should be in range of 3-20 characters
+                                                            x-ui-typeable: true
+                                                        mount_path:
+                                                            description: Mount path for PVC
+                                                            title: Mount Path
+                                                            type: string
+                                                        sub_path:
+                                                            description: Path within the PVC to mount a specific subdirectory
+                                                            title: Sub Path
+                                                            type: string
+                                                    required:
+                                                        - claim_name
+                                                        - mount_path
+                                                    title: PVC Name
+                                                    type: object
+                                            title: PVC
+                                            type: object
+                                        secrets:
+                                            description: Secret mounts
+                                            patternProperties:
+                                                ^[a-zA-Z0-9_.-]*$:
+                                                    properties:
+                                                        mount_path:
+                                                            description: Mount path for secrets
+                                                            title: Mount Path
+                                                            type: string
+                                                        name:
+                                                            description: Secret name
+                                                            title: Name
+                                                            type: string
+                                                            x-ui-api-source:
+                                                                endpoint: /cc-ui/v1/dropdown/stack/{{stackName}}/resources-info
+                                                                filterConditions:
+                                                                    - field: resourceType
+                                                                      value: kubernetes_secret
+                                                                labelKey: resourceName
+                                                                method: GET
+                                                                params:
+                                                                    includeContent: false
+                                                                valueKey: resourceName
+                                                                valueTemplate: ${kubernetes_secret.{{value}}.out.attributes.name}
+                                                            x-ui-typeable: true
+                                                        sub_path:
+                                                            description: Path within the Secret to mount a specific key or file
+                                                            title: Sub Path
+                                                            type: string
+                                                    required:
+                                                        - name
+                                                        - mount_path
+                                                    title: Secret name
+                                                    type: object
+                                            title: Secrets
+                                            type: object
+                                    title: Volumes
+                                    type: object
+                                    x-ui-override-disable: true
+                                    x-ui-toggle: true
+                            required:
+                                - size
+                            title: Runtime
+                            type: object
+                            x-ui-order:
+                                - size
+                                - volumes
+                                - command
+                                - args
+                    required:
+                        - image
+                        - pull_policy
+                        - runtime
+                    title: Init Container
+                    type: object
+            title: Init Containers
+            type: object
+            x-ui-toggle: true
+            x-ui-visible-if:
+                field: spec.type
+                values:
+                    - application
+                    - statefulset
+        job:
+            description: Manage execution of a one-off task or batch process, ensuring it completes successfully
+            properties:
+                retry:
+                    title: Retry Count
+                    default: 5
+                    description: Number of time you want to retry the job before calling it a failure
+                    minimum: 1
+                    pattern: ^(100|[1-9][0-9]?)$
+                    type: string
+                    x-ui-error-message: The retry count must be a positive integer between 1 and 100.
+                    x-ui-placeholder: Enter the minimum retry count for your job (default is 5)
+            required:
+                - retry
+            title: Job
+            type: object
+            x-ui-override-disable: true
+            x-ui-toggle: true
+            x-ui-visible-if:
+                field: spec.type
+                values:
+                    - job
+                    - cronjob
+        persistent_volume_claims:
+            Description: PVCs that you will create and mount to your statefulset
+            patternProperties:
+                ^[a-zA-Z0-9_-]*$:
+                    description: Define volume details
+                    properties:
+                        access_mode:
+                            description: Define read-write access of the pvc
+                            enum:
+                                - ReadWriteOnce
+                                - ReadWriteMany
+                            title: Access Mode
+                            type: string
+                        path:
+                            description: Path to mount the PVC
+                            pattern: ^(/[^/]+)*(/)?$
+                            title: Path
+                            type: string
+                            x-ui-error-message: 'Value doesn''t match pattern, eg: / or /<path> etc'
+                            x-ui-placeholder: Enter the storage size, eg. /data/temp
+                        storage_size:
+                            description: The storage size of the pvc , it should be specified like `10Gi`
+                            minLength: 1
+                            pattern: ^(0\.[1-9]|[1-9](\.[0-9]+)?|[1-5][0-9](\.[0-9]+)?|6[0-4])Gi$|^([1-9](\.[0-9]+)?|[1-9][0-9]{1,3}(\.[0-9]+)?|[1-5][0-9]{4}(\.[0-9]+)?|6[0-3][0-9]{3}(\.[0-9]+)?|64000)Mi$
+                            title: Storage Size
+                            type: string
+                            x-ui-error-message: Value doesn't match pattern, it should be number ranging from 1Gi to 64Gi or 1Mi to 64000Mi
+                            x-ui-placeholder: e.g., '800Mi' or '1.5Gi'
+                    required:
+                        - access_mode
+                        - path
+                        - storage_size
+                    title: PVC
+                    type: object
+            title: Persistent Volume Claim
+            type: object
+            x-ui-override-disable: true
+            x-ui-toggle: true
+            x-ui-visible-if:
+                field: spec.type
+                values:
+                    - statefulset
+        pod_distribution:
+            description: Configure how pods are distributed across the cluster topology
+            patternProperties:
+                ^[a-zA-Z0-9_-]*$:
+                    properties:
+                        max_skew:
+                            default: 1
+                            description: Maximum difference between the number of matching pods in any two topology domains
+                            maximum: 100
+                            minimum: 1
+                            title: Max Skew
+                            type: integer
+                        node_affinity_policy:
+                            description: How to handle node affinity when scheduling pods
+                            enum:
+                                - Honor
+                                - Ignore
+                            title: Node Affinity Policy
+                            type: string
+                        node_taints_policy:
+                            description: How to handle node taints when scheduling pods
+                            enum:
+                                - Honor
+                                - Ignore
+                            title: Node Taints Policy
+                            type: string
+                        topology_key:
+                            default: kubernetes.io/hostname
+                            description: The key of node labels used for grouping nodes
+                            enum:
+                                - kubernetes.io/hostname
+                                - topology.kubernetes.io/zone
+                                - kubernetes.io/arch
+                                - lifecycle
+                            title: Topology Key
+                            type: string
+                        when_unsatisfiable:
+                            default: DoNotSchedule
+                            description: How to deal with pods that don't satisfy the spread constraints
+                            enum:
+                                - DoNotSchedule
+                                - ScheduleAnyway
+                            title: When Unsatisfiable
+                            type: string
+                    required:
+                        - topology_key
+                        - when_unsatisfiable
+                        - max_skew
+                    title: Topology Configuration
+                    type: object
+            title: Pod Distribution
+            type: object
+            x-ui-toggle: true
+            x-ui-visible-if:
+                field: spec.pod_distribution_enabled
+                values:
+                    - true
+        pod_distribution_enabled:
+            default: false
+            description: Enable topology spread constraints for pod distribution
+            title: Enable Pod Distribution
+            type: boolean
+            x-ui-visible-if:
+                field: spec.type
+                values:
+                    - application
+                    - statefulset
+        release:
+            description: Manage version releases to deploy updates and maintain software integrity
+            properties:
+                disruption_policy:
+                    description: The disruption policy for the service. Both min available and max unavailable cannot be specified simultaneously in disruption policy. You must fill one of the two fields when defining a disruption policy to avoid release failures.
+                    properties:
+                        max_unavailable:
+                            description: This is the max number of pods that can be unavailable during a failure.
+                            pattern: ^((100|[1-9]?[0-9])%?)$
+                            title: Max Unavailable
+                            type: string
+                            x-ui-error-message: Value doesn't match pattern, it should be number ranging from 0 to 100 or 0% to 100%
+                            x-ui-placeholder: Enter the max number or percentage of pods that needs to be unavailable during disruption, this is pod disruption budget
+                        min_available:
+                            description: This is the min number of pods should be available in case of failures
+                            pattern: ^((100|[1-9]?[0-9])%?)$
+                            title: Min Available
+                            type: string
+                            x-ui-error-message: Value doesn't match pattern, it should be number ranging from 0 to 100 or 0% to 100%
+                            x-ui-placeholder: Enter the min number or percentage of pods that needs to be available during disruption, this is pod disruption budget
+                    title: Disruption Policy
+                    type: object
+                image:
+                    description: The docker image of the application that you want to run
+                    title: Image
+                    type: string
+                    x-ui-error-message: Value doesn't match pattern for a container image
+                    x-ui-skip: true
+                image_pull_policy:
+                    default: IfNotPresent
+                    description: Specifies when the image should be pulled from the registry.
+                    enum:
+                        - IfNotPresent
+                        - Always
+                        - Never
+                    title: Image Pull Policy
+                    type: string
+                strategy:
+                    description: The type of upgrade strategy to be followed by this service
+                    properties:
+                        max_available:
+                            description: If type RollingUpdate, this is the max number of pods that can be created from the default replicas
+                            pattern: ^((100|[1-9]?[0-9])%?)$
+                            title: Max Available
+                            type: string
+                            x-ui-error-message: Value doesn't match pattern, it should be number ranging from 0 to 100 or 0% to 100%
+                            x-ui-placeholder: Enter the max number or percentage of pods that needs to be available during rolling restart
+                        max_unavailable:
+                            description: If type RollingUpdate, this is the max number of pods that can be unavailable from the default replicas
+                            pattern: ^((100|[1-9]?[0-9])%?)$
+                            title: Max Unavailable
+                            type: string
+                            x-ui-error-message: Value doesn't match pattern, it should be number ranging from 0 to 100 or 0% to 100%
+                            x-ui-placeholder: Enter the max number or percentage of pods that needs to be unavailable during rolling restart
+                        type:
+                            description: 'Your kubernetes rollout type eg: RollingUpdate or Recreate'
+                            enum:
+                                - RollingUpdate
+                                - Recreate
+                            title: Type
+                            type: string
+                    title: Strategy
+                    type: object
+            title: Release
+            type: object
+        namespace:
+          type: string
+          title: Namespace
+          description: >-
+            Kubernetes namespace to deploy into. Leave empty to use the environment's default
+            namespace. Set it when the workload must
+            sit beside namespaced resources it mounts — a pod can only mount a ConfigMap or Secret from
+            its OWN namespace. The namespace must already exist; this module never creates it.
+          maxLength: 63
+          minLength: 1
+
+        restart_policy:
+            description: Restart Policy - Always, OnFailure, Never
+            enum:
+                - Always
+                - OnFailure
+                - Never
+            title: Restart Policy
+            type: string
+            x-ui-override-disable: true
+            x-ui-visible-if:
+                field: spec.type
+                values:
+                    - application
+                    - statefulset
+        runtime:
+            description: Customize service runtime settings like ports, healthchecks etc.
+            properties:
+                args:
+                    description: Arguments to pass to the command
+                    items:
+                        type: string
+                    title: Arguments
+                    type: array
+                    x-ui-command: true
+                    x-ui-override-disable: true
+                autoscaling:
+                    description: Automatically adjust resources based on demand for optimal performance
+                    properties:
+                        cpu_threshold:
+                            description: Max CPU threshold
+                            pattern: ^(100|[1-9][0-9]?)$
+                            title: CPU Threshold
+                            type: string
+                            x-ui-visible-if:
+                                field: spec.runtime.autoscaling.scaling_on
+                                values:
+                                    - CPU
+                        max:
+                            default: 1
+                            description: Max replicas
+                            maximum: 200
+                            minimum: 1
+                            title: Max
+                            type: integer
+                        min:
+                            default: 1
+                            description: Min replicas
+                            maximum: 200
+                            minimum: 1
+                            title: Min
+                            type: integer
+                        ram_threshold:
+                            description: Max RAM threshold
+                            pattern: ^(1?[0-9]?[0-9]|100)$
+                            title: RAM Threshold
+                            type: string
+                            x-ui-visible-if:
+                                field: spec.runtime.autoscaling.scaling_on
+                                values:
+                                    - RAM
+                        scaling_on:
+                            default: CPU
+                            enum:
+                                - CPU
+                                - RAM
+                            title: Scale based on
+                            type: string
+                    title: Autoscaling
+                    type: object
+                    x-ui-toggle: true
+                    x-ui-visible-if:
+                        field: spec.type
+                        values:
+                            - application
+                            - statefulset
+                command:
+                    description: Command to run in the container
+                    items:
+                        type: string
+                    title: Command
+                    type: array
+                    x-ui-command: true
+                    x-ui-override-disable: true
+                health_checks:
+                    description: Ensure service remains responsive and operational. Assess its status and performance.
+                    properties:
+                        liveness_check_type:
+                            default: None
+                            enum:
+                                - None
+                                - PortCheck
+                                - HttpCheck
+                                - ExecCheck
+                            title: Liveness Check Type
+                            type: string
+                            x-ui-no-sort: true
+                        liveness_exec_command:
+                            description: Commands for liveness
+                            title: Liveness Exec Command
+                            type: array
+                            x-ui-error-message: Enter each command/argument in a separate line
+                            x-ui-override-disable: true
+                            x-ui-placeholder: Add each command argument as a new entry
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.liveness_check_type
+                                values:
+                                    - ExecCheck
+                        liveness_period:
+                            default: 10
+                            description: Interval for Liveness (in sec)
+                            maximum: 10000
+                            minimum: 0
+                            title: Liveness Check Interval
+                            type: integer
+                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-10000
+                            x-ui-placeholder: Enter liveness period for the Pod
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.liveness_check_type
+                                values:
+                                    - PortCheck
+                                    - HttpCheck
+                                    - ExecCheck
+                        liveness_port:
+                            description: Port for Health Checks
+                            title: Liveness Port
+                            type: string
+                            x-ui-disable-tooltip: No Ports Added
+                            x-ui-dynamic-enum: spec.runtime.ports.*.port
+                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-65535
+                            x-ui-placeholder: Enter liveness port for the Pod
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.liveness_check_type
+                                values:
+                                    - PortCheck
+                                    - HttpCheck
+                        liveness_start_up_time:
+                            default: 10
+                            description: Wait time for liveness (in sec)
+                            maximum: 10000
+                            minimum: 0
+                            title: Liveness Start-Up Time
+                            type: integer
+                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-10000
+                            x-ui-placeholder: Enter liveness start up time for the Pod
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.liveness_check_type
+                                values:
+                                    - PortCheck
+                                    - HttpCheck
+                                    - ExecCheck
+                        liveness_timeout:
+                            default: 10
+                            description: Max time for liveness (in sec)
+                            maximum: 10000
+                            minimum: 0
+                            title: Liveness Timeout
+                            type: integer
+                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-10000
+                            x-ui-placeholder: Enter liveness timeout for the Pod
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.liveness_check_type
+                                values:
+                                    - PortCheck
+                                    - HttpCheck
+                                    - ExecCheck
+                        liveness_url:
+                            description: URL for liveness
+                            pattern: ^(/[^/]+)*(/)?$
+                            title: Liveness URL
+                            type: string
+                            x-ui-error-message: 'Value doesn''t match pattern, eg: / , /<path>'
+                            x-ui-placeholder: Enter liveness url for the Pod
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.liveness_check_type
+                                values:
+                                    - HttpCheck
+                        readiness_check_type:
+                            default: None
+                            enum:
+                                - None
+                                - PortCheck
+                                - HttpCheck
+                                - ExecCheck
+                            title: Readiness Check Type
+                            type: string
+                            x-ui-no-sort: true
+                        readiness_exec_command:
+                            description: Commands for readiness check
+                            title: Readiness Exec Command
+                            type: array
+                            x-ui-error-message: Enter each command/argument in a separate line
+                            x-ui-override-disable: true
+                            x-ui-placeholder: Add each command argument as a new entry
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.readiness_check_type
+                                values:
+                                    - ExecCheck
+                        readiness_period:
+                            default: 10
+                            description: Repeated interval for health-check (in sec)
+                            maximum: 10000
+                            minimum: 0
+                            title: Readiness Check Interval
+                            type: integer
+                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-10000
+                            x-ui-placeholder: Enter readiness period for the Pod
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.readiness_check_type
+                                values:
+                                    - PortCheck
+                                    - HttpCheck
+                                    - ExecCheck
+                        readiness_port:
+                            description: Port for Health Checks
+                            title: Readiness Port
+                            type: string
+                            x-ui-disable-tooltip: No Ports Added
+                            x-ui-dynamic-enum: spec.runtime.ports.*.port
+                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-65535
+                            x-ui-placeholder: Enter readiness port for the Pod
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.readiness_check_type
+                                values:
+                                    - PortCheck
+                                    - HttpCheck
+                        readiness_start_up_time:
+                            default: 10
+                            description: Wait time for readiness check (in sec)
+                            maximum: 10000
+                            minimum: 0
+                            title: Readiness Start-Up Time
+                            type: integer
+                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-10000
+                            x-ui-placeholder: Enter readiness start up time for the Pod
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.readiness_check_type
+                                values:
+                                    - PortCheck
+                                    - HttpCheck
+                                    - ExecCheck
+                        readiness_timeout:
+                            default: 10
+                            description: Max time for readiness (in sec)
+                            maximum: 10000
+                            minimum: 0
+                            title: Readiness Timeout
+                            type: integer
+                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-10000
+                            x-ui-placeholder: Enter readiness timeout for the Pod
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.readiness_check_type
+                                values:
+                                    - PortCheck
+                                    - HttpCheck
+                                    - ExecCheck
+                        readiness_url:
+                            description: URL for readiness
+                            pattern: ^(/[^/]+)*(/)?$
+                            title: Readiness URL
+                            type: string
+                            x-ui-error-message: 'Value doesn''t match pattern, eg: / , /<path>'
+                            x-ui-placeholder: Enter readiness url for the Pod
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.readiness_check_type
+                                values:
+                                    - HttpCheck
+                        startup_check_type:
+                            default: None
+                            enum:
+                                - None
+                                - PortCheck
+                                - HttpCheck
+                                - ExecCheck
+                            title: Startup Check Type
+                            type: string
+                            x-ui-no-sort: true
+                        startup_exec_command:
+                            description: Commands for startup check
+                            title: Startup Exec Command
+                            type: array
+                            x-ui-error-message: Enter each command/argument in a separate line
+                            x-ui-override-disable: true
+                            x-ui-placeholder: Add each command argument as a new entry
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.startup_check_type
+                                values:
+                                    - ExecCheck
+                        startup_headers:
+                            description: Headers to be sent with startup check request
+                            title: Startup Headers
+                            type: object
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.startup_check_type
+                                values:
+                                    - HttpCheck
+                            x-ui-yaml-editor: true
+                        startup_period:
+                            default: 10
+                            description: Repeated interval for health-check (in sec)
+                            maximum: 10000
+                            minimum: 0
+                            title: Startup Check Interval
+                            type: integer
+                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-10000
+                            x-ui-placeholder: Enter startup period for the Pod
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.startup_check_type
+                                values:
+                                    - PortCheck
+                                    - HttpCheck
+                                    - ExecCheck
+                        startup_port:
+                            description: Port for Health Checks
+                            title: Startup Port
+                            type: string
+                            x-ui-disable-tooltip: No Ports Added
+                            x-ui-dynamic-enum: spec.runtime.ports.*.port
+                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-65535
+                            x-ui-placeholder: Enter startup port for the Pod
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.startup_check_type
+                                values:
+                                    - PortCheck
+                                    - HttpCheck
+                        startup_start_up_time:
+                            default: 10
+                            description: Wait time for startup check (in sec)
+                            maximum: 10000
+                            minimum: 0
+                            title: Startup Start-Up Time
+                            type: integer
+                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-10000
+                            x-ui-placeholder: Enter startup start up time for the Pod
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.startup_check_type
+                                values:
+                                    - PortCheck
+                                    - HttpCheck
+                                    - ExecCheck
+                        startup_timeout:
+                            default: 10
+                            description: Max time for startup (in sec)
+                            maximum: 10000
+                            minimum: 0
+                            title: Startup Timeout
+                            type: integer
+                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-10000
+                            x-ui-placeholder: Enter startup timeout for the Pod
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.startup_check_type
+                                values:
+                                    - PortCheck
+                                    - HttpCheck
+                                    - ExecCheck
+                        startup_url:
+                            description: URL for startup
+                            pattern: ^(/[^/]+)*(/)?$
+                            title: Startup URL
+                            type: string
+                            x-ui-error-message: 'Value doesn''t match pattern, eg: / , /<path>'
+                            x-ui-placeholder: Enter startup url for the Pod
+                            x-ui-visible-if:
+                                field: spec.runtime.health_checks.startup_check_type
+                                values:
+                                    - HttpCheck
+                    title: Health Checks
+                    type: object
+                    x-ui-override-disable: true
+                    x-ui-toggle: true
+                    x-ui-visible-if:
+                        field: spec.type
+                        values:
+                            - application
+                            - statefulset
+                metrics:
+                    description: Metrics port mappings
+                    patternProperties:
+                        ^[a-zA-Z0-9_.-]*$:
+                            description: Track and analyze performance metrics to monitor service health and efficiency
+                            properties:
+                                path:
+                                    description: Metrics path
+                                    pattern: ^(/[^/]+)*(/)?$
+                                    title: Path
+                                    type: string
+                                port_name:
+                                    description: Port name for metrics
+                                    title: Port Name
+                                    type: string
+                                    x-ui-disable-tooltip: No Ports Available
+                                    x-ui-dynamic-enum: spec.runtime.ports.*
+                            required:
+                                - path
+                                - port_name
+                            title: Metrics Name
+                            type: object
+                    title: Metrics
+                    type: object
+                    x-ui-override-disable: true
+                    x-ui-toggle: true
+                ports:
+                    description: Port mappings
+                    patternProperties:
+                        ^[0-9]+[m]?$:
+                            description: Define port allocation to facilitate communication with service
+                            properties:
+                                port:
+                                    description: Port on which application is running
+                                    pattern: ^([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$
+                                    title: Port
+                                    type: string
+                                    x-ui-error-message: Value doesn't match pattern, it should be number ranging from 1-65535
+                                    x-ui-placeholder: Enter the port number to expose for your application container
+                                    x-ui-unique: true
+                                protocol:
+                                    description: TCP or UDP
+                                    enum:
+                                        - tcp
+                                        - udp
+                                    title: Protocol
+                                    type: string
+                                service_port:
+                                    description: Port from which application service can be exposed
+                                    pattern: ^([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$
+                                    title: Service Port
+                                    type: string
+                                    x-ui-error-message: Value doesn't match pattern, it should be number ranging from 1-65535
+                                    x-ui-placeholder: Enter the port number to expose for your application service
+                                    x-ui-unique: true
+                            required:
+                                - protocol
+                                - port
+                            title: Port Name
+                            type: object
+                    title: Ports
+                    type: object
+                    x-ui-override-disable: true
+                    x-ui-visible-if:
+                        field: spec.type
+                        values:
+                            - application
+                            - statefulset
+                size:
+                    description: Configure container size to meet resource requirements
+                    properties:
+                        cpu:
+                            description: CPU size
+                            pattern: ^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$
+                            title: CPU
+                            type: string
+                            x-ui-compare:
+                                comparator: <=
+                                field: spec.runtime.size.cpu_limit
+                                x-ui-error-message: CPU cannot be more than CPU limit
+                            x-ui-error-message: Value doesn't match pattern, it should be number ranging from 1 to 32 or 1m to 32000m
+                            x-ui-placeholder: Enter CPU requests for your application
+                        cpu_limit:
+                            description: CPU limit size
+                            pattern: ^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$
+                            title: CPU Limit
+                            type: string
+                            x-ui-compare:
+                                comparator: '>='
+                                field: spec.runtime.size.cpu
+                                x-ui-error-message: CPU limit cannot be less than CPU
+                            x-ui-error-message: Value doesn't match pattern, it should be number ranging from 1 to 32 or 1m to 32000m
+                            x-ui-placeholder: Enter CPU limits for your application
+                        memory:
+                            description: Memory size
+                            pattern: ^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$
+                            title: Memory
+                            type: string
+                            x-ui-compare:
+                                comparator: <=
+                                field: spec.runtime.size.memory_limit
+                                x-ui-error-message: Memory cannot be more than memory limit
+                            x-ui-error-message: Value doesn't match pattern, it should be number ranging from 1Gi to 64Gi or 1Mi to 64000Mi
+                            x-ui-placeholder: Enter Memory requests for your application
+                        memory_limit:
+                            description: Memory limit size
+                            pattern: ^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$
+                            title: Memory Limit
+                            type: string
+                            x-ui-compare:
+                                comparator: '>='
+                                field: spec.runtime.size.memory
+                                x-ui-error-message: Memory limit cannot be less than memory
+                            x-ui-error-message: Value doesn't match pattern, it should be number ranging from 1Gi to 64Gi or 1Mi to 64000Mi
+                            x-ui-placeholder: Enter Memory limits for your application
+                    required:
+                        - cpu
+                        - memory
+                    title: Size
+                    type: object
+                volumes:
+                    description: Manage data storage volumes to ensure access and persistence
+                    properties:
+                        config_maps:
+                            description: Config map mounts
+                            patternProperties:
+                                ^[a-zA-Z0-9_.-]*$:
+                                    properties:
+                                        mount_path:
+                                            description: Mount path for config maps
+                                            pattern: ^/.*
+                                            title: Mount Path
+                                            type: string
+                                            x-ui-error-message: Value doesn't match pattern, it should start with a forward slash (/)
+                                        name:
+                                            description: Config map name
+                                            title: Name
+                                            type: string
+                                            x-ui-api-source:
+                                                endpoint: /cc-ui/v1/dropdown/stack/{{stackName}}/resources-info
+                                                filterConditions:
+                                                    - field: resourceType
+                                                      value: config_map
+                                                labelKey: resourceName
+                                                method: GET
+                                                params:
+                                                    includeContent: false
+                                                valueKey: resourceName
+                                                valueTemplate: ${config_map.{{value}}.out.attributes.name}
+                                            x-ui-typeable: true
+                                        sub_path:
+                                            description: Path within the ConfigMap to mount a specific key or file
+                                            title: Sub Path
+                                            type: string
+                                    required:
+                                        - name
+                                        - mount_path
+                                    title: Config Map Name
+                                    type: object
+                            title: Config Maps
+                            type: object
+                        host_path:
+                            description: Host path mounts
+                            patternProperties:
+                                ^[a-zA-Z0-9_.-]*$:
+                                    properties:
+                                        mount_path:
+                                            description: Mount path for host path
+                                            pattern: ^/.*
+                                            title: Mount Path
+                                            type: string
+                                            x-ui-error-message: Value doesn't match pattern, it should start with a forward slash (/)
+                                        sub_path:
+                                            description: Path within the host filesystem to mount a specific directory or file
+                                            title: Sub Path
+                                            type: string
+                                    required:
+                                        - name
+                                        - mount_path
+                                    title: Host Path Name
+                                    type: object
+                            title: Host Path
+                            type: object
+                        pvc:
+                            description: PVC mounts
+                            patternProperties:
+                                ^[a-zA-Z0-9_.-]*$:
+                                    properties:
+                                        claim_name:
+                                            description: PVC name
+                                            pattern: ^[a-zA-Z0-9]([a-zA-Z0-9-]{1,18}[a-zA-Z0-9])$
+                                            title: Claim Name
+                                            type: string
+                                            x-ui-api-source:
+                                                endpoint: /cc-ui/v1/dropdown/stack/{{stackName}}/resources-info
+                                                filterConditions:
+                                                    - field: resourceType
+                                                      value: pvc
+                                                labelKey: resourceName
+                                                method: GET
+                                                params:
+                                                    includeContent: false
+                                                valueKey: resourceName
+                                                valueTemplate: ${pvc.{{value}}.out.attributes.name}
+                                            x-ui-error-message: Value doesn't match pattern, it should start with an alphanumeric character and should be in range of 3-20 characters
+                                            x-ui-typeable: true
+                                        mount_path:
+                                            description: Mount path for PVC
+                                            pattern: ^/.*
+                                            title: Mount Path
+                                            type: string
+                                            x-ui-error-message: Value doesn't match pattern, it should start with a forward slash (/)
+                                        sub_path:
+                                            description: Path within the PVC to mount a specific subdirectory
+                                            title: Sub Path
+                                            type: string
+                                    required:
+                                        - claim_name
+                                        - mount_path
+                                    title: PVC Name
+                                    type: object
+                            title: PVC
+                            type: object
+                        secrets:
+                            description: Secret mounts
+                            patternProperties:
+                                ^[a-zA-Z0-9_.-]*$:
+                                    properties:
+                                        mount_path:
+                                            description: Mount path for secrets
+                                            pattern: ^/.*
+                                            title: Mount Path
+                                            type: string
+                                            x-ui-error-message: Value doesn't match pattern, it should start with a forward slash (/)
+                                        name:
+                                            description: Secret name
+                                            title: Name
+                                            type: string
+                                            x-ui-api-source:
+                                                endpoint: /cc-ui/v1/dropdown/stack/{{stackName}}/resources-info
+                                                filterConditions:
+                                                    - field: resourceType
+                                                      value: kubernetes_secret
+                                                labelKey: resourceName
+                                                method: GET
+                                                params:
+                                                    includeContent: false
+                                                valueKey: resourceName
+                                                valueTemplate: ${kubernetes_secret.{{value}}.out.attributes.name}
+                                            x-ui-typeable: true
+                                        sub_path:
+                                            description: Path within the Secret to mount a specific key or file
+                                            title: Sub Path
+                                            type: string
+                                    required:
+                                        - name
+                                        - mount_path
+                                    title: Secret name
+                                    type: object
+                            title: Secrets
+                            type: object
+                    title: Volumes
+                    type: object
+                    x-ui-override-disable: true
+                    x-ui-toggle: true
+            required:
+                - ports
+                - size
+            title: Runtime
+            type: object
+        sidecars:
+            description: Map of specialized additional containers that run alongside a primary application container within a Pod.
+            patternProperties:
+                ^[a-z]([-a-z0-9]{0,61}[a-z0-9])?$:
+                    description: Sidecar Container Specification
+                    properties:
+                        additional_k8s_env:
+                            description: List of evironment variables to be created from referencing key from configmap or secret. Eg https://raw.githubusercontent.com/kubernetes/website/main/content/en/examples/pods/pod-configmap-env-var-valueFrom.yaml
+                            title: Additional Environment Variables
+                            type: object
+                            x-ui-yaml-editor: true
+                        additional_k8s_env_from:
+                            description: List of configmap or secret reference from which environments varibales to be imported. Eg. https://raw.githubusercontent.com/kubernetes/website/main/content/en/examples/pods/inject/pod-secret-envFrom.yaml
+                            title: Import Additional Environment Variables
+                            type: object
+                            x-ui-yaml-editor: true
+                        env:
+                            description: Map of environment variables passed to init container
+                            title: Environment Variables
+                            type: object
+                            x-ui-yaml-editor: true
+                        image:
+                            description: Docker image of the init container
+                            title: Image
+                            type: string
+                            x-ui-error-message: Value doesn't match pattern for a container image
+                        pull_policy:
+                            default: IfNotPresent
+                            description: Specifies when the image should be pulled from the registry.
+                            enum:
+                                - IfNotPresent
+                                - Always
+                                - Never
+                            title: Image Pull Policy
+                            type: string
+                        runtime:
+                            description: Customize runtime settings like size, healthchecks etc.
+                            properties:
+                                args:
+                                    description: Arguments to pass to the command
+                                    items:
+                                        type: string
+                                    title: Arguments
+                                    type: array
+                                    x-ui-command: true
+                                    x-ui-override-disable: true
+                                command:
+                                    description: Command to run in the container
+                                    items:
+                                        type: string
+                                    title: Command
+                                    type: array
+                                    x-ui-command: true
+                                    x-ui-override-disable: true
+                                health_checks:
+                                    description: Ensure service remains responsive and operational. Assess its status and performance.
+                                    properties:
+                                        liveness_check_type:
+                                            default: None
+                                            enum:
+                                                - None
+                                                - PortCheck
+                                                - HttpCheck
+                                                - ExecCheck
+                                            title: Liveness Check Type
+                                            type: string
+                                            x-ui-no-sort: true
+                                        liveness_exec_command:
+                                            description: Commands for liveness
+                                            title: Liveness Exec Command
+                                            type: array
+                                            x-ui-error-message: Enter each command/argument in a separate line
+                                            x-ui-override-disable: true
+                                            x-ui-placeholder: Add each command argument as a new entry
+                                            x-ui-visible-if:
+                                                field: spec.sidecars.{{this}}.runtime.health_checks.liveness_check_type
+                                                values:
+                                                    - ExecCheck
+                                        liveness_period:
+                                            default: 10
+                                            description: Interval for Liveness (in sec)
+                                            maximum: 10000
+                                            minimum: 0
+                                            title: Liveness Check Interval
+                                            type: integer
+                                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-10000
+                                            x-ui-placeholder: Enter liveness period for the Pod
+                                            x-ui-visible-if:
+                                                field: spec.sidecars.{{this}}.runtime.health_checks.liveness_check_type
+                                                values:
+                                                    - PortCheck
+                                                    - HttpCheck
+                                                    - ExecCheck
+                                        liveness_start_up_time:
+                                            default: 10
+                                            description: Wait time for liveness (in sec)
+                                            maximum: 10000
+                                            minimum: 0
+                                            title: Liveness Start-Up Time
+                                            type: integer
+                                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-10000
+                                            x-ui-placeholder: Enter liveness start up time for the Pod
+                                            x-ui-visible-if:
+                                                field: spec.sidecars.{{this}}.runtime.health_checks.liveness_check_type
+                                                values:
+                                                    - PortCheck
+                                                    - HttpCheck
+                                                    - ExecCheck
+                                        liveness_timeout:
+                                            default: 10
+                                            description: Max time for liveness (in sec)
+                                            maximum: 10000
+                                            minimum: 0
+                                            title: Liveness Timeout
+                                            type: integer
+                                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-10000
+                                            x-ui-placeholder: Enter liveness timeout for the Pod
+                                            x-ui-visible-if:
+                                                field: spec.sidecars.{{this}}.runtime.health_checks.liveness_check_type
+                                                values:
+                                                    - PortCheck
+                                                    - HttpCheck
+                                                    - ExecCheck
+                                        liveness_url:
+                                            description: URL for liveness
+                                            pattern: ^(/[^/]+)*(/)?$
+                                            title: Liveness URL
+                                            type: string
+                                            x-ui-error-message: 'Value doesn''t match pattern, eg: / , /<path>'
+                                            x-ui-placeholder: Enter liveness url for the Pod
+                                            x-ui-visible-if:
+                                                field: spec.sidecars.{{this}}.runtime.health_checks.liveness_check_type
+                                                values:
+                                                    - HttpCheck
+                                        port:
+                                            description: Port for Health Checks
+                                            title: Health Check Port
+                                            type: string
+                                            x-ui-disable-tooltip: No Ports Added
+                                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-65535
+                                            x-ui-placeholder: Enter health check port for the Sidecar
+                                            x-ui-typeable: true
+                                            x-ui-visible-if:
+                                                field: spec.sidecars.{{this}}.runtime.health_checks.readiness_check_type
+                                                values:
+                                                    - PortCheck
+                                                    - HttpCheck
+                                        readiness_check_type:
+                                            default: None
+                                            enum:
+                                                - None
+                                                - PortCheck
+                                                - HttpCheck
+                                                - ExecCheck
+                                            title: Readiness Check Type
+                                            type: string
+                                            x-ui-no-sort: true
+                                        readiness_exec_command:
+                                            description: Commands for readiness check
+                                            title: Readiness Exec Command
+                                            type: array
+                                            x-ui-error-message: Enter each command/argument in a separate line
+                                            x-ui-override-disable: true
+                                            x-ui-placeholder: Add each command argument as a new entry
+                                            x-ui-visible-if:
+                                                field: spec.sidecars.{{this}}.runtime.health_checks.readiness_check_type
+                                                values:
+                                                    - ExecCheck
+                                        readiness_period:
+                                            default: 10
+                                            description: Repeated interval for health-check (in sec)
+                                            maximum: 10000
+                                            minimum: 0
+                                            title: Readiness Check Interval
+                                            type: integer
+                                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-10000
+                                            x-ui-placeholder: Enter readiness period for the Pod
+                                            x-ui-visible-if:
+                                                field: spec.sidecars.{{this}}.runtime.health_checks.readiness_check_type
+                                                values:
+                                                    - PortCheck
+                                                    - HttpCheck
+                                                    - ExecCheck
+                                        readiness_start_up_time:
+                                            default: 10
+                                            description: Wait time for readiness check (in sec)
+                                            maximum: 10000
+                                            minimum: 0
+                                            title: Readiness Start-Up Time
+                                            type: integer
+                                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-10000
+                                            x-ui-placeholder: Enter readiness start up time for the Pod
+                                            x-ui-visible-if:
+                                                field: spec.sidecars.{{this}}.runtime.health_checks.readiness_check_type
+                                                values:
+                                                    - PortCheck
+                                                    - HttpCheck
+                                                    - ExecCheck
+                                        readiness_timeout:
+                                            default: 10
+                                            description: Max time for readiness (in sec)
+                                            maximum: 10000
+                                            minimum: 0
+                                            title: Readiness Timeout
+                                            type: integer
+                                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-10000
+                                            x-ui-placeholder: Enter readiness timeout for the Pod
+                                            x-ui-visible-if:
+                                                field: spec.sidecars.{{this}}.runtime.health_checks.readiness_check_type
+                                                values:
+                                                    - PortCheck
+                                                    - HttpCheck
+                                                    - ExecCheck
+                                        readiness_url:
+                                            description: URL for readiness
+                                            pattern: ^(/[^/]+)*(/)?$
+                                            title: Readiness URL
+                                            type: string
+                                            x-ui-error-message: 'Value doesn''t match pattern, eg: / , /<path>'
+                                            x-ui-placeholder: Enter readiness url for the Pod
+                                            x-ui-visible-if:
+                                                field: spec.sidecars.{{this}}.runtime.health_checks.readiness_check_type
+                                                values:
+                                                    - HttpCheck
+                                        startup_check_type:
+                                            default: None
+                                            enum:
+                                                - None
+                                                - PortCheck
+                                                - HttpCheck
+                                                - ExecCheck
+                                            title: Startup Check Type
+                                            type: string
+                                            x-ui-no-sort: true
+                                        startup_exec_command:
+                                            description: Commands for startup check
+                                            title: Startup Exec Command
+                                            type: array
+                                            x-ui-error-message: Enter each command/argument in a separate line
+                                            x-ui-override-disable: true
+                                            x-ui-placeholder: Add each command argument as a new entry
+                                            x-ui-visible-if:
+                                                field: spec.sidecars.{{this}}.runtime.health_checks.startup_check_type
+                                                values:
+                                                    - ExecCheck
+                                        startup_period:
+                                            default: 10
+                                            description: Repeated interval for health-check (in sec)
+                                            maximum: 10000
+                                            minimum: 0
+                                            title: Startup Check Interval
+                                            type: integer
+                                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-10000
+                                            x-ui-placeholder: Enter startup period for the Pod
+                                            x-ui-visible-if:
+                                                field: spec.sidecars.{{this}}.runtime.health_checks.startup_check_type
+                                                values:
+                                                    - PortCheck
+                                                    - HttpCheck
+                                                    - ExecCheck
+                                        startup_start_up_time:
+                                            default: 10
+                                            description: Wait time for startup check (in sec)
+                                            maximum: 10000
+                                            minimum: 0
+                                            title: Startup Start-Up Time
+                                            type: integer
+                                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-10000
+                                            x-ui-placeholder: Enter startup start up time for the Pod
+                                            x-ui-visible-if:
+                                                field: spec.sidecars.{{this}}.runtime.health_checks.startup_check_type
+                                                values:
+                                                    - PortCheck
+                                                    - HttpCheck
+                                                    - ExecCheck
+                                        startup_timeout:
+                                            default: 10
+                                            description: Max time for startup (in sec)
+                                            maximum: 10000
+                                            minimum: 0
+                                            title: Startup Timeout
+                                            type: integer
+                                            x-ui-error-message: Value doesn't match pattern, accepted values are from 0-10000
+                                            x-ui-placeholder: Enter startup timeout for the Pod
+                                            x-ui-visible-if:
+                                                field: spec.sidecars.{{this}}.runtime.health_checks.startup_check_type
+                                                values:
+                                                    - PortCheck
+                                                    - HttpCheck
+                                                    - ExecCheck
+                                        startup_url:
+                                            description: URL for startup
+                                            pattern: ^(/[^/]+)*(/)?$
+                                            title: Startup URL
+                                            type: string
+                                            x-ui-error-message: 'Value doesn''t match pattern, eg: / , /<path>'
+                                            x-ui-placeholder: Enter startup url for the Pod
+                                            x-ui-visible-if:
+                                                field: spec.sidecars.{{this}}.runtime.health_checks.startup_check_type
+                                                values:
+                                                    - HttpCheck
+                                    required:
+                                        - readiness_url
+                                        - readiness_exec_command
+                                        - liveness_url
+                                        - liveness_exec_command
+                                        - startup_url
+                                        - startup_exec_command
+                                        - port
+                                    title: Health Checks
+                                    type: object
+                                    x-ui-override-disable: true
+                                    x-ui-toggle: true
+                                ports:
+                                    description: Port mappings for sidecar container
+                                    patternProperties:
+                                        ^[0-9]+[m]?$:
+                                            description: Define port to be exposed from sidecar
+                                            properties:
+                                                port:
+                                                    description: Port on which sidecar application is running
+                                                    pattern: ^([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$
+                                                    title: Port
+                                                    type: string
+                                                    x-ui-error-message: Value doesn't match pattern, it should be number ranging from 1-65535
+                                                    x-ui-placeholder: Enter the port number to expose for your sidecar container
+                                            required:
+                                                - port
+                                            title: Port Name
+                                            type: object
+                                    title: Ports
+                                    type: object
+                                    x-ui-override-disable: true
+                                size:
+                                    description: Configure container size to meet resource requirements
+                                    properties:
+                                        cpu:
+                                            description: CPU size
+                                            pattern: ^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$
+                                            title: CPU
+                                            type: string
+                                            x-ui-error-message: Value doesn't match pattern, it should be number ranging from 1 to 32 or 1m to 32000m
+                                            x-ui-placeholder: Enter CPU requests for your application
+                                        cpu_limit:
+                                            description: CPU limit size
+                                            pattern: ^([1-9]|[12][0-9]|3[0-2])$|^(3[0-1][0-9]{3}|[1-2][0-9]{4}|[1-9][0-9]{0,3}|32000)m$
+                                            title: CPU Limit
+                                            type: string
+                                            x-ui-error-message: Value doesn't match pattern, it should be number ranging from 1 to 32 or 1m to 32000m
+                                            x-ui-placeholder: Enter CPU limits for your application
+                                        memory:
+                                            description: Memory size
+                                            pattern: ^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$
+                                            title: Memory
+                                            type: string
+                                            x-ui-error-message: Value doesn't match pattern, it should be number ranging from 1Gi to 64Gi or 1Mi to 64000Mi
+                                            x-ui-placeholder: Enter Memory requests for your application
+                                        memory_limit:
+                                            description: Memory limit size
+                                            pattern: ^([1-9]|[1-5][0-9]|6[0-4])Gi$|^([1-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-3][0-9]{3}|64000)Mi$
+                                            title: Memory Limit
+                                            type: string
+                                            x-ui-error-message: Value doesn't match pattern, it should be number ranging from 1Gi to 64Gi or 1Mi to 64000Mi
+                                            x-ui-placeholder: Enter Memory limits for your application
+                                    required:
+                                        - cpu
+                                        - memory
+                                    title: Size
+                                    type: object
+                                volumes:
+                                    description: Manage data storage volumes to ensure access and persistence
+                                    properties:
+                                        config_maps:
+                                            description: Config map mounts
+                                            patternProperties:
+                                                ^[a-zA-Z0-9_.-]*$:
+                                                    properties:
+                                                        mount_path:
+                                                            description: Mount path for config maps
+                                                            title: Mount Path
+                                                            type: string
+                                                        name:
+                                                            description: Config map name
+                                                            pattern: ^[a-zA-Z0-9]([a-zA-Z0-9-]{1,18}[a-zA-Z0-9])$
+                                                            title: Name
+                                                            type: string
+                                                            x-ui-api-source:
+                                                                endpoint: /cc-ui/v1/dropdown/stack/{{stackName}}/resources-info
+                                                                filterConditions:
+                                                                    - field: resourceType
+                                                                      value: config_map
+                                                                labelKey: resourceName
+                                                                method: GET
+                                                                params:
+                                                                    includeContent: false
+                                                                valueKey: resourceName
+                                                                valueTemplate: ${config_map.{{value}}.out.attributes.name}
+                                                            x-ui-error-message: Value doesn't match pattern, it should start with an alphanumeric character and should be in range of 3-20 characters
+                                                            x-ui-typeable: true
+                                                        sub_path:
+                                                            description: Path within the ConfigMap to mount a specific key or file
+                                                            title: Sub Path
+                                                            type: string
+                                                    required:
+                                                        - name
+                                                        - mount_path
+                                                    title: Config Map Name
+                                                    type: object
+                                            title: Config Maps
+                                            type: object
+                                        host_path:
+                                            description: Host path mounts
+                                            patternProperties:
+                                                ^[a-zA-Z0-9_.-]*$:
+                                                    properties:
+                                                        mount_path:
+                                                            description: Mount path for host path
+                                                            title: Mount Path
+                                                            type: string
+                                                        sub_path:
+                                                            description: Path within the host filesystem to mount a specific directory or file
+                                                            title: Sub Path
+                                                            type: string
+                                                    required:
+                                                        - name
+                                                        - mount_path
+                                                    title: Host Path Name
+                                                    type: object
+                                            title: Host Path
+                                            type: object
+                                        pvc:
+                                            description: PVC mounts
+                                            patternProperties:
+                                                ^[a-zA-Z0-9_.-]*$:
+                                                    properties:
+                                                        claim_name:
+                                                            description: PVC name
+                                                            pattern: ^[a-zA-Z0-9]([a-zA-Z0-9-]{1,18}[a-zA-Z0-9])$
+                                                            title: Claim Name
+                                                            type: string
+                                                            x-ui-api-source:
+                                                                endpoint: /cc-ui/v1/dropdown/stack/{{stackName}}/resources-info
+                                                                filterConditions:
+                                                                    - field: resourceType
+                                                                      value: pvc
+                                                                labelKey: resourceName
+                                                                method: GET
+                                                                params:
+                                                                    includeContent: false
+                                                                valueKey: resourceName
+                                                                valueTemplate: ${pvc.{{value}}.out.attributes.name}
+                                                            x-ui-error-message: Value doesn't match pattern, it should start with an alphanumeric character and should be in range of 3-20 characters
+                                                            x-ui-typeable: true
+                                                        mount_path:
+                                                            description: Mount path for PVC
+                                                            title: Mount Path
+                                                            type: string
+                                                        sub_path:
+                                                            description: Path within the PVC to mount a specific subdirectory
+                                                            title: Sub Path
+                                                            type: string
+                                                    required:
+                                                        - claim_name
+                                                        - mount_path
+                                                    title: PVC Name
+                                                    type: object
+                                            title: PVC
+                                            type: object
+                                        secrets:
+                                            description: Secret mounts
+                                            patternProperties:
+                                                ^[a-zA-Z0-9_.-]*$:
+                                                    properties:
+                                                        mount_path:
+                                                            description: Mount path for secrets
+                                                            title: Mount Path
+                                                            type: string
+                                                        name:
+                                                            description: Secret name
+                                                            title: Name
+                                                            type: string
+                                                            x-ui-api-source:
+                                                                endpoint: /cc-ui/v1/dropdown/stack/{{stackName}}/resources-info
+                                                                filterConditions:
+                                                                    - field: resourceType
+                                                                      value: kubernetes_secret
+                                                                labelKey: resourceName
+                                                                method: GET
+                                                                params:
+                                                                    includeContent: false
+                                                                valueKey: resourceName
+                                                                valueTemplate: ${kubernetes_secret.{{value}}.out.attributes.name}
+                                                            x-ui-typeable: true
+                                                        sub_path:
+                                                            description: Path within the Secret to mount a specific key or file
+                                                            title: Sub Path
+                                                            type: string
+                                                    required:
+                                                        - name
+                                                        - mount_path
+                                                    title: Secret name
+                                                    type: object
+                                            title: Secrets
+                                            type: object
+                                    title: Volumes
+                                    type: object
+                                    x-ui-override-disable: true
+                                    x-ui-toggle: true
+                            required:
+                                - size
+                            title: Runtime
+                            type: object
+                            x-ui-order:
+                                - size
+                                - volumes
+                                - command
+                                - args
+                                - ports
+                                - health_checks
+                    required:
+                        - image
+                        - pull_policy
+                        - runtime
+                    title: Sidecar Container
+                    type: object
+            title: Sidecar Containers
+            type: object
+            x-ui-toggle: true
+            x-ui-visible-if:
+                field: spec.type
+                values:
+                    - application
+                    - statefulset
+        type:
+            default: application
+            description: Type of Kubernetes workload to deploy
+            enum:
+                - application
+                - cronjob
+                - job
+                - statefulset
+            title: Service Type
+            type: string
+    required:
+        - type
+        - runtime
+    title: Kubernetes Service
+    type: object
+    x-ui-order:
+        - type
+        - namespace
+        - restart_policy
+        - enable_host_anti_affinity
+        - pod_distribution_enabled
+        - pod_distribution
+        - cronjob
+        - job
+        - runtime
+        - release
+        - init_containers
+        - sidecars
+        - persistent_volume_claims
+        - env
+        - cloud_permissions
+sample:
+    flavor: anycloud
+    kind: service
+    spec:
+        enable_host_anti_affinity: false
+        env:
+            LOG_LEVEL: INFO
+        init_containers: {}
+        pod_distribution: {}
+        pod_distribution_enabled: false
+        release:
+            strategy:
+                type: RollingUpdate
+        restart_policy: Always
+        runtime:
+            args: []
+            autoscaling:
+                cpu_threshold: "50"
+                max: 1
+                min: 1
+                scaling_on: CPU
+            command: []
+            health_checks:
+                liveness_check_type: None
+                readiness_check_type: None
+            ports: {}
+            size:
+                cpu: 300m
+                cpu_limit: 1000m
+                memory: 1Gi
+                memory_limit: 5Gi
+        sidecars: {}
+        type: application
+    version: "1.0"

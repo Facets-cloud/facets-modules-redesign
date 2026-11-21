@@ -1,0 +1,276 @@
+intent: network
+flavor: anycloud
+version: "1.0"
+description: Anycloud network — Kubernetes-optimized VPC. Branches on the linked cloud_account's cloud_provider. AWS = VPC across N AZs (public/private/database subnets, single or per-AZ NAT, VPC endpoints). GCP = VPC network with GKE secondary ranges, internal-LB subnet, Google-services peering, Cloud NAT, firewall rules.
+intentDetails:
+    type: Cloud & Infrastructure
+    description: Kubernetes/GKE-optimized VPC that branches on the linked cloud_account — AWS VPC (public/private/database subnets, NAT, VPC endpoints) or GCP VPC network (GKE secondary ranges, Cloud NAT, firewall rules).
+    displayName: Network
+    iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/network.svg
+clouds:
+    - aws
+    - gcp
+inputs:
+    cloud_account:
+        type: '@facets/any_cloud_account'
+        providers:
+            - aws
+            - google
+outputs:
+    default:
+        type: '@facets/any_cloud_network'
+spec:
+    type: object
+    properties:
+        cidr:
+            type: string
+            title: VPC CIDR Block
+            description: Base /16 CIDR for the VPC (AWS & GCP). Subnets are auto-calculated from this block for optimal Kubernetes/GKE allocation.
+            default: 10.0.0.0/16
+            pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}/16$
+            x-ui-error-message: CIDR must be a /16 block (e.g. 10.0.0.0/16)
+            x-ui-placeholder: 10.0.0.0/16
+        name:
+            type: string
+            title: Name
+            description: Custom resource name. Optional — auto-generated (name module) when empty.
+            minLength: 1
+            maxLength: 100
+        aws:
+            type: object
+            title: AWS (VPC) configuration
+            description: Applied only when the linked cloud_account resolves to AWS. Ignored on GCP.
+            properties:
+                auto_select_azs:
+                    type: boolean
+                    title: Auto Select Availability Zones
+                    description: Automatically select 3 availability zones from the region.
+                    default: true
+                availability_zones:
+                    type: array
+                    title: Availability Zones
+                    description: Explicit AZs to use (2-5). Only used when Auto Select AZs is false.
+                    items:
+                        type: string
+                    minItems: 2
+                    maxItems: 5
+                    x-ui-overrides-only: true
+                    x-ui-visible-if:
+                        field: spec.aws.auto_select_azs
+                        values:
+                            - false
+                nat_gateway:
+                    type: object
+                    title: NAT Gateway
+                    description: One NAT gateway (cheaper) or one per AZ (HA, no cross-AZ egress charges).
+                    properties:
+                        strategy:
+                            type: string
+                            title: NAT Gateway Strategy
+                            enum:
+                                - single
+                                - per_az
+                            default: single
+                    required:
+                        - strategy
+                vpc_endpoints:
+                    type: object
+                    title: VPC Endpoints
+                    description: Interface/Gateway endpoints to keep AWS-service traffic private and cut NAT/data-transfer cost.
+                    x-ui-toggle: true
+                    properties:
+                        enable_s3:
+                            type: boolean
+                            title: S3 (Gateway, free)
+                            default: true
+                        enable_dynamodb:
+                            type: boolean
+                            title: DynamoDB (Gateway, free)
+                            default: true
+                        enable_ecr_api:
+                            type: boolean
+                            title: ECR API (Interface)
+                            default: true
+                        enable_ecr_dkr:
+                            type: boolean
+                            title: ECR Docker (Interface)
+                            default: true
+                        enable_eks:
+                            type: boolean
+                            title: EKS (Interface)
+                            default: false
+                        enable_ec2:
+                            type: boolean
+                            title: EC2 (Interface)
+                            default: false
+                        enable_ssm:
+                            type: boolean
+                            title: SSM (Interface)
+                            default: true
+                        enable_ssm_messages:
+                            type: boolean
+                            title: SSM Messages (Interface)
+                            default: true
+                        enable_ec2_messages:
+                            type: boolean
+                            title: EC2 Messages (Interface)
+                            default: true
+                        enable_kms:
+                            type: boolean
+                            title: KMS (Interface)
+                            default: false
+                        enable_logs:
+                            type: boolean
+                            title: CloudWatch Logs (Interface)
+                            default: false
+                        enable_monitoring:
+                            type: boolean
+                            title: CloudWatch Monitoring (Interface)
+                            default: false
+                        enable_sts:
+                            type: boolean
+                            title: STS (Interface)
+                            default: false
+                        enable_lambda:
+                            type: boolean
+                            title: Lambda (Interface)
+                            default: false
+                tags:
+                    type: object
+                    title: Additional Tags (AWS)
+                    description: Extra tags merged onto all VPC resources.
+                    x-ui-yaml-editor: true
+        gcp:
+            type: object
+            title: GCP (VPC network) configuration
+            description: Applied only when the linked cloud_account resolves to GCP. Ignored on AWS.
+            properties:
+                auto_select_zones:
+                    type: boolean
+                    title: Auto Select Zones
+                    description: Automatically select 3 zones from the region.
+                    default: true
+                zones:
+                    type: array
+                    title: Zones
+                    description: Explicit zones to use (2-5). Only used when Auto Select Zones is false.
+                    items:
+                        type: string
+                    minItems: 2
+                    maxItems: 5
+                    x-ui-overrides-only: true
+                    x-ui-visible-if:
+                        field: spec.gcp.auto_select_zones
+                        values:
+                            - false
+                enable_flow_logs:
+                    type: boolean
+                    title: Enable VPC Flow Logs
+                    description: Flow logs on subnets for monitoring/security analysis.
+                    default: false
+                firewall_rules:
+                    type: object
+                    title: Firewall Rules
+                    description: VPC firewall rules for traffic control (tag-scoped for SSH/HTTP/HTTPS).
+                    x-ui-toggle: true
+                    properties:
+                        allow_internal:
+                            type: boolean
+                            title: Allow Internal Traffic
+                            default: true
+                        allow_ssh:
+                            type: boolean
+                            title: Allow SSH (ssh-access tag)
+                            default: true
+                        allow_http:
+                            type: boolean
+                            title: Allow HTTP (http-server tag)
+                            default: false
+                        allow_https:
+                            type: boolean
+                            title: Allow HTTPS (https-server tag)
+                            default: true
+                        allow_icmp:
+                            type: boolean
+                            title: Allow ICMP
+                            default: true
+                vpc_connector:
+                    type: object
+                    title: VPC Access Connector
+                    description: Serverless VPC access for Cloud Run / Functions / App Engine.
+                    x-ui-toggle: true
+                    properties:
+                        enabled:
+                            type: boolean
+                            title: Enable VPC Connector
+                            default: false
+                        machine_type:
+                            type: string
+                            title: Machine Type
+                            enum:
+                                - f1-micro
+                                - e2-micro
+                                - e2-standard-4
+                            default: e2-micro
+                            x-ui-visible-if:
+                                field: spec.gcp.vpc_connector.enabled
+                                values:
+                                    - true
+                        min_instances:
+                            type: integer
+                            title: Min Instances
+                            minimum: 2
+                            maximum: 9
+                            default: 2
+                            x-ui-visible-if:
+                                field: spec.gcp.vpc_connector.enabled
+                                values:
+                                    - true
+                        max_instances:
+                            type: integer
+                            title: Max Instances
+                            minimum: 3
+                            maximum: 10
+                            default: 3
+                            x-ui-visible-if:
+                                field: spec.gcp.vpc_connector.enabled
+                                values:
+                                    - true
+                labels:
+                    type: object
+                    title: Additional Labels (GCP)
+                    description: Extra labels merged onto all VPC resources.
+                    x-ui-yaml-editor: true
+    required:
+        - cidr
+    x-ui-order:
+        - name
+        - cidr
+        - aws
+        - gcp
+sample:
+    flavor: anycloud
+    kind: network
+    spec:
+        cidr: 10.0.0.0/16
+        aws:
+            auto_select_azs: true
+            nat_gateway:
+                strategy: single
+            vpc_endpoints:
+                enable_s3: true
+                enable_dynamodb: true
+                enable_ecr_api: true
+                enable_ecr_dkr: true
+                enable_ssm: true
+        gcp:
+            auto_select_zones: true
+            enable_flow_logs: false
+            firewall_rules:
+                allow_internal: true
+                allow_https: true
+                allow_icmp: true
+                allow_ssh: true
+            vpc_connector:
+                enabled: false
+    version: "1.0"
