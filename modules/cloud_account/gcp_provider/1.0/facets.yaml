@@ -61,12 +61,14 @@ outputs:
         attributes:
           project: attributes.project
           credentials: attributes.credentials
+          impersonate_service_account: attributes.impersonate_service_account
       google-beta:
         source: hashicorp/google-beta
         version: '>= 6.43.0'
         attributes:
           project: attributes.project
           credentials: attributes.credentials
+          impersonate_service_account: attributes.impersonate_service_account
 sample:
   version: '1.0'
   flavor: gcp_provider
