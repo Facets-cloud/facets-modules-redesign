@@ -18,10 +18,15 @@ locals {
     }
   }
 
-  # Merge user supplied values with PDB configuration
-  user_supplied_helm_values = merge(local.base_helm_values, local.pdb_helm_values)
-  ingressRoutes             = { for x, y in lookup(var.instance.spec, "rules", {}) : x => y }
-  record_type               = lookup(var.inputs.kubernetes_details, "lb_service_record_type", var.inputs.kubernetes_details.cloud_provider == "AWS" ? "CNAME" : "A")
+  # Merge user supplied values with PDB configuration.
+  # Nested merge on `controller`: a shallow merge() replaced the user's whole
+  # helm_values.controller block (config, proxySetHeaders, ...) with the PDB map,
+  # silently dropping overrides such as controller.config.use-http2.
+  user_supplied_helm_values = merge(local.base_helm_values, {
+    controller = merge(lookup(local.base_helm_values, "controller", {}), local.pdb_helm_values.controller)
+  })
+  ingressRoutes = { for x, y in lookup(var.instance.spec, "rules", {}) : x => y }
+  record_type   = lookup(var.inputs.kubernetes_details, "lb_service_record_type", var.inputs.kubernetes_details.cloud_provider == "AWS" ? "CNAME" : "A")
   #If environment name and instance exceeds 33 , take md5
   instance_env_name          = length(var.environment.unique_name) + length(var.instance_name) + length(local.tenant_base_domain) >= 60 ? substr(md5("${var.instance_name}-${var.environment.unique_name}"), 0, 20) : "${var.instance_name}-${var.environment.unique_name}"
   check_domain_prefix        = coalesce(lookup(var.instance.spec, "domain_prefix_override", null), local.instance_env_name)
