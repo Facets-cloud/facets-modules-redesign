@@ -46,8 +46,9 @@ spec:
       type: string
     version:
       default: v1.4.1
-      description: Version of Gateway API CRDs to install
+      description: Version of Gateway API CRDs to install. v1.7.0 is required by NGINX Gateway Fabric 2.9.0; from v1.5 a safe-upgrades ValidatingAdmissionPolicy blocks downgrading below v1.5.
       enum:
+        - v1.7.0
         - v1.4.1
         - v1.4.0
         - v1.3.0

@@ -33,6 +33,14 @@ resource "kubernetes_cluster_role_v1" "gateway_api_crd_installer" {
     resources  = ["customresourcedefinitions"]
     verbs      = ["get", "list", "create", "update", "patch"]
   }
+
+  # Gateway API >= v1.5 install manifests also ship the
+  # safe-upgrades.gateway.networking.k8s.io ValidatingAdmissionPolicy + binding.
+  rule {
+    api_groups = ["admissionregistration.k8s.io"]
+    resources  = ["validatingadmissionpolicies", "validatingadmissionpolicybindings"]
+    verbs      = ["get", "list", "create", "update", "patch"]
+  }
 }
 
 # ClusterRoleBinding for Gateway API CRD installer
