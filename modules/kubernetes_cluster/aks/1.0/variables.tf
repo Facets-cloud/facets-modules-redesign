@@ -41,6 +41,18 @@ variable "instance" {
     })
   })
 
+  # cluster_endpoint_public_access_cidrs: a non-empty list of IPv4 CIDRs, so a typo fails at plan, not at apply
+  validation {
+    condition = (
+      try(var.instance.spec.cluster.cluster_endpoint_public_access_cidrs == null, true) ||
+      try(length(var.instance.spec.cluster.cluster_endpoint_public_access_cidrs) > 0 && alltrue([
+        for cidr in var.instance.spec.cluster.cluster_endpoint_public_access_cidrs :
+        can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$", cidr)) && can(cidrhost(cidr, 0))
+      ]), false)
+    )
+    error_message = "cluster_endpoint_public_access_cidrs must be a non-empty list of IPv4 CIDRs, e.g. 203.0.113.10/32."
+  }
+
   validation {
     condition     = contains(["Free", "Standard"], var.instance.spec.cluster.sku_tier)
     error_message = "SKU tier must be one of: Free, Standard."
