@@ -33,9 +33,12 @@ spec:
     whitelisted_cidrs:
       type: array
       title: Whitelisted CIDRs
-      description: List of CIDR blocks that can access the Kubernetes API server
+      description: IPv4 CIDRs allowed to reach the Kubernetes API server. Defaults to
+        everywhere; to restrict, list your egress IPs as /32s and include the IP of whatever
+        runs deployments against the cluster.
       default:
       - 0.0.0.0/0
+      minItems: 1
       x-ui-overrides-only: true
       items:
         type: string
