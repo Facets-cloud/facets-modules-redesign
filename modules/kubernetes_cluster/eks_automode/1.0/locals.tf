@@ -5,7 +5,7 @@ locals {
   cluster_location                       = var.inputs.cloud_account.attributes.aws_region
   cluster_endpoint_public_access         = lookup(local.cluster, "cluster_endpoint_public_access", true)
   cluster_endpoint_private_access        = true
-  cluster_endpoint_public_access_cidrs   = length(lookup(local.cluster, "cluster_endpoint_public_access_cidrs", [])) > 0 ? lookup(local.cluster, "cluster_endpoint_public_access_cidrs", ["0.0.0.0/0"]) : ["0.0.0.0/0"]
+  cluster_endpoint_public_access_cidrs   = lookup(local.cluster, "cluster_endpoint_public_access_cidrs", null) == null ? ["0.0.0.0/0"] : local.cluster.cluster_endpoint_public_access_cidrs
   kubernetes_version                     = null # Use latest available version by default
   cloudwatch_config                      = lookup(local.cluster, "cloudwatch", {})
   cluster_enabled_log_types              = lookup(local.cloudwatch_config, "enabled_log_types", ["api", "audit", "authenticator", "controllerManager", "scheduler"])

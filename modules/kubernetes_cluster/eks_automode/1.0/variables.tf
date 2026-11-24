@@ -93,13 +93,16 @@ variable "instance" {
     error_message = "CloudWatch enabled_log_types must be from: api, audit, authenticator, controllerManager, scheduler."
   }
 
-  # Validation for cluster_endpoint_public_access_cidrs format
+  # cluster_endpoint_public_access_cidrs: a non-empty list of IPv4 CIDRs (an empty list would silently open the endpoint)
   validation {
-    condition = alltrue([
-      for cidr in var.instance.spec.cluster.cluster_endpoint_public_access_cidrs :
-      can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$", cidr))
-    ])
-    error_message = "cluster_endpoint_public_access_cidrs must contain valid CIDR blocks (e.g., '0.0.0.0/0' or '10.0.0.0/16')."
+    condition = (
+      try(var.instance.spec.cluster.cluster_endpoint_public_access_cidrs == null, true) ||
+      try(length(var.instance.spec.cluster.cluster_endpoint_public_access_cidrs) > 0 && alltrue([
+        for cidr in var.instance.spec.cluster.cluster_endpoint_public_access_cidrs :
+        can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$", cidr)) && can(cidrhost(cidr, 0))
+      ]), false)
+    )
+    error_message = "cluster_endpoint_public_access_cidrs must be a non-empty list of IPv4 CIDRs, e.g. 203.0.113.10/32. Omit it to allow 0.0.0.0/0."
   }
 
   # Validation for cluster_endpoint_private_access_cidrs format
