@@ -86,8 +86,13 @@ spec:
           type: array
           title: Cluster Endpoint Public Access CIDRs
           description:
-            List of CIDR blocks which can access the Amazon EKS public
-            API server endpoint.
+            IPv4 CIDRs allowed to reach the public API server endpoint. Defaults to
+            everywhere; to restrict, list your egress IPs as /32s and include the IP of
+            whatever runs deployments against the cluster.
+          items:
+            type: string
+            pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$
+          minItems: 1
           x-ui-visible-if:
             field: spec.cluster.cluster_endpoint_public_access
             values:

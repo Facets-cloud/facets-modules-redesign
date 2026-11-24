@@ -4,11 +4,12 @@ variable "instance" {
     flavor  = string
     version = string
     spec = object({
-      cluster_version                 = string
-      cluster_endpoint_public_access  = optional(bool, true)
-      cluster_endpoint_private_access = optional(bool, true)
-      customer_managed_kms            = optional(bool, true)
-      node_subnet_ids                 = optional(list(string), [])
+      cluster_version                      = string
+      cluster_endpoint_public_access       = optional(bool, true)
+      cluster_endpoint_public_access_cidrs = optional(list(string), ["0.0.0.0/0"])
+      cluster_endpoint_private_access      = optional(bool, true)
+      customer_managed_kms                 = optional(bool, true)
+      node_subnet_ids                      = optional(list(string), [])
 
       cluster_addons = optional(object({
         vpc_cni = optional(object({
@@ -46,6 +47,17 @@ variable "instance" {
       cluster_tags = optional(map(string), {})
     })
   })
+
+  validation {
+    condition = (
+      try(var.instance.spec.cluster_endpoint_public_access_cidrs == null, true) ||
+      try(length(var.instance.spec.cluster_endpoint_public_access_cidrs) > 0 && alltrue([
+        for c in var.instance.spec.cluster_endpoint_public_access_cidrs :
+        can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$", c)) && can(cidrhost(c, 0))
+      ]), false)
+    )
+    error_message = "cluster_endpoint_public_access_cidrs must be a non-empty list of IPv4 CIDRs, e.g. 203.0.113.10/32."
+  }
 
   validation {
     condition     = contains(["1.28", "1.29", "1.30", "1.31", "1.32", "1.33", "1.34", "1.35", "1.36"], var.instance.spec.cluster_version)

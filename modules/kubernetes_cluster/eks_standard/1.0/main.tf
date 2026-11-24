@@ -148,8 +148,9 @@ module "eks" {
   )
 
   # Cluster endpoint access
-  cluster_endpoint_public_access  = lookup(var.instance.spec, "cluster_endpoint_public_access", true)
-  cluster_endpoint_private_access = lookup(var.instance.spec, "cluster_endpoint_private_access", true)
+  cluster_endpoint_public_access       = lookup(var.instance.spec, "cluster_endpoint_public_access", true)
+  cluster_endpoint_public_access_cidrs = lookup(var.instance.spec, "cluster_endpoint_public_access_cidrs", null) == null ? ["0.0.0.0/0"] : var.instance.spec.cluster_endpoint_public_access_cidrs
+  cluster_endpoint_private_access      = lookup(var.instance.spec, "cluster_endpoint_private_access", true)
 
   # Control plane logging - all 5 log types enabled by default, user-configurable
   cluster_enabled_log_types = lookup(var.instance.spec, "enabled_log_types", ["api", "audit", "authenticator", "controllerManager", "scheduler"])

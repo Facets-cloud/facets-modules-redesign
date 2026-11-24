@@ -25,7 +25,7 @@ locals {
   node_locations = lookup(local.network_attributes, "zones", [])
 
   # Security settings
-  whitelisted_cidrs = lookup(local.spec, "whitelisted_cidrs", ["0.0.0.0/0"])
+  whitelisted_cidrs = lookup(local.spec, "whitelisted_cidrs", null) == null ? ["0.0.0.0/0"] : local.spec.whitelisted_cidrs
 
   # Logging configuration
   logging_components_config = lookup(local.spec, "logging_components", {})
