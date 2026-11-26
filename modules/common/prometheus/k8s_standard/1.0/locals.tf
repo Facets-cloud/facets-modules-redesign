@@ -51,6 +51,10 @@ locals {
     }
   })
 
+  # Opt-in hardening; defaults keep today's behaviour (the control-plane UI documents admin/prom-operator)
+  grafana_random_admin_password = lookup(lookup(local.spec, "grafana", {}), "random_admin_password", false)
+  grafana_anonymous_role        = lookup(lookup(local.spec, "grafana", {}), "anonymous_role", "Editor")
+
   grafanaSpec = lookup(local.spec, "grafana", {
     "enabled" = false
     "size" = {
@@ -284,7 +288,7 @@ locals {
     grafana = {
       enabled       = lookup(local.grafanaSpec, "enabled", true)
       adminUser     = "admin"
-      adminPassword = "prom-operator"
+      adminPassword = local.grafana_random_admin_password ? random_password.grafana_admin[0].result : "prom-operator"
       sidecar = {
         datasources = {
           defaultDatasourceEnabled = false
@@ -321,15 +325,17 @@ locals {
           allowed_origins = "https://${local.cc_host}"
         }
         "auth.anonymous" = {
-          enabled  = true
+          enabled  = local.grafana_anonymous_role != "Disabled"
           org_name = "Main Org."
-          org_role = "Editor"
+          org_role = local.grafana_anonymous_role == "Disabled" ? "Viewer" : local.grafana_anonymous_role
         }
       }
       imageRenderer = {
         enabled = true
         image = {
-          repository = "hferreira/grafana-image-renderer"
+          # Official Grafana image, pinned (multi-arch amd64/arm64).
+          repository = "grafana/grafana-image-renderer"
+          tag        = "3.12.9"
         }
         podAnnotations = {
           "cluster-autoscaler.kubernetes.io/safe-to-evict" = "true"
