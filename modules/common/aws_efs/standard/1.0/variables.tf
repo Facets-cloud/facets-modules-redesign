@@ -22,6 +22,7 @@ variable "instance" {
     }), {})
     spec = object({
       encrypted                       = optional(bool, true)
+      enforce_tls                     = optional(bool, false)
       performance_mode                = optional(string, "generalPurpose")
       throughput_mode                 = optional(string, "bursting")
       provisioned_throughput_in_mibps = optional(number, null)
