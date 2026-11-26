@@ -3,7 +3,7 @@
 # =============================================================================
 
 module "name" {
-  source        = "github.com/Facets-cloud/facets-utility-modules//name"
+  source        = "github.com/Facets-cloud/facets-utility-modules//name?ref=3b222c02b481f2517be1a794a2b9b6184e140b19"
   environment   = var.environment
   limit         = 30
   resource_name = var.instance_name

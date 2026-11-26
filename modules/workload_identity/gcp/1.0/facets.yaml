@@ -153,7 +153,5 @@ sample:
     use_existing_k8s_sa: false
     namespace: default
     roles:
-      storage-admin:
-        role: roles/storage.admin
-      compute-admin:
-        role: roles/compute.admin
+      storage_object_viewer:
+        role: roles/storage.objectViewer
