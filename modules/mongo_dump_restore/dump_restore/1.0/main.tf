@@ -23,6 +23,8 @@ locals {
   sa_name       = "${local.safe_name}-runner"
   runner_sa     = local.existing_service_account != "" ? local.existing_service_account : local.sa_name
 
+  credential_secret_name = "${local.safe_name}-credentials"
+
   common_labels = {
     app                          = "mongo-dump-restore"
     resourceType                 = "mongo_dump_restore"
@@ -78,19 +80,24 @@ locals {
     DATABASES_TSV='${local.database_tsv}'
   EOT
 
-  runner_env = concat([
-    {
-      name  = "SOURCE_ADMIN_PASSWORD"
-      value = local.source.admin_password
-    },
-    {
-      name  = "TARGET_ADMIN_PASSWORD"
-      value = local.target.admin_password
+  # Credentials are read from a Kubernetes Secret, never inlined into the CronJob spec.
+  runner_env = [
+    for name, key in merge(
+      {
+        SOURCE_ADMIN_PASSWORD = "source_admin_password"
+        TARGET_ADMIN_PASSWORD = "target_admin_password"
+      },
+      local.slack_token != "" ? { SLACK_TOKEN = "slack_token" } : {}
+      ) : {
+      name = name
+      valueFrom = {
+        secretKeyRef = {
+          name = kubernetes_secret_v1.runner_credentials.metadata[0].name
+          key  = key
+        }
+      }
     }
-    ], local.slack_token != "" ? [{
-      name  = "SLACK_TOKEN"
-      value = local.slack_token
-  }] : [])
+  ]
 
   volume_mounts = [{
     name      = "scripts"
@@ -239,6 +246,22 @@ locals {
   }
 
   resources_data = merge(local.rbac_resources, local.script_resources, local.cronjob_resources)
+}
+
+resource "kubernetes_secret_v1" "runner_credentials" {
+  metadata {
+    name      = local.credential_secret_name
+    namespace = local.namespace
+    labels    = local.common_labels
+  }
+
+  data = merge(
+    {
+      source_admin_password = local.source.admin_password
+      target_admin_password = local.target.admin_password
+    },
+    local.slack_token != "" ? { slack_token = local.slack_token } : {}
+  )
 }
 
 module "name" {

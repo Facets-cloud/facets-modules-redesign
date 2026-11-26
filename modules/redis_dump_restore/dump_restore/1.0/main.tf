@@ -33,6 +33,8 @@ locals {
   sa_name       = "${local.safe_name}-runner"
   runner_sa     = local.existing_service_account != "" ? local.existing_service_account : local.sa_name
 
+  credential_secret_name = "${local.safe_name}-credentials"
+
   common_labels = {
     app                          = "redis-dump-restore"
     resourceType                 = "redis_dump_restore"
@@ -62,11 +64,9 @@ locals {
   config_script = <<-EOT
     SOURCE_HOST=${local.source.host}
     SOURCE_PORT=${coalesce(try(local.source.port, null), 6379)}
-    SOURCE_AUTH_TOKEN=${try(local.source.auth_token, "")}
     SOURCE_TLS=${coalesce(try(local.source.tls, null), false)}
     TARGET_HOST=${local.target.host}
     TARGET_PORT=${coalesce(try(local.target.port, null), 6379)}
-    TARGET_AUTH_TOKEN=${try(local.target.auth_token, "")}
     TARGET_TLS=${coalesce(try(local.target.tls, null), false)}
     STATE_CONFIGMAP=${local.state_name}
     NAMESPACE=${local.namespace}
@@ -88,10 +88,25 @@ locals {
     DATASETS_TSV='${local.datasets_tsv}'
   EOT
 
-  runner_env = local.slack_token != "" ? [{
-    name  = "SLACK_TOKEN"
-    value = local.slack_token
-  }] : []
+  # Credentials are read from a Kubernetes Secret, never written to the scripts ConfigMap
+  # or inlined into the CronJob spec.
+  runner_env = [
+    for name, key in merge(
+      {
+        SOURCE_AUTH_TOKEN = "source_auth_token"
+        TARGET_AUTH_TOKEN = "target_auth_token"
+      },
+      local.slack_token != "" ? { SLACK_TOKEN = "slack_token" } : {}
+      ) : {
+      name = name
+      valueFrom = {
+        secretKeyRef = {
+          name = kubernetes_secret_v1.runner_credentials.metadata[0].name
+          key  = key
+        }
+      }
+    }
+  ]
 
   volume_mounts = [{
     name      = "scripts"
@@ -240,6 +255,22 @@ locals {
   }
 
   resources_data = merge(local.rbac_resources, local.script_resources, local.cronjob_resources)
+}
+
+resource "kubernetes_secret_v1" "runner_credentials" {
+  metadata {
+    name      = local.credential_secret_name
+    namespace = local.namespace
+    labels    = local.common_labels
+  }
+
+  data = merge(
+    {
+      source_auth_token = local.source.auth_token # optional(string, "") in variables.tf
+      target_auth_token = local.target.auth_token
+    },
+    local.slack_token != "" ? { slack_token = local.slack_token } : {}
+  )
 }
 
 module "name" {
