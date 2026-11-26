@@ -7,7 +7,7 @@ locals {
     project_id            = var.inputs.cloud_account.attributes.project_id
 
     # Include service account key if created
-    private_key = var.instance.spec.create_key ? google_service_account_key.this[0].private_key : ""
+    private_key = var.instance.spec.create_key ? sensitive(google_service_account_key.this[0].private_key) : ""
 
     # Mark sensitive fields
     secrets = var.instance.spec.create_key ? ["private_key"] : []
