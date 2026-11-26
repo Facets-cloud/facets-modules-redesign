@@ -36,7 +36,7 @@ sample:
       allow_https: true
       allow_icmp: true
       allow_internal: true
-      allow_ssh: true
+      allow_ssh: false
     vpc_cidr: 10.0.0.0/16
     vpc_connector:
       enabled: false
@@ -84,6 +84,20 @@ spec:
             tag 'ssh-access'
           title: Allow SSH Access
           type: boolean
+        ssh_source_ranges:
+          default:
+          - 0.0.0.0/0
+          description: CIDR blocks allowed to SSH to instances with network tag
+            'ssh-access'. Restrict this to your admin or IAP range (35.235.240.0/20)
+            instead of the whole internet.
+          items:
+            type: string
+          title: SSH Source Ranges
+          type: array
+          x-ui-visible-if:
+            field: spec.firewall_rules.allow_ssh
+            values:
+            - true
       title: Firewall Rules Configuration
       type: object
       x-ui-toggle: true

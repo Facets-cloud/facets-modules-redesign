@@ -207,7 +207,7 @@ resource "google_compute_firewall" "allow_ssh" {
     ports    = ["22"]
   }
 
-  source_ranges = ["0.0.0.0/0"]
+  source_ranges = lookup(local.firewall_rules, "ssh_source_ranges", ["0.0.0.0/0"])
   target_tags   = [local.network_tags.ssh_access]
   priority      = 1000
 }
