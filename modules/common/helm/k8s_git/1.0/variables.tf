@@ -22,8 +22,9 @@ variable "instance" {
   })
 
   validation {
-    condition     = lookup(var.instance.spec, "git_repository", "") == "" || can(regex("^[a-zA-Z0-9._-]+$", lookup(var.instance.spec, "git_repository", "")))
-    error_message = "git_repository must be a valid repository name (alphanumeric, dots, underscores, and hyphens only)."
+    # "."/".." would point the clone dir (rm -rf'd by git_clone.sh) at the module dir or its parent
+    condition     = lookup(var.instance.spec, "git_repository", "") == "" || (can(regex("^[a-zA-Z0-9._-]+$", lookup(var.instance.spec, "git_repository", ""))) && !contains([".", ".."], lookup(var.instance.spec, "git_repository", "")))
+    error_message = "git_repository must be a valid repository name (alphanumeric, dots, underscores, and hyphens only; not '.' or '..')."
   }
 
   validation {

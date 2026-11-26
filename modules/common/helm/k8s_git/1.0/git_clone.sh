@@ -40,6 +40,10 @@ if [ -z "$CHART_DIR" ]; then
     exit 1
 fi
 
+# Never print credentials embedded in GIT_URL (https://user:token@host/...)
+SAFE_GIT_URL=$(printf '%s' "$GIT_URL" | sed -E 's#://[^/]*@#://***@#')
+redact() { sed -E 's#://[^/[:space:]]*@#://***@#g'; }
+
 # Clean up existing directory
 if ! rm -rf "$CHART_DIR" 2>/dev/null; then
     >&2 echo "Error: Failed to remove existing directory $CHART_DIR"
@@ -65,9 +69,9 @@ if ! git init >/dev/null 2>&1; then
 fi
 
 if ! git remote add origin "$GIT_URL" 2>/dev/null; then
-    >&2 echo "Error: Failed to add git remote origin $GIT_URL"
+    >&2 echo "Error: Failed to add git remote origin $SAFE_GIT_URL"
     >&2 echo "Git remote add output:"
-    git remote add origin "$GIT_URL" 2>&1 | >&2 cat || true
+    git remote add origin "$GIT_URL" 2>&1 | redact >&2 || true
     exit 1
 fi
 
@@ -96,12 +100,16 @@ fi
 # Pull only the specific path with depth 1
 if ! git pull --depth=1 origin "$GIT_REF" >/dev/null 2>&1; then
     >&2 echo "Error: Failed to pull from git repository"
-    >&2 echo "Git URL: $GIT_URL"
+    >&2 echo "Git URL: $SAFE_GIT_URL"
     >&2 echo "Git REF: $GIT_REF"
     >&2 echo "Git pull output:"
-    git pull --depth=1 origin "$GIT_REF" 2>&1 | >&2 cat || true
+    git pull --depth=1 origin "$GIT_REF" 2>&1 | redact >&2 || true
+    git remote remove origin >/dev/null 2>&1 || true
     exit 1
 fi
+
+# Drop the remote so the token is not left on disk in .git/config
+git remote remove origin >/dev/null 2>&1 || true
 
 # Verify chart exists
 if [ ! -f "$FULL_CHART_PATH/Chart.yaml" ] && [ ! -f "$FULL_CHART_PATH/Chart.yml" ]; then
