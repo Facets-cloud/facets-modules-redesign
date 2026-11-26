@@ -14,6 +14,9 @@ variable "instance" {
         disk_size          = number
         read_replica_count = number
       })
+      network_config = optional(object({
+        require_ssl = optional(bool, true)
+      }), {})
       restore_config = optional(object({
         restore_from_backup = bool
         source_instance_id  = optional(string)

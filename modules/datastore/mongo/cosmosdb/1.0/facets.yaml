@@ -17,6 +17,7 @@ spec:
   - version_config
   - sizing
   - backup_config
+  - network_config
   - restore_config
   - imports
   properties:
@@ -97,6 +98,29 @@ spec:
           description: Enable continuous backup for point-in-time restore capability
             (30-day retention)
           default: false
+    network_config:
+      type: object
+      title: Network Access
+      description: Defaults keep today's behaviour (reachable from any IP, key auth
+        only). Restrict for production.
+      x-ui-order:
+      - public_network_access_enabled
+      - allowed_ip_ranges
+      properties:
+        public_network_access_enabled:
+          type: boolean
+          title: Public Network Access
+          description: Allow access over the public endpoint. Disable only when clients
+            reach the account through a private endpoint.
+          default: true
+        allowed_ip_ranges:
+          type: array
+          title: Allowed IP Ranges
+          description: Public IPs or CIDRs allowed to connect (e.g. the AKS egress
+            IP). Empty means no IP filter.
+          items:
+            type: string
+          default: []
     restore_config:
       type: object
       title: Restore Operations
@@ -208,3 +232,6 @@ sample:
       enable_multi_region: false
     backup_config:
       enable_continuous_backup: false
+    network_config:
+      public_network_access_enabled: true
+      allowed_ip_ranges: []

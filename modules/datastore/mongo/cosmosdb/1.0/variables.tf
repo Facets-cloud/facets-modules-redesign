@@ -23,6 +23,10 @@ variable "instance" {
         source_account_name = optional(string)
         restore_timestamp   = optional(string)
       }))
+      network_config = optional(object({
+        public_network_access_enabled = optional(bool, true)
+        allowed_ip_ranges             = optional(list(string), [])
+      }))
       imports = optional(object({
         import_existing = optional(bool, false)
         account_name    = optional(string)

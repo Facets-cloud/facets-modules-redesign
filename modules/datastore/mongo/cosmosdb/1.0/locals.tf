@@ -15,6 +15,11 @@ locals {
   is_restore = try(var.instance.spec.restore_config.restore_from_backup, false) == true
   is_import  = local.import_enabled && local.import_account_id != null
 
+  # Network access - defaults keep the account reachable from any IP (pre-existing behaviour)
+  public_network_access_enabled = try(var.instance.spec.network_config.public_network_access_enabled, null) != false
+  allowed_ip_ranges             = coalesce(try(var.instance.spec.network_config.allowed_ip_ranges, null), [])
+  ip_range_filter               = length(local.allowed_ip_ranges) > 0 ? toset(local.allowed_ip_ranges) : null
+
   # Database should exist for both import and create modes (not restore)
   database_count = local.is_restore ? 0 : 1
 

@@ -18,6 +18,7 @@ spec:
   x-ui-order:
   - version_config
   - sizing
+  - network_config
   - restore_config
   - imports
   properties:
@@ -86,6 +87,18 @@ spec:
       required:
       - tier
       - disk_size
+    network_config:
+      type: object
+      title: Network Configuration
+      x-ui-order:
+      - require_ssl
+      properties:
+        require_ssl:
+          type: boolean
+          title: Require SSL
+          description: Reject unencrypted connections (ssl_mode ENCRYPTED_ONLY). Applies
+            when the instance is created; existing instances are not changed.
+          default: true
     restore_config:
       type: object
       title: Restore Operations
@@ -289,6 +302,8 @@ sample:
       tier: db-n1-standard-1
       disk_size: 100
       read_replica_count: 0
+    network_config:
+      require_ssl: true
     restore_config:
       restore_from_backup: false
     imports:
