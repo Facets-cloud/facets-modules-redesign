@@ -65,8 +65,9 @@ resource "azurerm_cosmosdb_account" "mongodb" {
     }
   }
 
-  # Security - encryption enabled by default
-  public_network_access_enabled = true # Allow public access for testing
+  # Network access - see spec.network_config (defaults keep public access with no IP filter)
+  public_network_access_enabled = local.public_network_access_enabled
+  ip_range_filter               = local.ip_range_filter
 
   # Prevent accidental deletion
   lifecycle {
@@ -146,8 +147,9 @@ resource "azurerm_cosmosdb_account" "mongodb_restored" {
     # No other backup parameters should be specified for restore operations
   }
 
-  # Security - encryption enabled by default
-  public_network_access_enabled = true
+  # Network access - see spec.network_config (defaults keep public access with no IP filter)
+  public_network_access_enabled = local.public_network_access_enabled
+  ip_range_filter               = local.ip_range_filter
 
   # Prevent accidental deletion
   lifecycle {

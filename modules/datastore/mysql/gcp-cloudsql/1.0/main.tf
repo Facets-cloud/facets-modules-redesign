@@ -81,6 +81,8 @@ resource "google_sql_database_instance" "mysql_instance" {
       enable_private_path_for_google_cloud_services = true
       # Let CloudSQL use the existing private services range managed by network module
       allocated_ip_range = null
+      # ip_configuration is in ignore_changes, so this only takes effect on new instances
+      ssl_mode = var.instance.spec.network_config.require_ssl ? "ENCRYPTED_ONLY" : "ALLOW_UNENCRYPTED_AND_ENCRYPTED"
     }
 
     # Database flags for security and performance
@@ -194,6 +196,7 @@ resource "google_sql_database_instance" "read_replica" {
       enable_private_path_for_google_cloud_services = true
       # Let CloudSQL use the existing private services range managed by network module
       allocated_ip_range = null
+      ssl_mode           = var.instance.spec.network_config.require_ssl ? "ENCRYPTED_ONLY" : "ALLOW_UNENCRYPTED_AND_ENCRYPTED"
     }
 
     # User labels
