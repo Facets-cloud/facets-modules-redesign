@@ -85,7 +85,12 @@ resource "aws_iam_policy" "karpenter_controller" {
         Action = [
           "ec2:TerminateInstances"
         ]
+        # Scope to this cluster's nodes: without the cluster tag, the controller
+        # could terminate Karpenter nodes of any other cluster in the account.
         Condition = {
+          StringEquals = {
+            "ec2:ResourceTag/kubernetes.io/cluster/${local.cluster_name}" = "owned"
+          }
           StringLike = {
             "ec2:ResourceTag/karpenter.sh/nodepool" = "*"
           }
