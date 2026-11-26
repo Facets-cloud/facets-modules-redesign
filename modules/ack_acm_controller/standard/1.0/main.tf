@@ -1,5 +1,5 @@
 module "name" {
-  source          = "github.com/Facets-cloud/facets-utility-modules//name"
+  source          = "github.com/Facets-cloud/facets-utility-modules//name?ref=3b222c02b481f2517be1a794a2b9b6184e140b19"
   environment     = var.environment
   limit           = 48
   resource_name   = var.instance_name
@@ -54,7 +54,7 @@ resource "aws_iam_policy" "ack_acm" {
 
 # IRSA - IAM Role for Service Account
 module "irsa" {
-  source                = "github.com/Facets-cloud/facets-utility-modules//aws_irsa"
+  source                = "github.com/Facets-cloud/facets-utility-modules//aws_irsa?ref=3b222c02b481f2517be1a794a2b9b6184e140b19"
   eks_oidc_provider_arn = local.eks_oidc_provider_arn
   iam_role_name         = local.name
   namespace             = local.controller_namespace

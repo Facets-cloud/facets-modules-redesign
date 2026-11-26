@@ -1,6 +1,6 @@
 # Create EC2NodeClass for this instance using any-k8s-resource module
 module "ec2_node_class" {
-  source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
+  source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource?ref=3b222c02b481f2517be1a794a2b9b6184e140b19"
 
   name         = "${var.instance_name}-nodeclass"
   namespace    = local.karpenter_namespace
@@ -58,7 +58,7 @@ module "ec2_node_class" {
 
 # Create NodePool for this instance using any-k8s-resource module
 module "node_pool" {
-  source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
+  source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource?ref=3b222c02b481f2517be1a794a2b9b6184e140b19"
 
   name         = "${var.instance_name}-nodepool"
   namespace    = local.karpenter_namespace

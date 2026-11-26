@@ -1,5 +1,5 @@
 module "name" {
-  source          = "github.com/Facets-cloud/facets-utility-modules//name"
+  source          = "github.com/Facets-cloud/facets-utility-modules//name?ref=3b222c02b481f2517be1a794a2b9b6184e140b19"
   environment     = var.environment
   limit           = 64
   resource_name   = var.instance_name
@@ -138,7 +138,7 @@ resource "aws_iam_policy" "efs_csi_driver" {
 
 # IRSA: creates IAM Role with OIDC trust and attaches the policy
 module "irsa" {
-  source                = "github.com/Facets-cloud/facets-utility-modules//aws_irsa"
+  source                = "github.com/Facets-cloud/facets-utility-modules//aws_irsa?ref=3b222c02b481f2517be1a794a2b9b6184e140b19"
   eks_oidc_provider_arn = local.oidc_provider_arn
   iam_role_name         = local.name
   namespace             = local.controller_namespace
