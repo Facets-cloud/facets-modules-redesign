@@ -162,6 +162,24 @@ spec:
       title: Custom Labels
       type: object
       x-ui-yaml-editor: true
+    public_access_prevention:
+      default: inherited
+      description: Set to 'enforced' to block any public (allUsers/allAuthenticatedUsers) access to this bucket. 'inherited' follows the project/org policy (current behaviour).
+      enum:
+      - inherited
+      - enforced
+      title: Public Access Prevention
+      type: string
+    kms_key_name:
+      description: Optional Cloud KMS key (projects/.../cryptoKeys/...) used as the bucket's default encryption key (CMEK). The GCS service agent needs roles/cloudkms.cryptoKeyEncrypterDecrypter on the key. Leave empty for Google-managed encryption.
+      title: KMS Key Name (CMEK)
+      type: string
+      pattern: ^(projects/[^/]+/locations/[^/]+/keyRings/[^/]+/cryptoKeys/[^/]+)?$
+    force_destroy:
+      default: true
+      description: When true, destroying this resource deletes the bucket even if it still contains objects. Set to false to protect data from accidental deletion.
+      title: Force Destroy
+      type: boolean
   required:
   - storage_class
   - versioning_enabled

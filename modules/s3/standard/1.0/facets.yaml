@@ -57,6 +57,11 @@ spec:
       title: Enable S3 Bucket Key
       description: Reduce KMS costs by using bucket keys (only applies with KMS encryption)
       default: true
+    enforce_secure_transport:
+      type: boolean
+      title: Enforce TLS (HTTPS only)
+      description: Attach a bucket policy statement that denies any request made without TLS (aws:SecureTransport=false). Merged with Bucket Policy JSON if set. Leave off if the bucket policy is managed outside this module, since enabling it sets the bucket policy.
+      default: false
     bucket_policy_json:
       type: string
       title: Bucket Policy JSON

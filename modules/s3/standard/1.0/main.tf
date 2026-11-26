@@ -46,6 +46,9 @@ locals {
   bucket_policy_json = try(local.spec.bucket_policy_json, null)
   has_bucket_policy  = local.bucket_policy_json != null && local.bucket_policy_json != ""
 
+  # Deny non-TLS requests (opt-in, default keeps current behaviour)
+  enforce_secure_transport = try(local.spec.enforce_secure_transport, false)
+
   # Tags
   custom_tags = try(local.spec.tags, {})
 
@@ -200,11 +203,41 @@ resource "aws_s3_bucket_cors_configuration" "main" {
 }
 
 # Bucket Policy
+# Opt-in: deny any request not made over TLS (aws:SecureTransport=false).
+# Off by default because enabling it attaches a bucket policy, which would replace
+# any policy managed outside this module when no bucket_policy_json is set.
+data "aws_iam_policy_document" "secure_transport" {
+  count = local.enforce_secure_transport ? 1 : 0
+
+  source_policy_documents = local.has_bucket_policy ? [local.bucket_policy_json] : []
+
+  statement {
+    sid     = "DenyInsecureTransport"
+    effect  = "Deny"
+    actions = ["s3:*"]
+    resources = [
+      aws_s3_bucket.main.arn,
+      "${aws_s3_bucket.main.arn}/*",
+    ]
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+}
+
 resource "aws_s3_bucket_policy" "main" {
-  count = local.has_bucket_policy ? 1 : 0
+  count = local.has_bucket_policy || local.enforce_secure_transport ? 1 : 0
 
   bucket = aws_s3_bucket.main.id
-  policy = local.bucket_policy_json
+  policy = local.enforce_secure_transport ? data.aws_iam_policy_document.secure_transport[0].json : local.bucket_policy_json
 
   depends_on = [aws_s3_bucket_public_access_block.main]
 }
