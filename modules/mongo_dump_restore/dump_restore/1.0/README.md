@@ -41,8 +41,9 @@ trigger an action.**
 ```
 
 Connection details, options, and the database list are rendered by Terraform
-into `config.sh` (non-secret) and passed as env (`SOURCE_ADMIN_PASSWORD`,
-`TARGET_ADMIN_PASSWORD`, `SLACK_TOKEN`). Each action creates a **manual Job from
+into `config.sh` (non-secret). Credentials (`SOURCE_ADMIN_PASSWORD`,
+`TARGET_ADMIN_PASSWORD`, `SLACK_TOKEN`) live in the `<name>-credentials` Secret
+and reach the runner as `secretKeyRef` env, never inline in the CronJob spec. Each action creates a **manual Job from
 the matching CronJob**, injecting the mode via an `ACTION_MODE_OVERRIDE` env
 patch.
 

@@ -42,7 +42,8 @@ on apply — it only lays down suspended CronJobs, a scripts ConfigMap, and RBAC
 ```
 
 Connection details, options, and the dataset list are rendered by Terraform into
-`config.sh` and passed as env. Each action creates a **manual Job from the
+`config.sh` (non-secret). Auth tokens and `SLACK_TOKEN` live in the
+`<name>-credentials` Secret and reach the runner as `secretKeyRef` env. Each action creates a **manual Job from the
 matching CronJob**, injecting the mode by replacing the container args.
 
 ---

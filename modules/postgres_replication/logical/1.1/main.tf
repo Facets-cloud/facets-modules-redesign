@@ -134,8 +134,13 @@ locals {
       }
     }
     ], local.slack_token != "" ? [{
-      name  = "SLACK_TOKEN"
-      value = local.slack_token
+      name = "SLACK_TOKEN"
+      valueFrom = {
+        secretKeyRef = {
+          name = kubernetes_secret_v1.runner_credentials.metadata[0].name
+          key  = "slack_token"
+        }
+      }
   }] : [])
 
   volume_mounts = [{
@@ -301,12 +306,15 @@ resource "kubernetes_secret_v1" "runner_credentials" {
     labels    = local.common_labels
   }
 
-  data = {
-    source_admin_password = local.source.admin_password
-    source_repl_password  = local.source.repl_password
-    target_admin_password = local.target.admin_password
-    target_repl_password  = local.target.repl_password
-  }
+  data = merge(
+    {
+      source_admin_password = local.source.admin_password
+      source_repl_password  = local.source.repl_password
+      target_admin_password = local.target.admin_password
+      target_repl_password  = local.target.repl_password
+    },
+    local.slack_token != "" ? { slack_token = local.slack_token } : {}
+  )
 }
 
 resource "kubernetes_secret_v1" "target_login_role_passwords" {
