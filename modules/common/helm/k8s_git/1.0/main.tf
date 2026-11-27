@@ -27,7 +27,7 @@ locals {
 }
 
 module "helm_release_name" {
-  source          = "github.com/Facets-cloud/facets-utility-modules//name"
+  source          = "github.com/Facets-cloud/facets-utility-modules//name?ref=3b222c02b481f2517be1a794a2b9b6184e140b19"
   is_k8s          = true
   globally_unique = false
   resource_name   = var.instance_name
@@ -40,8 +40,12 @@ module "helm_release_name" {
 data "external" "git_clone" {
   program = ["bash", "${path.module}/git_clone.sh"]
 
+  # sensitive() keeps the token-bearing URL out of plan and log output.
+  # ponytail: data source arguments are still written to state; keeping the token
+  # out of state needs Terraform >= 1.10 ephemeral values (modules target 1.5) or
+  # the token reaching the runner environment outside Terraform.
   query = {
-    git_url    = local.git_url
+    git_url    = sensitive(local.git_url)
     git_ref    = local.git_ref
     chart_dir  = local.chart_directory
     chart_path = local.chart_path
