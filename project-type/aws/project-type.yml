@@ -58,6 +58,8 @@ modules:
     flavor: aws-aurora
   - intent: mysql
     flavor: aws-rds
+  - intent: mysql_user
+    flavor: k8s_job
   - intent: postgres
     flavor: aws-aurora
   - intent: postgres
