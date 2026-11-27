@@ -1,6 +1,6 @@
 locals {
   output_attributes = {
-    token   = var.instance.spec.token
+    token   = sensitive(var.instance.spec.token)
     region  = var.instance.spec.region
     secrets = "[\"token\"]"
   }

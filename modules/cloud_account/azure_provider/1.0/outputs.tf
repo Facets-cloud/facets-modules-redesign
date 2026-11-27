@@ -10,6 +10,3 @@ locals {
     ]
   }
 }
-
-## facetsdemo/backend/accounts/667d6782d4f4f200072d621f
-## 7d811b1e-b652-4e7c-9902-08c3fa2b5039
