@@ -244,6 +244,32 @@ spec:
           title: Enable Grafana
           description: Enable/disable Grafana
           default: true
+        random_admin_password:
+          type: boolean
+          title: Random Admin Password
+          description: Generate a random 32-character Grafana admin password instead
+            of the well-known default (admin/prom-operator). Retrieve it from the
+            <release>-grafana secret (key admin-password). Changing it restarts Grafana.
+          default: false
+          x-ui-visible-if:
+            field: spec.grafana.enabled
+            values:
+            - true
+        anonymous_role:
+          type: string
+          title: Anonymous Access Role
+          description: Org role granted to unauthenticated users. Editor keeps today's
+            behaviour; Viewer is read-only; Disabled requires login (the control-plane
+            Grafana tunnel then needs the admin credentials).
+          enum:
+          - Editor
+          - Viewer
+          - Disabled
+          default: Editor
+          x-ui-visible-if:
+            field: spec.grafana.enabled
+            values:
+            - true
         size:
           type: object
           title: Grafana Size

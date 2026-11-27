@@ -8,6 +8,13 @@ module "name" {
   limit           = 45
 }
 
+# Opt-in random Grafana admin password (spec.grafana.random_admin_password)
+resource "random_password" "grafana_admin" {
+  count   = local.grafana_random_admin_password ? 1 : 0
+  length  = 32
+  special = false
+}
+
 # Deploy kube-prometheus-stack
 resource "helm_release" "prometheus-operator" {
   depends_on      = [module.prometheus-pvc, module.alertmanager-pvc]
