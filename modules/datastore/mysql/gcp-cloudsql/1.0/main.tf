@@ -4,7 +4,7 @@
 
 # Name module for CloudSQL instance (98 character limit)
 module "name" {
-  source        = "github.com/Facets-cloud/facets-utility-modules//name"
+  source        = "github.com/Facets-cloud/facets-utility-modules//name?ref=3b222c02b481f2517be1a794a2b9b6184e140b19"
   environment   = var.environment
   limit         = 98
   resource_name = var.instance_name
@@ -14,7 +14,7 @@ module "name" {
 # Name modules for read replicas
 module "replica_name" {
   count         = var.instance.spec.sizing.read_replica_count
-  source        = "github.com/Facets-cloud/facets-utility-modules//name"
+  source        = "github.com/Facets-cloud/facets-utility-modules//name?ref=3b222c02b481f2517be1a794a2b9b6184e140b19"
   environment   = var.environment
   limit         = 98
   resource_name = "${var.instance_name}-replica-${count.index + 1}"

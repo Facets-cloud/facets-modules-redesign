@@ -333,7 +333,7 @@ resource "kubernetes_secret_v1" "target_login_role_passwords" {
 }
 
 module "name" {
-  source          = "github.com/Facets-cloud/facets-utility-modules//name"
+  source          = "github.com/Facets-cloud/facets-utility-modules//name?ref=3b222c02b481f2517be1a794a2b9b6184e140b19"
   environment     = var.environment
   limit           = 63
   resource_name   = var.instance_name
@@ -343,7 +343,7 @@ module "name" {
 }
 
 module "postgres-replication-resources" {
-  source          = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resources"
+  source          = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resources?ref=3b222c02b481f2517be1a794a2b9b6184e140b19"
   name            = local.safe_name
   release_name    = module.name.name
   namespace       = local.namespace

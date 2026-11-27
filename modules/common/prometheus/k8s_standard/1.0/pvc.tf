@@ -1,6 +1,6 @@
 # Create PVC for Prometheus
 module "prometheus-pvc" {
-  source          = "github.com/Facets-cloud/facets-utility-modules//pvc"
+  source          = "github.com/Facets-cloud/facets-utility-modules//pvc?ref=3b222c02b481f2517be1a794a2b9b6184e140b19"
   name            = "pvc-prometheus-${module.name.name}-0"
   namespace       = local.namespace
   access_modes    = ["ReadWriteOnce"]
@@ -13,7 +13,7 @@ module "prometheus-pvc" {
 
 # Create PVC for Alertmanager
 module "alertmanager-pvc" {
-  source          = "github.com/Facets-cloud/facets-utility-modules//pvc"
+  source          = "github.com/Facets-cloud/facets-utility-modules//pvc?ref=3b222c02b481f2517be1a794a2b9b6184e140b19"
   name            = "pvc-alertmanager-${module.name.name}-0"
   namespace       = local.namespace
   access_modes    = ["ReadWriteOnce"]

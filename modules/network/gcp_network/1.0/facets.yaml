@@ -86,10 +86,11 @@ spec:
           type: boolean
         ssh_source_ranges:
           default:
-          - 0.0.0.0/0
+          - 35.235.240.0/20
           description: CIDR blocks allowed to SSH to instances with network tag
-            'ssh-access'. Restrict this to your admin or IAP range (35.235.240.0/20)
-            instead of the whole internet.
+            'ssh-access'. Defaults to Google's IAP TCP-forwarding range
+            (35.235.240.0/20); add your admin CIDRs for direct SSH. Resources
+            without this field keep 0.0.0.0/0.
           items:
             type: string
           title: SSH Source Ranges
