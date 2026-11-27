@@ -5,6 +5,7 @@ locals {
   oidc_provider_arn         = var.inputs.eks_details.attributes.oidc_provider_arn
   oidc_provider             = var.inputs.eks_details.attributes.oidc_provider
   aws_region                = var.inputs.cloud_account.attributes.aws_region
+  partition                 = data.aws_partition.current.partition
   node_security_group_id    = var.inputs.eks_details.attributes.node_security_group_id
 
   # Interruption handling flag - defaults to false if not specified
@@ -21,6 +22,8 @@ locals {
     }
   )
 }
+
+data "aws_partition" "current" {}
 
 # IAM Role for Karpenter Controller
 resource "aws_iam_role" "karpenter_controller" {
@@ -57,12 +60,11 @@ resource "aws_iam_policy" "karpenter_controller" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "Karpenter"
+        Sid    = "KarpenterRead"
         Effect = "Allow"
         Action = [
           "ssm:GetParameter",
           "ec2:DescribeImages",
-          "ec2:RunInstances",
           "ec2:DescribeSubnets",
           "ec2:DescribeSecurityGroups",
           "ec2:DescribeLaunchTemplates",
@@ -70,32 +72,144 @@ resource "aws_iam_policy" "karpenter_controller" {
           "ec2:DescribeInstanceTypes",
           "ec2:DescribeInstanceTypeOfferings",
           "ec2:DescribeAvailabilityZones",
-          "ec2:DeleteLaunchTemplate",
-          "ec2:CreateTags",
-          "ec2:CreateLaunchTemplate",
-          "ec2:CreateFleet",
           "ec2:DescribeSpotPriceHistory",
           "pricing:GetProducts"
         ]
         Resource = "*"
       },
+      # EC2 write statements mirror the upstream Karpenter v1 controller policy:
+      # every mutating call is limited to resources tagged (or being created with)
+      # kubernetes.io/cluster/<this cluster>=owned, so this controller cannot tag,
+      # launch from, terminate or delete another cluster's instances/templates.
       {
-        Sid    = "ConditionalEC2Termination"
+        Sid    = "AllowScopedEC2InstanceAccessActions"
         Effect = "Allow"
-        Action = [
-          "ec2:TerminateInstances"
+        Resource = [
+          "arn:${local.partition}:ec2:${local.aws_region}::image/*",
+          "arn:${local.partition}:ec2:${local.aws_region}::snapshot/*",
+          "arn:${local.partition}:ec2:${local.aws_region}:*:security-group/*",
+          "arn:${local.partition}:ec2:${local.aws_region}:*:subnet/*",
+          "arn:${local.partition}:ec2:${local.aws_region}:*:capacity-reservation/*"
         ]
-        # Scope to this cluster's nodes: without the cluster tag, the controller
-        # could terminate Karpenter nodes of any other cluster in the account.
+        Action = [
+          "ec2:RunInstances",
+          "ec2:CreateFleet"
+        ]
+      },
+      {
+        Sid      = "AllowScopedEC2LaunchTemplateAccessActions"
+        Effect   = "Allow"
+        Resource = "arn:${local.partition}:ec2:${local.aws_region}:*:launch-template/*"
+        Action = [
+          "ec2:RunInstances",
+          "ec2:CreateFleet"
+        ]
         Condition = {
           StringEquals = {
-            "ec2:ResourceTag/kubernetes.io/cluster/${local.cluster_name}" = "owned"
+            "aws:ResourceTag/kubernetes.io/cluster/${local.cluster_name}" = "owned"
           }
           StringLike = {
-            "ec2:ResourceTag/karpenter.sh/nodepool" = "*"
+            "aws:ResourceTag/karpenter.sh/nodepool" = "*"
           }
         }
-        Resource = "*"
+      },
+      {
+        Sid    = "AllowScopedEC2InstanceActionsWithTags"
+        Effect = "Allow"
+        Resource = [
+          "arn:${local.partition}:ec2:${local.aws_region}:*:fleet/*",
+          "arn:${local.partition}:ec2:${local.aws_region}:*:instance/*",
+          "arn:${local.partition}:ec2:${local.aws_region}:*:volume/*",
+          "arn:${local.partition}:ec2:${local.aws_region}:*:network-interface/*",
+          "arn:${local.partition}:ec2:${local.aws_region}:*:launch-template/*",
+          "arn:${local.partition}:ec2:${local.aws_region}:*:spot-instances-request/*",
+          "arn:${local.partition}:ec2:${local.aws_region}:*:capacity-reservation/*"
+        ]
+        Action = [
+          "ec2:RunInstances",
+          "ec2:CreateFleet",
+          "ec2:CreateLaunchTemplate"
+        ]
+        Condition = {
+          StringEquals = {
+            "aws:RequestTag/kubernetes.io/cluster/${local.cluster_name}" = "owned"
+            "aws:RequestTag/eks:eks-cluster-name"                        = local.cluster_name
+          }
+          StringLike = {
+            "aws:RequestTag/karpenter.sh/nodepool" = "*"
+          }
+        }
+      },
+      {
+        Sid    = "AllowScopedResourceCreationTagging"
+        Effect = "Allow"
+        Resource = [
+          "arn:${local.partition}:ec2:${local.aws_region}:*:fleet/*",
+          "arn:${local.partition}:ec2:${local.aws_region}:*:instance/*",
+          "arn:${local.partition}:ec2:${local.aws_region}:*:volume/*",
+          "arn:${local.partition}:ec2:${local.aws_region}:*:network-interface/*",
+          "arn:${local.partition}:ec2:${local.aws_region}:*:launch-template/*",
+          "arn:${local.partition}:ec2:${local.aws_region}:*:spot-instances-request/*"
+        ]
+        Action = "ec2:CreateTags"
+        Condition = {
+          StringEquals = {
+            "aws:RequestTag/kubernetes.io/cluster/${local.cluster_name}" = "owned"
+            "aws:RequestTag/eks:eks-cluster-name"                        = local.cluster_name
+            "ec2:CreateAction" = [
+              "RunInstances",
+              "CreateFleet",
+              "CreateLaunchTemplate"
+            ]
+          }
+          StringLike = {
+            "aws:RequestTag/karpenter.sh/nodepool" = "*"
+          }
+        }
+      },
+      {
+        Sid      = "AllowScopedResourceTagging"
+        Effect   = "Allow"
+        Resource = "arn:${local.partition}:ec2:${local.aws_region}:*:instance/*"
+        Action   = "ec2:CreateTags"
+        Condition = {
+          StringEquals = {
+            "aws:ResourceTag/kubernetes.io/cluster/${local.cluster_name}" = "owned"
+          }
+          StringLike = {
+            "aws:ResourceTag/karpenter.sh/nodepool" = "*"
+          }
+          StringEqualsIfExists = {
+            "aws:RequestTag/eks:eks-cluster-name" = local.cluster_name
+          }
+          "ForAllValues:StringEquals" = {
+            "aws:TagKeys" = [
+              "eks:eks-cluster-name",
+              "karpenter.sh/nodeclaim",
+              "Name"
+            ]
+          }
+        }
+      },
+      {
+        Sid    = "AllowScopedDeletion"
+        Effect = "Allow"
+        Resource = [
+          "arn:${local.partition}:ec2:${local.aws_region}:*:instance/*",
+          "arn:${local.partition}:ec2:${local.aws_region}:*:launch-template/*"
+        ]
+        Action = [
+          "ec2:TerminateInstances",
+          "ec2:DeleteLaunchTemplate"
+        ]
+        Condition = {
+          StringEquals = {
+            "aws:ResourceTag/kubernetes.io/cluster/${local.cluster_name}" = "owned"
+          }
+          StringLike = {
+            "aws:ResourceTag/karpenter.sh/nodepool" = "*"
+          }
+        }
       },
       {
         Sid      = "PassNodeIAMRole"
