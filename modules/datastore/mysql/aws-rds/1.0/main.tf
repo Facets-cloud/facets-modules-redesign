@@ -150,7 +150,7 @@ resource "aws_db_instance" "mysql" {
   publicly_accessible    = false # Always private for security
 
   # High availability and backup configuration (hardcoded for security)
-  multi_az                = true                  # Enable HA by default
+  multi_az                = var.instance.spec.sizing.multi_az
   backup_retention_period = 7                     # 7 days retention
   backup_window           = "03:00-04:00"         # 3-4 AM UTC
   maintenance_window      = "sun:04:00-sun:05:00" # Sunday 4-5 AM UTC
