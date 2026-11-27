@@ -1,6 +1,6 @@
 # Deploy NodeClass using any-k8s-resource for rollback capabilities
 module "node_class" {
-  source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
+  source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource?ref=3b222c02b481f2517be1a794a2b9b6184e140b19"
 
   name      = local.node_class_name
   namespace = "karpenter"
@@ -15,7 +15,7 @@ module "node_class" {
 
 # Deploy NodePool using any-k8s-resource for rollback capabilities
 module "node_pool" {
-  source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource"
+  source = "github.com/Facets-cloud/facets-utility-modules//any-k8s-resource?ref=3b222c02b481f2517be1a794a2b9b6184e140b19"
 
   # Ensure NodeClass is created first
   depends_on = [module.node_class]
