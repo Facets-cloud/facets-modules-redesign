@@ -101,6 +101,8 @@ modules:
     flavor: k8s_standard
   - intent: strimzi-operator
     flavor: helm
+  - intent: k8ssandra-operator
+    flavor: helm
   - intent: vpa
     flavor: standard
   - intent: wireguard-operator
@@ -121,3 +123,5 @@ modules:
     flavor: kubeblocks
   - intent: redis
     flavor: kubeblocks
+  - intent: cassandra
+    flavor: k8ssandra
