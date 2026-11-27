@@ -40,6 +40,15 @@ resource "google_storage_bucket" "bucket" {
 
   uniform_bucket_level_access = var.instance.spec.uniform_bucket_level_access
   requester_pays              = var.instance.spec.requester_pays
+  public_access_prevention    = var.instance.spec.public_access_prevention
+
+  # Optional CMEK; absent block keeps Google-managed encryption (no diff for existing buckets)
+  dynamic "encryption" {
+    for_each = try(trimspace(var.instance.spec.kms_key_name), "") != "" ? [var.instance.spec.kms_key_name] : []
+    content {
+      default_kms_key_name = encryption.value
+    }
+  }
 
   versioning {
     enabled = var.instance.spec.versioning_enabled
@@ -66,8 +75,8 @@ resource "google_storage_bucket" "bucket" {
     lookup(var.instance.spec, "custom_labels", {})
   )
 
-  # Force destroy for easier cleanup in testing
-  force_destroy = true
+  # Defaults to true (previous hardcoded behaviour); set spec.force_destroy=false to protect data
+  force_destroy = var.instance.spec.force_destroy
 
   # Ensure we don't create invalid bucket names
   lifecycle {

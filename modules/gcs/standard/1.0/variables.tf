@@ -16,7 +16,10 @@ variable "instance" {
         action        = string
         storage_class = string
       })
-      custom_labels = optional(map(string), {})
+      custom_labels            = optional(map(string), {})
+      public_access_prevention = optional(string, "inherited")
+      kms_key_name             = optional(string)
+      force_destroy            = optional(bool, true)
       # location is now fully optional and not required in the type definition
     })
   })
@@ -24,6 +27,11 @@ variable "instance" {
   validation {
     condition     = lookup(var.instance.spec, "location", null) == null || contains(["US", "EU", "ASIA", "US-CENTRAL1", "US-EAST1", "US-EAST4", "US-EAST5", "US-SOUTH1", "US-WEST1", "US-WEST2", "US-WEST3", "US-WEST4", "NORTHAMERICA-NORTHEAST1", "NORTHAMERICA-NORTHEAST2", "NORTHAMERICA-SOUTH1", "SOUTHAMERICA-EAST1", "SOUTHAMERICA-WEST1", "EUROPE-CENTRAL2", "EUROPE-NORTH1", "EUROPE-NORTH2", "EUROPE-SOUTHWEST1", "EUROPE-WEST1", "EUROPE-WEST2", "EUROPE-WEST3", "EUROPE-WEST4", "EUROPE-WEST6", "EUROPE-WEST8", "EUROPE-WEST9", "EUROPE-WEST10", "EUROPE-WEST12", "ASIA-EAST1", "ASIA-EAST2", "ASIA-NORTHEAST1", "ASIA-NORTHEAST2", "ASIA-NORTHEAST3", "ASIA-SOUTHEAST1", "ASIA-SOUTHEAST2", "ASIA-SOUTH1", "ASIA-SOUTH2", "ME-CENTRAL1", "ME-CENTRAL2", "ME-WEST1", "AUSTRALIA-SOUTHEAST1", "AUSTRALIA-SOUTHEAST2", "AFRICA-SOUTH1", "ASIA1", "EUR4", "EUR5", "EUR7", "EUR8", "NAM4"], lookup(var.instance.spec, "location", ""))
     error_message = "If specified, location must be a valid GCS location."
+  }
+
+  validation {
+    condition     = contains(["inherited", "enforced"], var.instance.spec.public_access_prevention)
+    error_message = "public_access_prevention must be either inherited or enforced."
   }
 
   validation {
