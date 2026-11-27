@@ -55,7 +55,7 @@ resource "null_resource" "annotate-sa" {
   }
 
   provisioner "local-exec" {
-    when    = create
+    when = create
     # Create the kubeconfig owner-only and remove it on exit so it never
     # outlives this provisioner on the runner.
     command = <<EOT
