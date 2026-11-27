@@ -13,6 +13,13 @@ variable "instance" {
       token_creators = optional(list(string), [])
     })
   })
+
+  validation {
+    condition = alltrue([
+      for m in var.instance.spec.token_creators : !contains(["allusers", "allauthenticatedusers"], lower(trimspace(m)))
+    ])
+    error_message = "token_creators must not contain allUsers or allAuthenticatedUsers: that lets anyone impersonate this service account."
+  }
 }
 
 variable "instance_name" {

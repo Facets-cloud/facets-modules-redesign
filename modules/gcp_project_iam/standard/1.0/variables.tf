@@ -19,6 +19,15 @@ variable "instance" {
   })
 
   validation {
+    condition = alltrue(flatten([
+      for b in var.instance.spec.bindings : [
+        for m in b.members : !contains(["allusers", "allauthenticatedusers"], lower(trimspace(m)))
+      ]
+    ]))
+    error_message = "bindings members must not contain allUsers or allAuthenticatedUsers: project roles must not be granted to the public."
+  }
+
+  validation {
     condition = length(setsubtract(
       toset(flatten([
         for cfg in lookup(var.instance.spec, "audit_configs", []) : cfg.audit_log_types
