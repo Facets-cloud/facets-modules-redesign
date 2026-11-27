@@ -185,11 +185,58 @@ node_pools:
 ```yaml
 node_pools:
   gpu:
-    instance_families: [p3, p4, g4dn]
+    instance_families: [g4dn, g5, g6]
+    instance_sizes: [xlarge, 2xlarge]
     capacity_types: [on-demand]
+    gpu_limits: "8"            # cap the pool by GPUs, not only by CPU/memory
+    use_instance_store: true   # images and model caches on the bundled NVMe
     labels:
       accelerator: nvidia
+    taints:                    # keep CPU-only pods off the GPU nodes
+      nvidia.com/gpu:
+        value: "true"
+        effect: NoSchedule
 ```
+
+Inference images are large (Triton, vLLM and TGI are 10–20 GB on disk) and do not fit on
+Karpenter's default 20Gi root volume; the pod is evicted for ephemeral storage and Karpenter
+replaces the node until the pool's limits are reached. Either `use_instance_store: true`
+(GPU families bundle 100+ GiB of NVMe at no extra cost) or `disk_size: 50Gi` avoids this.
+
+The NVIDIA device plugin (or GPU Operator) must be installed separately for pods to request
+`nvidia.com/gpu`. Karpenter labels every GPU node it launches with
+`karpenter.k8s.aws/instance-gpu-manufacturer=nvidia` (and `instance-gpu-name`,
+`instance-gpu-count`), so point the plugin's node affinity at that label instead of the
+chart's default `nvidia.com/gpu.present`; it is per node, so mixed pools such as
+`[g5, m5]` only run the plugin where there is a GPU. The chart already tolerates the
+`nvidia.com/gpu` taint.
+
+```yaml
+# nvidia-device-plugin Helm values
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: karpenter.k8s.aws/instance-gpu-manufacturer
+              operator: In
+              values: [nvidia]
+```
+
+GPU workloads need the matching toleration:
+
+```yaml
+tolerations:
+  - key: nvidia.com/gpu
+    operator: Exists
+    effect: NoSchedule
+resources:
+  limits:
+    nvidia.com/gpu: 1
+```
+
+Changing `use_instance_store`, `disk_size`, `disk_iops` or `disk_throughput` on an existing
+pool is EC2NodeClass drift: Karpenter replaces every node in that pool, not only new ones.
 
 ## Monitoring
 

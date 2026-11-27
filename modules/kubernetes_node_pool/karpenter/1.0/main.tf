@@ -18,6 +18,14 @@ locals {
     }
   )
 
+  # GPU limit and root volume settings; empty / false means "not rendered",
+  # so pools that do not set them keep their current manifests
+  gpu_limits         = lookup(var.instance.spec, "gpu_limits", "")
+  disk_size          = lookup(var.instance.spec, "disk_size", "")
+  disk_iops          = lookup(var.instance.spec, "disk_iops", 3000)
+  disk_throughput    = lookup(var.instance.spec, "disk_throughput", 125)
+  use_instance_store = lookup(var.instance.spec, "use_instance_store", false)
+
   # Output values
   node_class_name = "${var.instance_name}-nodeclass"
   node_pool_name  = "${var.instance_name}-nodepool"
