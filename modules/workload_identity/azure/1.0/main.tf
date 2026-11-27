@@ -68,7 +68,7 @@ resource "null_resource" "annotate_k8s_sa" {
   }
 
   provisioner "local-exec" {
-    when    = create
+    when = create
     # The kubeconfig carries the cluster client key: create it owner-only and
     # remove it on exit so it never outlives this provisioner on the runner.
     command = <<EOT
