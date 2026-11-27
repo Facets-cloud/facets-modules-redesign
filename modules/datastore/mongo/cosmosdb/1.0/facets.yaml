@@ -110,14 +110,17 @@ spec:
         public_network_access_enabled:
           type: boolean
           title: Public Network Access
-          description: Allow access over the public endpoint. Disable only when clients
-            reach the account through a private endpoint.
+          description: 'Allow access over the public endpoint. WARNING: this module
+            does not create a private endpoint. Turning this off without a private
+            endpoint created outside this module makes the account unreachable for
+            every client. To restrict access, keep this on and set Allowed IP Ranges.'
           default: true
         allowed_ip_ranges:
           type: array
           title: Allowed IP Ranges
           description: Public IPs or CIDRs allowed to connect (e.g. the AKS egress
-            IP). Empty means no IP filter.
+            IP). Empty means no IP filter. A non-empty list also blocks Azure portal
+            Data Explorer unless the portal IPs are added.
           items:
             type: string
           default: []

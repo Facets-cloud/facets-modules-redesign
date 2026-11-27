@@ -196,7 +196,9 @@ resource "google_sql_database_instance" "read_replica" {
       enable_private_path_for_google_cloud_services = true
       # Let CloudSQL use the existing private services range managed by network module
       allocated_ip_range = null
-      ssl_mode           = var.instance.spec.network_config.require_ssl ? "ENCRYPTED_ONLY" : "ALLOW_UNENCRYPTED_AND_ENCRYPTED"
+      # Follow the primary's actual ssl_mode (not the spec): a primary created before
+      # require_ssl existed keeps accepting plaintext, so its new replicas must too.
+      ssl_mode = try(google_sql_database_instance.mysql_instance.settings[0].ip_configuration[0].ssl_mode, "") != "" ? google_sql_database_instance.mysql_instance.settings[0].ip_configuration[0].ssl_mode : null
     }
 
     # User labels
