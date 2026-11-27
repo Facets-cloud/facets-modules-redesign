@@ -50,6 +50,36 @@ resource "aws_efs_file_system" "efs-csi-driver" {
   }
 }
 
+# Opt-in: deny NFS access that is not encrypted in transit (spec.enforce_tls)
+resource "aws_efs_file_system_policy" "enforce_tls" {
+  count          = lookup(local.spec, "enforce_tls", false) ? 1 : 0
+  file_system_id = aws_efs_file_system.efs-csi-driver.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "AllowMountViaMountTarget"
+        Effect    = "Allow"
+        Principal = { AWS = "*" }
+        Action = [
+          "elasticfilesystem:ClientMount",
+          "elasticfilesystem:ClientWrite",
+          "elasticfilesystem:ClientRootAccess",
+        ]
+        Condition = { Bool = { "elasticfilesystem:AccessedViaMountTarget" = "true" } }
+      },
+      {
+        Sid       = "DenyInsecureTransport"
+        Effect    = "Deny"
+        Principal = { AWS = "*" }
+        Action    = "*"
+        Condition = { Bool = { "aws:SecureTransport" = "false" } }
+      },
+    ]
+  })
+}
+
 resource "aws_security_group" "efs-csi-driver" {
   name = module.name.name
   ingress {

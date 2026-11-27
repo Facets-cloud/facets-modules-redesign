@@ -39,6 +39,13 @@ spec:
       title: Enable Encryption at Rest
       description: Whether to enable encryption at rest for the EFS file system
       default: true
+    enforce_tls:
+      type: boolean
+      title: Enforce Encryption in Transit
+      description: Attach a file system policy that denies non-TLS NFS access (aws:SecureTransport).
+        Clients must mount with TLS (EFS CSI driver mounts with the tls option by default;
+        plain NFS mounts will be refused).
+      default: false
     performance_mode:
       type: string
       title: Performance Mode
@@ -111,6 +118,7 @@ spec:
       x-ui-yaml-editor: true
   x-ui-order:
   - encrypted
+  - enforce_tls
   - performance_mode
   - throughput_mode
   - provisioned_throughput_in_mibps
