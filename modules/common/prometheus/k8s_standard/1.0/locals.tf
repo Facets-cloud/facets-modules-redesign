@@ -333,9 +333,10 @@ locals {
       imageRenderer = {
         enabled = true
         image = {
-          # Official Grafana image, pinned (multi-arch amd64/arm64).
+          # Official Grafana image, pinned by tag and multi-arch (amd64/arm64) index digest.
           repository = "grafana/grafana-image-renderer"
-          tag        = "3.12.9"
+          tag        = "v5.12.12"
+          sha        = "7ec15ea713a82d0cc16aaf1575b5416a6f8b178f475f4d1685e3322a5ce3fae3"
         }
         podAnnotations = {
           "cluster-autoscaler.kubernetes.io/safe-to-evict" = "true"
