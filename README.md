@@ -91,7 +91,7 @@ raptor import project-type --managed facets/gcp --name "My Platform"
 `Cloud Account (gcp_provider)` `Network/VPC (gcp_network)` `GKE (gke)` `Node Pool (gcp)` `Node Fleet (gcp_node_fleet)` `Service (gcp)` `Workload Identity (gcp)` `Pub/Sub (gcp)` `GCP Secret Manager (gcp)`
 
 **Managed Datastores**
-`PostgreSQL/Cloud SQL (gcp-cloudsql)` `PostgreSQL/Logical (logical)` `MySQL/Cloud SQL (gcp-cloudsql)` `Redis/Memorystore (gcp-memorystore)`
+`PostgreSQL/Cloud SQL (gcp-cloudsql)` `PostgreSQL/Logical (logical)` `MySQL/Cloud SQL (gcp-cloudsql)` `MySQL/Logical Cloud SQL (gcp-logical)` `Redis/Memorystore (gcp-memorystore)`
 
 **Self-hosted via KubeBlocks**
 `PostgreSQL` `MySQL` `MongoDB` `Redis`

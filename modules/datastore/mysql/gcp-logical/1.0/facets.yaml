@@ -1,0 +1,108 @@
+intent: mysql
+flavor: gcp-logical
+version: '1.0'
+clouds:
+- gcp
+description: Logical Cloud SQL databases and centrally owned users on a shared existing Cloud SQL instance.
+intentDetails:
+  type: Datastores
+  description: Logical Cloud SQL databases and centrally managed shared users
+  displayName: MySQL
+  iconUrl: https://raw.githubusercontent.com/Facets-cloud/facets-modules-redesign/main/icons/mysql.svg
+spec:
+  title: MySQL Logical Database
+  description: Logical Cloud SQL databases and centrally owned users on a shared existing Cloud SQL instance.
+  type: object
+  x-ui-order:
+  - source
+  - database_name
+  - cloud_sql_instance
+  - databases_json
+  - managed_users
+  - user_list
+  - canonical_passwords_json
+  properties:
+    source:
+      type: object
+      title: Source MySQL Datastore
+      description: The existing MySQL datastore whose outputs should be re-exposed.
+        Resolves to the full outputs (attributes + interfaces) of the selected
+        resource.
+      x-ui-output-type: '@facets/mysql'
+    user_list:
+      type: object
+      title: Logical users
+      patternProperties:
+        "^[a-zA-Z0-9_-]{1,32}$":
+          type: object
+          properties:
+            database:
+              type: string
+              title: Default database
+            host:
+              type: string
+              title: MySQL host pattern
+    managed_users:
+      type: object
+      title: Users owned on this host
+      patternProperties:
+        "^[a-zA-Z0-9_-]{1,32}$":
+          type: object
+          properties:
+            host:
+              type: string
+              title: MySQL host pattern
+              default: "%"
+    canonical_passwords_json:
+      type: string
+      title: Canonical user passwords secret
+      x-ui-secret-ref: true
+      description: Reference to a secret JSON map; never enter passwords as literals.
+    cloud_sql_instance:
+      type: string
+      title: Cloud SQL instance name
+    databases_json:
+      type: string
+      title: Database names as JSON
+      default: "[]"
+    database_name:
+      type: string
+      title: Logical Database Name
+      description: Optional logical database to expose on the shared physical
+        instance. When set, the re-emitted connection_string targets this database
+        instead of the source's database.
+      pattern: ^[a-zA-Z][a-zA-Z0-9_]*$
+      minLength: 1
+      maxLength: 64
+  required:
+  - source
+  - cloud_sql_instance
+inputs:
+  cloud_account:
+    type: "@facets/gcp_cloud_account"
+    optional: false
+    providers: [google]
+outputs:
+  default:
+    type: '@facets/mysql'
+    title: MySQL Logical Database
+metadata:
+  x-ui-key-sources:
+    default:
+      interfaces:
+        path: spec.user_list
+        select: keys
+iac:
+  validated_files:
+  - main.tf
+  - variables.tf
+  - outputs.tf
+sample:
+  kind: mysql
+  flavor: gcp-logical
+  version: '1.0'
+  disabled: true
+  spec:
+    source: {}
+    cloud_sql_instance: shared-instance
+    database_name: reporting

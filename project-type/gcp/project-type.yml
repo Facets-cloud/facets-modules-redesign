@@ -51,6 +51,8 @@ modules:
   # GCP Datastore Modules
   - intent: mysql
     flavor: gcp-cloudsql
+  - intent: mysql
+    flavor: gcp-logical
   - intent: postgres
     flavor: gcp-cloudsql
   - intent: postgres
