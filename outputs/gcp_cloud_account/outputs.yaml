@@ -8,6 +8,9 @@ properties:
         credentials:
           description: Service account key (sensitive)
           type: string
+        impersonate_service_account:
+          description: Service account email to impersonate (empty when unused)
+          type: string
         project_id:
           description: GCP project ID
           type: string
